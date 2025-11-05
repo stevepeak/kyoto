@@ -2,7 +2,7 @@ import { task, logger } from '@trigger.dev/sdk'
 import type { StoryTestResult } from '../types'
 import { createInstallationOctokit } from '../helpers/github'
 
-export interface CreateGitHubCheckParams {
+interface CreateGitHubCheckParams {
   orgSlug: string
   repoName: string
   commitSha: string
@@ -25,7 +25,7 @@ export interface CreateGitHubCheckParams {
   }
 }
 
-export interface UpdateGitHubCheckParams extends CreateGitHubCheckParams {
+interface UpdateGitHubCheckParams extends CreateGitHubCheckParams {
   checkRunId: number
 }
 
@@ -64,7 +64,7 @@ export async function createGitHubCheck(
   return checkRun.data.id
 }
 
-export async function updateGitHubCheck(
+async function updateGitHubCheck(
   params: UpdateGitHubCheckParams,
 ): Promise<void> {
   const {

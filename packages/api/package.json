@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Server-side tRPC API definitions",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },

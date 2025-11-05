@@ -20,7 +20,6 @@ const config: KnipConfig = {
     },
     'apps/web': {
       entry: ['src/pages/**/*.{astro,ts}', 'src/layouts/**/*.astro'],
-      project: ['src/**/*.{ts,tsx,astro}'],
       ignore: ['**/node_modules/**', '**/.astro/**', '**/dist/**', '**/*.d.ts'],
     },
     'apps/trigger': {
@@ -61,7 +60,12 @@ const config: KnipConfig = {
     '**/seed.sql',
     '**/schema.sql',
   ],
-  ignoreDependencies: ['vitest', '@types/*', '@vitejs/plugin-react'],
+  ignoreDependencies: [
+    'vitest',
+    '@types/*',
+    '@vitejs/plugin-react',
+    'astro:env/*',
+  ],
   ignoreBinaries: ['pg_dump', 'psql', 'sed'],
 }
 

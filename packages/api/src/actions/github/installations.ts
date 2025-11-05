@@ -10,10 +10,6 @@ export const githubAppCallbackQuerySchema = z.object({
   state: z.string().optional(),
 })
 
-export type GithubAppCallbackQuery = z.infer<
-  typeof githubAppCallbackQuerySchema
->
-
 interface SyncInstallationParams {
   db: Kysely<DB>
   appId: number

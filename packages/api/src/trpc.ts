@@ -49,5 +49,5 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
  * that can be used throughout the router
  */
 export const router = t.router
-export const publicProcedure = t.procedure.use(loggingMiddleware)
+const publicProcedure = t.procedure.use(loggingMiddleware)
 export const protectedProcedure = publicProcedure.use(authMiddleware)

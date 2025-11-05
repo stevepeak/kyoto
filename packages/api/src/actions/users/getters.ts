@@ -23,16 +23,3 @@ export async function getUser({
     .selectAll()
     .executeTakeFirstOrThrow(trpcNotFoundError)
 }
-
-/**
- * Lists all users
- * @param db - Database instance
- * @returns Array of users
- */
-export async function listUsers({
-  db,
-}: {
-  db: Kysely<DB>
-}): Promise<Selectable<User>[]> {
-  return await db.selectFrom('users').selectAll().execute()
-}

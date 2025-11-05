@@ -1,15 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
 // Smart polling configuration
-export const SMART_POLLING_INTERVALS = {
+const SMART_POLLING_INTERVALS = {
   active: 15 * 1000, // 15 seconds when active
   inactive: 60 * 1000, // 1 minute when inactive
   background: 2 * 60 * 1000, // 2 minutes when in background
 } as const
 
-export type PollingState = 'active' | 'inactive' | 'background'
+type PollingState = 'active' | 'inactive' | 'background'
 
-export interface SmartPollingContextValue {
+interface SmartPollingContextValue {
   pollingState: PollingState
   refetchInterval: number
   isActive: boolean
@@ -105,37 +105,4 @@ export function useSmartPolling(): SmartPollingContextValue {
   }
 
   return context
-}
-
-/**
- * Hook for components that need custom polling behavior
- * This provides the standard query options with smart polling applied
- */
-export function useSmartPollingOptions(overrides?: {
-  activeInterval?: number
-  inactiveInterval?: number
-  backgroundInterval?: number
-}) {
-  const { pollingState, isActive } = useSmartPolling()
-
-  const getInterval = () => {
-    switch (pollingState) {
-      case 'active':
-        return overrides?.activeInterval ?? SMART_POLLING_INTERVALS.active
-      case 'background':
-        return (
-          overrides?.backgroundInterval ?? SMART_POLLING_INTERVALS.background
-        )
-      default:
-        return overrides?.inactiveInterval ?? SMART_POLLING_INTERVALS.inactive
-    }
-  }
-
-  return {
-    refetchInterval: getInterval(),
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    // Reduce stale time when active for more responsive updates
-    staleTime: isActive ? 15 * 1000 : 30 * 1000,
-  }
 }
