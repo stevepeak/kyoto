@@ -44,35 +44,45 @@ export function RepoOverviewLoader({
   const [branches, setBranches] = useState<BranchItem[]>([])
   const [runs, setRuns] = useState<RunItem[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const loadData = async () => {
+    try {
+      const [repoResp, branchesResp, runsResp] = await Promise.all([
+        trpc.repo.getBySlug.query({ orgSlug, repoName }),
+        trpc.branch.listByRepo.query({ orgSlug, repoName }),
+        trpc.run.listByRepo.query({ orgSlug, repoName }),
+      ])
+      if (repoResp.repo) {
+        setRepo(repoResp.repo)
+      }
+      setBranches(branchesResp.branches)
+      setRuns(runsResp.runs)
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
     async function load() {
-      try {
-        const [repoResp, branchesResp, runsResp] = await Promise.all([
-          trpc.repo.getBySlug.query({ orgSlug, repoName }),
-          trpc.branch.listByRepo.query({ orgSlug, repoName }),
-          trpc.run.listByRepo.query({ orgSlug, repoName }),
-        ])
-        if (!isMounted) {
-          return
-        }
-        if (repoResp.repo) {
-          setRepo(repoResp.repo)
-        }
-        setBranches(branchesResp.branches)
-        setRuns(runsResp.runs)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load data')
-      } finally {
-        setIsLoading(false)
+      await loadData()
+      if (!isMounted) {
+        return
       }
     }
     void load()
     return () => {
       isMounted = false
     }
-  }, [trpc, orgSlug, repoName])
+  }, [trpc, orgSlug, repoName, refreshKey])
+
+  const handleRefreshRuns = () => {
+    setRefreshKey((prev) => prev + 1)
+  }
 
   return (
     <AppProvider>
@@ -87,6 +97,7 @@ export function RepoOverviewLoader({
           defaultBranch={repo?.defaultBranch ?? null}
           branches={branches}
           runs={runs}
+          onRefreshRuns={handleRefreshRuns}
         />
       )}
     </AppProvider>

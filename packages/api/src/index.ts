@@ -16,6 +16,8 @@ export {
 } from './actions/github/installations'
 export { analyzeRepository } from './actions/repo/analyze'
 export type { AnalyzeRepositoryResult } from './actions/repo/analyze'
+export { startRun } from './actions/run/start-run'
+export type { StartRunResult } from './actions/run/start-run'
 
 export const appRouter = router({
   user: userRouter,

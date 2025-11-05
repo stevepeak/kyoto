@@ -8,6 +8,7 @@ import { AppSidebar } from './app-sidebar'
 interface BreadcrumbItem {
   label: string
   href?: string
+  showGithubIcon?: boolean
 }
 
 interface Props {
@@ -26,9 +27,6 @@ export function AppLayout({ children, breadcrumbs, right }: Props) {
           <SidebarInset className="flex flex-1 flex-col overflow-hidden">
             <div className="border-b">
               <div className="flex items-center gap-3 px-4 py-2">
-                <a href="/" aria-label="Home" className="shrink-0">
-                  <img src="/favicon.svg" alt="Logo" className="h-5 w-5" />
-                </a>
                 {breadcrumbs ? (
                   <Breadcrumbs
                     items={breadcrumbs}

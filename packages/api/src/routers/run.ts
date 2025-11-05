@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import type { RunStory } from '@app/db'
+import { startRun } from '../actions/run/start-run'
 import { protectedProcedure, router } from '../trpc'
 
 export const runRouter = router({
@@ -223,6 +224,79 @@ export const runRouter = router({
           createdAt: runRow.createdAt.toISOString(),
           updatedAt: runRow.updatedAt.toISOString(),
           stories: storiesWithStatus,
+        },
+      }
+    }),
+
+  create: protectedProcedure
+    .input(
+      z.object({
+        orgSlug: z.string(),
+        repoName: z.string(),
+        branchName: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.env.githubAppId || !ctx.env.githubAppPrivateKey) {
+        throw new Error('GitHub App configuration is missing')
+      }
+
+      if (!ctx.env.openRouterApiKey) {
+        throw new Error('OpenRouter API key is missing')
+      }
+
+      const appId = Number(ctx.env.githubAppId)
+      if (Number.isNaN(appId)) {
+        throw new Error('Invalid GitHub App ID')
+      }
+
+      const result = await startRun({
+        db: ctx.db,
+        orgSlug: input.orgSlug,
+        repoName: input.repoName,
+        branchName: input.branchName,
+        appId,
+        privateKey: ctx.env.githubAppPrivateKey,
+        openRouterApiKey: ctx.env.openRouterApiKey,
+      })
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create run')
+      }
+
+      // Map the run to the frontend format
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const run = result.run as any
+      const createdAt = run.createdAt as Date
+      const updatedAt = run.updatedAt as Date
+      const durationMs = updatedAt.getTime() - createdAt.getTime()
+
+      const statusMap: Record<
+        string,
+        'queued' | 'running' | 'success' | 'failed' | 'skipped'
+      > = {
+        pass: 'success',
+        fail: 'failed',
+        skipped: 'skipped',
+      }
+
+      return {
+        run: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          id: run.id,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          runId: String(run.number),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          status: statusMap[run.status] ?? 'queued',
+          createdAt: createdAt.toISOString(),
+          updatedAt: updatedAt.toISOString(),
+          durationMs,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          commitSha: run.commitSha,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          commitMessage: run.commitMessage ?? null,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          branchName: run.branchName,
         },
       }
     }),

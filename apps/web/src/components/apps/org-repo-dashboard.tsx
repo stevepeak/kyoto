@@ -1,4 +1,5 @@
 import { navigate } from 'astro:transitions/client'
+import { SiGithub } from 'react-icons/si'
 
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -37,8 +38,9 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     >
       <div className="p-6 flex flex-col h-full overflow-auto">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-foreground">
-            {org?.name ?? 'Organization'}
+          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <SiGithub className="h-5 w-5" />
+            <span>{org?.name ?? 'Organization'}</span>
           </h1>
           <Button
             variant="outline"
@@ -61,11 +63,6 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                   >
                     {r.name}
                   </a>
-                  {r.defaultBranch ? (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {r.defaultBranch}
-                    </span>
-                  ) : null}
                 </li>
               ))}
               {repos.length === 0 ? (

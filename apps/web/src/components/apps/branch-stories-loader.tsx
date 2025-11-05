@@ -62,7 +62,7 @@ export function BranchStoriesLoader({
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
+        { label: orgSlug, href: `/org/${orgSlug}`, showGithubIcon: true },
         { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
       ]}
     >
