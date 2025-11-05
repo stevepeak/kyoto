@@ -27,7 +27,9 @@ export function OrgListApp() {
         }
         setOrgs(data.orgs)
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load organizations')
+        setError(
+          e instanceof Error ? e.message : 'Failed to load organizations',
+        )
       } finally {
         setIsLoading(false)
       }
@@ -73,11 +75,7 @@ export function OrgListApp() {
         <h1 className="text-xl font-semibold text-foreground">Organizations</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {orgs.map((org) => (
-            <a
-              key={org.slug}
-              href={`/org/${org.slug}`}
-              className="block"
-            >
+            <a key={org.slug} href={`/org/${org.slug}`} className="block">
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader>
                   <CardTitle>{org.name}</CardTitle>

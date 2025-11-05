@@ -10,16 +10,27 @@ export function SetupApp() {
   const trpc = useTRPCClient()
   const [selectedOrg, setSelectedOrg] = useState<string | null>(null)
   const [orgs, setOrgs] = useState<Array<{ slug: string; name: string }>>([])
-  const [repos, setRepos] = useState<Array<{ id: string; name: string; defaultBranch: string | null; enabled: boolean }>>([])
+  const [repos, setRepos] = useState<
+    Array<{
+      id: string
+      name: string
+      defaultBranch: string | null
+      enabled: boolean
+    }>
+  >([])
   const [saving, setSaving] = useState(false)
   const [loadingRepos, setLoadingRepos] = useState(false)
-  const [selectedRepos, setSelectedRepos] = useState<Record<string, boolean>>({})
+  const [selectedRepos, setSelectedRepos] = useState<Record<string, boolean>>(
+    {},
+  )
 
   useEffect(() => {
     let mounted = true
-    ;(async () => {
+    void (async () => {
       const data = await trpc.org.listInstalled.query()
-      if (!mounted) {return}
+      if (!mounted) {
+        return
+      }
       setOrgs(data.orgs)
     })()
     return () => {
@@ -28,13 +39,24 @@ export function SetupApp() {
   }, [trpc])
 
   useEffect(() => {
-    if (!selectedOrg) {return}
+    if (!selectedOrg) {
+      return
+    }
     let mounted = true
-    setLoadingRepos(true)
-    ;(async () => {
+    void (async () => {
+      setLoadingRepos(true)
       const data = await trpc.repo.listByOrg.query({ orgSlug: selectedOrg })
-      if (!mounted) {return}
-      setRepos(data.repos as Array<{ id: string; name: string; defaultBranch: string | null; enabled: boolean }>)
+      if (!mounted) {
+        return
+      }
+      setRepos(
+        data.repos as Array<{
+          id: string
+          name: string
+          defaultBranch: string | null
+          enabled: boolean
+        }>,
+      )
       setSelectedRepos({})
       setLoadingRepos(false)
     })()
@@ -48,13 +70,18 @@ export function SetupApp() {
   }
 
   const onSave = async () => {
-    if (!selectedOrg) {return}
+    if (!selectedOrg) {
+      return
+    }
     const names = Object.entries(selectedRepos)
       .filter(([, v]) => v)
       .map(([k]) => k)
     setSaving(true)
     try {
-      await trpc.repo.setEnabled.mutate({ orgSlug: selectedOrg, repoNames: names })
+      await trpc.repo.setEnabled.mutate({
+        orgSlug: selectedOrg,
+        repoNames: names,
+      })
       // Redirect to home after successful save
       await navigate('/')
     } catch (error) {
@@ -74,7 +101,9 @@ export function SetupApp() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Organization</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Organization
+                  </label>
                   <select
                     className="border rounded px-3 py-2 w-full"
                     value={selectedOrg ?? ''}
@@ -96,17 +125,31 @@ export function SetupApp() {
 
                 {selectedOrg && !loadingRepos && (
                   <div className="space-y-2">
-                    {repos.length === 0 && <div className="text-sm text-muted-foreground">No repositories found.</div>}
-                    {repos.map((r: { id: string; name: string; defaultBranch: string | null; enabled: boolean }) => (
-                      <label key={r.id} className="flex items-center gap-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedRepos[r.name] ?? r.enabled}
-                          onChange={() => onToggle(r.name)}
-                        />
-                        <span className="text-sm">{r.name}</span>
-                      </label>
-                    ))}
+                    {repos.length === 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        No repositories found.
+                      </div>
+                    )}
+                    {repos.map(
+                      (r: {
+                        id: string
+                        name: string
+                        defaultBranch: string | null
+                        enabled: boolean
+                      }) => (
+                        <label
+                          key={r.id}
+                          className="flex items-center gap-3 py-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedRepos[r.name] ?? r.enabled}
+                            onChange={() => onToggle(r.name)}
+                          />
+                          <span className="text-sm">{r.name}</span>
+                        </label>
+                      ),
+                    )}
                     <div className="pt-2">
                       <Button onClick={onSave} disabled={saving}>
                         Save selection
@@ -122,5 +165,3 @@ export function SetupApp() {
     </AppLayout>
   )
 }
-
-

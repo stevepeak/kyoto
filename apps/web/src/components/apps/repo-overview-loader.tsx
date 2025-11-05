@@ -57,7 +57,7 @@ export function RepoOverviewLoader({
         setRepo(repoResp.repo)
       }
       setBranches(branchesResp.branches)
-      setRuns(runsResp.runs)
+      setRuns(runsResp.runs as RunItem[])
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load data')
@@ -78,6 +78,7 @@ export function RepoOverviewLoader({
     return () => {
       isMounted = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trpc, orgSlug, repoName, refreshKey])
 
   const handleRefreshRuns = () => {

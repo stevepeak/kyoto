@@ -276,10 +276,12 @@ export const runRouter = router({
       }
 
       // Map the run to the frontend format
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const run = result.run as any
-      const createdAt = run.createdAt as Date
-      const updatedAt = run.updatedAt as Date
+      if (!result.run) {
+        throw new Error('Run was not created')
+      }
+      const run = result.run
+      const createdAt = run.createdAt
+      const updatedAt = run.updatedAt
       const durationMs = updatedAt.getTime() - createdAt.getTime()
 
       const statusMap: Record<
@@ -294,20 +296,14 @@ export const runRouter = router({
 
       return {
         run: {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           id: run.id,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           runId: String(run.number),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           status: statusMap[run.status] ?? 'queued',
           createdAt: createdAt.toISOString(),
           updatedAt: updatedAt.toISOString(),
           durationMs,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           commitSha: run.commitSha,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           commitMessage: run.commitMessage ?? null,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           branchName: run.branchName,
         },
       }

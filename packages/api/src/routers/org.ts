@@ -18,7 +18,9 @@ export const orgRouter = router({
       .orderBy('login')
       .execute()
 
-    return { orgs: owners.map((o) => ({ slug: o.slug, name: o.name ?? o.slug })) }
+    return {
+      orgs: owners.map((o) => ({ slug: o.slug, name: o.name ?? o.slug })),
+    }
   }),
   getSetupStatus: protectedProcedure.query(async ({ ctx }) => {
     const installed = await ctx.db
@@ -27,7 +29,9 @@ export const orgRouter = router({
       .where('installationId', 'is not', null)
       .executeTakeFirst()
 
-    if (!installed) {return { hasInstallation: false, hasEnabledRepos: false }}
+    if (!installed) {
+      return { hasInstallation: false, hasEnabledRepos: false }
+    }
 
     const enabledRepo = await ctx.db
       .selectFrom('repos')

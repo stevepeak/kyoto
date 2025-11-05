@@ -9,9 +9,6 @@
     },
     {
       "path": "../db/tsconfig.json"
-    },
-    {
-      "path": "../utils/tsconfig.json"
     }
   ]
 }

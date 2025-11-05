@@ -87,7 +87,7 @@ export const findStoriesInPullRequestTask = task({
           )
           codebase.push({ path, content: decoded })
         }
-      } catch (e) {
+      } catch (_e) {
         // skip files we fail to fetch (binary or too large)
       }
     }

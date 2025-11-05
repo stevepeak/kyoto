@@ -31,6 +31,7 @@ This document outlines the complete migration plan from Kysely (type-safe SQL qu
 ### Database Schema
 
 Current tables:
+
 - `accounts` - Better-auth account table
 - `credentials` - Better-auth credentials table
 - `sessions` - Better-auth sessions table
@@ -40,6 +41,7 @@ Current tables:
 - `repos` - GitHub repositories
 
 All tables use:
+
 - UUID primary keys (`gen_random_uuid()`)
 - `timestamptz` for timestamps
 - Auto-updated `updated_at` via triggers
@@ -56,6 +58,7 @@ All tables use:
 3. **Auth Migration**: Migrate to a different auth solution that supports Drizzle
 
 **Recommendation**: Use approach #1 (dual ORM) for immediate migration. This allows:
+
 - Full Drizzle migration for application code
 - Minimal changes to better-auth setup
 - Clean separation of concerns
@@ -63,6 +66,7 @@ All tables use:
 ### Migration Strategy
 
 Since we're starting from scratch with migrations, we'll:
+
 1. Use Drizzle Kit for schema definition and migrations
 2. Keep existing `node-pg-migrate` setup for better-auth tables (if using dual ORM)
 3. Generate Drizzle schema from existing database structure initially
@@ -79,7 +83,7 @@ Since we're starting from scratch with migrations, we'll:
 {
   "dependencies": {
     "drizzle-orm": "@latest",
-    "drizzle-kit": "@latest",
+    "drizzle-kit": "@latest"
     // Keep existing: pg, @neondatabase/serverless, ws
     // Remove: kysely, kysely-neon, kysely-codegen
   }
@@ -87,6 +91,7 @@ Since we're starting from scratch with migrations, we'll:
 ```
 
 **Actions**:
+
 - Remove `kysely`, `kysely-neon`, `kysely-codegen` from dependencies
 - Add `drizzle-orm` and `drizzle-kit` (as dev dependency)
 - Keep `pg` and `@neondatabase/serverless` for connection pooling
@@ -113,6 +118,7 @@ export default defineConfig({
 **File**: `packages/db/package.json`
 
 Replace scripts:
+
 ```json
 {
   "scripts": {
@@ -123,7 +129,7 @@ Replace scripts:
     "db:schema:dump": "pg_dump -s -O -x -d \"$DATABASE_URL\" | sed '/^SET /d; /set_config/d' > schema.sql",
     "db:seed": "psql \"$DATABASE_URL\" -f seed.sql",
     "db:load:schema": "psql \"$DATABASE_URL\" -f schema.sql",
-    "db:reset": "psql \"$DATABASE_URL\" -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && pnpm db:push && pnpm db:seed",
+    "db:reset": "psql \"$DATABASE_URL\" -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && pnpm db:push && pnpm db:seed"
   }
 }
 ```
@@ -133,6 +139,7 @@ Replace scripts:
 #### 2.1 Create Schema Directory Structure
 
 **New Files**:
+
 - `packages/db/src/schema/index.ts` - Main schema export
 - `packages/db/src/schema/auth.ts` - Better-auth tables (if dual ORM)
 - `packages/db/src/schema/app.ts` - Application tables (owners, repos, etc.)
@@ -143,43 +150,71 @@ Replace scripts:
 **File**: `packages/db/src/schema/app.ts`
 
 ```typescript
-import { pgTable, uuid, text, timestamp, boolean, bigint, uniqueIndex, index } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  bigint,
+  uniqueIndex,
+  index,
+} from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
-export const owners = pgTable('owners', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-  externalId: bigint('external_id', { mode: 'bigint' }),
-  login: text('login').notNull(),
-  name: text('name'),
-  type: text('type'),
-  avatarUrl: text('avatar_url'),
-  htmlUrl: text('html_url'),
-  installationId: bigint('installation_id', { mode: 'bigint' }),
-}, (table) => ({
-  loginUnique: uniqueIndex('owners_login_unique').on(table.login),
-  externalIdUnique: uniqueIndex('owners_external_id_unique').on(table.externalId),
-  installationIdUnique: uniqueIndex('owners_installation_id_unique').on(table.installationId),
-}))
+export const owners = pgTable(
+  'owners',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    externalId: bigint('external_id', { mode: 'bigint' }),
+    login: text('login').notNull(),
+    name: text('name'),
+    type: text('type'),
+    avatarUrl: text('avatar_url'),
+    htmlUrl: text('html_url'),
+    installationId: bigint('installation_id', { mode: 'bigint' }),
+  },
+  (table) => ({
+    loginUnique: uniqueIndex('owners_login_unique').on(table.login),
+    externalIdUnique: uniqueIndex('owners_external_id_unique').on(
+      table.externalId,
+    ),
+    installationIdUnique: uniqueIndex('owners_installation_id_unique').on(
+      table.installationId,
+    ),
+  }),
+)
 
-export const repos = pgTable('repos', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  ownerId: uuid('owner_id').notNull().references(() => owners.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-  externalId: bigint('external_id', { mode: 'bigint' }),
-  name: text('name').notNull(),
-  fullName: text('full_name'),
-  private: boolean('private').notNull().default(false),
-  description: text('description'),
-  defaultBranch: text('default_branch'),
-  htmlUrl: text('html_url'),
-  enabled: boolean('enabled').notNull().default(false),
-}, (table) => ({
-  ownerNameUnique: uniqueIndex('repos_owner_name_unique').on(table.ownerId, table.name),
-  externalIdUnique: uniqueIndex('repos_external_id_unique').on(table.externalId),
-}))
+export const repos = pgTable(
+  'repos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => owners.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    externalId: bigint('external_id', { mode: 'bigint' }),
+    name: text('name').notNull(),
+    fullName: text('full_name'),
+    private: boolean('private').notNull().default(false),
+    description: text('description'),
+    defaultBranch: text('default_branch'),
+    htmlUrl: text('html_url'),
+    enabled: boolean('enabled').notNull().default(false),
+  },
+  (table) => ({
+    ownerNameUnique: uniqueIndex('repos_owner_name_unique').on(
+      table.ownerId,
+      table.name,
+    ),
+    externalIdUnique: uniqueIndex('repos_external_id_unique').on(
+      table.externalId,
+    ),
+  }),
+)
 
 export const ownersRelations = relations(owners, ({ many }) => ({
   repos: many(repos),
@@ -198,7 +233,11 @@ export const reposRelations = relations(repos, ({ one }) => ({
 ```typescript
 import { pgEnum } from 'drizzle-orm/pg-core'
 
-export const userStatusEnum = pgEnum('user_status', ['active', 'disabled', 'invited'])
+export const userStatusEnum = pgEnum('user_status', [
+  'active',
+  'disabled',
+  'invited',
+])
 ```
 
 **File**: `packages/db/src/schema/index.ts`
@@ -218,6 +257,7 @@ Drizzle doesn't manage triggers automatically. We'll need to:
    - Triggers for `updated_at` columns
 
 2. Or use Drizzle's `sql` helper in schema (less ideal):
+
 ```typescript
 import { sql } from 'drizzle-orm'
 
@@ -295,6 +335,7 @@ export type DB = ReturnType<typeof setupDb>
 **File**: `packages/db/src/types.ts`
 
 Replace with:
+
 ```typescript
 export * from './schema'
 export type { DB } from './db'
@@ -314,6 +355,7 @@ export { json } from './utils'
 **File**: `packages/db/src/utils.ts`
 
 Replace with Drizzle's SQL helper:
+
 ```typescript
 import { sql } from 'drizzle-orm'
 
@@ -387,11 +429,7 @@ export async function getUser({
   return user
 }
 
-export async function listUsers({
-  db,
-}: {
-  db: DB
-}): Promise<UserSelect[]> {
+export async function listUsers({ db }: { db: DB }): Promise<UserSelect[]> {
   return await db.query.users.findMany()
 }
 ```
@@ -449,6 +487,7 @@ export async function updateUser({
 **File**: `packages/api/src/actions/github/installations.ts`
 
 Key changes:
+
 - Replace Kysely query builder with Drizzle
 - Use `db.insert().values().onConflictDoUpdate()` for upserts
 - Use `db.query` for selects
@@ -569,12 +608,7 @@ export async function setEnabledRepos(
   const result = await db
     .update(repos)
     .set({ enabled: true })
-    .where(
-      and(
-        eq(repos.ownerId, owner.id),
-        inArray(repos.name, repoNames)
-      )
-    )
+    .where(and(eq(repos.ownerId, owner.id), inArray(repos.name, repoNames)))
     .returning()
 
   return { updated: result.length }
@@ -709,8 +743,8 @@ export const repoRouter = router({
         .where(
           and(
             eq(repos.ownerId, owner.id),
-            inArray(repos.name, input.repoNames)
-          )
+            inArray(repos.name, input.repoNames),
+          ),
         )
         .returning()
 
@@ -860,7 +894,11 @@ export * from './schema'
 export type { DB } from './db'
 
 // Re-export commonly used types
-export type { InferSelectModel, InferInsertModel, InferUpdateModel } from 'drizzle-orm'
+export type {
+  InferSelectModel,
+  InferInsertModel,
+  InferUpdateModel,
+} from 'drizzle-orm'
 ```
 
 #### 6.2 Remove Generated Types
@@ -876,6 +914,7 @@ Delete this file - Drizzle generates types from schema automatically.
 **File**: `packages/db/src/db.test.ts`
 
 Update to use Drizzle:
+
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { setupDb } from './db'
@@ -885,7 +924,7 @@ import { eq } from 'drizzle-orm'
 describe('Database', () => {
   it('should connect and query', async () => {
     const db = setupDb(process.env.DATABASE_URL!)
-    
+
     const result = await db.query.owners.findMany()
     expect(result).toBeDefined()
   })
@@ -907,6 +946,7 @@ Update any API tests that use database queries to use Drizzle syntax.
 ## Migration Checklist
 
 ### Database Package (`packages/db`)
+
 - [ ] Install Drizzle dependencies
 - [ ] Remove Kysely dependencies
 - [ ] Create `drizzle.config.ts`
@@ -922,6 +962,7 @@ Update any API tests that use database queries to use Drizzle syntax.
 - [ ] (If dual ORM) Create `src/types-kysely.ts` for auth types
 
 ### API Package (`packages/api`)
+
 - [ ] Update `src/context.ts` types
 - [ ] Migrate `src/actions/users/getters.ts`
 - [ ] Migrate `src/actions/users/setters.ts`
@@ -932,17 +973,20 @@ Update any API tests that use database queries to use Drizzle syntax.
 - [ ] Update all imports from `@app/db/types`
 
 ### Web Application (`apps/web`)
+
 - [ ] Update `src/server/db.ts` (add Kysely instance if dual ORM)
 - [ ] Update `src/server/create-auth.ts` to use Kysely instance
 - [ ] Update `src/server/auth.ts` to use correct DB instance
 
 ### Testing
+
 - [ ] Update `packages/db/src/db.test.ts`
 - [ ] Update API action tests
 - [ ] Run full test suite
 - [ ] Verify all queries work correctly
 
 ### Documentation
+
 - [ ] Update README with new migration commands
 - [ ] Update database rules in `.cursor/rules/database.mdc`
 - [ ] Document dual ORM approach (if used)
@@ -952,6 +996,7 @@ Update any API tests that use database queries to use Drizzle syntax.
 ### Query Building
 
 **Kysely**:
+
 ```typescript
 await db
   .selectFrom('users')
@@ -961,6 +1006,7 @@ await db
 ```
 
 **Drizzle**:
+
 ```typescript
 await db.query.users.findFirst({
   where: eq(users.id, userId),
@@ -970,6 +1016,7 @@ await db.query.users.findFirst({
 ### Updates
 
 **Kysely**:
+
 ```typescript
 await db
   .updateTable('users')
@@ -980,6 +1027,7 @@ await db
 ```
 
 **Drizzle**:
+
 ```typescript
 const [user] = await db
   .update(users)
@@ -991,6 +1039,7 @@ const [user] = await db
 ### Inserts with Conflict
 
 **Kysely**:
+
 ```typescript
 await db
   .insertInto('users')
@@ -1001,6 +1050,7 @@ await db
 ```
 
 **Drizzle**:
+
 ```typescript
 await db
   .insert(users)
@@ -1020,18 +1070,23 @@ await db
 ## Potential Issues and Solutions
 
 ### Issue 1: Better-Auth Requires Kysely
+
 **Solution**: Use dual ORM approach - keep Kysely for auth tables only
 
 ### Issue 2: Trigger Management
+
 **Solution**: Create SQL migration for triggers, or use Drizzle's `$onUpdate` (less ideal)
 
 ### Issue 3: BigInt Handling
+
 **Solution**: Use `bigint` with `{ mode: 'bigint' }` in Drizzle schema
 
 ### Issue 4: JSONB Columns
+
 **Solution**: Use `jsonb()` type in Drizzle, define TypeScript interfaces for structure
 
 ### Issue 5: Snake_case to camelCase
+
 **Solution**: Drizzle uses exact column names - access via `table.fieldName` (already camelCase in schema)
 
 ## Rollback Plan
@@ -1063,4 +1118,3 @@ If migration encounters issues:
 3. Create feature branch for migration
 4. Execute phases sequentially
 5. Test thoroughly before merging
-

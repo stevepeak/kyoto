@@ -10,14 +10,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "trigger/**/*"],
+  "include": ["src/**/*", "trigger/**/*", "trigger.config.ts"],
   "exclude": ["node_modules", "dist"],
   "references": [
     {
       "path": "../../packages/db/tsconfig.json"
-    },
-    {
-      "path": "../../packages/utils/tsconfig.json"
     }
   ]
 }

@@ -50,7 +50,7 @@ export async function syncGithubInstallation(
   const ownerExternalId = account?.id
   const ownerLogin =
     account && 'login' in account && account.login
-      ? (account.login)
+      ? account.login
       : (account?.slug ?? account?.name ?? '')
 
   // Upsert owner

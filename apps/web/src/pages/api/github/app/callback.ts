@@ -1,8 +1,5 @@
 import type { APIRoute } from 'astro'
-import {
-  GITHUB_APP_ID,
-  GITHUB_APP_PRIVATE_KEY,
-} from 'astro:env/server'
+import { GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY } from 'astro:env/server'
 import { githubAppCallbackQuerySchema, syncGithubInstallation } from '@app/api'
 import { db } from '@/server/db'
 
@@ -26,7 +23,7 @@ export const GET: APIRoute = async ({ request, redirect }) => {
   }
 
   const appId = Number(GITHUB_APP_ID)
-  if (isNaN(appId)) {
+  if (Number.isNaN(appId)) {
     console.error('GITHUB_APP_ID is not a valid number:', GITHUB_APP_ID)
     return new Response('Invalid GITHUB_APP_ID configuration', { status: 500 })
   }

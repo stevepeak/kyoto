@@ -1,4 +1,4 @@
-import CodeMirrorViewer from './CodeMirrorViewer'
+import { CodeMirrorViewer } from './CodeMirrorViewer'
 
 export interface WalkthroughFileItem {
   path: string
@@ -51,5 +51,3 @@ export function CodeWalkthrough({ files }: CodeWalkthroughProps) {
     </div>
   )
 }
-
-export default CodeWalkthrough

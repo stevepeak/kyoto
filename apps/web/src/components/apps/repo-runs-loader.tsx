@@ -33,7 +33,7 @@ export function RepoRunsLoader({
         if (!isMounted) {
           return
         }
-        setRuns(resp.runs)
+        setRuns(resp.runs as RunItem[])
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load runs')
       } finally {

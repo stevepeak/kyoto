@@ -106,5 +106,3 @@ export function CodeMirrorViewer({
     </div>
   )
 }
-
-export default CodeMirrorViewer
