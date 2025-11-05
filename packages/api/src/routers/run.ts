@@ -47,7 +47,7 @@ export const runRouter = router({
         .execute()
 
       // Map database runs to frontend format
-      // Map status: 'pass' -> 'success', 'fail' -> 'failed', 'skipped' -> 'skipped'
+      // Map status: 'pass' -> 'success', 'fail' -> 'failed', 'skipped' -> 'skipped', 'running' -> 'running'
       const statusMap: Record<
         string,
         'queued' | 'running' | 'success' | 'failed' | 'skipped'
@@ -55,13 +55,14 @@ export const runRouter = router({
         pass: 'success',
         fail: 'failed',
         skipped: 'skipped',
+        running: 'running',
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const runs = dbRuns.map((run: any) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const createdAt = run.createdAt as Date
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const updatedAt = run.updatedAt as Date
         // Calculate duration in milliseconds
         const durationMs = updatedAt.getTime() - createdAt.getTime()
@@ -73,9 +74,9 @@ export const runRouter = router({
           runId: String(run.number),
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           status: statusMap[run.status] ?? 'queued',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
           createdAt: createdAt.toISOString(),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+
           updatedAt: updatedAt.toISOString(),
           durationMs,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -247,7 +248,15 @@ export const runRouter = router({
 
       const appId = Number(ctx.env.githubAppId)
       if (Number.isNaN(appId)) {
-        throw new Error('Invalid GitHub App ID')
+        throw new TypeError('Invalid GitHub App ID')
+      }
+
+      if (!ctx.env.databaseUrl) {
+        throw new Error('DATABASE_URL environment variable is not set')
+      }
+
+      if (!ctx.env.triggerSecretKey) {
+        throw new Error('TRIGGER_SECRET_KEY environment variable is not set')
       }
 
       const result = await startRun({
@@ -258,6 +267,8 @@ export const runRouter = router({
         appId,
         privateKey: ctx.env.githubAppPrivateKey,
         openRouterApiKey: ctx.env.openRouterApiKey,
+        databaseUrl: ctx.env.databaseUrl,
+        triggerSecretKey: ctx.env.triggerSecretKey,
       })
 
       if (!result.success) {
@@ -278,6 +289,7 @@ export const runRouter = router({
         pass: 'success',
         fail: 'failed',
         skipped: 'skipped',
+        running: 'running',
       }
 
       return {

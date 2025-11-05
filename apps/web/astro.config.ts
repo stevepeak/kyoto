@@ -169,6 +169,11 @@ const config = defineConfig({
         access: 'secret',
         optional: false,
       }),
+      TRIGGER_SECRET_KEY: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: false,
+      }),
     },
   },
 })

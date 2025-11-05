@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { analyzeRepository } from '../actions/repo/analyze'
+import { tasks } from '@trigger.dev/sdk'
 import { protectedProcedure, router } from '../trpc'
 
 export const repoRouter = router({
@@ -127,25 +127,31 @@ export const repoRouter = router({
         newlyEnabledRepoIds.length > 0 &&
         ctx.env.githubAppId &&
         ctx.env.githubAppPrivateKey &&
-        ctx.env.openRouterApiKey
+        ctx.env.openRouterApiKey &&
+        ctx.env.databaseUrl
       ) {
         const appId = Number(ctx.env.githubAppId)
         if (!Number.isNaN(appId)) {
-          // Run analysis asynchronously without blocking the response
+          // Trigger analysis tasks asynchronously without blocking the response
           Promise.all(
             newlyEnabledRepoIds.map((repoId) =>
-              analyzeRepository({
-                db: ctx.db,
-                repoId,
-                appId,
-                privateKey: ctx.env.githubAppPrivateKey!,
-                openRouterApiKey: ctx.env.openRouterApiKey!,
-              }).catch((error) => {
-                console.error(`Failed to analyze repository ${repoId}:`, error)
-              }),
+              tasks
+                .trigger('analyze-repo', {
+                  repoId,
+                  appId,
+                  privateKey: ctx.env.githubAppPrivateKey!,
+                  openRouterApiKey: ctx.env.openRouterApiKey!,
+                  databaseUrl: ctx.env.databaseUrl!,
+                })
+                .catch((error) => {
+                  console.error(
+                    `Failed to trigger analysis for repository ${repoId}:`,
+                    error,
+                  )
+                }),
             ),
           ).catch((error) => {
-            console.error('Error in repository analysis:', error)
+            console.error('Error triggering repository analysis:', error)
           })
         }
       }

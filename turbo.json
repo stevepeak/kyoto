@@ -16,7 +16,14 @@
     },
     "dev": {
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "TRIGGER_SECRET_KEY",
+        "GITHUB_APP_ID",
+        "GITHUB_APP_PRIVATE_KEY",
+        "OPENROUTER_API_KEY"
+      ]
     },
     "preview": {
       "dependsOn": ["build"],

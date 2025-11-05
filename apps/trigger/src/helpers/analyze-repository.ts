@@ -4,8 +4,14 @@ import type { Kysely } from 'kysely'
 import { Octokit } from '@octokit/rest'
 import { createAppAuth } from '@octokit/auth-app'
 
-import { fetchRepositoryCodebase } from './helpers/fetch-codebase'
-import { generateStories } from './helpers/generate-stories'
+import { fetchRepositoryCodebase } from './fetch-codebase'
+import { generateStories } from './generate-stories'
+
+export interface AnalyzeRepositoryResult {
+  success: boolean
+  storyCount: number
+  error?: string
+}
 
 interface AnalyzeRepositoryParams {
   db: Kysely<DB>
@@ -13,12 +19,6 @@ interface AnalyzeRepositoryParams {
   appId: number
   privateKey: string
   openRouterApiKey: string
-}
-
-export interface AnalyzeRepositoryResult {
-  success: boolean
-  storyCount: number
-  error?: string
 }
 
 /**
@@ -121,14 +121,16 @@ export async function analyzeRepository(
     // We already checked defaultBranch is not null above
     const defaultBranchName = repo.defaultBranch
     const storiesToInsert: Array<Insertable<DB['stories']>> =
-      generatedStories.map((story) => ({
-        repoId,
-        branchName: defaultBranchName,
-        commitSha,
-        name: story.name,
-        story: story.story,
-        files: story.files,
-      }))
+      generatedStories.map(
+        (story: { name: string; story: string; files: string[] }) => ({
+          repoId,
+          branchName: defaultBranchName,
+          commitSha,
+          name: story.name,
+          story: story.story,
+          files: story.files,
+        }),
+      )
 
     await db.insertInto('stories').values(storiesToInsert).execute()
 

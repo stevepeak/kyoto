@@ -34,7 +34,7 @@ VALUES (
   'tailz',
   'gwizinc/tailz',
   false,
-  'Tailz monorepo scaffold',
+  'Tailz',
   'main',
   'https://github.com/gwizinc/tailz'
 )

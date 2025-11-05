@@ -5,6 +5,9 @@
   },
   "references": [
     {
+      "path": "../../apps/trigger/tsconfig.json"
+    },
+    {
       "path": "../db/tsconfig.json"
     },
     {

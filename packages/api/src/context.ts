@@ -17,9 +17,11 @@ export interface Session {
 // Env, used by TRPC to pass env variables along
 export interface Env {
   siteBaseUrl: string
-  githubAppId?: string
-  githubAppPrivateKey?: string
-  openRouterApiKey?: string
+  githubAppId: string
+  githubAppPrivateKey: string
+  openRouterApiKey: string
+  databaseUrl: string
+  triggerSecretKey: string
 }
 
 export interface Context {
