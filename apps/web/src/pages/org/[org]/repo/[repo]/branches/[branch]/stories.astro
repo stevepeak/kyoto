@@ -1,0 +1,14 @@
+---
+import Layout from '@/layouts/layout.astro'
+import { BranchStoriesApp } from '@/components/apps/branch-stories-app'
+
+export const prerender = false
+
+const { org, repo, branch } = Astro.params
+---
+
+<Layout title={`${org}/${repo}:${branch}`}>
+  <BranchStoriesApp orgSlug={org!} repoName={repo!} branchName={branch!} client:load />
+</Layout>
+
+

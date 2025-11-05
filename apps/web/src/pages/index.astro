@@ -1,10 +1,10 @@
 ---
-import { ExampleApp } from '@/components/apps/example-app'
 import Layout from '@/layouts/layout.astro'
+import { HomeApp } from '@/components/apps/home-app'
 
-export const prerender = true
+export const prerender = false
 ---
 
 <Layout title="App">
-  <ExampleApp client:load />
+  <HomeApp client:load />
 </Layout>

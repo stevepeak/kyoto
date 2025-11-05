@@ -1,0 +1,14 @@
+---
+import Layout from '@/layouts/layout.astro'
+import { RepoActionsApp } from '@/components/apps/repo-actions-app'
+
+export const prerender = false
+
+const { org, repo } = Astro.params
+---
+
+<Layout title={`${org}/${repo} actions`}>
+  <RepoActionsApp orgSlug={org!} repoName={repo!} client:load />
+</Layout>
+
+

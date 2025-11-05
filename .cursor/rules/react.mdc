@@ -19,6 +19,7 @@ Components:
 - DO NOT `import * as React from 'react'`, import each React function specifically
 - `zod` and `react-hook-form` packages are installed - use them.
 - Always use `cn` from `@/lib/utils` for class name merging.
+- If you see “useTRPCClient() can only be used inside of a <TRPCProvider>”, you likely split islands; collapse into one wrapper.
 
 UI and Styling:
 

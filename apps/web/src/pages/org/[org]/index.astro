@@ -1,0 +1,14 @@
+---
+import Layout from '@/layouts/layout.astro'
+import { OrgApp } from '@/components/apps/org-app'
+
+export const prerender = false
+
+const { org } = Astro.params
+---
+
+<Layout title={org}>
+  <OrgApp orgSlug={org!} client:load />
+</Layout>
+
+
