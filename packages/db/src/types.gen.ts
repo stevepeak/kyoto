@@ -9,6 +9,8 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
+
 export type Json = JsonValue;
 
 export type JsonArray = JsonValue[];
@@ -123,6 +125,92 @@ export interface Credential {
   userId: string;
 }
 
+export interface Owner {
+  /**
+   * Avatar image URL
+   */
+  avatarUrl: string | null;
+  /**
+   * Creation timestamp
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * External provider id (e.g., GitHub id)
+   */
+  externalId: Int8 | null;
+  /**
+   * HTML profile URL
+   */
+  htmlUrl: string | null;
+  /**
+   * Unique identifier for each owner
+   */
+  id: Generated<string>;
+  /**
+   * Owner login/handle (e.g., GitHub login)
+   */
+  login: string;
+  /**
+   * Display name of the owner
+   */
+  name: string | null;
+  /**
+   * Owner type (e.g., user or organization)
+   */
+  type: string | null;
+  /**
+   * Update timestamp (auto-managed by trigger)
+   */
+  updatedAt: Generated<Timestamp | null>;
+}
+
+export interface Repo {
+  /**
+   * Creation timestamp
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * Default branch name
+   */
+  defaultBranch: string | null;
+  /**
+   * Repository description
+   */
+  description: string | null;
+  /**
+   * External provider id (e.g., GitHub repo id)
+   */
+  externalId: Int8 | null;
+  /**
+   * Fully qualified name (e.g., owner/name)
+   */
+  fullName: string | null;
+  /**
+   * HTML repository URL
+   */
+  htmlUrl: string | null;
+  /**
+   * Unique identifier for each repository
+   */
+  id: Generated<string>;
+  /**
+   * Short repository name
+   */
+  name: string;
+  /**
+   * FK to owners.id of the repository owner
+   */
+  ownerId: string;
+  /**
+   * Whether the repository is private
+   */
+  private: Generated<boolean>;
+  /**
+   * Update timestamp (auto-managed by trigger)
+   */
+  updatedAt: Generated<Timestamp | null>;
+}
+
 export interface Session {
   /**
    * The time when the session was created
@@ -231,6 +319,8 @@ export interface Verification {
 export interface DB {
   accounts: Account;
   credentials: Credential;
+  owners: Owner;
+  repos: Repo;
   sessions: Session;
   users: User;
   verifications: Verification;
