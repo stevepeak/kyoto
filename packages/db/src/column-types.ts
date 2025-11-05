@@ -1,3 +1,5 @@
+import type { ColumnType, RawBuilder } from 'kysely'
+
 export type JSONValue =
   | null
   | string
@@ -7,6 +9,19 @@ export type JSONValue =
       [value: string]: JSONValue
     }
   | Array<JSONValue>
+
+// Run story execution status type
+export type RunStory = {
+  storyId: string
+  status: 'pass' | 'fail' | 'running' | 'skipped'
+}
+
+// Column type for runs.stories JSONB array
+export type RunStoryColumnType = ColumnType<
+  RunStory[],
+  RunStory[] | RawBuilder<RunStory[]>,
+  RunStory[] | RawBuilder<RunStory[]>
+>
 
 // Example of how to define a custom column type
 //

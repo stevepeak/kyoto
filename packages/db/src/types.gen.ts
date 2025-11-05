@@ -318,12 +318,52 @@ export interface Verification {
   value: string;
 }
 
+export interface Story {
+  /**
+   * The branch name this story was generated from (e.g., "main", "master")
+   */
+  branchName: string;
+  /**
+   * The SHA of the commit that was analyzed
+   */
+  commitSha: string | null;
+  /**
+   * The time when the story was created
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * Array of file references in format ["path@startLine:endLine", ...]
+   */
+  files: Json;
+  /**
+   * Unique identifier for each story
+   */
+  id: Generated<string>;
+  /**
+   * The title/name of the story
+   */
+  name: string;
+  /**
+   * FK to repos.id of the repository this story belongs to
+   */
+  repoId: string;
+  /**
+   * The Gherkin story text
+   */
+  story: string;
+  /**
+   * The time when the story was last updated
+   */
+  updatedAt: Generated<Timestamp | null>;
+}
+
 export interface DB {
   accounts: Account;
   credentials: Credential;
   owners: Owner;
   repos: Repo;
   sessions: Session;
+  stories: Story;
   users: User;
   verifications: Verification;
 }

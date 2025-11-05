@@ -35,7 +35,7 @@ export function RepoActionsLoader({
         }
         setActions(resp.actions)
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load actions')
+        setError(e instanceof Error ? e.message : 'Failed to load runs')
       } finally {
         setIsLoading(false)
       }
@@ -54,14 +54,18 @@ export function RepoActionsLoader({
       ]}
     >
       {isLoading ? (
-        <LoadingProgress label="Loading actions..." />
+        <LoadingProgress label="Loading runs..." />
       ) : error ? (
         <div className="p-6 text-sm text-red-500">{error}</div>
       ) : (
         <div className="p-6">
-          <h1 className="text-xl font-semibold text-foreground">Actions</h1>
+          <h1 className="text-xl font-semibold text-foreground">Runs</h1>
           <div className="mt-4 border rounded-md p-3">
-            <ActionList actions={actions} />
+            <ActionList
+              actions={actions}
+              orgSlug={orgSlug}
+              repoName={repoName}
+            />
           </div>
         </div>
       )}

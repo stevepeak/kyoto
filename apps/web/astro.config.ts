@@ -164,6 +164,11 @@ const config = defineConfig({
         access: 'secret',
         optional: false,
       }),
+      OPENROUTER_API_KEY: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: false,
+      }),
     },
   },
 })

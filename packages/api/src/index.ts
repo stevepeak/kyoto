@@ -14,6 +14,8 @@ export {
   syncGithubInstallation,
   setEnabledRepos,
 } from './actions/github/installations'
+export { analyzeRepository } from './actions/repo/analyze'
+export type { AnalyzeRepositoryResult } from './actions/repo/analyze'
 
 export const appRouter = router({
   user: userRouter,

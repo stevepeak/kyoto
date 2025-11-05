@@ -8,19 +8,24 @@ interface ActionItem {
 
 interface ActionListProps {
   actions: ActionItem[]
+  orgSlug: string
+  repoName: string
 }
 
-export function ActionList({ actions }: ActionListProps) {
+export function ActionList({ actions, orgSlug, repoName }: ActionListProps) {
   return (
     <ul className="divide-y">
       {actions.map((a) => (
         <li key={a.id} className="py-3 flex items-center justify-between">
-          <div>
+          <a
+            href={`/org/${orgSlug}/repo/${repoName}/runs/${a.runId}`}
+            className="flex-1 text-foreground hover:underline"
+          >
             <div className="font-medium">Run #{a.runId}</div>
             <div className="text-xs text-muted-foreground mt-1">
               {a.createdAt} • {a.commitSha.slice(0, 7)} • {a.status}
             </div>
-          </div>
+          </a>
         </li>
       ))}
     </ul>

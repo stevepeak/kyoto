@@ -659,6 +659,23 @@ CREATE TABLE public.verifications (
 
 
 --
+-- Name: stories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.stories (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    repo_id uuid NOT NULL,
+    branch_name text NOT NULL,
+    commit_sha text,
+    name text NOT NULL,
+    story text NOT NULL,
+    files jsonb DEFAULT '[]'::jsonb NOT NULL
+);
+
+
+--
 -- Name: COLUMN verifications.id; Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -698,6 +715,69 @@ COMMENT ON COLUMN public.verifications.created_at IS 'The time when the verifica
 --
 
 COMMENT ON COLUMN public.verifications.updated_at IS 'The time when the verification was last updated';
+
+
+--
+-- Name: COLUMN stories.id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.id IS 'Unique identifier for each story';
+
+
+--
+-- Name: COLUMN stories.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.created_at IS 'The time when the story was created';
+
+
+--
+-- Name: COLUMN stories.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.updated_at IS 'The time when the story was last updated';
+
+
+--
+-- Name: COLUMN stories.repo_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.repo_id IS 'FK to repos.id of the repository this story belongs to';
+
+
+--
+-- Name: COLUMN stories.branch_name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.branch_name IS 'The branch name this story was generated from (e.g., "main", "master")';
+
+
+--
+-- Name: COLUMN stories.commit_sha; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.commit_sha IS 'The SHA of the commit that was analyzed';
+
+
+--
+-- Name: COLUMN stories.name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.name IS 'The title/name of the story';
+
+
+--
+-- Name: COLUMN stories.story; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.story IS 'The Gherkin story text';
+
+
+--
+-- Name: COLUMN stories.files; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.files IS 'Array of file references in format ["path@startLine:endLine", ...]';
 
 
 --
@@ -820,6 +900,14 @@ ALTER TABLE ONLY public.verifications
 
 
 --
+-- Name: stories stories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: accounts set_timestamp_accounts; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -862,6 +950,13 @@ CREATE TRIGGER set_timestamp_verifications BEFORE UPDATE ON public.verifications
 
 
 --
+-- Name: stories set_timestamp_stories; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_timestamp_stories BEFORE UPDATE ON public.stories FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+
+
+--
 -- Name: credentials update_credentials_timestamp; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -898,6 +993,14 @@ ALTER TABLE ONLY public.repos
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: stories stories_repo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_repo_id_fkey FOREIGN KEY (repo_id) REFERENCES public.repos(id) ON DELETE CASCADE;
 
 
 --

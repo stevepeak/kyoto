@@ -52,10 +52,10 @@ export function RepoOverview({ orgSlug, repoName, branches }: Props) {
           </div>
           <div className="mt-6">
             <a
-              href={`/org/${orgSlug}/repo/${repoName}/actions`}
+              href={`/org/${orgSlug}/repo/${repoName}/runs`}
               className="text-sm text-primary hover:underline"
             >
-              View Actions
+              View Runs
             </a>
           </div>
         </div>
