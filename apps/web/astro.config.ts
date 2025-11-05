@@ -93,7 +93,6 @@ const config = defineConfig({
         },
       },
     },
-    // @ts-expect-error: Tailwind Vite plugin type is incompatible with Astro's PluginOption typings
     plugins: [tailwindcss()],
     resolve: {
       alias: {

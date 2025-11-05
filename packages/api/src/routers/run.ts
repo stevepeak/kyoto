@@ -282,6 +282,11 @@ export const runRouter = router({
       const run = result.run
       const createdAt = run.createdAt
       const updatedAt = run.updatedAt
+
+      if (!createdAt || !updatedAt) {
+        throw new Error('Run timestamps are missing')
+      }
+
       const durationMs = updatedAt.getTime() - createdAt.getTime()
 
       const statusMap: Record<
