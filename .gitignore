@@ -24,3 +24,4 @@ playwright-report
 .env*.local
 .eslintcache
 .eslintcacheapps
+apps/trigger/.trigger
