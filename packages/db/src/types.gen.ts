@@ -213,6 +213,54 @@ export interface Repo {
   updatedAt: Generated<Timestamp | null>;
 }
 
+export interface Run {
+  /**
+   * The branch name this run was executed on
+   */
+  branchName: string;
+  /**
+   * The commit message
+   */
+  commitMessage: string | null;
+  /**
+   * The SHA of the commit that was tested
+   */
+  commitSha: string;
+  /**
+   * The time when the run was created
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * Unique identifier for each run
+   */
+  id: Generated<string>;
+  number: number;
+  /**
+   * The pull request number associated with this run
+   */
+  prNumber: string | null;
+  /**
+   * FK to repos.id of the repository this run belongs to
+   */
+  repoId: string;
+  /**
+   * The overall status of the run (pass, fail, skipped)
+   */
+  status: string;
+  /**
+   * Array of story execution details with storyId and status
+   */
+  stories: import('./column-types').RunStoryColumnType;
+  /**
+   * Summary of the run execution
+   */
+  summary: string | null;
+  /**
+   * The time when the run was last updated
+   */
+  updatedAt: Generated<Timestamp | null>;
+}
+
 export interface Session {
   /**
    * The time when the session was created
@@ -246,6 +294,45 @@ export interface Session {
    * The id of the user
    */
   userId: string;
+}
+
+export interface Story {
+  /**
+   * The branch name this story was generated from (e.g., "main", "master")
+   */
+  branchName: string;
+  /**
+   * The SHA of the commit that was analyzed
+   */
+  commitSha: string | null;
+  /**
+   * The time when the story was created
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * Array of file references in format ["path@startLine:endLine", ...]
+   */
+  files: Generated<Json>;
+  /**
+   * Unique identifier for each story
+   */
+  id: Generated<string>;
+  /**
+   * The title/name of the story
+   */
+  name: string;
+  /**
+   * FK to repos.id of the repository this story belongs to
+   */
+  repoId: string;
+  /**
+   * The Gherkin story text
+   */
+  story: string;
+  /**
+   * The time when the story was last updated
+   */
+  updatedAt: Generated<Timestamp | null>;
 }
 
 export interface User {
@@ -318,50 +405,12 @@ export interface Verification {
   value: string;
 }
 
-export interface Story {
-  /**
-   * The branch name this story was generated from (e.g., "main", "master")
-   */
-  branchName: string;
-  /**
-   * The SHA of the commit that was analyzed
-   */
-  commitSha: string | null;
-  /**
-   * The time when the story was created
-   */
-  createdAt: Generated<Timestamp | null>;
-  /**
-   * Array of file references in format ["path@startLine:endLine", ...]
-   */
-  files: Json;
-  /**
-   * Unique identifier for each story
-   */
-  id: Generated<string>;
-  /**
-   * The title/name of the story
-   */
-  name: string;
-  /**
-   * FK to repos.id of the repository this story belongs to
-   */
-  repoId: string;
-  /**
-   * The Gherkin story text
-   */
-  story: string;
-  /**
-   * The time when the story was last updated
-   */
-  updatedAt: Generated<Timestamp | null>;
-}
-
 export interface DB {
   accounts: Account;
   credentials: Credential;
   owners: Owner;
   repos: Repo;
+  runs: Run;
   sessions: Session;
   stories: Story;
   users: User;

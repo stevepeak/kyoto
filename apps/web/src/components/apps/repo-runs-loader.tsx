@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
-import { ActionList } from '@/components/actions/ActionList'
+import { RunList } from '@/components/runs/RunList'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 
-interface ActionItem {
+interface RunItem {
   id: string
   runId: string
   status: 'queued' | 'running' | 'success' | 'failed'
@@ -13,7 +13,7 @@ interface ActionItem {
   commitSha: string
 }
 
-export function RepoActionsLoader({
+export function RepoRunsLoader({
   orgSlug,
   repoName,
 }: {
@@ -22,18 +22,18 @@ export function RepoActionsLoader({
 }) {
   const trpc = useTRPCClient()
   const [isLoading, setIsLoading] = useState(true)
-  const [actions, setActions] = useState<ActionItem[]>([])
+  const [runs, setRuns] = useState<RunItem[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
     async function load() {
       try {
-        const resp = await trpc.action.listByRepo.query({ orgSlug, repoName })
+        const resp = await trpc.run.listByRepo.query({ orgSlug, repoName })
         if (!isMounted) {
           return
         }
-        setActions(resp.actions)
+        setRuns(resp.runs)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load runs')
       } finally {
@@ -61,14 +61,11 @@ export function RepoActionsLoader({
         <div className="p-6">
           <h1 className="text-xl font-semibold text-foreground">Runs</h1>
           <div className="mt-4 border rounded-md p-3">
-            <ActionList
-              actions={actions}
-              orgSlug={orgSlug}
-              repoName={repoName}
-            />
+            <RunList runs={runs} orgSlug={orgSlug} repoName={repoName} />
           </div>
         </div>
       )}
     </AppLayout>
   )
 }
+

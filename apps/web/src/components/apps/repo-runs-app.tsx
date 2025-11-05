@@ -1,8 +1,8 @@
 import { AppProvider } from '@/components/providers/app-provider'
 
-import { RepoActionsLoader } from './repo-actions-loader'
+import { RepoRunsLoader } from './repo-runs-loader'
 
-export function RepoActionsApp({
+export function RepoRunsApp({
   orgSlug,
   repoName,
 }: {
@@ -11,7 +11,8 @@ export function RepoActionsApp({
 }) {
   return (
     <AppProvider>
-      <RepoActionsLoader orgSlug={orgSlug} repoName={repoName} />
+      <RepoRunsLoader orgSlug={orgSlug} repoName={repoName} />
     </AppProvider>
   )
 }
+

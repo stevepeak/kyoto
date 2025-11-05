@@ -50,7 +50,7 @@ export function RunDetailLoader({
     let isMounted = true
     async function load() {
       try {
-        const resp = await trpc.action.getByRunId.query({
+        const resp = await trpc.run.getByRunId.query({
           orgSlug,
           repoName,
           runId,
@@ -80,7 +80,7 @@ export function RunDetailLoader({
       breadcrumbs={[
         { label: orgSlug, href: `/org/${orgSlug}` },
         { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
-        { label: 'Actions', href: `/org/${orgSlug}/repo/${repoName}/actions` },
+        { label: 'Runs', href: `/org/${orgSlug}/repo/${repoName}/runs` },
       ]}
     >
       {isLoading ? (

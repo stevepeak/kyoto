@@ -3,11 +3,11 @@ import { z } from 'zod'
 import type { RunStory } from '@app/db'
 import { protectedProcedure, router } from '../trpc'
 
-export const actionRouter = router({
+export const runRouter = router({
   listByRepo: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
     .query(() => {
-      const actions = [
+      const runs = [
         {
           id: 'a1',
           runId: '101',
@@ -23,7 +23,7 @@ export const actionRouter = router({
           commitSha: 'def5678',
         },
       ]
-      return { actions }
+      return { runs }
     }),
 
   getByRunId: protectedProcedure
@@ -31,10 +31,16 @@ export const actionRouter = router({
       z.object({
         orgSlug: z.string(),
         repoName: z.string(),
-        runId: z.string().uuid(),
+        runId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      // Parse runId as number (should be numeric like "101")
+      const runNumber = Number.parseInt(input.runId, 10)
+      if (Number.isNaN(runNumber) || runNumber < 1) {
+        return { run: null }
+      }
+
       // Look up owner
       const owner = await ctx.db
         .selectFrom('owners')
@@ -58,14 +64,14 @@ export const actionRouter = router({
         return { run: null }
       }
 
-      // Look up run
+      // Look up run by repo_id and number (not UUID)
       // Note: runs table types will be generated after migration runs
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const run = await (ctx.db as any)
         .selectFrom('runs')
         .selectAll()
         .where('repoId', '=', repo.id)
-        .where('id', '=', input.runId)
+        .where('number', '=', runNumber)
         .executeTakeFirst()
 
       if (!run) {
@@ -150,3 +156,4 @@ export const actionRouter = router({
       }
     }),
 })
+
