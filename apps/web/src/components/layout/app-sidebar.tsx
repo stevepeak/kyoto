@@ -66,7 +66,7 @@ export function AppSidebar() {
     <div className="w-[56px] h-full bg-background border-r flex flex-col items-center py-4 gap-6 px-2">
       <NavItem
         icon={<Home size={15} />}
-        label="Conversation"
+        label="Home"
         href={'/'}
         active={currentPath === '/'}
       />

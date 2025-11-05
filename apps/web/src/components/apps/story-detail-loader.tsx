@@ -4,6 +4,7 @@ import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { GherkinViewer } from '@/components/gherkin/GherkinViewer'
 import { LoadingProgress } from '@/components/ui/loading-progress'
+import { CodeWalkthrough } from '@/components/code/CodeWalkthrough'
 
 interface Story {
   id: string
@@ -17,6 +18,9 @@ interface Story {
 interface FileTouched {
   path: string
   summary?: string
+  language?: string
+  content?: string
+  touchedLines?: number[]
 }
 
 export function StoryDetailLoader({
@@ -57,7 +61,12 @@ export function StoryDetailLoader({
   }, [trpc, orgSlug, repoName, storyId])
 
   return (
-    <AppLayout>
+    <AppLayout
+      breadcrumbs={[
+        { label: orgSlug, href: `/org/${orgSlug}` },
+        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+      ]}
+    >
       {isLoading ? (
         <LoadingProgress label="Loading story..." />
       ) : error ? (
@@ -79,20 +88,42 @@ export function StoryDetailLoader({
               <GherkinViewer text={story.gherkinText} />
             </div>
             <div className="w-1/2 p-6 overflow-auto">
-              <h2 className="text-sm font-medium text-foreground">Walkthrough</h2>
-              <div className="mt-3 text-sm text-muted-foreground">
-                <p>This test likely touches:</p>
-                <ul className="list-disc ml-5 mt-2">
-                  {filesTouched.map((f) => (
-                    <li key={f.path}>
-                      <span className="font-mono">{f.path}</span>
-                      {f.summary ? <span className="ml-2">— {f.summary}</span> : null}
-                    </li>
-                  ))}
-                  {filesTouched.length === 0 ? (
-                    <li>No files recorded for this story.</li>
-                  ) : null}
-                </ul>
+              <h2 className="text-sm font-medium text-foreground">
+                Walkthrough
+              </h2>
+              <div className="mt-3">
+                <CodeWalkthrough
+                  files={filesTouched.map((f) => {
+                    const lang = (():
+                      | 'typescript'
+                      | 'javascript'
+                      | 'tsx'
+                      | 'jsx'
+                      | 'astro'
+                      | 'html'
+                      | 'css' => {
+                      switch (f.language) {
+                        case 'typescript':
+                        case 'javascript':
+                        case 'tsx':
+                        case 'jsx':
+                        case 'astro':
+                        case 'html':
+                        case 'css':
+                          return f.language
+                        default:
+                          return 'typescript'
+                      }
+                    })()
+                    return {
+                      path: f.path,
+                      summary: f.summary,
+                      language: lang,
+                      content: f.content ?? '',
+                      touchedLines: f.touchedLines ?? [],
+                    }
+                  })}
+                />
               </div>
             </div>
           </div>
@@ -101,5 +132,3 @@ export function StoryDetailLoader({
     </AppLayout>
   )
 }
-
-

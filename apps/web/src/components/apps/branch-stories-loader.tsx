@@ -60,16 +60,19 @@ export function BranchStoriesLoader({
   }, [trpc, orgSlug, repoName, branchName])
 
   return (
-    <AppLayout>
+    <AppLayout
+      breadcrumbs={[
+        { label: orgSlug, href: `/org/${orgSlug}` },
+        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+      ]}
+    >
       {isLoading ? (
         <LoadingProgress label="Loading stories..." />
       ) : error ? (
         <div className="p-6 text-sm text-red-500">{error}</div>
       ) : (
         <div className="p-6">
-          <h1 className="text-xl font-semibold text-foreground">
-            {branchName} stories
-          </h1>
+          <h1 className="text-xl font-semibold text-foreground">Stories</h1>
           <div className="mt-4 border rounded-md p-3">
             <StoryList stories={stories} />
           </div>

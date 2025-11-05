@@ -13,9 +13,11 @@ export function BranchStoriesApp({
 }) {
   return (
     <AppProvider>
-      <BranchStoriesLoader orgSlug={orgSlug} repoName={repoName} branchName={branchName} />
+      <BranchStoriesLoader
+        orgSlug={orgSlug}
+        repoName={repoName}
+        branchName={branchName}
+      />
     </AppProvider>
   )
 }
-
-

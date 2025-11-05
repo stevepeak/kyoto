@@ -8,11 +8,19 @@ export const repoRouter = router({
     .query(({ input: _input }) => {
       // Hardwired data for MVP
       const repos = [
-        { id: 'repo-1', name: 'app', defaultBranch: 'main', updatedAt: new Date().toISOString() },
-        { id: 'repo-2', name: 'api', defaultBranch: 'main', updatedAt: new Date().toISOString() },
+        {
+          id: 'repo-1',
+          name: 'app',
+          defaultBranch: 'main',
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: 'repo-2',
+          name: 'api',
+          defaultBranch: 'main',
+          updatedAt: new Date().toISOString(),
+        },
       ]
       return { repos }
     }),
 })
-
-

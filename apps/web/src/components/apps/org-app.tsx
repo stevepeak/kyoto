@@ -9,5 +9,3 @@ export function OrgApp({ orgSlug }: { orgSlug: string }) {
     </AppProvider>
   )
 }
-
-

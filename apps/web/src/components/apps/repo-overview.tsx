@@ -14,7 +14,12 @@ interface Props {
 
 export function RepoOverview({ orgSlug, repoName, branches }: Props) {
   return (
-    <AppLayout>
+    <AppLayout
+      breadcrumbs={[
+        { label: orgSlug, href: `/org/${orgSlug}` },
+        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+      ]}
+    >
       <div className="p-6 flex flex-col h-full overflow-auto">
         <h1 className="text-xl font-semibold text-foreground">
           {orgSlug}/{repoName}
@@ -39,7 +44,9 @@ export function RepoOverview({ orgSlug, repoName, branches }: Props) {
                 </li>
               ))}
               {branches.length === 0 ? (
-                <li className="p-6 text-sm text-muted-foreground">No branches found.</li>
+                <li className="p-6 text-sm text-muted-foreground">
+                  No branches found.
+                </li>
               ) : null}
             </ul>
           </div>
@@ -56,5 +63,3 @@ export function RepoOverview({ orgSlug, repoName, branches }: Props) {
     </AppLayout>
   )
 }
-
-

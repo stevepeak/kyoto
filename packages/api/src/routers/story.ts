@@ -16,32 +16,56 @@ const storiesMock = [
 
 export const storyRouter = router({
   listByBranch: protectedProcedure
-    .input(z.object({ orgSlug: z.string(), repoName: z.string(), branchName: z.string() }))
+    .input(
+      z.object({
+        orgSlug: z.string(),
+        repoName: z.string(),
+        branchName: z.string(),
+      }),
+    )
     .query(() => {
-      return { stories: storiesMock.map((s) => ({
-        id: s.id,
-        title: s.title,
-        featureTitle: s.featureTitle,
-        commitSha: s.commitSha,
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-      })) }
+      return {
+        stories: storiesMock.map((s) => ({
+          id: s.id,
+          title: s.title,
+          featureTitle: s.featureTitle,
+          commitSha: s.commitSha,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
+        })),
+      }
     }),
 
   get: protectedProcedure
-    .input(z.object({ orgSlug: z.string(), repoName: z.string(), storyId: z.string() }))
+    .input(
+      z.object({
+        orgSlug: z.string(),
+        repoName: z.string(),
+        storyId: z.string(),
+      }),
+    )
     .query(({ input }) => {
       const story = storiesMock.find((s) => s.id === input.storyId)
       return {
         story: story ?? null,
         filesTouched: story
           ? [
-              { path: 'apps/web/src/pages/index.astro', summary: 'Displays dashboard' },
-              { path: 'packages/api/src/routers/story.ts', summary: 'Adds story routers' },
+              {
+                path: 'apps/web/src/pages/index.astro',
+                summary: 'Displays dashboard',
+                language: 'astro',
+                content: `---\nimport Layout from '@/layouts/layout.astro'\nimport { HomeApp } from '@/components/apps/home-app'\n---\n\n<Layout title="Home">\n  <HomeApp client:load />\n</Layout>\n`,
+                touchedLines: [1, 2, 6],
+              },
+              {
+                path: 'packages/api/src/routers/story.ts',
+                summary: 'Adds story routers',
+                language: 'typescript',
+                content: `import { z } from 'zod'\n\nimport { protectedProcedure, router } from '../trpc'\n\nexport const storyRouter = router({\n  // ...\n})\n`,
+                touchedLines: [1, 5, 6],
+              },
             ]
           : [],
       }
     }),
 })
-
-

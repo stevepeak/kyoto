@@ -20,9 +20,22 @@ interface Props {
 
 export function OrgRepoDashboard({ org, repos }: Props) {
   return (
-    <AppLayout>
+    <AppLayout
+      breadcrumbs={
+        org
+          ? [
+              {
+                label: org.slug,
+                href: `/org/${org.slug}`,
+              },
+            ]
+          : undefined
+      }
+    >
       <div className="p-6 flex flex-col h-full overflow-auto">
-        <h1 className="text-xl font-semibold text-foreground">{org?.name ?? 'Organization'}</h1>
+        <h1 className="text-xl font-semibold text-foreground">
+          {org?.name ?? 'Organization'}
+        </h1>
         <div className="mt-6">
           <h2 className="text-sm font-medium text-foreground">Repositories</h2>
           <div className="mt-3 border rounded-md">
@@ -43,7 +56,9 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                 </li>
               ))}
               {repos.length === 0 ? (
-                <li className="p-6 text-sm text-muted-foreground">No repositories found.</li>
+                <li className="p-6 text-sm text-muted-foreground">
+                  No repositories found.
+                </li>
               ) : null}
             </ul>
           </div>
@@ -52,5 +67,3 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     </AppLayout>
   )
 }
-
-

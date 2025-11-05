@@ -13,9 +13,11 @@ export function StoryApp({
 }) {
   return (
     <AppProvider>
-      <StoryDetailLoader orgSlug={orgSlug} repoName={repoName} storyId={storyId} />
+      <StoryDetailLoader
+        orgSlug={orgSlug}
+        repoName={repoName}
+        storyId={storyId}
+      />
     </AppProvider>
   )
 }
-
-

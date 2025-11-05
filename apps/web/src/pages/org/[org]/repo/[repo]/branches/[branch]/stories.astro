@@ -8,7 +8,10 @@ const { org, repo, branch } = Astro.params
 ---
 
 <Layout title={`${org}/${repo}:${branch}`}>
-  <BranchStoriesApp orgSlug={org!} repoName={repo!} branchName={branch!} client:load />
+  <BranchStoriesApp
+    orgSlug={org!}
+    repoName={repo!}
+    branchName={branch!}
+    client:load
+  />
 </Layout>
-
-

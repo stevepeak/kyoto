@@ -65,5 +65,3 @@ export function OrgRepoDashboardLoader() {
     </AppProvider>
   )
 }
-
-

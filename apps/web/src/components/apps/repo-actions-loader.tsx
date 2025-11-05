@@ -47,7 +47,12 @@ export function RepoActionsLoader({
   }, [trpc, orgSlug, repoName])
 
   return (
-    <AppLayout>
+    <AppLayout
+      breadcrumbs={[
+        { label: orgSlug, href: `/org/${orgSlug}` },
+        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+      ]}
+    >
       {isLoading ? (
         <LoadingProgress label="Loading actions..." />
       ) : error ? (
@@ -63,5 +68,3 @@ export function RepoActionsLoader({
     </AppLayout>
   )
 }
-
-

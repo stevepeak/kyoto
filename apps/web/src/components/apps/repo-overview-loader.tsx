@@ -55,10 +55,12 @@ export function RepoOverviewLoader({
       ) : error ? (
         <div className="p-6 text-sm text-red-500">{error}</div>
       ) : (
-        <RepoOverview orgSlug={orgSlug} repoName={repoName} branches={branches} />
+        <RepoOverview
+          orgSlug={orgSlug}
+          repoName={repoName}
+          branches={branches}
+        />
       )}
     </AppProvider>
   )
 }
-
-

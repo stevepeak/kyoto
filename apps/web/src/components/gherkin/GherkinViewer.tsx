@@ -9,5 +9,3 @@ export function GherkinViewer({ text }: GherkinViewerProps) {
     </pre>
   )
 }
-
-

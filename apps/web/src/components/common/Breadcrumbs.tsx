@@ -15,7 +15,9 @@ interface BreadcrumbsProps {
 
 export function Breadcrumbs({ items, className, right }: BreadcrumbsProps) {
   return (
-    <div className={cn('flex items-center justify-between px-4 py-3', className)}>
+    <div
+      className={cn('flex items-center justify-between px-4 py-3', className)}
+    >
       <nav className="text-sm text-muted-foreground">
         {items.map((item, index) => {
           const isLast = index === items.length - 1
@@ -37,5 +39,3 @@ export function Breadcrumbs({ items, className, right }: BreadcrumbsProps) {
     </div>
   )
 }
-
-

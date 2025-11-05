@@ -18,7 +18,9 @@ export function StoryList({ stories }: StoryListProps) {
           <a href={s.href} className="text-foreground hover:underline">
             <div className="font-medium">{s.featureTitle || s.title}</div>
             {s.updatedAt ? (
-              <div className="text-xs text-muted-foreground mt-1">Updated {s.updatedAt}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Updated {s.updatedAt}
+              </div>
             ) : null}
           </a>
         </li>
@@ -26,5 +28,3 @@ export function StoryList({ stories }: StoryListProps) {
     </ul>
   )
 }
-
-

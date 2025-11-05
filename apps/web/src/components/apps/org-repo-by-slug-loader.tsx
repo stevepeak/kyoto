@@ -61,5 +61,3 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
     </AppProvider>
   )
 }
-
-
