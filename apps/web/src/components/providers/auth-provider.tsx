@@ -21,11 +21,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   } | null>(null)
 
   useEffect(() => {
-    if (!session.data) return
+    if (!session.data) {return}
     let mounted = true
     ;(async () => {
       const data = await trpc.org.getSetupStatus.query()
-      if (!mounted) return
+      if (!mounted) {return}
       setSetupStatus(data)
     })()
     return () => {
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [session.isPending, session.data, session.error])
 
   useEffect(() => {
-    if (!session.data || !setupStatus) return
+    if (!session.data || !setupStatus) {return}
     const path = window.location.pathname
     if (!setupStatus.hasInstallation && path !== '/setup') {
       void navigate('/setup')

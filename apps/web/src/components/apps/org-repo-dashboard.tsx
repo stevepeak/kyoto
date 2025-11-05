@@ -1,4 +1,7 @@
+import { navigate } from 'astro:transitions/client'
+
 import { AppLayout } from '@/components/layout'
+import { Button } from '@/components/ui/button'
 
 interface RepoItem {
   id: string
@@ -33,9 +36,19 @@ export function OrgRepoDashboard({ org, repos }: Props) {
       }
     >
       <div className="p-6 flex flex-col h-full overflow-auto">
-        <h1 className="text-xl font-semibold text-foreground">
-          {org?.name ?? 'Organization'}
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-foreground">
+            {org?.name ?? 'Organization'}
+          </h1>
+          <Button
+            variant="outline"
+            onClick={() => {
+              void navigate('/setup/repos')
+            }}
+          >
+            Manage Repositories
+          </Button>
+        </div>
         <div className="mt-6">
           <h2 className="text-sm font-medium text-foreground">Repositories</h2>
           <div className="mt-3 border rounded-md">

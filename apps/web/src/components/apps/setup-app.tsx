@@ -18,7 +18,7 @@ export function SetupApp() {
     let mounted = true
     ;(async () => {
       const data = await trpc.org.listInstalled.query()
-      if (!mounted) return
+      if (!mounted) {return}
       setOrgs(data.orgs)
     })()
     return () => {
@@ -27,12 +27,12 @@ export function SetupApp() {
   }, [trpc])
 
   useEffect(() => {
-    if (!selectedOrg) return
+    if (!selectedOrg) {return}
     let mounted = true
     setLoadingRepos(true)
     ;(async () => {
       const data = await trpc.repo.listByOrg.query({ orgSlug: selectedOrg })
-      if (!mounted) return
+      if (!mounted) {return}
       setRepos(data.repos as Array<{ id: string; name: string; defaultBranch: string | null; enabled: boolean }>)
       setSelectedRepos({})
       setLoadingRepos(false)
@@ -47,7 +47,7 @@ export function SetupApp() {
   }
 
   const onSave = async () => {
-    if (!selectedOrg) return
+    if (!selectedOrg) {return}
     const names = Object.entries(selectedRepos)
       .filter(([, v]) => v)
       .map(([k]) => k)

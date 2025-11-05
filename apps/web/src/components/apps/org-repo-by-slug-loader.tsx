@@ -42,12 +42,15 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
               id: string
               name: string
               defaultBranch: string | null
+              enabled: boolean
             }>
-          ).map((r) => ({
-            id: r.id,
-            name: r.name,
-            defaultBranch: r.defaultBranch ?? undefined,
-          })),
+          )
+            .filter((r) => r.enabled)
+            .map((r) => ({
+              id: r.id,
+              name: r.name,
+              defaultBranch: r.defaultBranch ?? undefined,
+            })),
         )
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load data')

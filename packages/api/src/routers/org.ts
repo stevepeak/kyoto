@@ -27,7 +27,7 @@ export const orgRouter = router({
       .where('installationId', 'is not', null)
       .executeTakeFirst()
 
-    if (!installed) return { hasInstallation: false, hasEnabledRepos: false }
+    if (!installed) {return { hasInstallation: false, hasEnabledRepos: false }}
 
     const enabledRepo = await ctx.db
       .selectFrom('repos')

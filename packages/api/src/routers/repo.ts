@@ -13,14 +13,14 @@ export const repoRouter = router({
         .executeTakeFirst()
 
       if (!owner)
-        return {
+        {return {
           repos: [] as Array<{
             id: string
             name: string
             defaultBranch: string | null
             enabled: boolean
           }>,
-        }
+        }}
 
       const repos = await ctx.db
         .selectFrom('repos')
@@ -41,7 +41,7 @@ export const repoRouter = router({
         .where('login', '=', input.orgSlug)
         .executeTakeFirst()
 
-      if (!owner) return { updated: 0 }
+      if (!owner) {return { updated: 0 }}
 
       await ctx.db
         .updateTable('repos')
@@ -49,7 +49,7 @@ export const repoRouter = router({
         .where('ownerId', '=', owner.id)
         .execute()
 
-      if (input.repoNames.length === 0) return { updated: 0 }
+      if (input.repoNames.length === 0) {return { updated: 0 }}
 
       await ctx.db
         .updateTable('repos')
