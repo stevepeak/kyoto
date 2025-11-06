@@ -1,6 +1,7 @@
 import { task, logger } from '@trigger.dev/sdk'
 import { getRepoWithOctokit } from '../helpers/github'
 import type { CodebaseFile } from '../steps/fetch-codebase'
+import { indexFilesToQdrant } from '../helpers/index-codebase'
 
 /**
  * Trigger.dev task that discovers stories (Gherkin scenarios) in an entire repository.
@@ -11,7 +12,8 @@ import type { CodebaseFile } from '../steps/fetch-codebase'
  * 3. Retrieves the complete file tree recursively from GitHub API (all files in the repo)
  * 4. Filters to relevant business logic files (excludes test files, node_modules, etc.)
  * 5. Fetches content for all filtered files
- * 6. Uses AI to discover stories within the codebase
+ * 6. Indexes all codebase files to Qdrant vector database for semantic search
+ * 7. Uses AI to discover stories within the codebase
  *
  * @example
  * ```typescript
@@ -26,11 +28,20 @@ import type { CodebaseFile } from '../steps/fetch-codebase'
  *   repoId: 'repo-123',
  *   commitSha: 'abc123def456...'
  * })
+ *
+ * // Limit files for testing
+ * await findStoriesInRepoTask.trigger({
+ *   repoId: 'repo-123',
+ *   branch: 'main',
+ *   options: { limit: 10 }
+ * })
  * ```
  *
  * @param payload.repoId - The database ID of the repository
  * @param payload.commitSha - Optional: The full SHA hash of the commit to analyze
  * @param payload.branch - Optional: The branch name (defaults to 'main'). Used if commitSha is not provided.
+ * @param payload.options - Optional: Configuration options
+ * @param payload.options.limit - Optional: Limit the number of files to retrieve (primarily for testing purposes)
  *
  * @returns Object containing:
  *   - success: boolean indicating if the operation succeeded
@@ -47,6 +58,9 @@ export const findStoriesInRepoTask = task({
     repoId: string
     commitSha?: string
     branch?: string
+    options?: {
+      limit?: number
+    }
   }) => {
     const { repo, octokit } = await getRepoWithOctokit(payload.repoId)
 
@@ -142,9 +156,20 @@ export const findStoriesInRepoTask = task({
       relevantFiles,
     })
 
+    // Apply limit if specified (primarily for testing)
+    const filesToProcess = payload.options?.limit
+      ? relevantFiles.slice(0, payload.options.limit)
+      : relevantFiles
+
+    if (payload.options?.limit) {
+      logger.info(
+        `Limiting file processing to ${payload.options.limit} files (for testing)`,
+      )
+    }
+
     // Fetch contents for all relevant files in the repository
     const codebase: CodebaseFile[] = []
-    for (const file of relevantFiles) {
+    for (const file of filesToProcess) {
       try {
         const { data } = await octokit.rest.git.getBlob({
           owner: repo.ownerLogin,
@@ -168,6 +193,29 @@ export const findStoriesInRepoTask = task({
       commitSha,
       codebase: codebase.map((f) => f.path),
     })
+
+    const branch = payload.branch || 'main'
+    logger.info('Indexing codebase files to Qdrant', {
+      repoId: payload.repoId,
+      commitSha,
+      branch,
+      fileCount: codebase.length,
+    })
+
+    const indexingResult = await indexFilesToQdrant(
+      codebase,
+      payload.repoId,
+      commitSha,
+      branch,
+    )
+
+    if (!indexingResult.success) {
+      logger.warn(
+        `Failed to index files to Qdrant: ${indexingResult.error ?? 'Unknown error'}`,
+      )
+    } else {
+      logger.info('Successfully indexed codebase files to Qdrant')
+    }
 
     const result = {
       success: true,
