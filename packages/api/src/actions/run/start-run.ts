@@ -49,6 +49,7 @@ export async function startRun(
   let runId: string | null = null
 
   console.log('triggerSecretKey', triggerSecretKey)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   configure({
     secretKey: triggerSecretKey,
   })
@@ -167,6 +168,7 @@ export async function startRun(
       databaseUrl,
     } as const
     // Trigger the workflow using Trigger.dev client API
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     await tasks.trigger('execute-run', workflowPayload)
 
     // Return the run immediately (workflow will update it asynchronously)

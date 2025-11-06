@@ -62,8 +62,19 @@ Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, thi
     GITHUB_CLIENT_ID="your_github_client_id"
     GITHUB_CLIENT_SECRET="your_github_client_secret"
 
+    # From your GitHub App (for repository access)
+    GITHUB_APP_ID="your_github_app_id"
+    GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+    GITHUB_APP_SLUG="your_github_app_slug"
+
     # Your local PostgreSQL connection string
     DATABASE_URL="postgres://user:password@localhost:5432/tailz"
+
+    # OpenAI-compatible API key (for AI features)
+    OPENROUTER_API_KEY="your_openrouter_api_key"
+
+    # Trigger.dev secret key (for background jobs)
+    TRIGGER_SECRET_KEY="your_trigger_secret_key"
     ```
 
 4.  **Set up the database:**

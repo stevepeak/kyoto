@@ -135,7 +135,9 @@ export const repoRouter = router({
           // Trigger story discovery tasks asynchronously without blocking the response
           Promise.all(
             newlyEnabledRepoIds.map((repoId) =>
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
               tasks
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 .trigger('find-stories-in-repo', {
                   repoId,
                   appId,
@@ -143,6 +145,7 @@ export const repoRouter = router({
                   openRouterApiKey: ctx.env.openRouterApiKey,
                   databaseUrl: ctx.env.databaseUrl,
                 })
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 .catch((error) => {
                   console.error(
                     `Failed to trigger story discovery for repository ${repoId}:`,
@@ -180,6 +183,7 @@ export const repoRouter = router({
       }
 
       // Configure trigger
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       configure({
         secretKey: ctx.env.triggerSecretKey,
       })
@@ -209,6 +213,7 @@ export const repoRouter = router({
       }
 
       // Trigger the task
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await tasks.trigger('find-stories-in-repo', {
         repoId: repo.id,
         appId,
@@ -247,6 +252,7 @@ export const repoRouter = router({
       }
 
       // Configure trigger
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       configure({
         secretKey: ctx.env.triggerSecretKey,
       })
@@ -276,6 +282,7 @@ export const repoRouter = router({
       }
 
       // Trigger the task
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await tasks.trigger('find-stories-in-commit', {
         repoId: repo.id,
         appId,
@@ -315,6 +322,7 @@ export const repoRouter = router({
       }
 
       // Configure trigger
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       configure({
         secretKey: ctx.env.triggerSecretKey,
       })
@@ -344,6 +352,7 @@ export const repoRouter = router({
       }
 
       // Trigger the task
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await tasks.trigger('find-stories-in-pull-request', {
         repoId: repo.id,
         appId,
