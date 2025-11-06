@@ -13,11 +13,9 @@ const envSchema = z.object({
     .string()
     .min(1, 'GITHUB_APP_PRIVATE_KEY is required')
     .startsWith('-----BEGIN RSA PRIVATE KEY-----'),
+  GITHUB_WEBHOOK_SECRET: z.string().min(1, 'GITHUB_WEBHOOK_SECRET is required'),
   OPENROUTER_API_KEY: z.string().min(1, 'OPENROUTER_API_KEY is required'),
-  DATABASE_URL: z
-    .string()
-    .min(1, 'DATABASE_URL is required')
-    .startsWith('postgres://'),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   TRIGGER_SECRET_KEY: z
     .string()
     .min(1, 'TRIGGER_SECRET_KEY is required')
@@ -30,6 +28,7 @@ export function parseEnv(env: Env): ParsedEnv {
   return envSchema.parse({
     GITHUB_APP_ID: env.githubAppId,
     GITHUB_APP_PRIVATE_KEY: env.githubAppPrivateKey,
+    GITHUB_WEBHOOK_SECRET: env.githubWebhookSecret,
     OPENROUTER_API_KEY: env.openRouterApiKey,
     DATABASE_URL: env.databaseUrl,
     TRIGGER_SECRET_KEY: env.triggerSecretKey,
