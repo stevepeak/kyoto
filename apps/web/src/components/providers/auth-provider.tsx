@@ -52,12 +52,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const path = window.location.pathname
     if (!setupStatus.hasInstallation && path !== '/setup') {
       void navigate('/setup')
-    } else if (
-      setupStatus.hasInstallation &&
-      !setupStatus.hasEnabledRepos &&
-      path !== '/setup/repos'
-    ) {
-      void navigate('/setup/repos')
     }
   }, [session.data, setupStatus])
 

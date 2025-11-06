@@ -69,6 +69,103 @@ export const repoRouter = router({
       }
     }),
 
+  enableRepo: protectedProcedure
+    .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const owner = await ctx.db
+        .selectFrom('owners')
+        .selectAll()
+        .where('login', '=', input.orgSlug)
+        .executeTakeFirst()
+
+      if (!owner) {
+        throw new Error(`Owner with slug ${input.orgSlug} not found`)
+      }
+
+      // Check if repo exists
+      const repo = await ctx.db
+        .selectFrom('repos')
+        .selectAll()
+        .where('ownerId', '=', owner.id)
+        .where('name', '=', input.repoName)
+        .executeTakeFirst()
+
+      if (!repo) {
+        throw new Error(
+          `Repository ${input.repoName} not found for owner ${input.orgSlug}`,
+        )
+      }
+
+      // Check if already enabled
+      if (repo.enabled) {
+        return { enabled: true, repoId: repo.id }
+      }
+
+      // Enable the repo
+      await ctx.db
+        .updateTable('repos')
+        .set({ enabled: true })
+        .where('id', '=', repo.id)
+        .execute()
+
+      // Trigger story discovery for the newly enabled repo (fire-and-forget)
+      try {
+        parseEnv(ctx.env)
+        tasks
+          .trigger('find-stories-in-repo', {
+            repoId: repo.id,
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to trigger story discovery for repository ${repo.id}:`,
+              error,
+            )
+          })
+      } catch (error) {
+        // If env vars are missing, just log and continue
+        console.error('Failed to parse env vars for story discovery:', error)
+      }
+
+      return { enabled: true, repoId: repo.id }
+    }),
+
+  disableRepo: protectedProcedure
+    .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const owner = await ctx.db
+        .selectFrom('owners')
+        .selectAll()
+        .where('login', '=', input.orgSlug)
+        .executeTakeFirst()
+
+      if (!owner) {
+        throw new Error(`Owner with slug ${input.orgSlug} not found`)
+      }
+
+      // Check if repo exists
+      const repo = await ctx.db
+        .selectFrom('repos')
+        .selectAll()
+        .where('ownerId', '=', owner.id)
+        .where('name', '=', input.repoName)
+        .executeTakeFirst()
+
+      if (!repo) {
+        throw new Error(
+          `Repository ${input.repoName} not found for owner ${input.orgSlug}`,
+        )
+      }
+
+      // Disable the repo
+      await ctx.db
+        .updateTable('repos')
+        .set({ enabled: false })
+        .where('id', '=', repo.id)
+        .execute()
+
+      return { enabled: false, repoId: repo.id }
+    }),
+
   setEnabled: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoNames: z.array(z.string()) }))
     .mutation(async ({ ctx, input }) => {
