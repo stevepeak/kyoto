@@ -1,4 +1,4 @@
-export interface RunWorkflowPayload {
+interface RunWorkflowPayload {
   orgSlug: string
   repoName: string
   branchName?: string

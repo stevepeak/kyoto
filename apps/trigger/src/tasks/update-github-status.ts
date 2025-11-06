@@ -2,7 +2,7 @@ import { task, logger } from '@trigger.dev/sdk'
 import type { StoryTestResult } from '../types'
 import { createOctokit } from '../helpers/github'
 
-export function mapRunStatusToConclusion(
+function mapRunStatusToConclusion(
   status: 'pass' | 'fail' | 'skipped' | 'running',
 ): 'success' | 'failure' | 'neutral' | 'cancelled' | undefined {
   switch (status) {
@@ -19,7 +19,7 @@ export function mapRunStatusToConclusion(
   }
 }
 
-export function mapRunStatusToCheckStatus(
+function mapRunStatusToCheckStatus(
   status: 'pass' | 'fail' | 'skipped' | 'running',
 ): 'queued' | 'in_progress' | 'completed' {
   switch (status) {

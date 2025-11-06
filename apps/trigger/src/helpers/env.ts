@@ -16,7 +16,7 @@ const envSchema = z.object({
   TRIGGER_PROJECT_ID: z.string().optional(),
 })
 
-export type ParsedEnv = z.infer<typeof envSchema>
+type ParsedEnv = z.infer<typeof envSchema>
 
 export function parseEnv(): ParsedEnv {
   return envSchema.parse({

@@ -24,7 +24,7 @@ const envSchema = z.object({
     .startsWith('tr_'),
 })
 
-export type ParsedEnv = z.infer<typeof envSchema>
+type ParsedEnv = z.infer<typeof envSchema>
 
 export function parseEnv(env: Env): ParsedEnv {
   return envSchema.parse({

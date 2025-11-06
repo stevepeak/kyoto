@@ -1,7 +1,7 @@
 import type { CodebaseFile } from './fetch-codebase'
 import { generateStories } from './generate-stories'
 
-export interface DiscoverStoriesResult {
+interface DiscoverStoriesResult {
   success: boolean
   storyCount: number
   stories: Array<{ name: string; story: string; files: string[] }>
