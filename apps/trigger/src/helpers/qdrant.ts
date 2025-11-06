@@ -1,4 +1,4 @@
-export interface QdrantErrorContext {
+interface QdrantErrorContext {
   repoId: string
   commitSha: string
   branch?: string

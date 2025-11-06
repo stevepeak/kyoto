@@ -7,10 +7,12 @@ import { LoadingProgress } from '@/components/ui/loading-progress'
 
 interface StoryItem {
   id: string
-  title: string
-  featureTitle: string
-  updatedAt?: string
-  href: string
+  name: string
+  story: string
+  commitSha: string | null
+  branchName: string
+  createdAt: string | null
+  updatedAt: string | null
 }
 
 export function BranchStoriesLoader({
@@ -39,14 +41,7 @@ export function BranchStoriesLoader({
         if (!isMounted) {
           return
         }
-        const items: StoryItem[] = resp.stories.map((s) => ({
-          id: s.id,
-          title: s.title,
-          featureTitle: s.featureTitle,
-          updatedAt: s.updatedAt,
-          href: `/org/${orgSlug}/repo/${repoName}/stories/${s.id}`,
-        }))
-        setStories(items)
+        setStories(resp.stories as StoryItem[])
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load stories')
       } finally {
@@ -74,7 +69,12 @@ export function BranchStoriesLoader({
         <div className="p-6">
           <h1 className="text-xl font-semibold text-foreground">Stories</h1>
           <div className="mt-4 border rounded-md p-3">
-            <StoryList stories={stories} />
+            <StoryList
+              stories={stories}
+              orgSlug={orgSlug}
+              repoName={repoName}
+              branchName={branchName}
+            />
           </div>
         </div>
       )}

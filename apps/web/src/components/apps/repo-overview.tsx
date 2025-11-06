@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, GitBranch } from 'lucide-react'
 import { SiGithub } from 'react-icons/si'
 
@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { GitHubStyleRunList } from '@/components/runs/GitHubStyleRunList'
+import { StoryList } from '@/components/stories/StoryList'
 
 interface BranchItem {
   name: string
@@ -48,12 +49,23 @@ interface RunItem {
   branchName: string
 }
 
+interface StoryItem {
+  id: string
+  name: string
+  story: string
+  commitSha: string | null
+  branchName: string
+  createdAt: string | null
+  updatedAt: string | null
+}
+
 interface Props {
   orgSlug: string
   repoName: string
   defaultBranch: string | null
   branches: BranchItem[]
   runs: RunItem[]
+  stories: StoryItem[]
   onRefreshRuns?: () => void
 }
 
@@ -63,12 +75,44 @@ export function RepoOverview({
   defaultBranch,
   branches,
   runs,
+  stories: initialStories,
   onRefreshRuns,
 }: Props) {
   const trpc = useTRPCClient()
   const [selectedBranch, setSelectedBranch] = useState<string>(
     defaultBranch || branches[0]?.name || '',
   )
+  const [stories, setStories] = useState(initialStories)
+
+  // Reload stories when branch changes
+  useEffect(() => {
+    if (!selectedBranch) {
+      return
+    }
+
+    let isMounted = true
+    async function loadStories() {
+      try {
+        const storiesResp = await trpc.story.listByBranch.query({
+          orgSlug,
+          repoName,
+          branchName: selectedBranch,
+        })
+        if (isMounted) {
+          setStories(storiesResp.stories)
+        }
+      } catch (_e) {
+        // Silently fail - stories might not exist for this branch
+        if (isMounted) {
+          setStories([])
+        }
+      }
+    }
+    void loadStories()
+    return () => {
+      isMounted = false
+    }
+  }, [trpc, orgSlug, repoName, selectedBranch])
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [isFindingStories, setIsFindingStories] = useState(false)
@@ -173,8 +217,11 @@ export function RepoOverview({
     }
   }
 
-  // Filter runs by selected branch
+  // Filter runs and stories by selected branch
   const filteredRuns = runs.filter((run) => run.branchName === selectedBranch)
+  const filteredStories = stories.filter(
+    (story) => story.branchName === selectedBranch,
+  )
 
   return (
     <AppLayout
@@ -192,15 +239,6 @@ export function RepoOverview({
             </span>
           </h1>
           <div className="flex items-center gap-3">
-            {defaultBranch && (
-              <Button
-                onClick={handleStartRun}
-                disabled={isCreatingRun}
-                variant="default"
-              >
-                {isCreatingRun ? 'Starting...' : 'Start new run'}
-              </Button>
-            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -356,16 +394,55 @@ export function RepoOverview({
           </DialogContent>
         </Dialog>
 
-        <div className="mt-6">
-          <h2 className="text-sm font-medium text-foreground mb-3">
-            Latest runs
-          </h2>
-          <div className="border rounded-md overflow-hidden">
-            <GitHubStyleRunList
-              runs={filteredRuns}
-              orgSlug={orgSlug}
-              repoName={repoName}
-            />
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Panel: Stories */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-medium text-foreground">Stories</h2>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+              >
+                <a href={`/org/${orgSlug}/repo/${repoName}/stories/new?branch=${encodeURIComponent(selectedBranch)}`}>
+                  Add new story
+                </a>
+              </Button>
+            </div>
+            <div className="border rounded-md p-4 overflow-auto max-h-[600px]">
+              <StoryList
+                stories={filteredStories}
+                orgSlug={orgSlug}
+                repoName={repoName}
+                branchName={selectedBranch}
+              />
+            </div>
+          </div>
+
+          {/* Right Panel: Runs */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-medium text-foreground">
+                Latest runs
+              </h2>
+              {defaultBranch && (
+                <Button
+                  onClick={handleStartRun}
+                  disabled={isCreatingRun}
+                  variant="default"
+                  size="sm"
+                >
+                  {isCreatingRun ? 'Starting...' : 'Start new run'}
+                </Button>
+              )}
+            </div>
+            <div className="border rounded-md overflow-hidden">
+              <GitHubStyleRunList
+                runs={filteredRuns}
+                orgSlug={orgSlug}
+                repoName={repoName}
+              />
+            </div>
           </div>
         </div>
       </div>

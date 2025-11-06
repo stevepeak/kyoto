@@ -68,6 +68,16 @@ const config = defineConfig({
 
   integrations: [react()],
   vite: {
+    optimizeDeps: {
+      include: [
+        '@codemirror/lang-javascript',
+        '@codemirror/lang-html',
+        '@codemirror/lang-css',
+        '@codemirror/state',
+        '@codemirror/view',
+        '@uiw/react-codemirror',
+      ],
+    },
     build: {
       cssCodeSplit: true,
       rollupOptions: {
@@ -93,7 +103,6 @@ const config = defineConfig({
         },
       },
     },
-    // @ts-expect-error - tailwindcss plugin type compatibility issue with Vite
     plugins: [tailwindcss()],
     resolve: {
       alias: {

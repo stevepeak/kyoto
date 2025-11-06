@@ -31,6 +31,16 @@ interface RepoInfo {
   enabled: boolean
 }
 
+interface StoryItem {
+  id: string
+  name: string
+  story: string
+  commitSha: string | null
+  branchName: string
+  createdAt: string | null
+  updatedAt: string | null
+}
+
 export function RepoOverviewLoader({
   orgSlug,
   repoName,
@@ -43,10 +53,11 @@ export function RepoOverviewLoader({
   const [repo, setRepo] = useState<RepoInfo | null>(null)
   const [branches, setBranches] = useState<BranchItem[]>([])
   const [runs, setRuns] = useState<RunItem[]>([])
+  const [stories, setStories] = useState<StoryItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const loadData = async () => {
+  const loadData = async (branchName?: string) => {
     try {
       const [repoResp, branchesResp, runsResp] = await Promise.all([
         trpc.repo.getBySlug.query({ orgSlug, repoName }),
@@ -55,6 +66,18 @@ export function RepoOverviewLoader({
       ])
       if (repoResp.repo) {
         setRepo(repoResp.repo)
+        const defaultBranch = repoResp.repo.defaultBranch || branchesResp.branches[0]?.name || ''
+        const branchToUse = branchName || defaultBranch
+
+        // Load stories for the selected branch
+        if (branchToUse) {
+          const storiesResp = await trpc.story.listByBranch.query({
+            orgSlug,
+            repoName,
+            branchName: branchToUse,
+          })
+          setStories(storiesResp.stories as StoryItem[])
+        }
       }
       setBranches(branchesResp.branches)
       setRuns(runsResp.runs as RunItem[])
@@ -65,6 +88,7 @@ export function RepoOverviewLoader({
       setIsLoading(false)
     }
   }
+
 
   useEffect(() => {
     let isMounted = true
@@ -98,6 +122,7 @@ export function RepoOverviewLoader({
           defaultBranch={repo?.defaultBranch ?? null}
           branches={branches}
           runs={runs}
+          stories={stories}
           onRefreshRuns={handleRefreshRuns}
         />
       )}

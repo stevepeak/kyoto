@@ -23,14 +23,18 @@ export function Breadcrumbs({ items, className, right }: BreadcrumbsProps) {
       <nav className="text-sm text-muted-foreground flex items-center gap-1">
         {items.map((item, index) => {
           const isLast = index === items.length - 1
+          const hasHref = !!item.href
           return (
             <span
               key={`${item.label}-${index}`}
               className="flex items-center gap-1"
             >
               {item.showGithubIcon && <SiGithub className="h-4 w-4" />}
-              {item.href && !isLast ? (
-                <a href={item.href} className="hover:text-foreground">
+              {hasHref ? (
+                <a
+                  href={item.href}
+                  className="px-2 py-1 -mx-2 -my-1 rounded-md hover:bg-muted/80 transition-colors hover:text-foreground"
+                >
                   {item.label}
                 </a>
               ) : (
