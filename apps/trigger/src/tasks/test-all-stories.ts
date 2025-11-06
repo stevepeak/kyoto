@@ -1,5 +1,6 @@
 import { task, logger } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
+import { parseEnv } from '../helpers/env'
 
 export const testAllStoriesTask = task({
   id: 'test-all-stories',
@@ -7,7 +8,6 @@ export const testAllStoriesTask = task({
     payload: {
       repoId: string
       branchName: string
-      databaseUrl: string
     },
     { ctx: _ctx },
   ) => {
@@ -16,7 +16,8 @@ export const testAllStoriesTask = task({
       branchName: payload.branchName,
     })
 
-    const db = setupDb(payload.databaseUrl)
+    const env = parseEnv()
+    const db = setupDb(env.DATABASE_URL)
 
     const stories = await db
       .selectFrom('stories')

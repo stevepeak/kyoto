@@ -8,14 +8,7 @@ import { runRouter } from './routers/run'
 
 export type { Context, Env, Session, SessionUser } from './context'
 
-export { getUser } from './actions/users/getters'
-export {
-  githubAppCallbackQuerySchema,
-  syncGithubInstallation,
-  setEnabledRepos,
-} from './actions/github/installations'
-export { startRun } from './actions/run/start-run'
-export type { StartRunResult } from './actions/run/start-run'
+export { getUser } from './helpers/users'
 
 export const appRouter = router({
   user: userRouter,

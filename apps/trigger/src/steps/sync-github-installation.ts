@@ -1,35 +1,20 @@
 import type { DB } from '@app/db/types'
 import type { Kysely } from 'kysely'
-import { z } from 'zod'
-import { Octokit } from '@octokit/rest'
-import { createAppAuth } from '@octokit/auth-app'
+import { createOctokit } from '../helpers/github'
 
-export const githubAppCallbackQuerySchema = z.object({
-  installation_id: z.coerce.number(),
-  setup_action: z.enum(['install', 'update']).optional(),
-  state: z.string().optional(),
-})
-
-interface SyncInstallationParams {
-  db: Kysely<DB>
-  appId: number
-  privateKey: string
-  installationId: number
-}
-
-export async function syncGithubInstallation(
-  params: SyncInstallationParams,
-): Promise<{
+export interface SyncGithubInstallationResult {
   ownerId: string
   ownerLogin: string
   repoCount: number
-}> {
-  const { db, appId, privateKey, installationId } = params
+}
 
-  const installationOctokit = new Octokit({
-    authStrategy: createAppAuth,
-    auth: { appId, privateKey, installationId },
-  })
+export async function syncGithubInstallationStep(params: {
+  db: Kysely<DB>
+  installationId: number
+}): Promise<SyncGithubInstallationResult> {
+  const { db, installationId } = params
+
+  const installationOctokit = createOctokit(installationId)
 
   const installation = await installationOctokit.apps.getInstallation({
     installation_id: installationId,
@@ -135,58 +120,4 @@ export async function syncGithubInstallation(
   }
 
   return { ownerId: owner.id, ownerLogin, repoCount }
-}
-
-interface SetEnabledReposParams {
-  db: Kysely<DB>
-  ownerLogin: string
-  repoNames: string[]
-}
-
-export async function setEnabledRepos(
-  params: SetEnabledReposParams,
-): Promise<{ updated: number }> {
-  const { db, ownerLogin, repoNames } = params
-
-  const owner = await db
-    .selectFrom('owners')
-    .selectAll()
-    .where('login', '=', ownerLogin)
-    .executeTakeFirst()
-
-  if (!owner) {
-    return { updated: 0 }
-  }
-
-  // Disable all repos for owner
-  await db
-    .updateTable('repos')
-    .set({ enabled: false })
-    .where('ownerId', '=', owner.id)
-    .execute()
-
-  if (repoNames.length === 0) {
-    return { updated: 0 }
-  }
-
-  // Enable selected repos
-  const result = await db
-    .updateTable('repos')
-    .set({ enabled: true })
-    .where('ownerId', '=', owner.id)
-    .where('name', 'in', repoNames)
-    .executeTakeFirst()
-
-  // Kysely's update result does not always have rowCount across drivers; return count conservatively
-  return {
-    updated: Array.isArray(result)
-      ? result.length
-      : (result as unknown as { numUpdatedOrDeletedRows?: bigint })
-            .numUpdatedOrDeletedRows
-        ? Number(
-            (result as unknown as { numUpdatedOrDeletedRows: bigint })
-              .numUpdatedOrDeletedRows,
-          )
-        : repoNames.length,
-  }
 }

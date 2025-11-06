@@ -1,7 +1,8 @@
 import { z } from 'zod'
+import { configure, tasks } from '@trigger.dev/sdk'
 
 import type { RunStory } from '@app/db'
-import { startRun } from '../actions/run/start-run'
+import { parseEnv } from '../helpers/env'
 import { protectedProcedure, router } from '../trpc'
 
 export const runRouter = router({
@@ -237,80 +238,21 @@ export const runRouter = router({
         branchName: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.env.githubAppId || !ctx.env.githubAppPrivateKey) {
-        throw new Error('GitHub App configuration is missing')
-      }
+    .mutation(async ({ ctx: _ctx, input }) => {
+      const env = parseEnv()
 
-      if (!ctx.env.openRouterApiKey) {
-        throw new Error('OpenRouter API key is missing')
-      }
+      configure({
+        secretKey: env.TRIGGER_SECRET_KEY,
+      })
 
-      const appId = Number(ctx.env.githubAppId)
-      if (Number.isNaN(appId)) {
-        throw new TypeError('Invalid GitHub App ID')
-      }
-
-      if (!ctx.env.databaseUrl) {
-        throw new Error('DATABASE_URL environment variable is not set')
-      }
-
-      if (!ctx.env.triggerSecretKey) {
-        throw new Error('TRIGGER_SECRET_KEY environment variable is not set')
-      }
-
-      const result = await startRun({
-        db: ctx.db,
+      await tasks.trigger('run-ci', {
         orgSlug: input.orgSlug,
         repoName: input.repoName,
         branchName: input.branchName,
-        appId,
-        privateKey: ctx.env.githubAppPrivateKey,
-        openRouterApiKey: ctx.env.openRouterApiKey,
-        databaseUrl: ctx.env.databaseUrl,
-        triggerSecretKey: ctx.env.triggerSecretKey,
       })
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create run')
-      }
-
-      // Map the run to the frontend format
-      if (!result.run) {
-        throw new Error('Run was not created')
-      }
-      const run = result.run
-      const createdAt = run.createdAt
-      const updatedAt = run.updatedAt
-
-      if (!createdAt || !updatedAt) {
-        throw new Error('Run timestamps are missing')
-      }
-
-      const durationMs = updatedAt.getTime() - createdAt.getTime()
-
-      const statusMap: Record<
-        string,
-        'queued' | 'running' | 'success' | 'failed' | 'skipped'
-      > = {
-        pass: 'success',
-        fail: 'failed',
-        skipped: 'skipped',
-        running: 'running',
-      }
-
       return {
-        run: {
-          id: run.id,
-          runId: String(run.number),
-          status: statusMap[run.status] ?? 'queued',
-          createdAt: createdAt.toISOString(),
-          updatedAt: updatedAt.toISOString(),
-          durationMs,
-          commitSha: run.commitSha,
-          commitMessage: run.commitMessage ?? null,
-          branchName: run.branchName,
-        },
+        success: true,
       }
     }),
 })

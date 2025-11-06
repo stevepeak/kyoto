@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { configure, tasks } from '@trigger.dev/sdk'
 import { protectedProcedure, router } from '../trpc'
+import { parseEnv } from '../helpers/env'
 
 export const repoRouter = router({
   listByOrg: protectedProcedure
@@ -123,29 +124,16 @@ export const repoRouter = router({
         .map((r) => r.id)
 
       // Trigger story discovery for newly enabled repos (fire-and-forget)
-      if (
-        newlyEnabledRepoIds.length > 0 &&
-        ctx.env.githubAppId &&
-        ctx.env.githubAppPrivateKey &&
-        ctx.env.openRouterApiKey &&
-        ctx.env.databaseUrl
-      ) {
-        const appId = Number(ctx.env.githubAppId)
-        if (!Number.isNaN(appId)) {
+      if (newlyEnabledRepoIds.length > 0) {
+        try {
+          parseEnv()
           // Trigger story discovery tasks asynchronously without blocking the response
           Promise.all(
             newlyEnabledRepoIds.map((repoId) =>
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
               tasks
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 .trigger('find-stories-in-repo', {
                   repoId,
-                  appId,
-                  privateKey: ctx.env.githubAppPrivateKey,
-                  openRouterApiKey: ctx.env.openRouterApiKey,
-                  databaseUrl: ctx.env.databaseUrl,
                 })
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 .catch((error) => {
                   console.error(
                     `Failed to trigger story discovery for repository ${repoId}:`,
@@ -156,6 +144,9 @@ export const repoRouter = router({
           ).catch((error) => {
             console.error('Error triggering story discovery:', error)
           })
+        } catch (error) {
+          // If env vars are missing, just log and continue
+          console.error('Failed to parse env vars for story discovery:', error)
         }
       }
 
@@ -165,27 +156,11 @@ export const repoRouter = router({
   findStoriesInRepo: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.env.githubAppId || !ctx.env.githubAppPrivateKey) {
-        throw new Error('GitHub App configuration is missing')
-      }
-
-      if (!ctx.env.openRouterApiKey) {
-        throw new Error('OpenRouter API key is missing')
-      }
-
-      if (!ctx.env.triggerSecretKey) {
-        throw new Error('TRIGGER_SECRET_KEY environment variable is not set')
-      }
-
-      const appId = Number(ctx.env.githubAppId)
-      if (Number.isNaN(appId)) {
-        throw new TypeError('Invalid GitHub App ID')
-      }
+      const env = parseEnv()
 
       // Configure trigger
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       configure({
-        secretKey: ctx.env.triggerSecretKey,
+        secretKey: env.TRIGGER_SECRET_KEY,
       })
 
       // Look up owner and repo to get repoId
@@ -213,13 +188,8 @@ export const repoRouter = router({
       }
 
       // Trigger the task
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await tasks.trigger('find-stories-in-repo', {
         repoId: repo.id,
-        appId,
-        privateKey: ctx.env.githubAppPrivateKey,
-        openRouterApiKey: ctx.env.openRouterApiKey,
-        databaseUrl: ctx.env.databaseUrl,
       })
 
       return { success: true }
@@ -234,27 +204,11 @@ export const repoRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.env.githubAppId || !ctx.env.githubAppPrivateKey) {
-        throw new Error('GitHub App configuration is missing')
-      }
-
-      if (!ctx.env.openRouterApiKey) {
-        throw new Error('OpenRouter API key is missing')
-      }
-
-      if (!ctx.env.triggerSecretKey) {
-        throw new Error('TRIGGER_SECRET_KEY environment variable is not set')
-      }
-
-      const appId = Number(ctx.env.githubAppId)
-      if (Number.isNaN(appId)) {
-        throw new TypeError('Invalid GitHub App ID')
-      }
+      const env = parseEnv()
 
       // Configure trigger
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       configure({
-        secretKey: ctx.env.triggerSecretKey,
+        secretKey: env.TRIGGER_SECRET_KEY,
       })
 
       // Look up owner and repo to get repoId
@@ -282,13 +236,8 @@ export const repoRouter = router({
       }
 
       // Trigger the task
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await tasks.trigger('find-stories-in-commit', {
         repoId: repo.id,
-        appId,
-        privateKey: ctx.env.githubAppPrivateKey,
-        openRouterApiKey: ctx.env.openRouterApiKey,
-        databaseUrl: ctx.env.databaseUrl,
         commitSha: input.commitSha,
       })
 
@@ -304,27 +253,11 @@ export const repoRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.env.githubAppId || !ctx.env.githubAppPrivateKey) {
-        throw new Error('GitHub App configuration is missing')
-      }
-
-      if (!ctx.env.openRouterApiKey) {
-        throw new Error('OpenRouter API key is missing')
-      }
-
-      if (!ctx.env.triggerSecretKey) {
-        throw new Error('TRIGGER_SECRET_KEY environment variable is not set')
-      }
-
-      const appId = Number(ctx.env.githubAppId)
-      if (Number.isNaN(appId)) {
-        throw new TypeError('Invalid GitHub App ID')
-      }
+      const env = parseEnv()
 
       // Configure trigger
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       configure({
-        secretKey: ctx.env.triggerSecretKey,
+        secretKey: env.TRIGGER_SECRET_KEY,
       })
 
       // Look up owner and repo to get repoId
@@ -352,13 +285,8 @@ export const repoRouter = router({
       }
 
       // Trigger the task
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await tasks.trigger('find-stories-in-pull-request', {
         repoId: repo.id,
-        appId,
-        privateKey: ctx.env.githubAppPrivateKey,
-        openRouterApiKey: ctx.env.openRouterApiKey,
-        databaseUrl: ctx.env.databaseUrl,
         pullNumber: input.pullNumber,
       })
 

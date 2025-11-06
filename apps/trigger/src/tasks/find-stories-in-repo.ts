@@ -1,24 +1,22 @@
 import { task, logger } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
-import { createInstallationOctokit } from '../helpers/github'
-import type { CodebaseFile } from '../helpers/fetch-codebase'
-import { discoverStories } from '../helpers/discover-stories'
+import { createOctokit } from '../helpers/github'
+import { parseEnv } from '../helpers/env'
+import type { CodebaseFile } from '../steps/fetch-codebase'
+import { discoverStories } from '../steps/discover-stories'
 
 export const findStoriesInRepoTask = task({
   id: 'find-stories-in-repo',
   run: async (
     payload: {
       repoId: string
-      appId: number
-      privateKey: string
-      openRouterApiKey: string
-      databaseUrl: string
     },
     { ctx: _ctx },
   ) => {
     logger.info('Finding stories in repository', { repoId: payload.repoId })
 
-    const db = setupDb(payload.databaseUrl)
+    const env = parseEnv()
+    const db = setupDb(env.DATABASE_URL)
 
     const repo = await db
       .selectFrom('repos')
@@ -37,11 +35,7 @@ export const findStoriesInRepoTask = task({
       throw new Error('Repository or installation not found or misconfigured')
     }
 
-    const octokit = createInstallationOctokit({
-      appId: payload.appId,
-      privateKey: payload.privateKey,
-      installationId: Number(repo.installationId),
-    })
+    const octokit = createOctokit(Number(repo.installationId))
 
     const branchRef = await octokit.git.getRef({
       owner: repo.ownerLogin,
@@ -212,7 +206,7 @@ export const findStoriesInRepoTask = task({
 
     const result = await discoverStories({
       codebase,
-      apiKey: payload.openRouterApiKey,
+      apiKey: env.OPENROUTER_API_KEY,
     })
 
     if (!result.success) {

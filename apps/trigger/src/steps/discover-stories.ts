@@ -8,18 +8,14 @@ export interface DiscoverStoriesResult {
   error?: string
 }
 
-interface DiscoverStoriesParams {
-  codebase: CodebaseFile[]
-  apiKey: string
-}
-
 /**
  * Discovers stories from provided files or a diff-parsed file list.
  * The caller is responsible for sourcing files (full repo, commit, or PR).
  */
-export async function discoverStories(
-  params: DiscoverStoriesParams,
-): Promise<DiscoverStoriesResult> {
+export async function discoverStories(params: {
+  codebase: CodebaseFile[]
+  apiKey: string
+}): Promise<DiscoverStoriesResult> {
   const { codebase, apiKey } = params
 
   try {

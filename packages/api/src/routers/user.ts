@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
-import { getUser } from '../actions/users/getters'
-import { updateUser } from '../actions/users/setters'
+import { getUser, updateUser } from '../helpers/users'
 import { protectedProcedure, router } from '../trpc'
 
 // Validate timezone against IANA timezone database

@@ -1,14 +1,15 @@
 import { Octokit } from '@octokit/rest'
 import { createAppAuth } from '@octokit/auth-app'
+import { parseEnv } from './env'
 
-export function createInstallationOctokit(params: {
-  appId: number
-  privateKey: string
-  installationId: number
-}): Octokit {
-  const { appId, privateKey, installationId } = params
+export function createOctokit(installationId: number): Octokit {
+  const env = parseEnv()
   return new Octokit({
     authStrategy: createAppAuth,
-    auth: { appId, privateKey, installationId },
+    auth: {
+      appId: env.GITHUB_APP_ID,
+      privateKey: env.GITHUB_APP_PRIVATE_KEY,
+      installationId,
+    },
   })
 }

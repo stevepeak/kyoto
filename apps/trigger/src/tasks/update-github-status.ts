@@ -1,13 +1,11 @@
 import { task, logger } from '@trigger.dev/sdk'
 import type { StoryTestResult } from '../types'
-import { createInstallationOctokit } from '../helpers/github'
+import { createOctokit } from '../helpers/github'
 
 interface CreateGitHubCheckParams {
   orgSlug: string
   repoName: string
   commitSha: string
-  appId: number
-  privateKey: string
   installationId: number
   name: string
   status: 'queued' | 'in_progress' | 'completed'
@@ -32,24 +30,9 @@ interface UpdateGitHubCheckParams extends CreateGitHubCheckParams {
 export async function createGitHubCheck(
   params: CreateGitHubCheckParams,
 ): Promise<number> {
-  const {
-    orgSlug,
-    repoName,
-    commitSha,
-    appId,
-    privateKey,
-    installationId,
-    name,
-    status,
-    conclusion,
-    output,
-  } = params
+  const { orgSlug, repoName, commitSha, installationId, name, status, conclusion, output } = params
 
-  const octokit = createInstallationOctokit({
-    appId,
-    privateKey,
-    installationId,
-  })
+  const octokit = createOctokit(installationId)
 
   const checkRun = await octokit.rest.checks.create({
     owner: orgSlug,
@@ -67,23 +50,9 @@ export async function createGitHubCheck(
 async function updateGitHubCheck(
   params: UpdateGitHubCheckParams,
 ): Promise<void> {
-  const {
-    orgSlug,
-    repoName,
-    appId,
-    privateKey,
-    installationId,
-    checkRunId,
-    status,
-    conclusion,
-    output,
-  } = params
+  const { orgSlug, repoName, installationId, checkRunId, status, conclusion, output } = params
 
-  const octokit = createInstallationOctokit({
-    appId,
-    privateKey,
-    installationId,
-  })
+  const octokit = createOctokit(installationId)
 
   await octokit.rest.checks.update({
     owner: orgSlug,
@@ -136,8 +105,6 @@ export const updateGithubStatusTask = task({
       orgSlug: string
       repoName: string
       commitSha: string
-      appId: number
-      privateKey: string
       installationId: number
       checkRunId?: number
     },
@@ -181,8 +148,6 @@ export const updateGithubStatusTask = task({
           orgSlug: payload.orgSlug,
           repoName: payload.repoName,
           commitSha: payload.commitSha,
-          appId: payload.appId,
-          privateKey: payload.privateKey,
           installationId: payload.installationId,
           checkRunId: payload.checkRunId,
           name: 'Tailz/CI',
@@ -195,8 +160,6 @@ export const updateGithubStatusTask = task({
           orgSlug: payload.orgSlug,
           repoName: payload.repoName,
           commitSha: payload.commitSha,
-          appId: payload.appId,
-          privateKey: payload.privateKey,
           installationId: payload.installationId,
           name: 'Tailz/CI',
           status: checkStatus,
@@ -211,8 +174,6 @@ export const updateGithubStatusTask = task({
           orgSlug: payload.orgSlug,
           repoName: payload.repoName,
           commitSha: payload.commitSha,
-          appId: payload.appId,
-          privateKey: payload.privateKey,
           installationId: payload.installationId,
           name: 'Tailz/CI',
           status: checkStatus,

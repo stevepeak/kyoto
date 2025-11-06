@@ -1,8 +1,10 @@
 import { task, logger } from '@trigger.dev/sdk'
 import type { DB } from '@app/db/types'
-import type { Selectable } from 'kysely'
+import type { Insertable, Selectable } from 'kysely'
 import { setupDb } from '@app/db'
 import type { RunStory } from '@app/db'
+import { parseEnv } from '../helpers/env'
+import { createOctokit } from '../helpers/github'
 import {
   createGitHubCheck,
   mapRunStatusToCheckStatus,
@@ -14,22 +16,104 @@ export const runCiTask = task({
   id: 'run-ci',
   run: async (payload: RunWorkflowPayload, { ctx: _ctx }) => {
     logger.info('Starting run workflow', {
-      runId: payload.runId,
       orgSlug: payload.orgSlug,
       repoName: payload.repoName,
+      branchName: payload.branchName,
     })
 
-    try {
-      const db = setupDb(payload.databaseUrl)
+    const env = parseEnv()
+    const db = setupDb(env.DATABASE_URL)
+    let runId: string | null = null
 
+    try {
+      // Step 1: Look up owner and repo
+      const owner = await db
+        .selectFrom('owners')
+        .selectAll()
+        .where('login', '=', payload.orgSlug)
+        .executeTakeFirst()
+
+      if (!owner) {
+        throw new Error(`Owner with slug ${payload.orgSlug} not found`)
+      }
+
+      const repo = await db
+        .selectFrom('repos')
+        .selectAll()
+        .where('ownerId', '=', owner.id)
+        .where('name', '=', payload.repoName)
+        .executeTakeFirst()
+
+      if (!repo) {
+        throw new Error(
+          `Repository ${payload.repoName} not found for owner ${payload.orgSlug}`,
+        )
+      }
+
+      // Step 2: Determine branch to use (default to repo.defaultBranch)
+      const targetBranch = payload.branchName || repo.defaultBranch
+      if (!targetBranch) {
+        throw new Error(
+          `No branch specified and repository has no default branch configured`,
+        )
+      }
+
+      if (!owner.installationId) {
+        throw new Error(
+          `Owner ${payload.orgSlug} has no GitHub App installation configured`,
+        )
+      }
+
+      const installationId = Number(owner.installationId)
+
+      // Step 3: Get commit SHA and message from GitHub
+      const octokit = createOctokit(installationId)
+
+      const branchRef = await octokit.git.getRef({
+        owner: payload.orgSlug,
+        repo: payload.repoName,
+        ref: `heads/${targetBranch}`,
+      })
+      const commitSha = branchRef.data.object.sha
+
+      // Get commit message
+      const commit = await octokit.git.getCommit({
+        owner: payload.orgSlug,
+        repo: payload.repoName,
+        commit_sha: commitSha,
+      })
+      const commitMessage = commit.data.message || null
+
+      // Step 4: Create run with 'running' status
+      const runToInsert: Omit<Insertable<DB['runs']>, 'number'> = {
+        repoId: repo.id,
+        commitSha,
+        branchName: targetBranch,
+        commitMessage,
+        status: 'running',
+        stories: [],
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      const insertedRun = (await (db as any)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .insertInto('runs')
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .values(runToInsert)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .returningAll()
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .executeTakeFirstOrThrow()) as Selectable<DB['runs']>
+
+      runId = insertedRun.id
+
+      // Step 5: Create initial GitHub check
       try {
         await createGitHubCheck({
           orgSlug: payload.orgSlug,
           repoName: payload.repoName,
-          commitSha: payload.commitSha,
-          appId: payload.appId,
-          privateKey: payload.privateKey,
-          installationId: payload.installationId,
+          commitSha,
+          installationId,
           name: 'Tailz/CI',
           status: 'in_progress',
           output: {
@@ -41,22 +125,23 @@ export const runCiTask = task({
         logger.warn('Failed to create initial GitHub check', { error })
       }
 
+      // Step 6: Find and test stories
       const stories = await db
         .selectFrom('stories')
         .selectAll()
-        .where('repoId', '=', payload.repoId)
-        .where('branchName', '=', payload.branchName)
+        .where('repoId', '=', repo.id)
+        .where('branchName', '=', targetBranch)
         .execute()
 
       if (stories.length === 0) {
         logger.warn('No stories found', {
-          repoId: payload.repoId,
-          branchName: payload.branchName,
+          repoId: repo.id,
+          branchName: targetBranch,
         })
         await db
           .updateTable('runs')
           .set({ status: 'fail' })
-          .where('id', '=', payload.runId)
+          .where('id', '=', runId)
           .execute()
         throw new Error('No stories found for this repository and branch')
       }
@@ -89,7 +174,7 @@ export const runCiTask = task({
           stories: runStories,
         })
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        .where('id', '=', payload.runId)
+        .where('id', '=', runId)
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         .returningAll()
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -114,10 +199,8 @@ export const runCiTask = task({
         await createGitHubCheck({
           orgSlug: payload.orgSlug,
           repoName: payload.repoName,
-          commitSha: payload.commitSha,
-          appId: payload.appId,
-          privateKey: payload.privateKey,
-          installationId: payload.installationId,
+          commitSha,
+          installationId,
           name: 'Tailz/CI',
           status: checkStatus,
           conclusion,
@@ -128,7 +211,7 @@ export const runCiTask = task({
       }
 
       logger.info('Run workflow completed successfully', {
-        runId: payload.runId,
+        runId,
         finalStatus,
       })
 
@@ -139,43 +222,23 @@ export const runCiTask = task({
       }
     } catch (error) {
       logger.error('Run workflow failed', {
-        runId: payload.runId,
+        runId,
         error: error instanceof Error ? error.message : String(error),
       })
 
-      try {
-        const db = setupDb(payload.databaseUrl)
-        await db
-          .updateTable('runs')
-          .set({ status: 'fail' })
-          .where('id', '=', payload.runId)
-          .execute()
-
+      // Update run status to 'fail' on any error (if run was created)
+      if (runId) {
         try {
-          await createGitHubCheck({
-            orgSlug: payload.orgSlug,
-            repoName: payload.repoName,
-            commitSha: payload.commitSha,
-            appId: payload.appId,
-            privateKey: payload.privateKey,
-            installationId: payload.installationId,
-            name: 'Tailz/CI',
-            status: 'completed',
-            conclusion: 'failure',
-            output: {
-              title: 'Run failed',
-              summary: error instanceof Error ? error.message : 'Unknown error',
-            },
-          })
-        } catch (checkError) {
-          logger.warn('Failed to update GitHub check on error', {
-            error: checkError,
+          await db
+            .updateTable('runs')
+            .set({ status: 'fail' })
+            .where('id', '=', runId)
+            .execute()
+        } catch (updateError) {
+          logger.error('Failed to update run status on error', {
+            error: updateError,
           })
         }
-      } catch (updateError) {
-        logger.error('Failed to update run status on error', {
-          error: updateError,
-        })
       }
 
       throw error

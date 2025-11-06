@@ -1,18 +1,15 @@
 import { task, logger } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
-import { createInstallationOctokit } from '../helpers/github'
-import type { CodebaseFile } from '../helpers/fetch-codebase'
-import { discoverStories } from '../helpers/discover-stories'
+import { createOctokit } from '../helpers/github'
+import { parseEnv } from '../helpers/env'
+import type { CodebaseFile } from '../steps/fetch-codebase'
+import { discoverStories } from '../steps/discover-stories'
 
 export const findStoriesInPullRequestTask = task({
   id: 'find-stories-in-pull-request',
   run: async (
     payload: {
       repoId: string
-      appId: number
-      privateKey: string
-      openRouterApiKey: string
-      databaseUrl: string
       pullNumber: number
       refSha?: string
     },
@@ -23,7 +20,8 @@ export const findStoriesInPullRequestTask = task({
       pullNumber: payload.pullNumber,
     })
 
-    const db = setupDb(payload.databaseUrl)
+    const env = parseEnv()
+    const db = setupDb(env.DATABASE_URL)
 
     const repo = await db
       .selectFrom('repos')
@@ -40,11 +38,7 @@ export const findStoriesInPullRequestTask = task({
       throw new Error('Repository or installation not found or misconfigured')
     }
 
-    const octokit = createInstallationOctokit({
-      appId: payload.appId,
-      privateKey: payload.privateKey,
-      installationId: Number(repo.installationId),
-    })
+    const octokit = createOctokit(Number(repo.installationId))
 
     const prFiles = await octokit.pulls.listFiles({
       owner: repo.ownerLogin,
@@ -94,7 +88,7 @@ export const findStoriesInPullRequestTask = task({
 
     const result = await discoverStories({
       codebase,
-      apiKey: payload.openRouterApiKey,
+      apiKey: env.OPENROUTER_API_KEY,
     })
 
     if (!result.success) {
