@@ -1,3 +1,115 @@
+import { createHash } from 'node:crypto'
+
+import { QdrantClient } from '@qdrant/js-client-rest'
+import { OpenAIEmbedding } from '@zilliz/claude-context-core'
+import { logger } from '@trigger.dev/sdk'
+
+import { parseEnv } from '@/helpers/env'
+
+const EMBEDDING_MODEL_ID = 'text-embedding-3-small'
+
+export async function embedQuery(query: string): Promise<number[]> {
+  const env = parseEnv()
+
+  const embedding = new OpenAIEmbedding({
+    apiKey: env.OPENAI_API_KEY,
+    model: EMBEDDING_MODEL_ID,
+  })
+
+  const result = await embedding.embed(query)
+  const vector = result.vector
+
+  if (!Array.isArray(vector) || vector.length === 0) {
+    throw new Error('Failed to generate embedding for search query')
+  }
+
+  return vector
+}
+
+export function getQdrantClient(): QdrantClient {
+  const env = parseEnv()
+
+  return new QdrantClient({
+    url: env.QDRANT_URL,
+    apiKey: env.QDRANT_API_KEY,
+  })
+}
+
+export interface QdrantSearchContext {
+  repoId: string
+  branch: string
+}
+
+export interface CodeSearchHit {
+  id: string
+  path: string
+  content: string
+  commitSha: string
+  branch: string | null
+  score: number
+}
+
+type SearchParams = Parameters<QdrantClient['search']>[1]
+
+function ensureStringValue(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+  return {}
+}
+
+export async function performQdrantSearch(
+  context: QdrantSearchContext,
+  vector: number[],
+  limit: number,
+): Promise<CodeSearchHit[]> {
+  const collectionName = `repo_embeddings_${context.repoId}`
+  const qdrantClient = getQdrantClient()
+
+  const searchParams: SearchParams = {
+    vector,
+    limit,
+    with_payload: true,
+  }
+
+  try {
+    const searchResult = await qdrantClient.search(collectionName, searchParams)
+
+    return searchResult.map((point) => {
+      const payload = toRecord(point.payload)
+      return {
+        id: String(
+          point.id ??
+            createHash('sha1').update(JSON.stringify(point)).digest('hex'),
+        ),
+        path: ensureStringValue(payload.path),
+        content: ensureStringValue(payload.content),
+        commitSha: ensureStringValue(payload.commitSha),
+        branch:
+          typeof payload.branch === 'string' && payload.branch.length > 0
+            ? payload.branch
+            : null,
+        score: Number(point.score ?? 0),
+      }
+    })
+  } catch (error) {
+    const errorDetails = buildQdrantErrorDetails(error, {
+      repoId: context.repoId,
+      commitSha: 'unknown',
+      branch: context.branch,
+      collection: collectionName,
+      fileCount: 0,
+    })
+
+    logger.error('Failed to search Qdrant for code files', errorDetails)
+    throw error
+  }
+}
+
 interface QdrantErrorContext {
   repoId: string
   commitSha: string

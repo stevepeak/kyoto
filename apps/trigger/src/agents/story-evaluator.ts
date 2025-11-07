@@ -7,8 +7,8 @@ import type {
   StoryTestResultPayload,
 } from '@app/db'
 
-import { createSearchCodeTool } from '@/tools/search-code'
 import { parseEnv } from '@/helpers/env'
+import { createSemanticCodeSearchTool, createSymbolLookupTool } from '@/tools'
 
 const DEFAULT_STORY_MODEL = 'gpt-4o-mini'
 const DEFAULT_MAX_STEPS = 30
@@ -113,7 +113,8 @@ function buildStoryEvaluationInstructions(): string {
     \`\`\`
 
     # Tools
-    - Call the "codeSearch" tool whenever you need additional code or repository information.
+    - Call the "semanticCodeSearch" tool whenever you need additional code or repository information.
+    - Call the "symbolLookup" tool whenever you need to locate a specific symbol or identifier in the codebase.
 
     # Rules
     - When status is not "running", you must provide analysis with an ordered evidence list showing exactly which files and line ranges support your conclusion.
@@ -149,19 +150,24 @@ export async function runStoryEvaluationAgent(
   const openAiProvider = createOpenAI({ apiKey: env.OPENAI_API_KEY })
   const effectiveModelId = DEFAULT_STORY_MODEL
 
-  const codeSearchTool = createSearchCodeTool({
+  const semanticCodeSearch = createSemanticCodeSearchTool({
     repoId: options.repoId,
     branch: options.branchName,
   })
-  // TODO add new tool for specific file lookup
-  // TODO add new tool for specific symbol lookup
+
+  const symbolLookup = createSymbolLookupTool({
+    repoId: options.repoId,
+    branch: options.branchName,
+  })
 
   const agent = new ToolLoopAgent({
     id: STORY_EVALUATION_AGENT_ID,
     model: openAiProvider(effectiveModelId),
     instructions: buildStoryEvaluationInstructions(),
     tools: {
-      codeSearch: codeSearchTool,
+      // TODO add new tool for specific file lookup
+      semanticCodeSearch,
+      symbolLookup,
     },
     onStepFinish: (step) => {
       console.log('🛠️ Step finished', {
