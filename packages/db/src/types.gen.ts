@@ -125,6 +125,60 @@ export interface Credential {
   userId: string;
 }
 
+export interface FeatureRequest {
+  /**
+   * Creation timestamp
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * FK to users.id for the creator of the request
+   */
+  createdBy: string;
+  /**
+   * Detailed description of the feature request
+   */
+  description: string;
+  /**
+   * Unique identifier for each feature request
+   */
+  id: Generated<string>;
+  /**
+   * Short title for the feature request
+   */
+  title: string;
+  /**
+   * Last update timestamp
+   */
+  updatedAt: Generated<Timestamp | null>;
+  /**
+   * Cached total number of user votes
+   */
+  voteCount: Generated<number>;
+}
+
+export interface FeatureVote {
+  /**
+   * Creation timestamp
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * FK to feature_requests.id
+   */
+  featureId: string;
+  /**
+   * Unique identifier for each vote
+   */
+  id: Generated<string>;
+  /**
+   * Last update timestamp
+   */
+  updatedAt: Generated<Timestamp | null>;
+  /**
+   * FK to users.id for the voter
+   */
+  userId: string;
+}
+
 export interface Owner {
   /**
    * Avatar image URL
@@ -483,6 +537,8 @@ export interface Verification {
 export interface DB {
   accounts: Account;
   credentials: Credential;
+  featureRequests: FeatureRequest;
+  featureVotes: FeatureVote;
   owners: Owner;
   repos: Repo;
   runs: Run;

@@ -1,7 +1,7 @@
 'use client'
 
 import { navigate } from 'astro:transitions/client'
-import { ChevronDown, Home, LogOut, Zap } from 'lucide-react'
+import { ChevronDown, Home, LogOut, Sparkles, Zap } from 'lucide-react'
 import { useState } from 'react'
 import { GiWhaleTail } from 'react-icons/gi'
 
@@ -18,6 +18,7 @@ import { useTRPCClient } from '@/client/trpc'
 import { useSession, signOut } from '@/client/auth-client'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
 interface BreadcrumbItem {
   label: string
@@ -64,11 +65,7 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-8 gap-2 px-2"
-            title="Dev"
-          >
+          <Button variant="ghost" className="h-8 gap-2 px-2" title="Dev">
             <span className="text-sm">Dev</span>
             <ChevronDown size={14} />
           </Button>
@@ -83,6 +80,18 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button
+        className={cn(
+          'h-8 px-3 text-sm font-semibold text-primary-foreground',
+          'bg-gradient-to-r from-primary via-primary/80 to-primary/60 shadow-sm',
+          'hover:shadow-md focus-visible:ring-ring focus-visible:ring-offset-1',
+        )}
+        onClick={() => void navigate('/upcoming-features')}
+      >
+        <Sparkles className="h-4 w-4" />
+        Upcoming Features
+      </Button>
 
       {right ? <div>{right}</div> : null}
 
