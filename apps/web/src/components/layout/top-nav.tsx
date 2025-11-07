@@ -1,7 +1,7 @@
 'use client'
 
 import { navigate } from 'astro:transitions/client'
-import { Home, LogOut, Zap } from 'lucide-react'
+import { ChevronDown, Home, LogOut, Zap } from 'lucide-react'
 import { useState } from 'react'
 import { GiWhaleTail } from 'react-icons/gi'
 
@@ -62,16 +62,27 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
         <Home size={16} />
       </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        disabled={isTriggering}
-        onClick={() => void handleTestHelloWorld()}
-        title="Test Hello World"
-      >
-        <Zap size={16} />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-8 gap-2 px-2"
+            title="Dev"
+          >
+            <span className="text-sm">Dev</span>
+            <ChevronDown size={14} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => void handleTestHelloWorld()}
+            disabled={isTriggering}
+          >
+            <Zap className="mr-2 h-4 w-4" />
+            Start Hello world Task
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {right ? <div>{right}</div> : null}
 
