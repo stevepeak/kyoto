@@ -2,12 +2,6 @@
 alwaysApply: true
 ---
 
-## Web search and research using Perplexity
-
-Use the `mcp_perplexity-ask_perplexity_search` tools to answer questions. You should use this instead of the `web_search` tool because it is a lot more accurate.
-
-Give the tool a full question and include all the relevant context, rather than generic search terms.
-
 ## NPM package, documentation, interfaces and code search
 
 Use the `Context7` MCP server tools to search for NPM packages, documentation, TypeScript interfaces and code.
