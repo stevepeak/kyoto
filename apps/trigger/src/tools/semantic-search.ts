@@ -1,8 +1,9 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 
-import { embedQuery, performQdrantSearch } from '@/helpers/qdrant'
+import { performQdrantSearch } from '@/helpers/qdrant'
 import type { CodeSearchHit } from '@/helpers/qdrant'
+import { createEmbeddings } from '@/helpers/embeddings'
 
 export const DEFAULT_RESULT_LIMIT = 8
 export const MAX_RESULT_LIMIT = 24
@@ -57,11 +58,11 @@ export async function semanticCodeSearch(
   }
 
   const limited = ensureBoundedLimit(options.limit)
-  const vector = await embedQuery(trimmedQuery)
+  const vectors = await createEmbeddings(trimmedQuery)
 
   const hits = await performQdrantSearch(
     { repoId: options.repoId, branch: options.branch },
-    vector,
+    vectors,
     limited,
   )
 
@@ -96,5 +97,3 @@ export function createSemanticCodeSearchTool(context: SearchContext) {
     },
   })
 }
-
-

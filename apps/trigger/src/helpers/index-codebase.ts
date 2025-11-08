@@ -1,55 +1,8 @@
 import { createHash } from 'node:crypto'
-import { OpenAIEmbedding } from '@zilliz/claude-context-core'
 import { logger } from '@trigger.dev/sdk'
-import { QdrantClient } from '@qdrant/js-client-rest'
 import type { CodebaseFile } from '../steps/fetch-codebase'
-import { parseEnv } from './env'
-import { buildQdrantErrorDetails } from './qdrant'
-
-async function ensurePayloadIndex(
-  client: QdrantClient,
-  collectionName: string,
-  fieldName: string,
-) {
-  try {
-    await client.createPayloadIndex(collectionName, {
-      field_name: fieldName,
-      field_schema: 'keyword',
-      wait: true,
-    })
-    logger.info('Created Qdrant payload index', {
-      collectionName,
-      fieldName,
-    })
-  } catch (error) {
-    const details = buildQdrantErrorDetails(error, {
-      repoId: collectionName,
-      commitSha: 'N/A',
-      collection: collectionName,
-    })
-    const message =
-      typeof details.qdrantErrorMessage === 'string'
-        ? details.qdrantErrorMessage
-        : error instanceof Error
-          ? error.message
-          : null
-
-    if (message && message.toLowerCase().includes('already exists')) {
-      logger.info('Payload index already exists, skipping creation', {
-        collectionName,
-        fieldName,
-      })
-      return
-    }
-
-    logger.error('Failed to ensure payload index', {
-      collectionName,
-      fieldName,
-      error: details,
-    })
-    throw error
-  }
-}
+import { buildQdrantErrorDetails, getQdrantClient } from './qdrant'
+import { createEmbeddings } from './embeddings'
 
 function generateDeterministicUUID(input: string): string {
   const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
@@ -58,8 +11,8 @@ function generateDeterministicUUID(input: string): string {
     .digest()
 
   const hashBuffer = Buffer.from(hash)
-  hashBuffer[6] = (hashBuffer[6] & 0x0F) | 0x50
-  hashBuffer[8] = (hashBuffer[8] & 0x3F) | 0x80
+  hashBuffer[6] = (hashBuffer[6] & 0x0f) | 0x50
+  hashBuffer[8] = (hashBuffer[8] & 0x3f) | 0x80
 
   const hex = hashBuffer.toString('hex')
   return [
@@ -95,29 +48,8 @@ export async function indexFilesToQdrant(
       return { success: true }
     }
 
-    const env = parseEnv()
-
-    const embedding = new OpenAIEmbedding({
-      apiKey: env.OPENAI_API_KEY,
-      model: 'text-embedding-3-small',
-    })
-
-    const collectionName = `repo_embeddings_${repoId}`
-    const qdrantClient = new QdrantClient({
-      url: env.QDRANT_URL,
-      apiKey: env.QDRANT_API_KEY,
-    })
-
-    try {
-      await qdrantClient.getCollection(collectionName)
-    } catch {
-      await qdrantClient.createCollection(collectionName, {
-        vectors: { size: 1536, distance: 'Cosine' },
-      })
-    }
-
-    await ensurePayloadIndex(qdrantClient, collectionName, 'commitSha')
-    await ensurePayloadIndex(qdrantClient, collectionName, 'extType')
+    const collectionName = `test`
+    const qdrantClient = getQdrantClient()
 
     logger.info(
       `Indexing ${files.length} files to Qdrant collection: ${collectionName}`,
@@ -125,20 +57,6 @@ export async function indexFilesToQdrant(
 
     for (const file of files) {
       try {
-        const embeddingVector = (await embedding.embed(file.content)).vector
-
-        if (!Array.isArray(embeddingVector) || embeddingVector.length === 0) {
-          throw new Error(
-            `Invalid embedding result: expected array of numbers, got ${typeof embeddingVector}`,
-          )
-        }
-
-        if (embeddingVector.length !== 1536) {
-          throw new Error(
-            `Invalid embedding dimension: expected 1536, got ${embeddingVector.length}`,
-          )
-        }
-
         const fileIdString = `${repoId}:${file.path}:${commitSha}`
         const fileId = generateDeterministicUUID(fileIdString)
         const extType = extractExtType(file.path)
@@ -149,22 +67,24 @@ export async function indexFilesToQdrant(
             ? file.content.substring(0, MAX_PAYLOAD_SIZE) + '... [truncated]'
             : file.content
 
+        const { dense, sparse } = await createEmbeddings(file.content)
+
+        const point = {
+          id: fileId,
+          vector: { dense, sparse },
+          payload: {
+            path: file.path,
+            repo_id: repoId,
+            commitSha,
+            branch,
+            extType,
+            content: contentPreview,
+            contentLength: file.content.length,
+          },
+        }
+
         await qdrantClient.upsert(collectionName, {
-          points: [
-            {
-              id: fileId,
-              vector: embeddingVector,
-              payload: {
-                path: file.path,
-                repoId,
-                commitSha,
-                branch: branch ?? null,
-                extType: extType ?? null,
-                content: contentPreview,
-                contentLength: file.content.length,
-              },
-            },
-          ],
+          points: [point],
         })
         logger.info(`Indexed ${file.path} (${file.content.length} bytes)`)
       } catch (err) {

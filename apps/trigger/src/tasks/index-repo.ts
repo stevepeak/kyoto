@@ -6,7 +6,7 @@ import { task, logger } from '@trigger.dev/sdk'
 import { indexFilesToQdrant } from '../helpers/index-codebase'
 import { parseEnv } from '../helpers/env'
 import { getRepoWithOctokit } from '../helpers/github'
-import { buildQdrantErrorDetails } from '../helpers/qdrant'
+import { buildQdrantErrorDetails, getQdrantClient } from '../helpers/qdrant'
 import type { CodebaseFile } from '../steps/fetch-codebase'
 
 function generateDeterministicUUID(input: string): string {
@@ -193,63 +193,45 @@ export const indexRepoTask = task({
       )
     }
 
-    const env = parseEnv()
-    const collectionName = `repo_embeddings_${payload.repoId}`
-    const qdrantClient = new QdrantClient({
-      url: env.QDRANT_URL,
-      apiKey: env.QDRANT_API_KEY,
-    })
-
-    let qdrantCollectionExists = false
-    try {
-      await qdrantClient.getCollection(collectionName)
-      qdrantCollectionExists = true
-    } catch (error) {
-      const details = buildQdrantErrorDetails(error, {
-        repoId: payload.repoId,
-        commitSha,
-        branch,
-        collection: collectionName,
-      })
-      logger.info('Qdrant collection unavailable for pre-index check', details)
-    }
+    const collectionName = `test`
+    const qdrantClient = getQdrantClient()
 
     // Fetch contents for all relevant files in the repository
     const codebase: CodebaseFile[] = []
+    // TODO run in parallel by changing the logic below into it's own task and batching them
+    // TODO keep in mind rate limiting
     for (const file of filesToProcess) {
-      if (qdrantCollectionExists) {
-        const fileIdString = `${payload.repoId}:${file.path}:${commitSha}`
-        const pointId = generateDeterministicUUID(fileIdString)
-        try {
-          const existingPoints = await qdrantClient.retrieve(collectionName, {
-            ids: [pointId],
-            with_payload: false,
-          })
-          const hasExistingPoint = existingPoints.some((point) => {
-            const pointIdentifier =
-              typeof point.id === 'string' || typeof point.id === 'number'
-                ? String(point.id)
-                : null
-            return pointIdentifier === pointId
-          })
+      const fileIdString = `${payload.repoId}:${file.path}:${commitSha}`
+      const pointId = generateDeterministicUUID(fileIdString)
+      try {
+        const existingPoints = await qdrantClient.retrieve(collectionName, {
+          ids: [pointId],
+          with_payload: false,
+        })
+        const hasExistingPoint = existingPoints.some((point) => {
+          const pointIdentifier =
+            typeof point.id === 'string' || typeof point.id === 'number'
+              ? String(point.id)
+              : null
+          return pointIdentifier === pointId
+        })
 
-          if (hasExistingPoint) {
-            logger.info(
-              `Skipping ${file.path} - already indexed for commit ${commitSha.substring(0, 7)}`,
-            )
-            continue
-          }
-        } catch (error) {
-          const details = buildQdrantErrorDetails(error, {
-            repoId: payload.repoId,
-            commitSha,
-            branch,
-            collection: collectionName,
-            file: file.path,
-            fileId: pointId,
-          })
-          logger.warn('Failed to verify existing Qdrant point', details)
+        if (hasExistingPoint) {
+          logger.info(
+            `Skipping ${file.path} - already indexed for commit ${commitSha.substring(0, 7)}`,
+          )
+          continue
         }
+      } catch (error) {
+        const details = buildQdrantErrorDetails(error, {
+          repoId: payload.repoId,
+          commitSha,
+          branch,
+          collection: collectionName,
+          file: file.path,
+          fileId: pointId,
+        })
+        logger.warn('Failed to verify existing Qdrant point', details)
       }
 
       try {

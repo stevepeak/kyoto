@@ -1,30 +1,10 @@
 import { createHash } from 'node:crypto'
 
 import { QdrantClient } from '@qdrant/js-client-rest'
-import { OpenAIEmbedding } from '@zilliz/claude-context-core'
 import { logger } from '@trigger.dev/sdk'
 
 import { parseEnv } from '@/helpers/env'
-
-const EMBEDDING_MODEL_ID = 'text-embedding-3-small'
-
-export async function embedQuery(query: string): Promise<number[]> {
-  const env = parseEnv()
-
-  const embedding = new OpenAIEmbedding({
-    apiKey: env.OPENAI_API_KEY,
-    model: EMBEDDING_MODEL_ID,
-  })
-
-  const result = await embedding.embed(query)
-  const vector = result.vector
-
-  if (!Array.isArray(vector) || vector.length === 0) {
-    throw new Error('Failed to generate embedding for search query')
-  }
-
-  return vector
-}
+import type { Vectors } from './embeddings'
 
 export function getQdrantClient(): QdrantClient {
   const env = parseEnv()
@@ -49,8 +29,6 @@ export interface CodeSearchHit {
   score: number
 }
 
-type SearchParams = Parameters<QdrantClient['search']>[1]
-
 function ensureStringValue(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
@@ -64,22 +42,35 @@ function toRecord(value: unknown): Record<string, unknown> {
 
 export async function performQdrantSearch(
   context: QdrantSearchContext,
-  vector: number[],
+  vectors: Vectors,
   limit: number,
 ): Promise<CodeSearchHit[]> {
-  const collectionName = `repo_embeddings_${context.repoId}`
+  const collectionName = `test`
   const qdrantClient = getQdrantClient()
 
-  const searchParams: SearchParams = {
-    vector,
-    limit,
-    with_payload: true,
-  }
-
   try {
-    const searchResult = await qdrantClient.search(collectionName, searchParams)
+    const searchResult = await qdrantClient.searchBatch(collectionName, {
+      searches: [
+        {
+          vector: {
+            name: 'dense',
+            vector: vectors.dense,
+          },
+          limit,
+          with_payload: true,
+        },
+        {
+          vector: {
+            name: 'sparse',
+            vector: vectors.sparse,
+          },
+          limit,
+          with_payload: true,
+        },
+      ],
+    })
 
-    return searchResult.map((point) => {
+    return searchResult.flat(1).map((point) => {
       const payload = toRecord(point.payload)
       return {
         id: String(
