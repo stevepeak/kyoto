@@ -10,7 +10,7 @@ export const testRouter = router({
       secretKey: env.TRIGGER_SECRET_KEY,
     })
 
-    await tasks.trigger('test-hello-world', {})
+    await tasks.trigger('hello-world', {})
 
     return {
       success: true,

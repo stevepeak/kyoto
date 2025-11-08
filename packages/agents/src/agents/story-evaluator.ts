@@ -12,7 +12,7 @@ import type {
 import { parseEnv } from '../helpers/env'
 import { createSemanticCodeSearchTool, createSymbolLookupTool } from '../tools'
 
-const DEFAULT_STORY_MODEL = 'gpt-4o-mini'
+const DEFAULT_STORY_MODEL = 'gpt-5-mini'
 const DEFAULT_MAX_STEPS = 30
 const STORY_EVALUATION_AGENT_ID = 'story-evaluation'
 
@@ -60,7 +60,10 @@ export interface StoryEvaluationAgentResult {
   finishReason: FinishReason
 }
 
-function summarizeText(text: string | undefined, maxLength = 280): string | undefined {
+function summarizeText(
+  text: string | undefined,
+  maxLength = 280,
+): string | undefined {
   if (!text) {
     return undefined
   }
@@ -230,7 +233,8 @@ export async function runStoryEvaluationAgent(
           )
         : undefined
 
-      logger.info('Story evaluation agent step finished',
+      logger.info(
+        'Story evaluation agent step finished',
         omitUndefined({
           storyName: options.storyName,
           repoId: options.repoId,

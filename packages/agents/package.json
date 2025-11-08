@@ -13,10 +13,9 @@
     "lint:fix": "eslint . --fix --cache --concurrency=2"
   },
   "dependencies": {
-    "@app/db": "workspace:*",
     "@ai-sdk/openai": "^2.0.64",
-    "@qdrant/js-client-rest": "^1.15.1",
-    "@zilliz/claude-context-core": "^0.1.3",
+    "@app/db": "workspace:*",
+    "@trigger.dev/sdk": "^4.0.6",
     "ai": "6.0.0-beta.94",
     "zod": "^3.24.1"
   }

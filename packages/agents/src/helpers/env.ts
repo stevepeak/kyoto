@@ -48,8 +48,6 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   TRIGGER_PROJECT_ID: z.string().optional(),
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
-  QDRANT_URL: z.string().default('http://localhost:6333'),
-  QDRANT_API_KEY: z.string().optional(),
 })
 
 type ParsedEnv = z.infer<typeof envSchema>
@@ -62,7 +60,5 @@ export function parseEnv(): ParsedEnv {
     DATABASE_URL: process.env.DATABASE_URL,
     TRIGGER_PROJECT_ID: process.env.TRIGGER_PROJECT_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    QDRANT_URL: process.env.QDRANT_URL,
-    QDRANT_API_KEY: process.env.QDRANT_API_KEY,
   })
 }

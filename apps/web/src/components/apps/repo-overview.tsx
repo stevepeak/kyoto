@@ -147,23 +147,6 @@ export function RepoOverview({
     }
   }
 
-  const handleIndexRepo = async () => {
-    setIsIndexingRepo(true)
-    setIndexRepoError(null)
-    try {
-      await trpc.repo.indexRepo.mutate({
-        orgSlug,
-        repoName,
-      })
-    } catch (error) {
-      setIndexRepoError(
-        error instanceof Error ? error.message : 'Failed to index repository',
-      )
-    } finally {
-      setIsIndexingRepo(false)
-    }
-  }
-
   const handleFindStoriesInCommit = async () => {
     if (!commitSha.trim()) {
       setIndexRepoError('Commit SHA is required')
@@ -264,9 +247,6 @@ export function RepoOverview({
                 <DropdownMenuItem disabled>Repository</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button onClick={handleIndexRepo} disabled={isIndexingRepo}>
-              {isIndexingRepo ? 'Indexing...' : 'Index repository'}
-            </Button>
             {branches.length > 0 && (
               <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                 <SelectTrigger className="w-[180px]">
