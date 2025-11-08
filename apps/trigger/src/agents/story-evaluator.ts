@@ -169,11 +169,6 @@ export async function runStoryEvaluationAgent(
       semanticCodeSearch,
       symbolLookup,
     },
-    onStepFinish: (step) => {
-      console.log('🛠️ Step finished', {
-        step,
-      })
-    },
     // TODO: surface stopWhen tuning once we gather additional telemetry from longer stories.
     stopWhen: stepCountIs(
       Math.max(1, (options.maxSteps ?? DEFAULT_MAX_STEPS) + 1),
