@@ -1,4 +1,4 @@
-import { ToolLoopAgent, Output, stepCountIs, type FinishReason } from 'ai'
+import { ToolLoopAgent, Output, type FinishReason } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { logger } from '@trigger.dev/sdk'
 import { z } from 'zod'
@@ -174,6 +174,8 @@ export async function runStoryEvaluationAgent(
     runId: options.runId ?? null,
   })
 
+  const maxSteps = Math.max(1, options.maxSteps ?? DEFAULT_MAX_STEPS)
+
   const agent = new ToolLoopAgent({
     id: STORY_EVALUATION_AGENT_ID,
     model: openAiProvider(effectiveModelId),
@@ -183,9 +185,14 @@ export async function runStoryEvaluationAgent(
       searchCode: searchCodeTool,
     },
     // TODO: surface stopWhen tuning once we gather additional telemetry from longer stories.
-    stopWhen: stepCountIs(
-      Math.max(1, (options.maxSteps ?? DEFAULT_MAX_STEPS) + 1),
-    ),
+    stopWhen: ({ steps }) => {
+      const stepCount = steps.length
+      const lastStep = steps[stepCount - 1]
+      const latestText = lastStep?.text ?? ''
+      const hasStatus = latestText.includes('"status"')
+
+      return hasStatus || stepCount > maxSteps
+    },
     output: Output.object({ schema: storyTestResultSchema }),
   })
 

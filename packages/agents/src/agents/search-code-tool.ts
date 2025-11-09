@@ -1,5 +1,5 @@
 import type { Sandbox } from '@daytonaio/sdk'
-import { ToolLoopAgent, Output, stepCountIs, tool } from 'ai'
+import { ToolLoopAgent, Output, tool } from 'ai'
 import { z } from 'zod'
 
 import { createTerminalCommandTool } from '../tools/terminal-command-tool'
@@ -126,6 +126,8 @@ export async function createSearchCodeTool(ctx: SearchCodeAgentContext) {
   }
   const outline = repoOutline.result ?? ''
 
+  const maxSteps = Math.max(1, ctx.maxSteps ?? DEFAULT_SEARCH_CODE_MAX_STEPS)
+
   const agent = new ToolLoopAgent({
     id: SEARCH_CODE_AGENT_ID,
     model: ctx.model,
@@ -134,9 +136,14 @@ export async function createSearchCodeTool(ctx: SearchCodeAgentContext) {
       runCommand: runCommandTool,
       readFiles: readFileTool,
     },
-    stopWhen: stepCountIs(
-      Math.max(1, (ctx.maxSteps ?? DEFAULT_SEARCH_CODE_MAX_STEPS) + 1),
-    ),
+    stopWhen: ({ steps }) => {
+      const stepCount = steps.length
+      const lastStep = steps[stepCount - 1]
+      const latestText = lastStep?.text ?? ''
+      const hasFilePath = latestText.includes('"filePath"')
+
+      return hasFilePath || stepCount > maxSteps
+    },
     output: Output.text(),
   })
 
