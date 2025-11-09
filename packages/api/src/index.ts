@@ -10,6 +10,7 @@ import { featureRouter } from './routers/feature'
 import { dashboardRouter } from './routers/dashboard'
 
 export type { Context, Env, Session, SessionUser } from './context'
+export type { DailyMetricPoint } from './routers/dashboard'
 
 export { getUser } from './helpers/users'
 

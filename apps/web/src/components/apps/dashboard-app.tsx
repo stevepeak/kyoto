@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react'
 
+import type { DailyMetricPoint } from '@app/api'
+
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { MetricCard } from '@/components/dashboard/metric-card'
 import { AppProvider } from '@/components/providers/app-provider'
 import { LoadingProgress } from '@/components/ui/loading-progress'
-
-interface DailyMetricPoint {
-  date: string
-  count: number
-}
 
 interface DashboardMetrics {
   total: number

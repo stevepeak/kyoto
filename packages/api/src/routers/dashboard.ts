@@ -1,6 +1,6 @@
 import { router, protectedProcedure } from '../trpc'
 
-export interface DailyMetricPoint {
+export type DailyMetricPoint = {
   date: string
   count: number
 }
