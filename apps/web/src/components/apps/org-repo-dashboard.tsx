@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { SiGithub } from 'react-icons/si'
-import { BookOpen, Clock3, ChevronDown, Plus } from 'lucide-react'
+import { BookOpen, Clock3, ChevronDown, Plus, BookMarked } from 'lucide-react'
 
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -90,6 +90,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
       name: string
       defaultBranch: string | null
       enabled: boolean
+      isPrivate: boolean
     }>
   >([])
   const [loadingRepos, setLoadingRepos] = useState(false)
@@ -106,6 +107,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
         name: string
         defaultBranch: string | null
         enabled: boolean
+        isPrivate: boolean
       }>
       setAllRepos(reposList)
     } catch (error) {
@@ -416,8 +418,8 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                     to add more repositories and projects to Tailz.
                   </p>
                   <p>
-                    After updating the installation, reopen this dialog to search
-                    again.
+                    After updating the installation, reopen this dialog to
+                    search again.
                   </p>
                 </div>
               ) : (
@@ -431,14 +433,25 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                   {dialogFilteredRepos.map((r) => (
                     <li
                       key={r.id}
-                      className={`p-3 cursor-pointer hover:bg-accent ${
-                        selectedRepoName === r.name ? 'bg-accent' : ''
-                      }`}
+                      className={cn(
+                        'cursor-pointer p-3 hover:bg-accent',
+                        selectedRepoName === r.name && 'bg-accent',
+                      )}
                       onClick={() => {
                         setSelectedRepoName(r.name)
                       }}
                     >
-                      <span className="text-sm">{r.name}</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <BookMarked className="h-4 w-4 text-muted-foreground" />
+                          <span className="truncate text-sm font-medium text-foreground">
+                            {r.name}
+                          </span>
+                        </div>
+                        <span className="flex-shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {r.isPrivate ? 'Private' : 'Public'}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -470,4 +483,3 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     </AppLayout>
   )
 }
-

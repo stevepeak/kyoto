@@ -18,7 +18,9 @@ export interface RunningCiRun {
 const DAILY_WINDOW_DAYS = 30
 
 function toUtcStartOfDay(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  )
 }
 
 function formatDateKey(date: Date): string {
@@ -90,10 +92,12 @@ export const dashboardRouter = router({
       ctx.db
         .selectFrom('repos')
         .select((eb) => eb.fn.countAll().as('count'))
+        .where('enabled', '=', true)
         .executeTakeFirst(),
       ctx.db
         .selectFrom('repos')
         .select(['createdAt'])
+        .where('enabled', '=', true)
         .where('createdAt', '>=', startDate)
         .execute(),
       ctx.db
@@ -137,9 +141,21 @@ export const dashboardRouter = router({
     const usersTotal = parseCount(usersTotalRow?.count)
     const runsTotal = parseCount(runsTotalRow?.count)
 
-    const projectsSeries = buildDailySeries(recentProjects, startDate, DAILY_WINDOW_DAYS)
-    const usersSeries = buildDailySeries(recentUsers, startDate, DAILY_WINDOW_DAYS)
-    const runsSeries = buildDailySeries(recentRuns, startDate, DAILY_WINDOW_DAYS)
+    const projectsSeries = buildDailySeries(
+      recentProjects,
+      startDate,
+      DAILY_WINDOW_DAYS,
+    )
+    const usersSeries = buildDailySeries(
+      recentUsers,
+      startDate,
+      DAILY_WINDOW_DAYS,
+    )
+    const runsSeries = buildDailySeries(
+      recentRuns,
+      startDate,
+      DAILY_WINDOW_DAYS,
+    )
 
     const runningCiRuns: RunningCiRun[] = runningRuns.map((run) => ({
       id: run.id,
@@ -171,4 +187,3 @@ export const dashboardRouter = router({
     }
   }),
 })
-

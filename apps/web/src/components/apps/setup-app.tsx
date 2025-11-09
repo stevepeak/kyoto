@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { GitBranch, Book } from 'lucide-react'
+
 import { useTRPCClient } from '@/client/trpc'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { AppLayout } from '@/components/layout'
+import { cn } from '@/lib/utils'
 
 export function SetupApp() {
   const trpc = useTRPCClient()
@@ -24,6 +27,7 @@ export function SetupApp() {
       name: string
       defaultBranch: string | null
       enabled: boolean
+      isPrivate: boolean
     }>
   >([])
   const [allRepos, setAllRepos] = useState<
@@ -32,6 +36,7 @@ export function SetupApp() {
       name: string
       defaultBranch: string | null
       enabled: boolean
+      isPrivate: boolean
     }>
   >([])
   const [loadingRepos, setLoadingRepos] = useState(false)
@@ -72,6 +77,7 @@ export function SetupApp() {
         name: string
         defaultBranch: string | null
         enabled: boolean
+        isPrivate: boolean
       }>
       setAllRepos(repos)
       setEnabledRepos(repos.filter((r) => r.enabled))
@@ -111,6 +117,7 @@ export function SetupApp() {
         name: string
         defaultBranch: string | null
         enabled: boolean
+        isPrivate: boolean
       }>
       setAllRepos(repos)
       setEnabledRepos(repos.filter((r) => r.enabled))
@@ -140,6 +147,7 @@ export function SetupApp() {
         name: string
         defaultBranch: string | null
         enabled: boolean
+        isPrivate: boolean
       }>
       setAllRepos(repos)
       setEnabledRepos(repos.filter((r) => r.enabled))
@@ -262,14 +270,25 @@ export function SetupApp() {
                   {filteredRepos.map((r) => (
                     <li
                       key={r.id}
-                      className={`p-3 cursor-pointer hover:bg-accent ${
-                        selectedRepoName === r.name ? 'bg-accent' : ''
-                      }`}
+                      className={cn(
+                        'cursor-pointer p-3 hover:bg-accent',
+                        selectedRepoName === r.name && 'bg-accent',
+                      )}
                       onClick={() => {
                         setSelectedRepoName(r.name)
                       }}
                     >
-                      <span className="text-sm">{r.name}</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Book className="h-4 w-4 text-muted-foreground" />
+                          <span className="truncate text-sm font-medium text-foreground">
+                            {selectedOrg}/{r.name}
+                          </span>
+                        </div>
+                        <span className="flex-shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {r.isPrivate ? 'Private' : 'Public'}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>

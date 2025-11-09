@@ -298,7 +298,7 @@ export interface Run {
    */
   repoId: string;
   /**
-   * The overall status of the run (pass, fail, skipped, running)
+   * The overall status of the run (pass, fail, skipped, running, error)
    */
   status: string;
   /**

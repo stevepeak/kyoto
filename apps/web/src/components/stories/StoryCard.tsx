@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-type StoryStatus = 'pass' | 'fail' | 'error' | 'running' | null
+type StoryStatus = 'pass' | 'fail' | 'error'
 
 interface StoryCardProps {
   id: string
@@ -10,51 +10,39 @@ interface StoryCardProps {
   latestStatus: StoryStatus
 }
 
-function getStatusDisplay(status: StoryStatus) {
-  if (!status) {
-    return {
-      label: 'Not yet evaluated',
-      textClass: 'text-muted-foreground',
-      dotClass: 'bg-muted',
-    }
+const STATUS_META: Record<
+  StoryStatus,
+  {
+    label: string
+    textClass: string
+    dotClass: string
   }
-
-  switch (status) {
-    case 'pass':
-      return {
-        label: 'Passing',
-        textClass: 'text-chart-1',
-        dotClass: 'bg-chart-1',
-      }
-    case 'fail':
-      return {
-        label: 'Failing',
-        textClass: 'text-destructive',
-        dotClass: 'bg-destructive',
-      }
-    case 'error':
-      return {
-        label: 'Error',
-        textClass: 'text-orange-600 dark:text-orange-500',
-        dotClass: 'bg-orange-500',
-      }
-    case 'running':
-      return {
-        label: 'Running',
-        textClass: 'text-primary',
-        dotClass: 'bg-primary',
-      }
-    default:
-      return {
-        label: 'Not yet evaluated',
-        textClass: 'text-muted-foreground',
-        dotClass: 'bg-muted',
-      }
-  }
+> = {
+  pass: {
+    label: 'Passing',
+    textClass: 'text-chart-1',
+    dotClass: 'bg-chart-1',
+  },
+  fail: {
+    label: 'Failing',
+    textClass: 'text-destructive',
+    dotClass: 'bg-destructive',
+  },
+  error: {
+    label: 'Error',
+    textClass: 'text-orange-600 dark:text-orange-500',
+    dotClass: 'bg-orange-500',
+  },
 }
 
-export function StoryCard({ id: _id, name, href, groups, latestStatus }: StoryCardProps) {
-  const statusDisplay = getStatusDisplay(latestStatus)
+export function StoryCard({
+  id: _id,
+  name,
+  href,
+  groups,
+  latestStatus,
+}: StoryCardProps) {
+  const statusDisplay = STATUS_META[latestStatus]
 
   return (
     <a
@@ -71,10 +59,7 @@ export function StoryCard({ id: _id, name, href, groups, latestStatus }: StoryCa
             )}
           >
             <span
-              className={cn(
-                'h-2 w-2 rounded-full',
-                statusDisplay.dotClass,
-              )}
+              className={cn('h-2 w-2 rounded-full', statusDisplay.dotClass)}
             />
             {statusDisplay.label}
           </span>
