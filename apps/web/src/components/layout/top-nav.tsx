@@ -136,8 +136,6 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
 
       {right ? <div>{right}</div> : null}
 
-      <ThemeToggle />
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -168,6 +166,16 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
               <p className="text-xs text-muted-foreground">@{githubLogin}</p>
             ) : null}
           </div>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={(event) => event.preventDefault()}
+            className="gap-2"
+          >
+            <span className="text-sm">Theme</span>
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => void signOut()}>
             <LogOut className="mr-2 h-4 w-4" />

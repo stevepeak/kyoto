@@ -108,3 +108,16 @@ Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, thi
 # License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+# Domain names
+- aqa.dev
+- kyoto.dev
+- qazilla.dev
+- qaqa.app
+- qagenie.dev
+- qwaq.dev
+- qapa.dev
+- gomama.dev
+- doqa.dev
+- weqa.dev
+- 

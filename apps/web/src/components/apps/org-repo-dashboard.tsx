@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { SiGithub } from 'react-icons/si'
-import { BookOpen, Clock3, LayoutGrid, List, ChevronDown } from 'lucide-react'
+import { BookOpen, Clock3, ChevronDown } from 'lucide-react'
 
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -79,7 +79,6 @@ export function OrgRepoDashboard({ org, repos }: Props) {
   const [dialogSearchQuery, setDialogSearchQuery] = useState('')
   const [selectedRepoName, setSelectedRepoName] = useState<string | null>(null)
   const [sortOption, setSortOption] = useState<SortOption>('name')
-  const [activeView, setActiveView] = useState<'list' | 'grid'>('list')
   const [enabling, setEnabling] = useState(false)
   const [allRepos, setAllRepos] = useState<
     Array<{
@@ -285,41 +284,6 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <div className="flex items-center overflow-hidden rounded-md border border-border">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-pressed={activeView === 'list'}
-                onClick={() => setActiveView('list')}
-                className={cn(
-                  'rounded-none',
-                  activeView === 'list'
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                <List className="h-4 w-4" />
-                <span className="sr-only">List view</span>
-              </Button>
-              <div className="h-6 w-px bg-border" />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-pressed={activeView === 'grid'}
-                onClick={() => setActiveView('grid')}
-                className={cn(
-                  'rounded-none',
-                  activeView === 'grid'
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                <span className="sr-only">Grid view</span>
-              </Button>
-            </div>
           </div>
         </div>
         <div className="flex-1 overflow-auto px-6 py-6">
