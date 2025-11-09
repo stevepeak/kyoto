@@ -2,8 +2,8 @@ import type { Sandbox } from '@daytonaio/sdk'
 import { ToolLoopAgent, Output, tool } from 'ai'
 import { z } from 'zod'
 
-import { createTerminalCommandTool } from '../tools/terminal-command-tool'
-import { createReadFileTool } from '../tools/read-file-tool'
+import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
+import { createReadFileTool } from '../../tools/read-file-tool'
 
 const SEARCH_CODE_AGENT_ID = 'sandbox-search-code'
 const DEFAULT_SEARCH_CODE_MODEL = 'gpt-5-mini'
@@ -14,14 +14,11 @@ export const SearchRepoCodeParams = z.object({
     .string()
     .min(1)
     .max(4_096)
-    .describe(
-      'Detailed instructions for the repository search specialist, including any patterns, paths, filters, or preferred response format.',
-    ),
+    .describe('Detailed instructions for the repository search specialist.'),
 })
 
 function buildSearchCodeInstructions(args: { outline: string }): string {
   return `
-
 You are a Daytona Sandbox Code Search Specialist operating inside a git repository.
 
 # Role & Objective
@@ -44,6 +41,9 @@ When confident that you've satisfied the request, summarize evidence and STOP.
 - Assume \`runCommand\` returns:
   - stdout on success
   - a JSON object with \`exitCode\` and \`output\` on failure
+- If no relevant matches are found after reasonable searches, return an empty array \`[]\` rather than speculating.
+- When verifying, read 10-20 lines before and after a match to confirm context if needed.
+- Do not continue searching after you have provided sufficient verified evidence.
 
 # Search Strategy
 1. Break down the user's request into relevant code symbols, filenames, or terms.

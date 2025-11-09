@@ -6,5 +6,3 @@ export { helloWorldTask } from './tasks/hello-world'
 export { handleGithubWebhookTask } from './tasks/handle-github-webhook'
 export { testStoryTask } from './tasks/test-story'
 export { runCiTask } from './tasks/run-ci'
-
-// Export helper types and functio

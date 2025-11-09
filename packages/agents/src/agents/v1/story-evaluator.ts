@@ -8,12 +8,12 @@ import type {
   StoryTestResultPayload,
 } from '@app/db'
 
-import { parseEnv } from '../helpers/env'
+import { parseEnv } from '../../helpers/env'
 import {
   createSearchCodeTool,
   SEARCH_CODE_AGENT_MODEL,
 } from './search-code-tool'
-import { createShareThoughtTool } from '../tools/share-thought-tool'
+import { createShareThoughtTool } from '../../tools/share-thought-tool'
 import { Daytona } from '@daytonaio/sdk'
 
 const DEFAULT_STORY_MODEL = 'gpt-5-mini'
@@ -113,6 +113,13 @@ function buildStoryEvaluationInstructions(): string {
     
     # Important
     - Each response must be a JSON object that matches the required schema. Do not include explanations outside of JSON.
+
+    # Evaluation Mindset
+    - Treat the repository as the single source of truth.
+    - Only mark a story as "passed" when concrete code evidence confirms that each step is implemented and functionally connected.
+    - A step is "blocked" if supporting code is missing, incomplete, or ambiguous.
+    - A step is "failed" if code exists but clearly contradicts or prevents the expected behavior.
+    - A story may be "partially passed" if some steps are confirmed and others are blocked or failed; you must represent this in the evidence list.
     
     # Schema
     \`\`\`
@@ -123,10 +130,37 @@ function buildStoryEvaluationInstructions(): string {
     - **shareThought**: summarize your intent, plan next steps, and note important discoveries for human reviewers.
     - **searchCode**: delegate shell work to the sandbox search specialist. Provide a clear task with any useful filters or response expectations; the specialist can retry commands on your behalf. Remember that the Daytona terminal is non-interactive, so commands must complete without prompts. When suggesting ripgrep searches, include the "." path (for example: \`rg pattern .\`).
 
+    # When using searchCode
+    - Include a clear intent phrase, e.g. "Find function definitions for handleLogin" or "Locate where password reset emails are sent."
+    - Prefer targeted ripgrep searches using unique keywords, filenames, or function names derived from the story step.
+    - After receiving results, verify code semantics by reading context or re-querying with more specific patterns.
+    - Avoid redundant searches for the same concept once confirmed.
+
+    # Evidence Definition
+    - Evidence must be **executable code**, not just type definitions, comments, or unused utilities.
+    - Each evidence item must include:
+      - A meaningful note summarizing what this code does.
+      - A file path and line range.
+      - Optional confidence: "high" | "medium" | "low"
+    - Prefer top-level functions, components, or effects that implement user-facing outcomes.
+
+    # Step Continuity
+    - Maintain a mental map of dependencies between steps (e.g., "create user" must precede "log in user").
+    - When a step depends on another, cross-reference evidence from earlier steps rather than duplicating it.
+
+    # When to Stop
+    - When all steps are either satisfied, blocked, or failed.
+    - When sufficient verified evidence exists for every "passed" step.
+    - Do not continue searching once a definitive conclusion is reached.
+
     # Rules
     - When status is not "running", you must provide analysis with an ordered evidence list showing exactly which files and line ranges support your conclusion.
     - Explanation should clearly state why the story passes, fails, or is blocked. Use concise language that a human reviewer can follow quickly.
     - If available evidence is insufficient to decide, mark the status as "blocked" and describe what is missing in the explanation.
+    - If no relevant evidence is found after reasonable searches, include \`"evidence": []\` and set \`"status": "blocked"\`.
+    - Use shareThought to describe reasoning between steps, not raw searches.
+    - Keep it short, factual, and time-ordered.
+    - Do not include internal thoughts in final output, instead use shareThought to describe your reasoning.
     `
 }
 

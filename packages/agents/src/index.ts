@@ -3,14 +3,14 @@ export { parseEnv } from './helpers/env'
 export {
   runStoryEvaluationAgent,
   normalizeStoryTestResult,
-} from './agents/story-evaluator'
+} from './agents/v1/story-evaluator'
 
-export type { StoryEvaluationAgentResult } from './agents/story-evaluator'
+export type { StoryEvaluationAgentResult } from './agents/v1/story-evaluator'
 
 export {
   createSearchCodeTool as createSandboxSearchTool,
   SearchRepoCodeParams as sandboxSearchParams,
-} from './agents/search-code-tool'
+} from './agents/v1/search-code-tool'
 export {
   createShareThoughtTool,
   shareThoughtInputSchema,
