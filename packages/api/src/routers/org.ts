@@ -1,3 +1,6 @@
+import { configure, tasks } from '@trigger.dev/sdk'
+
+import { parseEnv } from '../helpers/env'
 import { router, protectedProcedure } from '../trpc'
 
 export const orgRouter = router({
@@ -13,13 +16,24 @@ export const orgRouter = router({
   listInstalled: protectedProcedure.query(async ({ ctx }) => {
     const owners = await ctx.db
       .selectFrom('owners')
-      .select(['login as slug', 'name'])
-      .where('installationId', 'is not', null)
-      .orderBy('login')
+      .leftJoin('repos', 'owners.id', 'repos.ownerId')
+      .select((eb) => [
+        eb.ref('owners.login').as('slug'),
+        eb.ref('owners.name').as('accountName'),
+        eb.fn.count('repos.id').as('repoCount'),
+      ])
+      .where('owners.installationId', 'is not', null)
+      .groupBy(['owners.login', 'owners.name'])
+      .orderBy('owners.login')
       .execute()
 
     return {
-      orgs: owners.map((o) => ({ slug: o.slug, name: o.name ?? o.slug })),
+      orgs: owners.map((owner) => ({
+        slug: owner.slug,
+        name: owner.accountName ?? owner.slug,
+        accountName: owner.accountName ?? null,
+        repoCount: Number(owner.repoCount ?? 0),
+      })),
     }
   }),
   getSetupStatus: protectedProcedure.query(async ({ ctx }) => {
@@ -40,5 +54,69 @@ export const orgRouter = router({
       .executeTakeFirst()
 
     return { hasInstallation: true, hasEnabledRepos: Boolean(enabledRepo) }
+  }),
+  refreshInstallations: protectedProcedure.mutation(async ({ ctx }) => {
+    const installationRows = await ctx.db
+      .selectFrom('owners')
+      .select(['installationId', 'login'])
+      .where('installationId', 'is not', null)
+      .execute()
+
+    const installations = installationRows
+      .map((row) => {
+        if (row.installationId === null) {
+          return null
+        }
+
+        const parsed = Number.parseInt(String(row.installationId), 10)
+
+        if (!Number.isFinite(parsed)) {
+          console.warn(
+            `Skipping invalid installation id for owner ${row.login}: ${row.installationId}`,
+          )
+          return null
+        }
+
+        return {
+          installationId: parsed,
+          login: row.login,
+        }
+      })
+      .filter(
+        (value): value is { installationId: number; login: string } =>
+          value !== null,
+      )
+
+    if (installations.length === 0) {
+      return {
+        triggered: 0,
+        total: 0,
+        failed: 0,
+      }
+    }
+
+    const env = parseEnv(ctx.env)
+
+    configure({
+      secretKey: env.TRIGGER_SECRET_KEY,
+    })
+
+    const results = await Promise.allSettled(
+      installations.map((installation) =>
+        tasks.trigger('sync-github-installation', {
+          installationId: installation.installationId,
+        }),
+      ),
+    )
+
+    const failed = results.filter(
+      (result) => result.status === 'rejected',
+    ).length
+
+    return {
+      triggered: installations.length - failed,
+      total: installations.length,
+      failed,
+    }
   }),
 })

@@ -1,8 +1,8 @@
 'use client'
 
 import { navigate } from 'astro:transitions/client'
-import { ChevronDown, LogOut, Sparkles, Zap } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronDown, LogOut, RefreshCw, Sparkles, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { GiWhaleTail } from 'react-icons/gi'
 
 import { Button } from '@/components/ui/button'
@@ -34,6 +34,8 @@ interface TopNavProps {
 export function TopNav({ breadcrumbs, right }: TopNavProps) {
   const trpc = useTRPCClient()
   const [isTriggering, setIsTriggering] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [githubLogin, setGithubLogin] = useState<string | null>(null)
   const session = useSession()
 
   const handleTestHelloWorld = async () => {
@@ -47,9 +49,50 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
     }
   }
 
+  const handleRefreshInstallations = async () => {
+    setIsRefreshing(true)
+    try {
+      await trpc.org.refreshInstallations.mutate()
+    } catch (error) {
+      console.error('Failed to refresh installations:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   const user = session.data?.user
   const userImage = user?.image
   const userName = user?.name || user?.email || 'User'
+
+  useEffect(() => {
+    if (!session.data) {
+      setGithubLogin(null)
+      return
+    }
+
+    let isMounted = true
+
+    void (async () => {
+      try {
+        const result = await trpc.user.get.query()
+        if (!isMounted) {
+          return
+        }
+
+        setGithubLogin(result.githubLogin ?? null)
+      } catch (error) {
+        console.error('Failed to fetch GitHub login', error)
+        if (!isMounted) {
+          return
+        }
+        setGithubLogin(null)
+      }
+    })()
+
+    return () => {
+      isMounted = false
+    }
+  }, [session.data, trpc])
 
   const rightActions = (
     <div className="flex items-center gap-2">
@@ -68,6 +111,13 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
             <Zap className="mr-2 h-4 w-4" />
             Start Hello world Task
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => void handleRefreshInstallations()}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh orgs/repos
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -81,7 +131,7 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
         onClick={() => void navigate('/upcoming-features')}
       >
         <Sparkles className="h-4 w-4" />
-        Upcoming Features
+        What&apos;s next?
       </Button>
 
       {right ? <div>{right}</div> : null}
@@ -114,6 +164,9 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
             {user?.email && (
               <p className="text-xs text-muted-foreground">{user.email}</p>
             )}
+            {githubLogin ? (
+              <p className="text-xs text-muted-foreground">@{githubLogin}</p>
+            ) : null}
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => void signOut()}>

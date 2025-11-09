@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
+import { Button } from '@/components/ui/button'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SiGithub } from 'react-icons/si'
 
 interface OrgItem {
   slug: string
   name: string
+  accountName: string | null
+  repoCount: number
 }
 
 export function OrgListApp() {
@@ -72,16 +76,34 @@ export function OrgListApp() {
   return (
     <AppLayout>
       <div className="p-6 flex flex-col h-full overflow-auto">
-        <h1 className="text-xl font-semibold text-foreground">Organizations</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-xl font-semibold text-foreground">
+            Organizations
+          </h1>
+          <Button asChild>
+            <a href="/setup">Add new organization</a>
+          </Button>
+        </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {orgs.map((org) => (
             <a key={org.slug} href={`/org/${org.slug}`} className="block">
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle>{org.name}</CardTitle>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <SiGithub className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base font-semibold">
+                      {org.accountName ?? org.name}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{org.slug}</p>
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-muted-foreground">@{org.slug}</p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">
+                      {org.repoCount}
+                    </span>{' '}
+                    {org.repoCount === 1 ? 'repository' : 'repositories'}
+                  </p>
                 </CardContent>
               </Card>
             </a>

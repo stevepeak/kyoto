@@ -6,6 +6,47 @@ import type { Json, Story } from '@app/db/types'
 import { protectedProcedure, router } from '../trpc'
 import { parseEnv } from '../helpers/env'
 
+type StoryTestStatus = 'pass' | 'fail' | 'blocked' | 'running'
+
+function deriveGroupNamesFromFiles(files: Json | null): string[] {
+  if (!files || !Array.isArray(files)) {
+    return []
+  }
+
+  const groupNames = new Set<string>()
+
+  for (const entry of files) {
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
+      continue
+    }
+
+    const [rawPath] = entry.split('@', 1)
+    if (!rawPath) {
+      continue
+    }
+
+    const sanitizedPath = rawPath.trim().replace(/\\/g, '/')
+    const segments = sanitizedPath.split('/').filter(Boolean)
+    if (segments.length === 0) {
+      continue
+    }
+
+    let group = segments[0]
+    if (
+      (segments[0] === 'apps' || segments[0] === 'packages' || segments[0] === 'services') &&
+      segments.length >= 2
+    ) {
+      group = `${segments[0]}/${segments[1]}`
+    } else if (segments[0] === 'src' && segments.length >= 2) {
+      group = `${segments[0]}/${segments[1]}`
+    }
+
+    groupNames.add(group)
+  }
+
+  return Array.from(groupNames)
+}
+
 export const storyRouter = router({
   listByBranch: protectedProcedure
     .input(
@@ -48,6 +89,39 @@ export const storyRouter = router({
         .orderBy('createdAt', 'desc')
         .execute()
 
+      const storyIds = stories.map((story) => story.id)
+
+      let latestStatuses = new Map<string, { status: StoryTestStatus; createdAt: Date | null }>()
+
+      if (storyIds.length > 0) {
+        const statusRows = await ctx.db
+          .selectFrom('storyTestResults')
+          .select([
+            'storyTestResults.storyId as storyId',
+            'storyTestResults.status as status',
+            'storyTestResults.createdAt as createdAt',
+          ])
+          .where('storyTestResults.storyId', 'in', storyIds)
+          .where('storyTestResults.status', '!=', 'running')
+          .orderBy('storyTestResults.storyId', 'asc')
+          .orderBy('storyTestResults.createdAt', 'desc')
+          .orderBy('storyTestResults.id', 'desc')
+          .execute()
+
+        latestStatuses = statusRows.reduce(
+          (acc, row) => {
+            if (!acc.has(row.storyId)) {
+              acc.set(row.storyId, {
+                status: row.status as StoryTestStatus,
+                createdAt: row.createdAt ?? null,
+              })
+            }
+            return acc
+          },
+          new Map<string, { status: StoryTestStatus; createdAt: Date | null }>(),
+        )
+      }
+
       return {
         stories: stories.map((story) => ({
           id: story.id,
@@ -57,6 +131,10 @@ export const storyRouter = router({
           branchName: story.branchName,
           createdAt: story.createdAt?.toISOString() ?? null,
           updatedAt: story.updatedAt?.toISOString() ?? null,
+          groups: deriveGroupNamesFromFiles(story.files as Json),
+          latestStatus: latestStatuses.get(story.id)?.status ?? null,
+          latestStatusAt:
+            latestStatuses.get(story.id)?.createdAt?.toISOString() ?? null,
         })),
       }
     }),

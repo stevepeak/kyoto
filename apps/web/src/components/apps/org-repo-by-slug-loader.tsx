@@ -16,7 +16,10 @@ interface RepoItem {
   id: string
   name: string
   defaultBranch?: string
-  updatedAt?: string
+  isPrivate: boolean
+  storyCount: number
+  lastRunStatus: 'pass' | 'fail' | 'skipped' | 'running' | null
+  lastRunAt: Date | null
 }
 
 export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
@@ -35,7 +38,15 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
         if (!isMounted) {
           return
         }
-        setOrg({ id: orgSlug, slug: orgSlug, name: orgSlug })
+        if (reposResp.owner) {
+          setOrg({
+            id: reposResp.owner.id,
+            slug: reposResp.owner.slug,
+            name: reposResp.owner.name,
+          })
+        } else {
+          setOrg({ id: orgSlug, slug: orgSlug, name: orgSlug })
+        }
         setRepos(
           (
             reposResp.repos as Array<{
@@ -43,6 +54,10 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
               name: string
               defaultBranch: string | null
               enabled: boolean
+              isPrivate: boolean
+              storyCount: number
+              lastRunStatus: 'pass' | 'fail' | 'skipped' | 'running' | null
+              lastRunAt: Date | null
             }>
           )
             .filter((r) => r.enabled)
@@ -50,6 +65,10 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
               id: r.id,
               name: r.name,
               defaultBranch: r.defaultBranch ?? undefined,
+              isPrivate: r.isPrivate,
+              storyCount: r.storyCount,
+              lastRunStatus: r.lastRunStatus,
+              lastRunAt: r.lastRunAt,
             })),
         )
       } catch (e) {

@@ -1,4 +1,4 @@
-import { CheckCircle2, MinusCircle, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Loader2, MinusCircle, XCircle } from 'lucide-react'
 
 interface RunItem {
   id: string
@@ -61,15 +61,16 @@ function getStatusIcon(status: RunItem['status']) {
   switch (status) {
     case 'success':
       return (
-        <CheckCircle2 className="size-4 text-green-600 dark:text-green-500" />
+        <CheckCircle2 className="size-4 text-chart-1" />
       )
     case 'failed':
-      return <XCircle className="size-4 text-red-600 dark:text-red-500" />
+      return <XCircle className="size-4 text-destructive" />
     case 'skipped':
       return <MinusCircle className="size-4 text-muted-foreground" />
     case 'running':
+      return <Loader2 className="size-4 text-primary animate-spin" />
     case 'queued':
-      return null
+      return <Clock className="size-4 text-chart-4" />
   }
 }
 

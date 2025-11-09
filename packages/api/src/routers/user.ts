@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { getUser, updateUser } from '../helpers/users'
+import { getUser, getUserGithubLogin, updateUser } from '../helpers/users'
 import { protectedProcedure, router } from '../trpc'
 
 // Validate timezone against IANA timezone database
@@ -26,7 +26,15 @@ export const userRouter = router({
       userId,
     })
 
-    return user
+    const githubLogin = await getUserGithubLogin({
+      db: ctx.db,
+      userId,
+    })
+
+    return {
+      ...user,
+      githubLogin,
+    }
   }),
 
   update: protectedProcedure

@@ -1,6 +1,6 @@
-import { navigate } from 'astro:transitions/client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { SiGithub } from 'react-icons/si'
+import { BookOpen, Clock3, LayoutGrid, List, ChevronDown } from 'lucide-react'
 
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -14,13 +14,24 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useTRPCClient } from '@/client/trpc'
+import { cn } from '@/lib/utils'
 
 interface RepoItem {
   id: string
   name: string
   defaultBranch?: string
-  updatedAt?: string
+  isPrivate: boolean
+  storyCount: number
+  lastRunStatus: 'pass' | 'fail' | 'skipped' | 'running' | null
+  lastRunAt: Date | null
 }
 
 interface OrgData {
@@ -34,11 +45,41 @@ interface Props {
   repos: RepoItem[]
 }
 
+type SortOption = 'name' | 'stories' | 'lastRun'
+
 export function OrgRepoDashboard({ org, repos }: Props) {
+  const statusConfig: Record<
+    NonNullable<RepoItem['lastRunStatus']>,
+    {
+      label: string
+      dotClass: string
+    }
+  > = {
+    pass: {
+      label: 'Passed',
+      dotClass: 'bg-chart-1',
+    },
+    fail: {
+      label: 'Failed',
+      dotClass: 'bg-destructive',
+    },
+    skipped: {
+      label: 'Skipped',
+      dotClass: 'bg-muted-foreground',
+    },
+    running: {
+      label: 'Running',
+      dotClass: 'bg-primary',
+    },
+  }
+
   const trpc = useTRPCClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [listSearchQuery, setListSearchQuery] = useState('')
+  const [dialogSearchQuery, setDialogSearchQuery] = useState('')
   const [selectedRepoName, setSelectedRepoName] = useState<string | null>(null)
+  const [sortOption, setSortOption] = useState<SortOption>('name')
+  const [activeView, setActiveView] = useState<'list' | 'grid'>('list')
   const [enabling, setEnabling] = useState(false)
   const [allRepos, setAllRepos] = useState<
     Array<{
@@ -71,17 +112,52 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     }
   }
 
-  const filteredRepos = allRepos.filter((repo) => {
-    if (!searchQuery.trim()) {
+  const dialogFilteredRepos = allRepos.filter((repo) => {
+    if (!dialogSearchQuery.trim()) {
       return !repo.enabled
     }
-    const query = searchQuery.toLowerCase()
+    const query = dialogSearchQuery.toLowerCase()
     return (
       !repo.enabled &&
       (repo.name.toLowerCase().includes(query) ||
         `${org?.slug}/${repo.name}`.toLowerCase().includes(query))
     )
   })
+
+  const repoCount = repos.length
+
+  const filteredRepos = useMemo(() => {
+    const query = listSearchQuery.trim().toLowerCase()
+    if (!query) {
+      return repos
+    }
+
+    return repos.filter((repo) =>
+      `${org?.slug ?? ''}/${repo.name}`.toLowerCase().includes(query),
+    )
+  }, [listSearchQuery, org?.slug, repos])
+
+  const displayedRepos = useMemo(() => {
+    const sorted = [...filteredRepos]
+    switch (sortOption) {
+      case 'stories':
+        sorted.sort((a, b) => b.storyCount - a.storyCount)
+        break
+      case 'lastRun':
+        sorted.sort((a, b) => {
+          const aTime = a.lastRunAt ? a.lastRunAt.getTime() : 0
+          const bTime = b.lastRunAt ? b.lastRunAt.getTime() : 0
+          return bTime - aTime
+        })
+        break
+      case 'name':
+      default:
+        sorted.sort((a, b) => a.name.localeCompare(b.name))
+        break
+    }
+
+    return sorted
+  }, [filteredRepos, sortOption])
 
   const handleEnableRepo = async () => {
     if (!org?.slug || !selectedRepoName) {
@@ -93,7 +169,6 @@ export function OrgRepoDashboard({ org, repos }: Props) {
         orgSlug: org.slug,
         repoName: selectedRepoName,
       })
-      // Refresh the page to show the new repo
       window.location.reload()
     } catch (error) {
       console.error('Failed to enable repository:', error)
@@ -106,6 +181,39 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     setIsDialogOpen(true)
     void loadRepos()
   }
+
+  const formatRelativeTime = (value: Date | null): string | null => {
+    if (!value) {
+      return null
+    }
+
+    const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+    let deltaSeconds = Math.round((value.getTime() - Date.now()) / 1000)
+
+    const units: Array<{
+      limit: number
+      divisor: number
+      unit: Intl.RelativeTimeFormatUnit
+    }> = [
+      { limit: 60, divisor: 1, unit: 'second' },
+      { limit: 3600, divisor: 60, unit: 'minute' },
+      { limit: 86400, divisor: 3600, unit: 'hour' },
+      { limit: 604800, divisor: 86400, unit: 'day' },
+      { limit: 2629800, divisor: 604800, unit: 'week' },
+      { limit: 31557600, divisor: 2629800, unit: 'month' },
+    ]
+
+    for (const { limit, divisor, unit } of units) {
+      if (Math.abs(deltaSeconds) < limit) {
+        return rtf.format(Math.round(deltaSeconds / divisor), unit)
+      }
+    }
+
+    return rtf.format(Math.round(deltaSeconds / 31557600), 'year')
+  }
+
+  const formatStoryCount = (count: number): string =>
+    `${count} ${count === 1 ? 'story' : 'stories'}`
 
   return (
     <AppLayout
@@ -120,55 +228,183 @@ export function OrgRepoDashboard({ org, repos }: Props) {
           : undefined
       }
     >
-      <div className="p-6 flex flex-col h-full overflow-auto">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <SiGithub className="h-5 w-5" />
-            <span>{org?.name ?? 'Organization'}</span>
-          </h1>
-          <Button
-            variant="outline"
-            onClick={() => {
-              void navigate('/setup/repos')
-            }}
-          >
-            Manage Repositories
-          </Button>
-        </div>
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-foreground">
-              Repositories
-            </h2>
-            <Button onClick={handleOpenDialog}>Add new repo</Button>
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="border-b border-border bg-background/80 px-6 py-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xl font-semibold text-foreground">
+                <SiGithub className="h-5 w-5 text-muted-foreground" />
+                <span>{org?.name ?? 'Organization'}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                {org?.slug ? <span>{org.slug}</span> : null}
+                <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
+                  {repoCount} {repoCount === 1 ? 'repository' : 'repositories'}
+                </span>
+              </div>
+            </div>
+            <Button
+              className="bg-chart-1 text-chart-foreground hover:bg-chart-1/90"
+              onClick={handleOpenDialog}
+            >
+              New repository
+            </Button>
           </div>
-          {repos.length === 0 ? (
-            <div className="mt-6">
-              <EmptyState
-                title="No repositories activated yet"
-                description="Get started by adding your first repository to begin tracking stories and runs."
-                action={
-                  <Button onClick={handleOpenDialog}>
-                    Add your first repository
-                  </Button>
-                }
-              />
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Input
+              placeholder="Find a repository..."
+              value={listSearchQuery}
+              onChange={(event) => setListSearchQuery(event.target.value)}
+              className="min-w-[220px] flex-1"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-sm"
+                >
+                  Sort
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44">
+                <DropdownMenuRadioGroup
+                  value={sortOption}
+                  onValueChange={(value) => setSortOption(value as SortOption)}
+                >
+                  <DropdownMenuRadioItem value="name">
+                    Name
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="stories">
+                    Story count
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="lastRun">
+                    Last CI run
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="flex items-center overflow-hidden rounded-md border border-border">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-pressed={activeView === 'list'}
+                onClick={() => setActiveView('list')}
+                className={cn(
+                  'rounded-none',
+                  activeView === 'list'
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground',
+                )}
+              >
+                <List className="h-4 w-4" />
+                <span className="sr-only">List view</span>
+              </Button>
+              <div className="h-6 w-px bg-border" />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-pressed={activeView === 'grid'}
+                onClick={() => setActiveView('grid')}
+                className={cn(
+                  'rounded-none',
+                  activeView === 'grid'
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground',
+                )}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span className="sr-only">Grid view</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto px-6 py-6">
+          {repoCount === 0 ? (
+            <EmptyState
+              title="No repositories activated yet"
+              description="Enable your first repository to start tracking stories, CI runs, and more."
+              action={
+                <Button
+                  className="bg-chart-1 text-chart-foreground hover:bg-chart-1/90"
+                  onClick={handleOpenDialog}
+                >
+                  New repository
+                </Button>
+              }
+            />
+          ) : displayedRepos.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="max-w-md rounded-lg border border-dashed border-border p-8 text-center">
+                <h3 className="text-sm font-medium text-foreground">
+                  No repositories match your search
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Try adjusting your filters or clear the search to view all
+                  repositories.
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="mt-3 border rounded-md">
-              <ul className="divide-y">
-                {repos.map((r) => (
-                  <li key={r.id} className="p-3">
-                    <a
-                      href={`/org/${org?.slug}/repo/${r.name}`}
-                      className="text-foreground hover:underline"
-                    >
-                      {r.name}
-                    </a>
+            <ul className="overflow-hidden rounded-lg border border-border bg-card">
+              {displayedRepos.map((repo) => {
+                const statusMeta = repo.lastRunStatus
+                  ? statusConfig[repo.lastRunStatus]
+                  : null
+                const relativeTime = formatRelativeTime(repo.lastRunAt)
+
+                return (
+                  <li
+                    key={repo.id}
+                    className="border-b border-border px-6 py-5 last:border-b-0"
+                  >
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <a
+                          href={`/org/${org?.slug}/repo/${repo.name}`}
+                          className="text-base font-semibold text-primary hover:underline"
+                        >
+                          {repo.name}
+                        </a>
+                        <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {repo.isPrivate ? 'Private' : 'Public'}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          <span>{formatStoryCount(repo.storyCount)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {statusMeta ? (
+                            <>
+                              <span
+                                className={cn(
+                                  'h-2 w-2 rounded-full',
+                                  statusMeta.dotClass,
+                                )}
+                              />
+                              <span className="text-muted-foreground">
+                                Last CI run {statusMeta.label.toLowerCase()}
+                                {relativeTime ? ` • ${relativeTime}` : ''}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock3 className="h-4 w-4 text-muted-foreground" />
+                              <span>No CI runs yet</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </li>
-                ))}
-              </ul>
-            </div>
+                )
+              })}
+            </ul>
           )}
         </div>
       </div>
@@ -186,9 +422,9 @@ export function OrgRepoDashboard({ org, repos }: Props) {
             <div>
               <Input
                 placeholder="Search by repository name..."
-                value={searchQuery}
+                value={dialogSearchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value)
+                  setDialogSearchQuery(e.target.value)
                   setSelectedRepoName(null)
                 }}
               />
@@ -197,16 +433,38 @@ export function OrgRepoDashboard({ org, repos }: Props) {
               <div className="text-sm text-muted-foreground py-4 text-center">
                 Loading repositories...
               </div>
-            ) : filteredRepos.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-4 text-center">
-                {searchQuery.trim()
-                  ? 'No matching repositories found'
-                  : 'Start typing to search for repositories'}
-              </div>
+            ) : dialogFilteredRepos.length === 0 ? (
+              dialogSearchQuery.trim() ? (
+                <div className="space-y-3 py-6 text-center text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">
+                    No matching repositories found
+                  </p>
+                  <p>
+                    Need to connect another repo?{' '}
+                    <a
+                      href="/setup"
+                      className="font-medium text-primary underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Configure the GitHub app
+                    </a>{' '}
+                    to add more repositories and projects to Tailz.
+                  </p>
+                  <p>
+                    After updating the installation, reopen this dialog to search
+                    again.
+                  </p>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground py-4 text-center">
+                  Start typing to search for repositories
+                </div>
+              )
             ) : (
               <div className="border rounded-md max-h-60 overflow-auto">
                 <ul className="divide-y">
-                  {filteredRepos.map((r) => (
+                  {dialogFilteredRepos.map((r) => (
                     <li
                       key={r.id}
                       className={`p-3 cursor-pointer hover:bg-accent ${
@@ -228,7 +486,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
               variant="outline"
               onClick={() => {
                 setIsDialogOpen(false)
-                setSearchQuery('')
+                setDialogSearchQuery('')
                 setSelectedRepoName(null)
               }}
             >
@@ -248,3 +506,4 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     </AppLayout>
   )
 }
+

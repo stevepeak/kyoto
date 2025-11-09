@@ -13,6 +13,9 @@ interface StoryItem {
   branchName: string
   createdAt: string | null
   updatedAt: string | null
+  groups: string[]
+  latestStatus: 'pass' | 'fail' | 'blocked' | 'running' | null
+  latestStatusAt: string | null
 }
 
 export function BranchStoriesLoader({

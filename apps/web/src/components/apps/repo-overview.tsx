@@ -1,28 +1,12 @@
 import { useState, useEffect } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@app/api'
-import { ChevronDown, GitBranch } from 'lucide-react'
+import { GitBranch } from 'lucide-react'
 import { SiGithub } from 'react-icons/si'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -94,12 +78,6 @@ export function RepoOverview({
   }, [trpc, orgSlug, repoName, selectedBranch])
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
-  const [isIndexingRepo] = useState(false)
-  const [indexRepoError, setIndexRepoError] = useState<string | null>(null)
-  const [commitDialogOpen, setCommitDialogOpen] = useState(false)
-  const [prDialogOpen, setPrDialogOpen] = useState(false)
-  const [commitSha, setCommitSha] = useState('')
-  const [prNumber, setPrNumber] = useState('')
 
   const handleStartRun = async () => {
     if (!defaultBranch) {
@@ -125,23 +103,6 @@ export function RepoOverview({
     }
   }
 
-  const handleFindStoriesInCommit = () => {
-    if (!commitSha.trim()) {
-      setIndexRepoError('Commit SHA is required')
-      return
-    }
-    setIndexRepoError('Finding stories by commit is not available yet')
-  }
-
-  const handleFindStoriesInPR = () => {
-    const prNum = Number.parseInt(prNumber.trim(), 10)
-    if (Number.isNaN(prNum) || prNum < 1) {
-      setIndexRepoError('Valid PR number is required')
-      return
-    }
-    setIndexRepoError('Finding stories by pull request is not available yet')
-  }
-
   // Filter runs and stories by selected branch
   const filteredRuns = runs.filter((run) => run.branchName === selectedBranch)
   const filteredStories = stories.filter(
@@ -164,33 +125,6 @@ export function RepoOverview({
             </span>
           </h1>
           <div className="flex items-center gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled className="gap-2">
-                  Find stories in...
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setCommitDialogOpen(true)
-                  }}
-                  disabled
-                >
-                  Commit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setPrDialogOpen(true)
-                  }}
-                  disabled
-                >
-                  Pull Request
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled>Repository</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             {branches.length > 0 && (
               <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                 <SelectTrigger className="w-[180px]">
@@ -215,98 +149,6 @@ export function RepoOverview({
             {createError}
           </div>
         )}
-        {indexRepoError && (
-          <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-            {indexRepoError}
-          </div>
-        )}
-
-        <Dialog open={commitDialogOpen} onOpenChange={setCommitDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Find Stories in Commit</DialogTitle>
-              <DialogDescription>
-                Enter the commit SHA to find stories in that commit.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="commitSha">Commit SHA</Label>
-                <Input
-                  id="commitSha"
-                  value={commitSha}
-                  onChange={(e) => setCommitSha(e.target.value)}
-                  placeholder="e.g., abc123def456..."
-                  disabled
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setCommitDialogOpen(false)
-                  setCommitSha('')
-                  setIndexRepoError(null)
-                }}
-                disabled
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleFindStoriesInCommit} disabled>
-                {isIndexingRepo ? 'Finding...' : 'Find Stories'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={prDialogOpen} onOpenChange={setPrDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Find Stories in Pull Request</DialogTitle>
-              <DialogDescription>
-                Enter the pull request number to find stories in that PR.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="prNumber">PR Number</Label>
-                <Input
-                  id="prNumber"
-                  type="number"
-                  value={prNumber}
-                  onChange={(e) => setPrNumber(e.target.value)}
-                  placeholder="e.g., 123"
-                  disabled
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setPrDialogOpen(false)
-                  setPrNumber('')
-                  setIndexRepoError(null)
-                }}
-                disabled
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleFindStoriesInPR}
-                disabled={
-                  isIndexingRepo ||
-                  !prNumber.trim() ||
-                  Number.isNaN(Number.parseInt(prNumber.trim(), 10))
-                }
-              >
-                {isIndexingRepo ? 'Finding...' : 'Find Stories'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Panel: Stories */}
           <div>

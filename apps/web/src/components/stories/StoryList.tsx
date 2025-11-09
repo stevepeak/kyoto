@@ -1,5 +1,7 @@
 import { StoryCard } from './StoryCard'
 
+type StoryStatus = 'pass' | 'fail' | 'blocked' | 'running' | null
+
 interface StoryItem {
   id: string
   name: string
@@ -8,6 +10,9 @@ interface StoryItem {
   branchName: string
   createdAt: string | null
   updatedAt: string | null
+  groups: string[]
+  latestStatus: StoryStatus
+  latestStatusAt: string | null
 }
 
 interface StoryListProps {
@@ -31,6 +36,8 @@ export function StoryList({
             id={story.id}
             name={story.name}
             href={`/org/${orgSlug}/repo/${repoName}/stories/${story.id}`}
+            groups={story.groups}
+            latestStatus={story.latestStatus}
           />
         </li>
       ))}
