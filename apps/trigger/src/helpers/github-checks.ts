@@ -7,7 +7,7 @@ export type AggregatedCounts = {
   blocked: number
 }
 
-export type RunOutcome = 'pass' | 'fail' | 'skipped'
+type RunOutcome = 'pass' | 'fail' | 'skipped'
 
 type BuildCheckRunContentParams =
   | {

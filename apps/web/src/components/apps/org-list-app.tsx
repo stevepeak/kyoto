@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
@@ -7,6 +7,8 @@ import { LoadingProgress } from '@/components/ui/loading-progress'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SiGithub } from 'react-icons/si'
+import { RefreshCw } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface OrgItem {
   slug: string
@@ -18,31 +20,62 @@ interface OrgItem {
 export function OrgListApp() {
   const trpc = useTRPCClient()
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [orgs, setOrgs] = useState<OrgItem[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  const queryOrganizations = useCallback(async () => {
+    const data = await trpc.org.listInstalled.query()
+    return data.orgs
+  }, [trpc])
+
   useEffect(() => {
     let isMounted = true
-    async function load() {
+
+    void (async () => {
       try {
-        const data = await trpc.org.listInstalled.query()
+        const loadedOrgs = await queryOrganizations()
         if (!isMounted) {
           return
         }
-        setOrgs(data.orgs)
+        setOrgs(loadedOrgs)
+        setError(null)
       } catch (e) {
+        if (!isMounted) {
+          return
+        }
         setError(
           e instanceof Error ? e.message : 'Failed to load organizations',
         )
       } finally {
+        if (!isMounted) {
+          return
+        }
         setIsLoading(false)
       }
-    }
-    void load()
+    })()
+
     return () => {
       isMounted = false
     }
-  }, [trpc])
+  }, [queryOrganizations])
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      await trpc.org.refreshInstallations.mutate()
+      const refreshedOrgs = await queryOrganizations()
+      setOrgs(refreshedOrgs)
+      setError(null)
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : 'Failed to refresh organizations',
+      )
+    } finally {
+      setIsRefreshing(false)
+      setIsLoading(false)
+    }
+  }, [queryOrganizations, trpc])
 
   if (isLoading) {
     return (
@@ -80,9 +113,21 @@ export function OrgListApp() {
           <h1 className="text-xl font-semibold text-foreground">
             Organizations
           </h1>
-          <Button asChild>
-            <a href="/setup">Add new organization</a>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => void handleRefresh()}
+              disabled={isRefreshing}
+              title="Refresh organizations"
+              aria-label="Refresh organizations"
+            >
+              <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            </Button>
+            <Button asChild>
+              <a href="/setup">Add new organization</a>
+            </Button>
+          </div>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {orgs.map((org) => (

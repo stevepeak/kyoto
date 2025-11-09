@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react'
-import { SiGithub } from 'react-icons/si'
 
 import { cn } from '@/lib/utils'
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string
   href?: string
-  showGithubIcon?: boolean
 }
 
 interface BreadcrumbsProps {
@@ -24,21 +22,31 @@ export function Breadcrumbs({ items, className, right }: BreadcrumbsProps) {
         {items.map((item, index) => {
           const isLast = index === items.length - 1
           const hasHref = !!item.href
+          const isOrg = index === 0
+          const isRepo = index === 1
           return (
             <span
               key={`${item.label}-${index}`}
               className="flex items-center gap-1"
             >
-              {item.showGithubIcon && <SiGithub className="h-4 w-4" />}
               {hasHref ? (
                 <a
                   href={item.href}
-                  className="px-2 py-1 -mx-2 -my-1 rounded-md hover:bg-muted/80 transition-colors hover:text-foreground"
+                  className={cn(
+                    'px-2 py-1 -mx-2 -my-1 rounded-md hover:bg-muted/80 transition-colors hover:text-foreground',
+                    'text-muted-foreground',
+                    (isOrg || isRepo) && 'text-foreground',
+                    isRepo && 'font-semibold',
+                  )}
                 >
                   {item.label}
                 </a>
               ) : (
-                <span className="text-foreground">{item.label}</span>
+                <span
+                  className={cn('text-foreground', isRepo && 'font-semibold')}
+                >
+                  {item.label}
+                </span>
               )}
               {!isLast && <span className="mx-2">/</span>}
             </span>

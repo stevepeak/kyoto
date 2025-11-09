@@ -109,9 +109,8 @@ export function RunDetailLoader({
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}`, showGithubIcon: true },
+        { label: orgSlug, href: `/org/${orgSlug}` },
         { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
-        { label: 'Runs', href: `/org/${orgSlug}/repo/${repoName}/runs` },
       ]}
     >
       {isLoading ? (

@@ -111,7 +111,7 @@ export function StoryDetailLoader({
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}`, showGithubIcon: true },
+        { label: orgSlug, href: `/org/${orgSlug}` },
         { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
       ]}
     >

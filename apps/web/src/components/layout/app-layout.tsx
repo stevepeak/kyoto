@@ -1,12 +1,7 @@
 import type { ReactNode } from 'react'
+import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
 
 import { TopNav } from './top-nav'
-
-interface BreadcrumbItem {
-  label: string
-  href?: string
-  showGithubIcon?: boolean
-}
 
 interface Props {
   children: ReactNode

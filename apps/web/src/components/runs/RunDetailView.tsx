@@ -1,4 +1,17 @@
+import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import {
+  CheckCircle2,
+  Clock,
+  GitBranch,
+  GitCommit,
+  GitPullRequest,
+  Loader2,
+  MinusCircle,
+  Timer,
+  XCircle,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { StoryStatusCheck } from './StoryStatusCheck'
 
 interface StoryAnalysisEvidence {
@@ -65,22 +78,87 @@ interface RunDetailViewProps {
   repoName: string
 }
 
-function getStatusBadgeClass(status: 'pass' | 'fail' | 'skipped' | 'running') {
+interface StatusDisplay {
+  label: string
+  Icon: LucideIcon
+  heroClassName: string
+  chipClassName: string
+  chipIconClassName: string
+  shouldSpin: boolean
+}
+
+function getStatusDisplay(status: Run['status']): StatusDisplay {
   switch (status) {
     case 'pass':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      return {
+        label: 'Succeeded',
+        Icon: CheckCircle2,
+        heroClassName: 'text-chart-1',
+        chipClassName: 'border-chart-1/30 bg-chart-1/10 text-chart-1',
+        chipIconClassName: 'text-chart-1',
+        shouldSpin: false,
+      }
     case 'fail':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+      return {
+        label: 'Failed',
+        Icon: XCircle,
+        heroClassName: 'text-destructive',
+        chipClassName:
+          'border-destructive/30 bg-destructive/10 text-destructive',
+        chipIconClassName: 'text-destructive',
+        shouldSpin: false,
+      }
     case 'skipped':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+      return {
+        label: 'Skipped',
+        Icon: MinusCircle,
+        heroClassName: 'text-muted-foreground',
+        chipClassName: 'border-border bg-muted text-muted-foreground',
+        chipIconClassName: 'text-muted-foreground',
+        shouldSpin: false,
+      }
     case 'running':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+      return {
+        label: 'In progress',
+        Icon: Loader2,
+        heroClassName: 'text-primary',
+        chipClassName: 'border-primary/30 bg-primary/10 text-primary',
+        chipIconClassName: 'text-primary',
+        shouldSpin: true,
+      }
   }
 }
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
   return date.toLocaleString()
+}
+
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+  const diffWeeks = Math.floor(diffDays / 7)
+
+  if (diffMins < 1) {
+    return 'just now'
+  }
+  if (diffMins < 60) {
+    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`
+  }
+  if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+  }
+  if (diffDays < 7) {
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+  }
+  if (diffWeeks < 5) {
+    return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
+  }
+  return date.toLocaleDateString()
 }
 
 function formatDurationMs(durationMs: number | null | undefined): string {
@@ -104,62 +182,165 @@ function formatDurationMs(durationMs: number | null | undefined): string {
 }
 
 export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
+  const statusDisplay = getStatusDisplay(run.status)
+  const commitTitle =
+    run.commitMessage?.split('\n')[0]?.trim() || 'Workflow run'
+  const shortSha = run.commitSha ? run.commitSha.slice(0, 7) : null
+  const relativeStarted = formatRelativeTime(run.createdAt)
+  const absoluteStarted = formatDate(run.createdAt)
+  const durationMs =
+    new Date(run.updatedAt).getTime() - new Date(run.createdAt).getTime()
+  const durationDisplay = formatDurationMs(
+    Number.isFinite(durationMs) && durationMs > 0 ? durationMs : null,
+  )
+  const commitUrl =
+    run.commitSha && orgSlug && repoName
+      ? `https://github.com/${orgSlug}/${repoName}/commit/${run.commitSha}`
+      : null
+  const pullRequestUrl =
+    run.prNumber && orgSlug && repoName
+      ? `https://github.com/${orgSlug}/${repoName}/pull/${run.prNumber}`
+      : null
+  const actorHandle = '@unknown'
+  const actorInitial =
+    actorHandle.length > 1 ? (actorHandle[1]?.toUpperCase() ?? '?') : '?'
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Top Section: Metadata */}
-      <div className="p-6 border-b space-y-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-foreground">Run Details</h1>
-          <span
-            className={cn(
-              'px-2 py-1 text-xs font-medium rounded-md',
-              getStatusBadgeClass(run.status),
-            )}
-          >
-            {run.status.toUpperCase()}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <div className="text-muted-foreground">Time</div>
-            <div className="text-foreground mt-1">
-              {formatDate(run.createdAt)}
+      <div className="border-b bg-muted/30">
+        <div className="p-6 space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="flex items-start gap-3">
+              <statusDisplay.Icon
+                className={cn(
+                  'size-10',
+                  statusDisplay.heroClassName,
+                  statusDisplay.shouldSpin ? 'animate-spin' : '',
+                )}
+              />
+              <div className="space-y-2">
+                <div className="flex flex-col gap-1">
+                  <h1 className="text-xl font-semibold text-foreground md:text-2xl">
+                    {commitTitle}
+                  </h1>
+                  <div
+                    className="text-sm text-muted-foreground"
+                    title={absoluteStarted}
+                  >
+                    Run triggered {relativeStarted}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="size-3.5" />
+                    {absoluteStarted}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Timer className="size-3.5" />
+                    Runtime {durationDisplay}
+                  </span>
+                  {pullRequestUrl ? (
+                    <a
+                      href={pullRequestUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-primary hover:text-primary/80"
+                    >
+                      <GitPullRequest className="size-3.5" />
+                      PR #{run.prNumber}
+                    </a>
+                  ) : null}
+                </div>
+              </div>
             </div>
+            <span
+              className={cn(
+                'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium',
+                statusDisplay.chipClassName,
+              )}
+            >
+              <statusDisplay.Icon
+                className={cn(
+                  'size-4',
+                  statusDisplay.chipIconClassName,
+                  statusDisplay.shouldSpin ? 'animate-spin' : '',
+                )}
+              />
+              {statusDisplay.label}
+            </span>
           </div>
 
-          <div>
-            <div className="text-muted-foreground">Branch</div>
-            <div className="text-foreground mt-1">{run.branchName}</div>
-          </div>
+          <div className="space-y-4">
+            <Card className="w-full">
+              <CardContent className="grid gap-4 px-6 py-0 sm:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-semibold text-muted-foreground">
+                    {actorInitial}
+                  </div>
+                  <div className="space-y-0.5 text-sm">
+                    <div className="font-medium text-foreground">
+                      {actorHandle}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Committed {relativeStarted}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 sm:justify-end lg:justify-center">
+                  <GitBranch className="size-4 text-muted-foreground" />
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-mono font-medium text-blue-800">
+                    {run.branchName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 lg:justify-end">
+                  <GitCommit className="size-4 text-muted-foreground underline" />
+                  {commitUrl ? (
+                    <a
+                      href={commitUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-xs font-medium text-primary underline hover:text-primary/80"
+                    >
+                      {shortSha ?? '—'}
+                    </a>
+                  ) : (
+                    <span className="font-mono text-xs font-medium text-foreground underline">
+                      {shortSha ?? '—'}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-          <div>
-            <div className="text-muted-foreground">Commit</div>
-            <div className="text-foreground mt-1 font-mono text-xs">
-              {run.commitSha ? run.commitSha.slice(0, 7) : '—'}
+            <div className="grid gap-4 text-sm sm:grid-cols-2">
+              {run.prNumber ? (
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Pull request</div>
+                  <div className="text-foreground font-medium">
+                    {pullRequestUrl ? (
+                      <a
+                        href={pullRequestUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:text-primary/80"
+                      >
+                        #{run.prNumber}
+                      </a>
+                    ) : (
+                      `#${run.prNumber}`
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              {run.summary ? (
+                <div className="space-y-1 md:col-span-2">
+                  <div className="text-muted-foreground">Summary</div>
+                  <div className="text-foreground">{run.summary}</div>
+                </div>
+              ) : null}
             </div>
           </div>
-
-          {run.prNumber ? (
-            <div>
-              <div className="text-muted-foreground">Pull Request</div>
-              <div className="text-foreground mt-1">#{run.prNumber}</div>
-            </div>
-          ) : null}
-
-          {run.commitMessage ? (
-            <div className="md:col-span-2">
-              <div className="text-muted-foreground">Commit Message</div>
-              <div className="text-foreground mt-1">{run.commitMessage}</div>
-            </div>
-          ) : null}
-
-          {run.summary ? (
-            <div className="md:col-span-2">
-              <div className="text-muted-foreground">Summary</div>
-              <div className="text-foreground mt-1">{run.summary}</div>
-            </div>
-          ) : null}
         </div>
       </div>
 
@@ -197,7 +378,9 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
                       <StoryStatusCheck status={runStory.status} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-foreground">{storyTitle}</div>
+                      <div className="font-medium text-foreground">
+                        {storyTitle}
+                      </div>
                       {runStory.summary ? (
                         <div className="text-xs text-muted-foreground mt-1">
                           {runStory.summary}
@@ -206,33 +389,53 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
                       <div className="mt-3 space-y-2 text-xs">
                         <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
                           <span>
-                            <span className="font-medium text-foreground">Story status:</span>{' '}
+                            <span className="font-medium text-foreground">
+                              Story status:
+                            </span>{' '}
                             {runStory.status.toUpperCase()}
                           </span>
                           <span>
-                            <span className="font-medium text-foreground">Result status:</span>{' '}
-                            {storyResult ? storyResult.status.toUpperCase() : '—'}
+                            <span className="font-medium text-foreground">
+                              Result status:
+                            </span>{' '}
+                            {storyResult
+                              ? storyResult.status.toUpperCase()
+                              : '—'}
                           </span>
                           <span>
-                            <span className="font-medium text-foreground">Result ID:</span>{' '}
+                            <span className="font-medium text-foreground">
+                              Result ID:
+                            </span>{' '}
                             {storyResult ? storyResult.id : '—'}
                           </span>
                           <span>
-                            <span className="font-medium text-foreground">Analysis version:</span>{' '}
+                            <span className="font-medium text-foreground">
+                              Analysis version:
+                            </span>{' '}
                             {storyResult ? storyResult.analysisVersion : '—'}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
                           <span>
-                            <span className="font-medium text-foreground">Started:</span>{' '}
-                            {startedTimestamp ? formatDate(startedTimestamp) : '—'}
+                            <span className="font-medium text-foreground">
+                              Started:
+                            </span>{' '}
+                            {startedTimestamp
+                              ? formatDate(startedTimestamp)
+                              : '—'}
                           </span>
                           <span>
-                            <span className="font-medium text-foreground">Completed:</span>{' '}
-                            {completedTimestamp ? formatDate(completedTimestamp) : '—'}
+                            <span className="font-medium text-foreground">
+                              Completed:
+                            </span>{' '}
+                            {completedTimestamp
+                              ? formatDate(completedTimestamp)
+                              : '—'}
                           </span>
                           <span>
-                            <span className="font-medium text-foreground">Duration:</span>{' '}
+                            <span className="font-medium text-foreground">
+                              Duration:
+                            </span>{' '}
                             {formatDurationMs(durationMs)}
                           </span>
                         </div>
@@ -240,38 +443,50 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
                           storyResult.analysis ? (
                             <div className="rounded-md border bg-muted/50 p-3 text-xs text-muted-foreground">
                               <div className="font-medium text-foreground">
-                                Conclusion: {storyResult.analysis.conclusion.toUpperCase()}
+                                Conclusion:{' '}
+                                {storyResult.analysis.conclusion.toUpperCase()}
                               </div>
                               <div className="mt-1 text-foreground">
                                 {storyResult.analysis.explanation}
                               </div>
                               {storyResult.analysis.evidence.length > 0 ? (
                                 <div className="mt-2 space-y-1">
-                                  <div className="font-medium text-foreground">Evidence</div>
+                                  <div className="font-medium text-foreground">
+                                    Evidence
+                                  </div>
                                   <ul className="list-disc space-y-1 pl-4">
-                                    {storyResult.analysis.evidence.map((evidence, index) => (
-                                      <li key={`${storyResult.id}-evidence-${index}`}>
-                                        <span className="text-foreground">{evidence.filePath}</span>
-                                        {evidence.startLine !== null && evidence.endLine !== null ? (
-                                          <span>
-                                            {' '}
-                                            ({evidence.startLine} - {evidence.endLine})
+                                    {storyResult.analysis.evidence.map(
+                                      (evidence, index) => (
+                                        <li
+                                          key={`${storyResult.id}-evidence-${index}`}
+                                        >
+                                          <span className="text-foreground">
+                                            {evidence.filePath}
                                           </span>
-                                        ) : null}
-                                        {evidence.note ? (
-                                          <span className="block text-muted-foreground">
-                                            {evidence.note}
-                                          </span>
-                                        ) : null}
-                                      </li>
-                                    ))}
+                                          {evidence.startLine !== null &&
+                                          evidence.endLine !== null ? (
+                                            <span>
+                                              {' '}
+                                              ({evidence.startLine} -{' '}
+                                              {evidence.endLine})
+                                            </span>
+                                          ) : null}
+                                          {evidence.note ? (
+                                            <span className="block text-muted-foreground">
+                                              {evidence.note}
+                                            </span>
+                                          ) : null}
+                                        </li>
+                                      ),
+                                    )}
                                   </ul>
                                 </div>
                               ) : null}
                             </div>
                           ) : (
                             <div className="rounded-md border border-dashed bg-muted/30 p-3 text-muted-foreground">
-                              Evaluation completed without additional analysis details.
+                              Evaluation completed without additional analysis
+                              details.
                             </div>
                           )
                         ) : (
@@ -309,7 +524,9 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
           )}
         </div>
         <div>
-          <h2 className="text-sm font-medium text-foreground mb-2">Run Metadata</h2>
+          <h2 className="text-sm font-medium text-foreground mb-2">
+            Run Metadata
+          </h2>
           <pre className="max-h-96 overflow-auto rounded-md border bg-muted p-4 text-xs font-mono text-muted-foreground">
             {JSON.stringify(run, null, 2)}
           </pre>

@@ -1,7 +1,7 @@
 'use client'
 
 import { navigate } from 'astro:transitions/client'
-import { ChevronDown, LogOut, RefreshCw, Sparkles, Zap } from 'lucide-react'
+import { LogOut, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { GiWhaleTail } from 'react-icons/gi'
 import { useTheme } from 'next-themes'
@@ -17,15 +17,10 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useTRPCClient } from '@/client/trpc'
 import { useSession, signOut } from '@/client/auth-client'
+import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-
-interface BreadcrumbItem {
-  label: string
-  href?: string
-  showGithubIcon?: boolean
-}
 
 interface TopNavProps {
   breadcrumbs?: BreadcrumbItem[]
@@ -34,33 +29,9 @@ interface TopNavProps {
 
 export function TopNav({ breadcrumbs, right }: TopNavProps) {
   const trpc = useTRPCClient()
-  const [isTriggering, setIsTriggering] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [githubLogin, setGithubLogin] = useState<string | null>(null)
   const session = useSession()
   const { setTheme, resolvedTheme } = useTheme()
-
-  const handleTestHelloWorld = async () => {
-    setIsTriggering(true)
-    try {
-      await trpc.test.helloWorld.mutate()
-    } catch (error) {
-      console.error('Failed to trigger test task:', error)
-    } finally {
-      setIsTriggering(false)
-    }
-  }
-
-  const handleRefreshInstallations = async () => {
-    setIsRefreshing(true)
-    try {
-      await trpc.org.refreshInstallations.mutate()
-    } catch (error) {
-      console.error('Failed to refresh installations:', error)
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
 
   const user = session.data?.user
   const userImage = user?.image
@@ -72,7 +43,6 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
 
   useEffect(() => {
     if (!session.data) {
-      setGithubLogin(null)
       return
     }
 
@@ -100,33 +70,10 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
     }
   }, [session.data, trpc])
 
+  const showGithubLogin = session.data ? githubLogin : null
+
   const rightActions = (
     <div className="flex items-center gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 gap-2 px-2" title="Dev">
-            <span className="text-sm">Dev</span>
-            <ChevronDown size={14} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => void handleTestHelloWorld()}
-            disabled={isTriggering}
-          >
-            <Zap className="mr-2 h-4 w-4" />
-            Start Hello world Task
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => void handleRefreshInstallations()}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh orgs/repos
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       <Button
         className={cn(
           'h-8 px-3 text-sm text-white',
@@ -168,8 +115,10 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
             {user?.email && (
               <p className="text-xs text-muted-foreground">{user.email}</p>
             )}
-            {githubLogin ? (
-              <p className="text-xs text-muted-foreground">@{githubLogin}</p>
+            {showGithubLogin ? (
+              <p className="text-xs text-muted-foreground">
+                @{showGithubLogin}
+              </p>
             ) : null}
           </div>
           <DropdownMenuSeparator />

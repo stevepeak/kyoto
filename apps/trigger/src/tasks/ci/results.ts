@@ -95,7 +95,7 @@ export function aggregateBatchResults({
   }
 }
 
-export function determineFinalStatus(
+function determineFinalStatus(
   aggregated: AggregatedCounts,
   totalStories: number,
 ): 'pass' | 'fail' | 'skipped' {
@@ -110,7 +110,7 @@ export function determineFinalStatus(
   return 'skipped'
 }
 
-export function buildSummaryParts(aggregated: AggregatedCounts): string[] {
+function buildSummaryParts(aggregated: AggregatedCounts): string[] {
   return [
     `${aggregated.pass} passed`,
     `${aggregated.fail} failed`,

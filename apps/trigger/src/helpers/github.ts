@@ -81,7 +81,7 @@ export async function getOctokitClient(repoId: string): Promise<OctokitClient> {
   }
 }
 
-export interface BranchDetails {
+interface BranchDetails {
   commitSha: string | null
   commitMessage: string | null
 }
