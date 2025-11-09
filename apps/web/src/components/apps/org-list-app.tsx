@@ -9,6 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SiGithub } from 'react-icons/si'
 import { RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface OrgItem {
   slug: string
@@ -114,16 +119,22 @@ export function OrgListApp() {
             Organizations
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => void handleRefresh()}
-              disabled={isRefreshing}
-              title="Refresh organizations"
-              aria-label="Refresh organizations"
-            >
-              <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => void handleRefresh()}
+                  disabled={isRefreshing}
+                  aria-label="Refresh organizations"
+                >
+                  <RefreshCw
+                    className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Refresh teams and repos</TooltipContent>
+            </Tooltip>
             <Button asChild>
               <a href="/setup">Add new organization</a>
             </Button>
