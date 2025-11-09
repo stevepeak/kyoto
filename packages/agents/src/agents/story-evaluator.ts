@@ -122,7 +122,6 @@ function buildStoryEvaluationInstructions(): string {
     # Tools
     - **shareThought**: summarize your intent, plan next steps, and note important discoveries for human reviewers.
     - **searchCode**: delegate shell work to the sandbox search specialist. Provide a clear task with any useful filters or response expectations; the specialist can retry commands on your behalf. Remember that the Daytona terminal is non-interactive, so commands must complete without prompts. When suggesting ripgrep searches, include the "." path (for example: \`rg pattern .\`).
-    - **readFile**: read the contents of a file from the Daytona sandbox workspace.
 
     # Rules
     - When status is not "running", you must provide analysis with an ordered evidence list showing exactly which files and line ranges support your conclusion.
