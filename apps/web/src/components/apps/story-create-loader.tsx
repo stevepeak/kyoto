@@ -1,18 +1,11 @@
-import { useState, useEffect } from 'react'
-import { GitBranch } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Sparkles } from 'lucide-react'
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { LoadingProgress } from '@/components/ui/loading-progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 interface BranchItem {
@@ -20,6 +13,65 @@ interface BranchItem {
   headSha?: string
   updatedAt?: string
 }
+
+interface StoryTemplate {
+  id: string
+  title: string
+  content: string
+}
+
+const STORY_TEMPLATES: StoryTemplate[] = [
+  {
+    id: 'classic',
+    title: '🧩 Classic User Story Format (Agile Standard)',
+    content: `Structure\n\nAs a [type of user],\nI want [some goal],\nso that [some reason].\n\nExample\n\nAs a registered user,\nI want to reset my password,\nso that I can regain access to my account if I forget it.\n\nAcceptance Criteria\n- User can request a password reset via email.\n- Email contains a unique, one-time-use link.\n- Link expires after 15 minutes.`,
+  },
+  {
+    id: 'gherkin',
+    title: '🧠 Gherkin / BDD (Behavior-Driven Development)',
+    content: `Structure\n\nFeature: [Feature Name]\n  As a [user type]\n  I want [goal]\n  So that [benefit]\n\n  Scenario: [Scenario Name]\n    Given [initial context]\n    When [event or action]\n    Then [expected outcome]\n\nExample\n\nFeature: Password Reset\n  As a registered user\n  I want to reset my password\n  So that I can regain access to my account\n\n  Scenario: Successful password reset\n    Given I am on the "Forgot Password" page\n    When I enter my email and click "Send Reset Link"\n    Then I should receive a reset link in my email\n\nAcceptance Criteria\n- All "Given/When/Then" scenarios pass via automated tests.`,
+  },
+  {
+    id: 'feature-story',
+    title: '🧱 Feature Story with Acceptance Criteria (Structured List)',
+    content: `Structure\n\nTitle: [Feature Title]\nDescription: [Short summary]\nUser Story: As a [user], I want [goal], so that [reason]\nAcceptance Criteria:\n  - [Criterion 1]\n  - [Criterion 2]\n  - [Criterion 3]\n\nExample\n\nTitle: Email Verification\nDescription: Require users to verify email after registration.\nUser Story: As a new user, I want to verify my email, so that my account is confirmed.\nAcceptance Criteria:\n  - Verification link sent upon registration\n  - Clicking link sets 'email_verified = true'\n  - Expired links show an error message`,
+  },
+  {
+    id: 'job-story',
+    title: '⚙️ “Job Story” Format (Intercom-style, Context-driven)',
+    content: `Structure\n\nWhen [situation],\nI want to [motivation],\nso I can [expected outcome].\n\nExample\n\nWhen I forget my password,\nI want to receive a reset link instantly,\nso I can quickly log back into my account.\n\nUse Case\nJob stories focus on context and motivation rather than persona; great for product UX work.`,
+  },
+  {
+    id: 'bdd-extended',
+    title: '💬 BDD Extended (Given/When/Then + And)',
+    content: `Structure\n\nScenario: [Scenario Name]\n  Given [precondition]\n  And [another precondition]\n  When [action]\n  And [another action]\n  Then [expected outcome]\n  And [another outcome]\n\nExample\n\nScenario: Multiple invalid login attempts\n  Given I am on the login page\n  And I have entered an incorrect password 3 times\n  When I try to log in again\n  Then my account should be temporarily locked\n  And I should see an error message`,
+  },
+  {
+    id: 'spec-by-example',
+    title: '🧩 Specification by Example (Concrete Use Cases)',
+    content: `Structure\n\nA table or matrix of concrete examples used to define behavior.\n\nExample\n\nFeature: Login validation\n\nExample:\n| Input Email        | Input Password | Expected Result        |\n|--------------------|----------------|------------------------|\n| valid@email.com    | correct123     | Login successful       |\n| valid@email.com    | wrongpass      | Error: Invalid password|\n| invalid@email      | anypass        | Error: Invalid email   |\n\nUsed with Cucumber, FitNesse, or other executable spec tools.`,
+  },
+  {
+    id: 'invest',
+    title: '📋 INVEST-compliant Story Format',
+    content: `Structure\n\nEnsures stories are:\nIndependent, Negotiable, Valuable, Estimable, Small, Testable\n\nTemplate\n\nStory: [Title]\nValue: [Business reason or impact]\nEstimation: [Story points or complexity]\nAcceptance Tests:\n  - [Behavior test or rule]\nNotes:\n  - [Open questions or dependencies]`,
+  },
+  {
+    id: 'use-case',
+    title: '💡 Use Case Narrative (UML-style)',
+    content: `Structure\n\nUse Case: [Name]\nActor: [User or System]\nPreconditions: [What must be true before]\nMain Flow:\n  1. [Action 1]\n  2. [Action 2]\nAlternative Flows:\n  A1. [Error or edge case]\nPostconditions: [What must be true after]\n\nExample\n\nUse Case: Reset Password\nActor: User\nPrecondition: User must have a valid registered email\nMain Flow:\n  1. User requests reset\n  2. System sends link\n  3. User resets password\nPostcondition: Password updated successfully`,
+  },
+  {
+    id: 'atdd',
+    title: '🧭 Acceptance Test-Driven Development (ATDD) Story',
+    content: `Structure\n\nStory: [Goal]\nTest: [Acceptance test description]\nExpected Outcome: [Result]\n\nExample\n\nStory: Reset Password via Email\nTest: Send reset link to registered email\nExpected Outcome: User receives email with valid link`,
+  },
+  {
+    id: 'hybrid',
+    title: '🧰 Hybrid Story (for Agile AI / Agentic Systems)',
+    content: `Structure\n\nStory:\n  As: AI reviewer agent\n  I want: verify repository implements user story\n  So that: developers can confirm feature completion\n\nAcceptance Criteria:\n  - Search finds relevant code symbols\n  - Each step is evaluated with evidence\n  - Verdict is structured JSON with explanation`,
+  },
+]
 
 export function StoryCreateLoader({
   orgSlug,
@@ -37,6 +89,11 @@ export function StoryCreateLoader({
   const [storyContent, setStoryContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isEnriching, setIsEnriching] = useState(false)
+  const [openTemplateId, setOpenTemplateId] = useState<string | null>(
+    STORY_TEMPLATES[0]?.id ?? null,
+  )
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   // Get branch from URL query params
   useEffect(() => {
@@ -100,8 +157,13 @@ export function StoryCreateLoader({
   }, [selectedBranch, branches])
 
   const handleSave = async () => {
-    if (!storyName.trim() || !storyContent.trim() || !selectedBranch) {
-      setError('Story name, content, and branch are required')
+    if (!storyName.trim() || !storyContent.trim()) {
+      setError('Story name and content are required')
+      return
+    }
+
+    if (!selectedBranch) {
+      setError('No branch available for story creation')
       return
     }
 
@@ -125,6 +187,38 @@ export function StoryCreateLoader({
       setError(e instanceof Error ? e.message : 'Failed to create story')
       setIsSaving(false)
     }
+  }
+
+  const handleEnrichStory = async () => {
+    if (!storyContent.trim()) {
+      setError('Story content is required before enhancing')
+      return
+    }
+
+    setIsEnriching(true)
+    setError(null)
+    try {
+      const result = await trpc.story.enrich.mutate({
+        orgSlug,
+        repoName,
+        storyId: 'new',
+        story: storyContent,
+      })
+
+      setStoryContent(result.enrichedStory)
+      textareaRef.current?.focus()
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : 'Failed to enhance story content',
+      )
+    } finally {
+      setIsEnriching(false)
+    }
+  }
+
+  const handleTemplateSelect = (template: StoryTemplate) => {
+    setStoryContent(template.content)
+    textareaRef.current?.focus()
   }
 
   if (isLoading) {
@@ -154,23 +248,20 @@ export function StoryCreateLoader({
           <h1 className="text-xl font-semibold text-foreground">
             Create New Story
           </h1>
-          {branches.length > 0 && (
-            <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-              <SelectTrigger className="w-[180px]">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <GitBranch className="h-4 w-4 shrink-0" />
-                  <SelectValue placeholder="Select branch" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((branch) => (
-                  <SelectItem key={branch.name} value={branch.name}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Button
+            type="button"
+            className={cn(
+              'h-9 px-4 text-sm text-white',
+              'bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 shadow-sm',
+              'hover:from-violet-600 hover:via-indigo-600 hover:to-sky-600 hover:shadow-md',
+              'focus-visible:ring-indigo-500/70 focus-visible:ring-offset-1',
+            )}
+            onClick={() => void handleEnrichStory()}
+            disabled={isEnriching || isSaving}
+          >
+            <Sparkles className="h-4 w-4" />
+            {isEnriching ? 'Enhancing...' : 'Enhance'}
+          </Button>
         </div>
         <div className="mb-6 shrink-0">
           <div className="grid gap-4">
@@ -200,6 +291,7 @@ export function StoryCreateLoader({
             </Label>
             <textarea
               id="storyEditor"
+              ref={textareaRef}
               value={storyContent}
               onChange={(e) => setStoryContent(e.target.value)}
               placeholder="Write your story here..."
@@ -212,13 +304,52 @@ export function StoryCreateLoader({
             />
           </div>
 
-          {/* Right Panel: Code Discovery (Placeholder) */}
-          <div className="flex-1 flex flex-col overflow-hidden border rounded-md p-4 min-h-0">
-            <h2 className="text-sm font-medium text-foreground mb-4 shrink-0">
-              Code Discovery
-            </h2>
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <p className="text-sm">Code discovery tool coming soon...</p>
+          {/* Right Panel: Story Templates */}
+          <div className="flex-1 flex flex-col overflow-hidden border rounded-md min-h-0">
+            <div className="px-4 py-3 border-b">
+              <h2 className="text-sm font-medium text-foreground">
+                Story Templates
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Explore different formats and use a template to jump-start your
+                story.
+              </p>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {STORY_TEMPLATES.map((template) => {
+                const isOpen = openTemplateId === template.id
+                return (
+                  <div key={template.id} className="border-b last:border-b-0">
+                    <div className="flex items-start gap-2 px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenTemplateId(isOpen ? null : template.id)
+                        }
+                        className={cn(
+                          'flex-1 text-left text-sm font-medium text-foreground',
+                          'focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm',
+                        )}
+                      >
+                        {template.title}
+                      </button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleTemplateSelect(template)}
+                      >
+                        Use Template
+                      </Button>
+                    </div>
+                    {isOpen ? (
+                      <div className="px-4 pb-4 text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                        {template.content}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
