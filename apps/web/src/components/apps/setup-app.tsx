@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { GitBranch, Book } from 'lucide-react'
+import { Book } from 'lucide-react'
 
 import { useTRPCClient } from '@/client/trpc'
 import { Button } from '@/components/ui/button'

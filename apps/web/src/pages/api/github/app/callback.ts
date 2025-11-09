@@ -39,5 +39,5 @@ export const GET: APIRoute = async ({ request, redirect }) => {
     )
   }
 
-  return redirect('/setup/repos')
+  return redirect('/')
 }
