@@ -166,37 +166,10 @@ export const runCiTask = task({
         githubToken,
       )
 
-      const lsResult = await sandbox.process.executeCommand(`ls -m`, repoPath)
-      logger.info('Listed workspace contents', { lsResult })
-
       // Remove token - just as a safe guard
       await sandbox.process.executeCommand(
         'rm -f ~/.git-credentials ~/.config/gh/hosts.yml || true',
       )
-
-      // // Ensure ripgrep is available - just as a safe guard
-      // const ensureRgResult = await sandbox.process.executeCommand(
-      //   'if ! command -v rg >/dev/null 2>&1; then if command -v apt-get >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y ripgrep; elif command -v apk >/dev/null 2>&1; then sudo apk add --no-cache ripgrep; elif command -v brew >/dev/null 2>&1; then brew install ripgrep; else echo "ripgrep is not available on this image"; exit 1; fi; fi',
-      // )
-      // if (ensureRgResult.exitCode !== 0) {
-      //   throw new Error(
-      //     `Failed to ensure ripgrep availability: ${ensureRgResult.result}`,
-      //   )
-      // } else {
-      //   console.log('🔍 Ripgrep is available', { ensureRgResult })
-      // }
-
-      // // Ensure tree is available - just as a safe guard
-      // const ensureTreeResult = await sandbox.process.executeCommand(
-      //   'if ! command -v tree >/dev/null 2>&1; then if command -v apt-get >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y tree; elif command -v apk >/dev/null 2>&1; then sudo apk add --no-cache tree; elif command -v brew >/dev/null 2>&1; then brew install tree; else echo "tree is not available on this image"; exit 1; fi; fi',
-      // )
-      // if (ensureTreeResult.exitCode !== 0) {
-      //   throw new Error(
-      //     `Failed to ensure tree availability: ${ensureTreeResult.result}`,
-      //   )
-      // } else {
-      //   console.log('🌳 Tree is available', { ensureTreeResult })
-      // }
 
       /**
        * 💎 Run all stories in parallel
