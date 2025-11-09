@@ -5,6 +5,32 @@ import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 import { RunDetailView } from '@/components/runs/RunDetailView'
 
+interface StoryAnalysisEvidence {
+  filePath: string
+  startLine: number | null
+  endLine: number | null
+  note: string | null
+}
+
+interface StoryAnalysis {
+  conclusion: 'pass' | 'fail' | 'blocked'
+  explanation: string
+  evidence: StoryAnalysisEvidence[]
+}
+
+interface StoryResult {
+  id: string
+  storyId: string
+  status: 'pass' | 'fail' | 'running' | 'blocked'
+  analysisVersion: number
+  analysis: StoryAnalysis | null
+  startedAt: string | null
+  completedAt: string | null
+  durationMs: number | null
+  createdAt: string | null
+  updatedAt: string | null
+}
+
 interface RunStory {
   storyId: string
   resultId: string | null
@@ -12,6 +38,7 @@ interface RunStory {
   summary: string | null
   startedAt: string | null
   completedAt: string | null
+  result: StoryResult | null
   story: {
     id: string
     name: string

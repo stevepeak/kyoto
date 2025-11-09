@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { configure, tasks } from '@trigger.dev/sdk'
 
-import type { RunStory } from '@app/db'
+import type { RunStory, StoryAnalysisV1 } from '@app/db'
 import { protectedProcedure, router } from '../trpc'
 import { parseEnv } from '../helpers/env'
 
@@ -164,10 +164,110 @@ export const runRouter = router({
       // Create a map of story ID to story data
       const storyMap = new Map(stories.map((s) => [s.id, s]))
 
-      // Combine run stories with actual story data
+      // Type assertion needed until migration runs and types are regenerated
+      type RunRow = {
+        id: string
+        commitSha: string
+        branchName: string
+        commitMessage: string | null
+        prNumber: string | null
+        status: 'pass' | 'fail' | 'skipped' | 'running'
+        summary: string | null
+        createdAt: Date
+        updatedAt: Date
+        stories: RunStory[]
+      }
+
+      const runRow = run as unknown as RunRow
+
+      const storyResults = await ctx.db
+        .selectFrom('storyTestResults')
+        .select((eb) => [
+          'storyTestResults.id',
+          'storyTestResults.storyId',
+          'storyTestResults.status',
+          'storyTestResults.analysisVersion',
+          eb.cast('storyTestResults.analysis', 'jsonb').as('analysis'),
+          'storyTestResults.startedAt',
+          'storyTestResults.completedAt',
+          'storyTestResults.durationMs',
+          'storyTestResults.createdAt',
+          'storyTestResults.updatedAt',
+        ])
+        .where('storyTestResults.runId', '=', runRow.id)
+        .execute()
+
+      const storyResultMap = new Map<
+        string,
+        {
+          id: string
+          storyId: string
+          status: 'pass' | 'fail' | 'blocked' | 'running'
+          analysisVersion: number
+          analysis: StoryAnalysisV1 | null
+          startedAt: string | null
+          completedAt: string | null
+          durationMs: number | null
+          createdAt: string | null
+          updatedAt: string | null
+        }
+      >(
+        storyResults.map((result) => {
+          const startedAt =
+            result.startedAt instanceof Date
+              ? result.startedAt.toISOString()
+              : (result.startedAt ?? null)
+          const completedAt =
+            result.completedAt instanceof Date
+              ? result.completedAt.toISOString()
+              : (result.completedAt ?? null)
+          const createdAt =
+            result.createdAt instanceof Date
+              ? result.createdAt.toISOString()
+              : (result.createdAt ?? null)
+          const updatedAt =
+            result.updatedAt instanceof Date
+              ? result.updatedAt.toISOString()
+              : (result.updatedAt ?? null)
+
+          const status = ['pass', 'fail', 'blocked', 'running'].includes(
+            result.status,
+          )
+            ? (result.status as 'pass' | 'fail' | 'blocked' | 'running')
+            : 'fail'
+
+          const analysis =
+            result.analysis && typeof result.analysis === 'object'
+              ? (result.analysis as StoryAnalysisV1)
+              : null
+
+          return [
+            result.id,
+            {
+              id: result.id,
+              storyId: result.storyId,
+              status,
+              analysisVersion: result.analysisVersion,
+              analysis,
+              startedAt,
+              completedAt,
+              durationMs: result.durationMs ?? null,
+              createdAt,
+              updatedAt,
+            },
+          ]
+        }),
+      )
+
+      // Combine run stories with actual story and evaluation data
 
       const storiesWithStatus = run.stories.map((runStory) => {
         const story = storyMap.get(runStory.storyId)
+        const result =
+          runStory.resultId !== undefined && runStory.resultId !== null
+            ? (storyResultMap.get(runStory.resultId) ?? null)
+            : null
+
         return {
           storyId: runStory.storyId,
           status: runStory.status,
@@ -186,24 +286,9 @@ export const runRouter = router({
                 updatedAt: story.updatedAt.toISOString(),
               }
             : null,
+          result,
         }
       })
-
-      // Type assertion needed until migration runs and types are regenerated
-      type RunRow = {
-        id: string
-        commitSha: string
-        branchName: string
-        commitMessage: string | null
-        prNumber: string | null
-        status: 'pass' | 'fail' | 'skipped' | 'running'
-        summary: string | null
-        createdAt: Date
-        updatedAt: Date
-        stories: RunStory[]
-      }
-
-      const runRow = run as unknown as RunRow
 
       return {
         run: {

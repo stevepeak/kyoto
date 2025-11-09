@@ -1,6 +1,32 @@
 import { cn } from '@/lib/utils'
 import { StoryStatusCheck } from './StoryStatusCheck'
 
+interface StoryAnalysisEvidence {
+  filePath: string
+  startLine: number | null
+  endLine: number | null
+  note: string | null
+}
+
+interface StoryAnalysis {
+  conclusion: 'pass' | 'fail' | 'blocked'
+  explanation: string
+  evidence: StoryAnalysisEvidence[]
+}
+
+interface StoryResult {
+  id: string
+  storyId: string
+  status: 'pass' | 'fail' | 'running' | 'blocked'
+  analysisVersion: number
+  analysis: StoryAnalysis | null
+  startedAt: string | null
+  completedAt: string | null
+  durationMs: number | null
+  createdAt: string | null
+  updatedAt: string | null
+}
+
 interface RunStory {
   storyId: string
   resultId: string | null
@@ -8,6 +34,7 @@ interface RunStory {
   summary: string | null
   startedAt: string | null
   completedAt: string | null
+  result: StoryResult | null
   story: {
     id: string
     name: string
@@ -54,6 +81,26 @@ function getStatusBadgeClass(status: 'pass' | 'fail' | 'skipped' | 'running') {
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
   return date.toLocaleString()
+}
+
+function formatDurationMs(durationMs: number | null | undefined): string {
+  if (!durationMs || durationMs < 1) {
+    return '—'
+  }
+  if (durationMs < 1000) {
+    return `${durationMs}ms`
+  }
+  if (durationMs < 60000) {
+    return `${Math.round(durationMs / 1000)}s`
+  }
+  const minutes = Math.floor(durationMs / 60000)
+  const seconds = Math.round((durationMs % 60000) / 1000)
+  if (minutes < 60) {
+    return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
 }
 
 export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
@@ -117,55 +164,156 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
       </div>
 
       {/* Stories Column */}
-      <div className="flex-1 overflow-auto p-6">
-        <h2 className="text-sm font-medium text-foreground mb-4">Stories</h2>
-        {run.stories.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            No stories in this run.
-          </div>
-        ) : (
-          <ul className="divide-y">
-            {run.stories.map((runStory) => (
-              <li key={runStory.storyId} className="py-3">
-                {runStory.story ? (
-                  <a
-                    href={`/org/${orgSlug}/repo/${repoName}/stories/${runStory.storyId}`}
-                    className="flex items-center gap-3 text-foreground hover:underline"
-                  >
-                    <StoryStatusCheck status={runStory.status} />
-                    <div className="flex-1">
-                      <div className="font-medium">{runStory.story.name}</div>
-                      {runStory.story.commitSha ? (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {runStory.story.commitSha.slice(0, 7)}
-                        </div>
-                      ) : null}
+      <div className="flex-1 overflow-auto p-6 space-y-4">
+        <div>
+          <h2 className="text-sm font-medium text-foreground mb-4">Stories</h2>
+          {run.stories.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              No stories in this run.
+            </div>
+          ) : (
+            <ul className="divide-y rounded-md border">
+              {run.stories.map((runStory) => {
+                const storyTitle = runStory.story
+                  ? runStory.story.name
+                  : `Story not found (${runStory.storyId.slice(0, 8)}...)`
+
+                const storyResult = runStory.result
+                const startedTimestamp =
+                  storyResult?.startedAt ?? runStory.startedAt
+                const completedTimestamp =
+                  storyResult?.completedAt ?? runStory.completedAt
+
+                const durationMs =
+                  storyResult?.durationMs ??
+                  (startedTimestamp && completedTimestamp
+                    ? new Date(completedTimestamp).getTime() -
+                      new Date(startedTimestamp).getTime()
+                    : null)
+
+                const content = (
+                  <>
+                    <div className="mt-0.5">
+                      <StoryStatusCheck status={runStory.status} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-foreground">{storyTitle}</div>
                       {runStory.summary ? (
                         <div className="text-xs text-muted-foreground mt-1">
                           {runStory.summary}
                         </div>
                       ) : null}
-                    </div>
-                  </a>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <StoryStatusCheck status={runStory.status} />
-                    <div className="flex-1">
-                      <div className="font-medium text-muted-foreground">
-                        Story not found ({runStory.storyId.slice(0, 8)}...)
+                      <div className="mt-3 space-y-2 text-xs">
+                        <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+                          <span>
+                            <span className="font-medium text-foreground">Story status:</span>{' '}
+                            {runStory.status.toUpperCase()}
+                          </span>
+                          <span>
+                            <span className="font-medium text-foreground">Result status:</span>{' '}
+                            {storyResult ? storyResult.status.toUpperCase() : '—'}
+                          </span>
+                          <span>
+                            <span className="font-medium text-foreground">Result ID:</span>{' '}
+                            {storyResult ? storyResult.id : '—'}
+                          </span>
+                          <span>
+                            <span className="font-medium text-foreground">Analysis version:</span>{' '}
+                            {storyResult ? storyResult.analysisVersion : '—'}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+                          <span>
+                            <span className="font-medium text-foreground">Started:</span>{' '}
+                            {startedTimestamp ? formatDate(startedTimestamp) : '—'}
+                          </span>
+                          <span>
+                            <span className="font-medium text-foreground">Completed:</span>{' '}
+                            {completedTimestamp ? formatDate(completedTimestamp) : '—'}
+                          </span>
+                          <span>
+                            <span className="font-medium text-foreground">Duration:</span>{' '}
+                            {formatDurationMs(durationMs)}
+                          </span>
+                        </div>
+                        {storyResult ? (
+                          storyResult.analysis ? (
+                            <div className="rounded-md border bg-muted/50 p-3 text-xs text-muted-foreground">
+                              <div className="font-medium text-foreground">
+                                Conclusion: {storyResult.analysis.conclusion.toUpperCase()}
+                              </div>
+                              <div className="mt-1 text-foreground">
+                                {storyResult.analysis.explanation}
+                              </div>
+                              {storyResult.analysis.evidence.length > 0 ? (
+                                <div className="mt-2 space-y-1">
+                                  <div className="font-medium text-foreground">Evidence</div>
+                                  <ul className="list-disc space-y-1 pl-4">
+                                    {storyResult.analysis.evidence.map((evidence, index) => (
+                                      <li key={`${storyResult.id}-evidence-${index}`}>
+                                        <span className="text-foreground">{evidence.filePath}</span>
+                                        {evidence.startLine !== null && evidence.endLine !== null ? (
+                                          <span>
+                                            {' '}
+                                            ({evidence.startLine} - {evidence.endLine})
+                                          </span>
+                                        ) : null}
+                                        {evidence.note ? (
+                                          <span className="block text-muted-foreground">
+                                            {evidence.note}
+                                          </span>
+                                        ) : null}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <div className="rounded-md border border-dashed bg-muted/30 p-3 text-muted-foreground">
+                              Evaluation completed without additional analysis details.
+                            </div>
+                          )
+                        ) : (
+                          <div className="rounded-md border border-dashed bg-muted/30 p-3 text-muted-foreground">
+                            No evaluation result recorded for this run story.
+                          </div>
+                        )}
                       </div>
-                      {runStory.summary ? (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {runStory.summary}
-                        </div>
-                      ) : null}
                     </div>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+                  </>
+                )
+
+                if (runStory.story) {
+                  return (
+                    <li key={runStory.storyId}>
+                      <a
+                        href={`/org/${orgSlug}/repo/${repoName}/stories/${runStory.storyId}`}
+                        className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-accent/60"
+                      >
+                        {content}
+                      </a>
+                    </li>
+                  )
+                }
+
+                return (
+                  <li key={runStory.storyId}>
+                    <div className="flex items-start gap-3 px-4 py-3">
+                      {content}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+        <div>
+          <h2 className="text-sm font-medium text-foreground mb-2">Run Metadata</h2>
+          <pre className="max-h-96 overflow-auto rounded-md border bg-muted p-4 text-xs font-mono text-muted-foreground">
+            {JSON.stringify(run, null, 2)}
+          </pre>
+        </div>
       </div>
     </div>
   )
