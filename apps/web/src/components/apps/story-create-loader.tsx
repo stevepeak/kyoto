@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Sparkles } from 'lucide-react'
+import { ChevronDown, Sparkles } from 'lucide-react'
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { Input } from '@/components/ui/input'
@@ -311,13 +311,15 @@ export function StoryCreateLoader({
                 Story Templates
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Explore different formats and use a template to jump-start your
-                story.
+                The templates below are suggested to help you get started, but
+                you are free to write your story in any format you like—none of
+                these are required.
               </p>
             </div>
             <div className="flex-1 overflow-y-auto">
               {STORY_TEMPLATES.map((template) => {
                 const isOpen = openTemplateId === template.id
+                const contentId = `story-template-${template.id}`
                 return (
                   <div key={template.id} className="border-b last:border-b-0">
                     <div className="flex items-start gap-2 px-4 py-3">
@@ -328,10 +330,19 @@ export function StoryCreateLoader({
                         }
                         className={cn(
                           'flex-1 text-left text-sm font-medium text-foreground',
+                          'flex items-center gap-2',
                           'focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm',
                         )}
+                        aria-expanded={isOpen}
+                        aria-controls={contentId}
                       >
-                        {template.title}
+                        <span className="flex-1">{template.title}</span>
+                        <ChevronDown
+                          className={cn(
+                            'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+                            isOpen ? '' : '-rotate-90',
+                          )}
+                        />
                       </button>
                       <Button
                         type="button"
@@ -343,7 +354,10 @@ export function StoryCreateLoader({
                       </Button>
                     </div>
                     {isOpen ? (
-                      <div className="px-4 pb-4 text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                      <div
+                        id={contentId}
+                        className="px-4 pb-4 text-xs text-muted-foreground whitespace-pre-wrap font-mono"
+                      >
                         {template.content}
                       </div>
                     ) : null}
