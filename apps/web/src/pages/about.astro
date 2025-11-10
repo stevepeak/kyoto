@@ -15,25 +15,42 @@ import { LandingFooter, LandingNavbar } from '@/components/landing'
         class="container grid gap-10 px-6 py-24 sm:px-8 lg:grid-cols-[2fr,3fr] lg:gap-16"
       >
         <div class="space-y-6">
-          <span
-            class="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-          >
-            Our Story
-          </span>
-          <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Helping teams ship quality software with confidence.
-          </h1>
-          <p class="text-base text-muted-foreground sm:text-lg">
-            Kyoto was born from countless late-night releases and a shared
-            belief that AI can make shipping software calmer. We build tools
-            that let product teams focus on outcomes while Kyoto safeguards
-            every deploy.
+          <p class="text-sm font-semibold tracking-[0.3em] text-primary">
+            物語の夜明け
           </p>
+          <h1 class="text-4xl font-display tracking-tight sm:text-5xl">
+            From the beginning,
+          </h1>
+          <figure class="space-y-4">
+            <blockquote
+              class="space-y-4 border-l-2 border-border/60 pl-6 text-base italic text-muted-foreground sm:text-lg"
+            >
+              <p>
+                Kyoto was born during the first Hacker Residency Group (HRG) in
+                Da Nang, Vietnam. But the story began long before that. In 2014 I
+                made my first commit to what became one of the largest developer
+                tools in the world:
+                <a href="https://codecov.io">Codecov</a>. My passion for building
+                developer tools and working with my most favorite people in the
+                world has never wavered.
+              </p>
+              <p>
+                At the Hacker Residency Group, I was inspired when talking to
+                younger engineers about how they are using AI to vibe code but
+                not writing tests. AI has changed developers lives and it shall
+                change testing forever too.
+              </p>
+            </blockquote>
+            <figcaption class="text-sm font-medium text-muted-foreground">
+              — Steve Peak, Founder
+            </figcaption>
+          </figure>
         </div>
+        <!-- TODO show a map of where, some images of the event -->
         <div
           class="grid gap-6 rounded-2xl border border-border bg-card p-8 shadow-sm"
         >
-          <h2 class="text-xl font-semibold">What we&apos;re building</h2>
+          <h2 class="text-xl font-display">TL;DR</h2>
           <p class="text-muted-foreground">
             We blend AI-assisted testing with human-friendly workflows so you
             can trust the software you release. Kyoto automates repetitive
@@ -43,7 +60,7 @@ import { LandingFooter, LandingNavbar } from '@/components/landing'
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="rounded-lg border border-border/70 bg-muted/30 p-4">
               <p class="text-sm font-medium text-muted-foreground">Founded</p>
-              <p class="text-2xl font-semibold text-foreground">2024</p>
+              <p class="text-2xl font-semibold text-foreground">2025</p>
             </div>
             <div class="rounded-lg border border-border/70 bg-muted/30 p-4">
               <p class="text-sm font-medium text-muted-foreground">Customers</p>
@@ -64,175 +81,6 @@ import { LandingFooter, LandingNavbar } from '@/components/landing'
       </div>
     </section>
 
-    <section class="border-b border-border/60 bg-muted/20">
-      <div
-        class="container grid gap-12 px-6 py-20 sm:px-8 lg:grid-cols-[1.2fr,1.8fr] lg:gap-16"
-      >
-        <div class="space-y-4">
-          <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Why Kyoto exists
-          </h2>
-          <p class="text-base text-muted-foreground">
-            Modern teams move fast, but quality practices haven&apos;t kept
-            pace. Manual QA slows everything down and brittle automation breaks
-            with every change. Kyoto gives teams the guardrails to release
-            continuously without sacrificing confidence.
-          </p>
-        </div>
-        <dl class="grid gap-6 sm:grid-cols-2">
-          <div
-            class="rounded-xl border border-border bg-background p-6 shadow-sm"
-          >
-            <dt
-              class="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
-            >
-              AI-guided coverage
-            </dt>
-            <dd class="mt-3 text-muted-foreground">
-              Kyoto surfaces the highest-risk flows and generates meaningful
-              test plans automatically, so your team catches the issues that
-              matter before users do.
-            </dd>
-          </div>
-          <div
-            class="rounded-xl border border-border bg-background p-6 shadow-sm"
-          >
-            <dt
-              class="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
-            >
-              Collaborative insights
-            </dt>
-            <dd class="mt-3 text-muted-foreground">
-              Everyone sees the same source of truth—from engineers to product
-              managers—through rich dashboards, annotations, and release notes.
-            </dd>
-          </div>
-          <div
-            class="rounded-xl border border-border bg-background p-6 shadow-sm"
-          >
-            <dt
-              class="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
-            >
-              Continuous trust
-            </dt>
-            <dd class="mt-3 text-muted-foreground">
-              Kyoto integrates into your CI/CD pipeline to guard every deploy,
-              offering contextual alerts and deep links back to the exact commit
-              or story.
-            </dd>
-          </div>
-          <div
-            class="rounded-xl border border-border bg-background p-6 shadow-sm"
-          >
-            <dt
-              class="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
-            >
-              Human-first automation
-            </dt>
-            <dd class="mt-3 text-muted-foreground">
-              We augment your team rather than replace it, keeping review
-              workflows transparent and creating space for experts to focus on
-              higher leverage work.
-            </dd>
-          </div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="border-b border-border/60 bg-background">
-      <div
-        class="container grid gap-12 px-6 py-20 sm:px-8 lg:grid-cols-[1.2fr,1.8fr] lg:gap-16"
-      >
-        <div class="space-y-4">
-          <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Building with principles
-          </h2>
-          <p class="text-base text-muted-foreground">
-            Kyoto is crafted by builders who value pragmatic automation, deep
-            empathy for end users, and resilient systems. These principles guide
-            every product decision.
-          </p>
-        </div>
-        <div class="grid gap-6">
-          <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 class="text-xl font-semibold">Empower teams, not silos</h3>
-            <p class="mt-3 text-muted-foreground">
-              We create shared context so QA, engineering, and product can
-              collaborate in real time without handoffs or status meetings.
-            </p>
-          </div>
-          <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 class="text-xl font-semibold">Bias toward clarity</h3>
-            <p class="mt-3 text-muted-foreground">
-              Every insight is actionable. Kyoto highlights root causes, impact,
-              and next steps instead of burying teams in noise.
-            </p>
-          </div>
-          <div class="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 class="text-xl font-semibold">Secure by design</h3>
-            <p class="mt-3 text-muted-foreground">
-              We operate with enterprise-grade security practices and give
-              customers control over their data lifecycles from day one.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="bg-muted/10">
-      <div
-        class="container grid gap-10 px-6 py-20 sm:px-8 lg:grid-cols-[1.1fr,1.9fr] lg:gap-16"
-      >
-        <div class="space-y-4">
-          <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-            What&apos;s next
-          </h2>
-          <p class="text-base text-muted-foreground">
-            We&apos;re working closely with design partners to shape
-            Kyoto&apos;s roadmap. From proactive defect prediction to richer
-            integrations, our mission is to make every release day feel
-            boring—in the best way possible.
-          </p>
-          <a
-            href="/upcoming-features"
-            class="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            Explore upcoming features
-          </a>
-        </div>
-        <div class="grid gap-8">
-          <div
-            class="relative rounded-3xl border border-border bg-background p-8"
-          >
-            <div
-              class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-transparent"
-            >
-            </div>
-            <h3 class="text-xl font-semibold">Where we started</h3>
-            <p class="mt-3 text-muted-foreground">
-              Kyoto started as an internal tooling project to make release
-              testing less painful. Sharing it with peers showed us how
-              universal that pain is—and how hungry teams are for tools that
-              amplify their judgment.
-            </p>
-          </div>
-          <div class="rounded-3xl border border-border bg-background p-8">
-            <h3 class="text-xl font-semibold">Join us</h3>
-            <p class="mt-3 text-muted-foreground">
-              We&apos;re assembling a small, senior team across engineering,
-              design, and customer partnerships. If our mission resonates,
-              we&apos;d love to connect.
-            </p>
-            <a
-              href="mailto:hello@kyoto.run"
-              class="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              Say hello
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
   <LandingFooter />
 </Layout>

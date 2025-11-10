@@ -28,6 +28,12 @@ export function LandingNavbar() {
           >
             Pricing
           </a>
+          <a
+            href="/about"
+            className="transition-colors hover:text-foreground focus-visible:text-foreground"
+          >
+            About
+          </a>
         </nav>
         <div className="w-full sm:w-auto">
           <Button asChild size="sm" className="w-full sm:w-auto">
