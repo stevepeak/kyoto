@@ -31,12 +31,12 @@ INSERT INTO repos (
 )
 VALUES (
   (SELECT id FROM owners WHERE login = 'gwizinc'),
-  'tailz',
-  'gwizinc/tailz',
+  'kyoyo',
+  'stevepeak/kyoto',
   false,
-  'Tailz',
+  'Kyoto',
   'main',
-  'https://github.com/gwizinc/tailz'
+  'https://github.com/stevepeak/kyoto'
 )
 ON CONFLICT (owner_id, name)
 DO UPDATE SET

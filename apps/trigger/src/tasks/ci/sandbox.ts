@@ -46,9 +46,9 @@ export async function runStoriesWithSandbox({
     sandbox = await daytona.create({
       language: 'typescript',
       labels: {
-        'tailz.repoId': repoRecord.repoId,
-        'tailz.repo': `${repo.ownerLogin}/${repo.repoName}`,
-        'tailz.runId': runId,
+        'kyoto.repoId': repoRecord.repoId,
+        'kyoto.repo': `${repo.ownerLogin}/${repo.repoName}`,
+        'kyoto.runId': runId,
       },
     })
 
@@ -119,4 +119,3 @@ async function cleanupSandbox({
     })
   }
 }
-

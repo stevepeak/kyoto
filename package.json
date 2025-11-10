@@ -1,10 +1,10 @@
 {
-  "name": "@app/Tailz",
+  "name": "@app/kyoto",
   "type": "module",
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@10.11.0",
-  "description": "Tailz",
+  "description": "Kyoto - AI-powered QA",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

@@ -415,7 +415,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                     >
                       Configure the GitHub app
                     </a>{' '}
-                    to add more repositories and projects to Tailz.
+                    to add more repositories and projects to Kyoto.
                   </p>
                   <p>
                     After updating the installation, reopen this dialog to

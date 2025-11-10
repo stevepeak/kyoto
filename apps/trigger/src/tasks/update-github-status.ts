@@ -105,7 +105,7 @@ export const updateGithubStatusTask = task({
         await octokit.rest.checks.create({
           owner: payload.orgSlug,
           repo: payload.repoName,
-          name: 'Tailz/CI',
+          name: 'Kyoto/QA',
           head_sha: payload.commitSha,
           status: checkStatus,
           conclusion,
@@ -118,7 +118,7 @@ export const updateGithubStatusTask = task({
         await octokit.rest.checks.create({
           owner: payload.orgSlug,
           repo: payload.repoName,
-          name: 'Tailz/CI',
+          name: 'Kyoto/QA',
           head_sha: payload.commitSha,
           status: checkStatus,
           conclusion,

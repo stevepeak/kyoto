@@ -206,7 +206,7 @@ function UpcomingFeaturesView() {
               <CardHeader>
                 <CardTitle>Request a feature</CardTitle>
                 <CardDescription>
-                  Share what would make Tailz even better for you and your team.
+                  Share what would make Kyoto even better for you and your team.
                 </CardDescription>
               </CardHeader>
               <CardContent>

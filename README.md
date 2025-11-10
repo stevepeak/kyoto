@@ -40,8 +40,8 @@ Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, thi
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/gwizinc/tailz.git
-    cd tailz
+    git clone https://github.com/stevepeak/kyoto.git
+    cd kyoto
     ```
 
 2.  **Install dependencies:**
@@ -68,7 +68,7 @@ Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, thi
     GITHUB_APP_SLUG="your_github_app_slug"
 
     # Your local PostgreSQL connection string
-    DATABASE_URL="postgres://user:password@localhost:5432/tailz"
+    DATABASE_URL="postgres://user:password@localhost:5432/kyoto"
 
     # OpenAI-compatible API key (for AI features)
     OPENROUTER_API_KEY="your_openrouter_api_key"
@@ -82,7 +82,7 @@ Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, thi
     Make sure you have a PostgreSQL server running. Then, run the migrations:
 
     ```bash
-    DATABASE_URL="postgres://user:password@localhost:5432/tailz" pnpm --filter @app/db db:migrate
+    DATABASE_URL="postgres://user:password@localhost:5432/kyoto" pnpm --filter @app/db db:migrate
     ```
 
 5.  **Run the development server:**

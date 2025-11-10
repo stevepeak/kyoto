@@ -89,7 +89,7 @@ export function buildCheckRunContent(
     return {
       status: 'in_progress',
       output: {
-        title: `Tailz Run #${params.runNumber} started`,
+        title: `⛩️ Kyoto - QA Run #${params.runNumber} running...`,
         summary: params.summary,
         text,
       },
@@ -115,7 +115,7 @@ export function buildCheckRunContent(
     status: 'completed',
     conclusion: mapOutcomeToConclusion(params.status),
     output: {
-      title: `Tailz Run #${params.runNumber}`,
+      title: `⛩️ Kyoto - QA Run #${params.runNumber}`,
       summary: params.summary,
       text: textLines.join('\n'),
     },
@@ -152,7 +152,7 @@ export async function submitCheckRun({
     const response = await octokit.rest.checks.create({
       owner,
       repo,
-      name: 'Tailz/CI',
+      name: 'Kyoto/QA',
       head_sha: headSha,
       status: content.status,
       details_url: detailsUrlValue,
@@ -215,7 +215,7 @@ async function handleCheckRunCreateFallback({
     const response = await octokit.rest.checks.create({
       owner,
       repo,
-      name: 'Tailz/CI',
+      name: 'Kyoto/QA',
       head_sha: headSha,
       status: content.status,
       details_url: detailsUrlValue,
@@ -235,17 +235,10 @@ async function handleCheckRunCreateFallback({
   }
 }
 
-function loggerWarn(
-  message: string,
-  metadata: Record<string, unknown>,
-): void {
+function loggerWarn(message: string, metadata: Record<string, unknown>): void {
   logger.warn(message, metadata)
 }
 
-function loggerError(
-  message: string,
-  metadata: Record<string, unknown>,
-): void {
+function loggerError(message: string, metadata: Record<string, unknown>): void {
   logger.error(message, metadata)
 }
-

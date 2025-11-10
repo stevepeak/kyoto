@@ -95,7 +95,7 @@ export async function getUserGithubLogin({
     const response = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${githubAccount.accessToken}`,
-        'User-Agent': 'TailzApp',
+        'User-Agent': 'Kyoto',
         Accept: 'application/vnd.github+json',
       },
     })
