@@ -13,7 +13,6 @@
         "GITHUB_APP_SLUG",
         "GITHUB_APP_PRIVATE_KEY",
         "GITHUB_WEBHOOK_SECRET",
-        "OPENROUTER_API_KEY",
         "OPENAI_API_KEY",
         "SENTRY_AUTH_TOKEN",
         "TRIGGER_SECRET_KEY",
@@ -30,8 +29,7 @@
         "TRIGGER_SECRET_KEY",
         "GITHUB_APP_ID",
         "GITHUB_APP_PRIVATE_KEY",
-        "GITHUB_WEBHOOK_SECRET",
-        "OPENROUTER_API_KEY"
+        "GITHUB_WEBHOOK_SECRET"
       ]
     },
     "preview": {

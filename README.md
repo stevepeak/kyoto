@@ -63,7 +63,6 @@ This monorepo includes:
     DATABASE_URL="postgres://user:password@localhost:5432/kyoto"
 
     # OpenAI-compatible API key (for AI features)
-    OPENROUTER_API_KEY="your_openrouter_api_key"
 
     # Trigger.dev secret key (for background jobs)
     TRIGGER_SECRET_KEY="your_trigger_secret_key"

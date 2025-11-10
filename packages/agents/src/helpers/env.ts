@@ -42,7 +42,6 @@ const envSchema = z.object({
       })
       return z.NEVER
     }),
-  OPENROUTER_API_KEY: z.string().min(1, 'OPENROUTER_API_KEY is required'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   TRIGGER_PROJECT_ID: z.string().optional(),
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
@@ -61,7 +60,6 @@ export function parseEnv(): ParsedEnv {
   return envSchema.parse({
     GITHUB_APP_ID: process.env.GITHUB_APP_ID,
     GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
-    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
     TRIGGER_PROJECT_ID: process.env.TRIGGER_PROJECT_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
