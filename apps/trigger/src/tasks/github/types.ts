@@ -4,4 +4,3 @@ interface WebhookHandlerContext {
 }
 
 export type WebhookHandler = (context: WebhookHandlerContext) => Promise<void>
-

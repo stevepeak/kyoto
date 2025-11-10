@@ -9,15 +9,16 @@ export function FeatureGrid() {
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold tracking-[0.3em] text-primary">
-            Platform
+            侘寂プラットフォーム
           </p>
           <h2 className="mt-4 font-display text-3xl text-foreground sm:text-4xl">
-            everything you need to automate quality without slowing teams down
+            Dear fellow developers,
           </h2>
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-            Kyoto orchestrates intelligent coverage, observability, and
-            remediation so that product velocity never comes at the expense of
-            safety.
+            Meet Kyoto, crafted with intention to ensure your product is shipped
+            working. We test code by evaluating your user stories with your
+            codebase to build confidence in your most important features working
+            as a CI.
           </p>
         </div>
 
@@ -32,6 +33,9 @@ export function FeatureGrid() {
                 <div className="inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <feature.icon className="size-6" />
                 </div>
+                <p className="text-sm font-semibold tracking-[0.3em] text-primary">
+                  {feature.katakana}
+                </p>
                 <h3 className="text-xl font-semibold text-foreground">
                   {feature.name}
                 </h3>

@@ -2,7 +2,6 @@
 import Layout from '@/layouts/layout.astro'
 import SignedInBanner from '@/components/common/signed-in-banner'
 import {
-  CallToAction,
   FeatureGrid,
   Faq,
   LandingFooter,
@@ -17,14 +16,15 @@ import {
 <Layout title="Kyoto">
   <SignedInBanner client:idle />
   <LandingNavbar />
-  <main class="flex flex-col gap-0 bg-linear-to-b from-background via-muted/10 to-background text-foreground">
+  <main
+    class="flex flex-col gap-0 bg-linear-to-b from-background via-muted/10 to-background text-foreground"
+  >
     <LandingHero />
     <FeatureGrid />
     <Metrics />
     <Testimonials />
     <Pricing />
     <Faq client:load />
-    <CallToAction />
   </main>
   <LandingFooter />
 </Layout>

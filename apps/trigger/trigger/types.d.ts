@@ -25,4 +25,3 @@ declare module '@sentry/esbuild-plugin' {
     options: SentryEsbuildPluginOptions,
   ): unknown
 }
-

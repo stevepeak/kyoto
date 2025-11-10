@@ -8,14 +8,10 @@ export function Pricing() {
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold tracking-[0.3em] text-primary">
-            Pricing
+            値段相応
           </p>
           <h2 className="mt-4 font-display text-3xl text-foreground sm:text-4xl">
-            Goodbye,{' '}
-            <span className="line-through text-muted-foreground/60">
-              manual qa testing
-            </span>
-            . Hello Kyoto
+            Goodbye, manual QA testing. Hello Kyoto.
           </h2>
         </div>
 

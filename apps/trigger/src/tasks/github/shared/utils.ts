@@ -4,7 +4,10 @@ import type { z } from 'zod'
 import type { AccountPayload } from './schemas'
 import type { idSchema } from './schemas'
 
-export function parseId(value: z.infer<typeof idSchema>, field: string): bigint {
+export function parseId(
+  value: z.infer<typeof idSchema>,
+  field: string,
+): bigint {
   try {
     return BigInt(String(value))
   } catch (error) {
@@ -14,7 +17,9 @@ export function parseId(value: z.infer<typeof idSchema>, field: string): bigint 
   }
 }
 
-export function toNullableString(value: string | null | undefined): string | null {
+export function toNullableString(
+  value: string | null | undefined,
+): string | null {
   if (typeof value !== 'string') {
     return null
   }
@@ -24,7 +29,9 @@ export function toNullableString(value: string | null | undefined): string | nul
   return trimmed.length > 0 ? trimmed : null
 }
 
-export function resolveAccountExternalId(account: AccountPayload): bigint | null {
+export function resolveAccountExternalId(
+  account: AccountPayload,
+): bigint | null {
   if (account.id === undefined) {
     return null
   }
@@ -60,7 +67,9 @@ export function resolveRepositoryOwnerLogin(
   return trimmed.length > 0 ? trimmed : null
 }
 
-export function extractBranchNameFromRef(ref: string | null | undefined): string | null {
+export function extractBranchNameFromRef(
+  ref: string | null | undefined,
+): string | null {
   if (typeof ref !== 'string') {
     return null
   }
@@ -81,5 +90,3 @@ export function extractBranchNameFromRef(ref: string | null | undefined): string
 
   return branch.length > 0 ? branch : null
 }
-
-

@@ -84,4 +84,3 @@ export const pullRequestEventSchema = z.object({
 
 export type AccountPayload = z.infer<typeof accountSchema>
 export type RepositoryPayload = z.infer<typeof repositorySchema>
-

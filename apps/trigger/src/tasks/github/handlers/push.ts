@@ -3,10 +3,7 @@ import { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
 import { runCiTask } from '../../ci/main'
-import {
-  findRepoByOwnerAndName,
-  type RepoLookupResult,
-} from '../shared/db'
+import { findRepoByOwnerAndName, type RepoLookupResult } from '../shared/db'
 import { pushEventSchema } from '../shared/schemas'
 import {
   extractBranchNameFromRef,
@@ -100,4 +97,3 @@ export const pushHandler: WebhookHandler = async ({
     await db.destroy()
   }
 }
-

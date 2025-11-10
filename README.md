@@ -1,4 +1,4 @@
-# ⛩️ Kyoto 
+# ⛩️ Kyoto
 
 > ⛩️ Kyoto - AI-powered QA
 

@@ -107,11 +107,7 @@ export function RepoOverview({
   // Filter runs and stories by selected branch
   const filteredRuns = runs.filter((run) => run.branchName === selectedBranch)
   const filteredStories = stories.filter(
-    (story) =>
-      story.branchName === selectedBranch &&
-      (story.latestStatus === 'pass' ||
-        story.latestStatus === 'fail' ||
-        story.latestStatus === 'error'),
+    (story) => story.branchName === selectedBranch,
   )
 
   return (

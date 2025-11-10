@@ -71,9 +71,7 @@ function getStatusIcon(status: RunItem['status']) {
     case 'failed':
       return <XCircle className="size-4 text-destructive" />
     case 'error':
-      return (
-        <AlertTriangle className="size-4 text-orange-600" />
-      )
+      return <AlertTriangle className="size-4 text-orange-600" />
     case 'skipped':
       return <MinusCircle className="size-4 text-muted-foreground" />
     case 'running':

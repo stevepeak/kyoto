@@ -24,10 +24,7 @@ export function StoryStatusCheck({ status, className }: StoryStatusCheckProps) {
       return (
         <CheckCircle2
           {...iconProps}
-          className={cn(
-            'text-green-600',
-            iconProps.className,
-          )}
+          className={cn('text-green-600', iconProps.className)}
         />
       )
     case 'fail':
@@ -41,10 +38,7 @@ export function StoryStatusCheck({ status, className }: StoryStatusCheckProps) {
       return (
         <Loader2
           {...iconProps}
-          className={cn(
-            'text-yellow-600 animate-spin',
-            iconProps.className,
-          )}
+          className={cn('text-yellow-600 animate-spin', iconProps.className)}
         />
       )
     case 'skipped':
@@ -58,10 +52,7 @@ export function StoryStatusCheck({ status, className }: StoryStatusCheckProps) {
       return (
         <AlertTriangle
           {...iconProps}
-          className={cn(
-            'text-orange-600',
-            iconProps.className,
-          )}
+          className={cn('text-orange-600', iconProps.className)}
         />
       )
     default:

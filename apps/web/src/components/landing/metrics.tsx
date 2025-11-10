@@ -24,7 +24,7 @@ export function Metrics() {
               key={metric.label}
               className="rounded-3xl border border-border/60 bg-card/60 p-6 text-center shadow-md"
             >
-              <p className="font-display text-3xl font-semibold text-foreground sm:text-4xl">
+              <p className="text-3xl font-semibold text-foreground sm:text-4xl">
                 {metric.value}
               </p>
               <p className="mt-2 text-sm font-medium tracking-[0.2em] text-muted-foreground">

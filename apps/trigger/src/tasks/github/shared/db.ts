@@ -225,4 +225,3 @@ export async function disableAllReposAndClearInstallation(
       .execute()
   })
 }
-

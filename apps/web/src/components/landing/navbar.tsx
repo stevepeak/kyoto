@@ -13,7 +13,7 @@ export function LandingNavbar() {
           <span aria-hidden="true" className="text-xl">
             ⛩️
           </span>
-          <span>Kyoto</span>
+          <span className="font-display">Kyoto</span>
         </a>
         <nav className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-muted-foreground">
           <a
@@ -41,4 +41,3 @@ export function LandingNavbar() {
     </header>
   )
 }
-

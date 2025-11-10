@@ -1,15 +1,16 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
-  Code,
-  Cog,
+  Bug,
   Gauge,
-  Layers,
+  GitCommit,
+  Languages,
   LifeBuoy,
   ShieldCheck,
 } from 'lucide-react'
 
 export type Feature = {
+  katakana: string
   name: string
   description: string
   icon: LucideIcon
@@ -37,37 +38,36 @@ export type Faq = {
 
 export const coreFeatures: Feature[] = [
   {
-    name: 'Scenario intelligence',
+    katakana: 'かいぜん',
+    name: 'Continuous Improvement',
     description:
-      'Kyoto ingests commit history, traces, and analytics data to craft reliable BDD scenarios that stay in sync with your product.',
-    icon: Layers,
+      'Like all the other CI tools, Kyoto is a continuously monitors and provides feedback on every commit.',
+    icon: GitCommit,
   },
   {
-    name: 'Continuous verification',
+    katakana: 'ぎゃっこう',
+    name: 'Prevent Regression',
     description:
-      'Ship with confidence thanks to automated regression sweeps, service health monitoring, and flaky test quarantine.',
+      "Don't let regressions sneak into your production. Kyoto will catch them before you deploy.",
+    icon: Bug,
+  },
+  {
+    katakana: '守り',
+    name: 'One click protection.',
+    description:
+      'Immediate protection after sign up. No configuration, no setup required.',
     icon: ShieldCheck,
   },
   {
-    name: 'Seamless developer workflow',
+    katakana: '言語学',
+    name: 'Natural Language Tests',
     description:
-      'Trigger Kyoto from any CI provider, receive inline feedback in GitHub checks, and merge with zero context switching.',
-    icon: Cog,
-  },
-  {
-    name: 'API-first platform',
-    description:
-      'Integrate Kyoto anywhere through a fully typed API, event webhooks, and first-class SDK support.',
-    icon: Code,
+      'Tests are written in natural language, without any required format.',
+    icon: Languages,
   },
 ]
 
 export const platformMetrics: Metric[] = [
-  {
-    label: 'Time to coverage',
-    value: '11 min',
-    helper: 'Median time from feature flag to verified scenario',
-  },
   {
     label: 'Regression caught',
     value: '93%',
@@ -80,24 +80,18 @@ export const platformMetrics: Metric[] = [
   },
 ]
 
-export const testimonials = [
+export const stories = [
   {
     quote:
-      'Kyoto feels like adding a senior QA engineer to every squad. The generated scenarios read exactly like the way our product managers think.',
-    author: 'Priya Verma',
-    role: 'Director of Engineering, Atlas',
+      'When I click create new post, then I see a dialog where I can enter a title and content. Then when I hit post I see my post as the first item in the list.',
   },
   {
     quote:
-      'We replaced flaky Selenium suites with Kyoto in under two weeks. Confidence in each release jumped immediately and our team finally sleeps.',
-    author: 'Jordan Lee',
-    role: 'Staff Software Engineer, Nifty',
+      'When I click on a post, then I see the post details page with the title and content. When I click the edit button, then I see a dialog where I can edit the title and content. When I hit save, then I see the updated post details page.',
   },
   {
     quote:
-      'The autonomous remediation flows are magic. Kyoto opens a patch before we even get to triage the incident.',
-    author: 'Elena García',
-    role: 'Head of Platform, Horizon AI',
+      'When I click the delete button, then I see a confirmation dialog. When I hit delete, then I see the post is removed from the list.',
   },
 ]
 
@@ -144,24 +138,19 @@ export const pricingTiers: PricingTier[] = [
 
 export const faqs: Faq[] = [
   {
-    question: 'How does Kyoto generate test scenarios?',
+    question: 'How does Kyoto work exactly?',
     answer:
-      'Kyoto combines production telemetry, user journeys, and commit metadata with LLM-driven reasoning. Every scenario is validated against your schema before it is committed.',
+      'Each commit to GitHub will be inspected by Kyoto against user stories you write. These tests are done by an AI agent that walks through your code to ensure every step in the story is achievable.',
   },
   {
-    question: 'Can I bring my own testing stack?',
+    question: 'Do I have to write these user stories?',
     answer:
-      'Yes. Kyoto exports executable specs for Playwright, Cypress, and custom runners. We also provide a first-party CLI and TypeScript SDK for deeper integrations.',
+      'No. Kyoto will review your code and write user stories automatically for the first key features in your product. We will improve this over time too.',
   },
   {
-    question: 'What does remediation look like?',
+    question: 'Is Kyoto secure?',
     answer:
-      'When Kyoto detects a regression it drafts a patch directly in GitHub, including updated tests, impact analysis, and rollout guidance. Engineers stay in the loop for final approval.',
-  },
-  {
-    question: 'Is Kyoto secure for regulated teams?',
-    answer:
-      'Absolutely. Kyoto is SOC 2 Type II certified, supports SSO/SAML, offers regional data residency, and can run in your dedicated cloud perimeter.',
+      'Absolutely. Though we are new, we are committed to the highest security standards. Our entire codebase is open source for review and audit.',
   },
 ]
 
@@ -172,23 +161,13 @@ export const supportChannels = [
   { label: 'Security', href: '/security', icon: ShieldCheck },
 ]
 
-export const productLinks = [
-  { label: 'Platform', href: '/product' },
-  { label: 'Autonomous QA', href: '/autonomous-qa' },
-  { label: 'Integrations', href: '/integrations' },
-  { label: 'Changelog', href: '/changelog' },
-]
-
 export const companyLinks = [
   { label: 'About', href: '/about' },
-  { label: 'Customers', href: '/customers' },
-  { label: 'Careers', href: '/careers' },
-  { label: 'Blog', href: '/blog' },
+  // { label: 'Blog', href: '/blog' },
 ]
 
 export const footerLegal = [
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms' },
-  { label: 'Responsible AI', href: '/responsible-ai' },
-  { label: 'Contact', href: 'mailto:hello@kyoto.app' },
+  { label: 'Contact', href: 'mailto:hello@usekyoto.com' },
 ]

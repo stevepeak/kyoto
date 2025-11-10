@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils'
 
-type StoryStatus = 'pass' | 'fail' | 'error'
+type StoryStatus = 'pass' | 'fail' | 'error' | 'running' | null
+
+type StoryStatusKey = Exclude<StoryStatus, null> | 'not_run'
 
 interface StoryCardProps {
   id: string
@@ -11,7 +13,7 @@ interface StoryCardProps {
 }
 
 const STATUS_META: Record<
-  StoryStatus,
+  StoryStatusKey,
   {
     label: string
     textClass: string
@@ -30,8 +32,18 @@ const STATUS_META: Record<
   },
   error: {
     label: 'Error',
-    textClass: 'text-orange-600',
-    dotClass: 'bg-orange-500',
+    textClass: 'text-chart-4',
+    dotClass: 'bg-chart-4',
+  },
+  running: {
+    label: 'Running',
+    textClass: 'text-primary',
+    dotClass: 'bg-primary',
+  },
+  not_run: {
+    label: 'Not run yet',
+    textClass: 'text-muted-foreground',
+    dotClass: 'bg-muted-foreground',
   },
 }
 
@@ -42,7 +54,8 @@ export function StoryCard({
   groups,
   latestStatus,
 }: StoryCardProps) {
-  const statusDisplay = STATUS_META[latestStatus]
+  const statusKey: StoryStatusKey = latestStatus ?? 'not_run'
+  const statusDisplay = STATUS_META[statusKey]
 
   return (
     <a

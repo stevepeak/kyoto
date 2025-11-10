@@ -64,4 +64,3 @@ export const installationRepositoriesHandler: WebhookHandler = async ({
     await db.destroy()
   }
 }
-

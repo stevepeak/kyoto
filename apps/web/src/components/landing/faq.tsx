@@ -13,18 +13,18 @@ export function Faq() {
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold tracking-[0.3em] text-primary">
-            faq
+            よくある質問
           </p>
           <h2 className="mt-4 font-display text-3xl text-foreground sm:text-4xl">
-            everything you need to know before inviting kyoto to your stack
+            Frequently Asked Questions
           </h2>
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
             Have more questions? Reach our solutions team any time at{' '}
             <a
               className="text-primary underline underline-offset-4"
-              href="mailto:hello@kyoto.app"
+              href="mailto:hello@usekyoto.com"
             >
-              hello@kyoto.app
+              hello@usekyoto.com
             </a>
             .
           </p>

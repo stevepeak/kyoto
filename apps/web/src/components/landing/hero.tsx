@@ -10,7 +10,7 @@ export function LandingHero() {
       <div className="container flex flex-col gap-12 px-6 py-10 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-xl space-y-8">
           <span className="inline-flex items-center gap-2 rounded-full bg-background/70 px-4 py-1 text-sm font-medium text-muted-foreground">
-            ⛩️ Hello, Kyoto. Meet, your QA Agent
+            👋 Hello Kyoto
           </span>
           <h1 className="font-display text-4xl tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             Ship it working.

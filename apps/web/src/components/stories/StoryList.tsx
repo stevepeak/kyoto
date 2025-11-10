@@ -1,7 +1,6 @@
 import { StoryCard } from './StoryCard'
 
 type StoryStatus = 'pass' | 'fail' | 'error' | 'running' | null
-type CompletedStoryStatus = Extract<StoryStatus, 'pass' | 'fail' | 'error'>
 
 interface StoryItem {
   id: string
@@ -29,20 +28,17 @@ export function StoryList({
   repoName,
   branchName: _branchName,
 }: StoryListProps) {
-  const completedStories = stories.filter(
-    (
-      story,
-    ): story is StoryItem & {
-      latestStatus: CompletedStoryStatus
-    } =>
-      story.latestStatus === 'pass' ||
-      story.latestStatus === 'fail' ||
-      story.latestStatus === 'error',
-  )
+  if (stories.length === 0) {
+    return (
+      <div className="px-4 py-6 text-sm text-muted-foreground">
+        No stories yet. Create one to get started.
+      </div>
+    )
+  }
 
   return (
     <ul className="divide-y divide-border">
-      {completedStories.map((story) => (
+      {stories.map((story) => (
         <li key={story.id}>
           <StoryCard
             id={story.id}
