@@ -86,11 +86,15 @@ export const POST: APIRoute = async ({ request }) => {
     })
 
     // Trigger the task to handle the webhook
-    await tasks.trigger('handle-github-webhook', {
-      eventType,
-      deliveryId,
-      payload,
-    })
+    await tasks.trigger(
+      'handle-github-webhook',
+      {
+        eventType,
+        deliveryId,
+        payload,
+      },
+      { tags: ['webhook', `github_${eventType}`] },
+    )
 
     return new Response('Webhook received', { status: 200 })
   } catch (error) {

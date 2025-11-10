@@ -25,9 +25,15 @@ export const GET: APIRoute = async ({ request, redirect }) => {
       secretKey: env.triggerSecretKey,
     })
 
-    await tasks.trigger('sync-github-installation', {
-      installationId: installation_id,
-    })
+    await tasks.trigger(
+      'sync-github-installation',
+      {
+        installationId: installation_id,
+      },
+      {
+        tags: [`install_${installation_id}`],
+      },
+    )
   } catch (error) {
     console.error('Failed to trigger GitHub installation sync:', error)
     const errorMessage =

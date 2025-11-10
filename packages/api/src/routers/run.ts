@@ -321,11 +321,15 @@ export const runRouter = router({
         secretKey: env.TRIGGER_SECRET_KEY,
       })
 
-      await tasks.trigger('run-ci', {
-        orgSlug: input.orgSlug,
-        repoName: input.repoName,
-        branchName: input.branchName,
-      })
+      await tasks.trigger(
+        'run-ci',
+        {
+          orgSlug: input.orgSlug,
+          repoName: input.repoName,
+          branchName: input.branchName,
+        },
+        { tags: [`org_${input.orgSlug}`, `repo_${input.repoName}`] },
+      )
 
       return {
         success: true,
