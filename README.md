@@ -1,12 +1,21 @@
-# Monorepo Scaffold
+# ⛩️ Kyoto 
 
-This is a scaffold for a modern web application using a monorepo architecture. It's designed to provide a solid foundation for new projects, with a focus on type-safety, developer experience, and scalability.
+> ⛩️ Kyoto - AI-powered QA
+
+# Why Kyoto?
+
+In the age of AI many hackers are vibe coding and not writing tests. We don't blame them.
+Instead, let's write user stories and let AI review the code to ensure the functionality
+**may** work as expected.
+
+# Development
 
 ## What's inside?
 
 This monorepo includes:
 
 - `apps/web`: An [Astro](https://astro.build/) application for the frontend.
+- `apps/trigger`: [Trigger.dev](https://trigger.dev/) background jobs and automation. Manages external webhook processing, scheduled tasks, and integration with monitoring tools (e.g., Sentry).
 - `packages/api`: A [tRPC](https://trpc.io/) API for type-safe client-server communication.
 - `packages/db`: Database schemas, migrations, and query utilities using [Kysely](https://kysely.dev/).
 - `packages/utils`: Shared utilities used across the monorepo.
@@ -17,23 +26,6 @@ This monorepo includes:
   - [PNPM](https://pnpm.io/) for efficient package management.
   - [TypeScript](https://www.typescriptlang.org/) for static typing.
   - [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for code quality.
-
-## Perfect for AI-Assisted Development
-
-This scaffold is specifically designed to excel with AI coding assistants and "vibe coding" workflows:
-
-- **Rich Examples**: The codebase provides comprehensive examples of common patterns like API routing, database connections, migrations, authentication flows, and UI components that AI can learn from and replicate.
-- **Comprehensive Cursor Rules**: Pre-configured `.cursor/rules/` directory with detailed guidelines for:
-  - Database patterns and Kysely type helpers
-  - tRPC and React Query integration patterns
-  - React component conventions and shadcn/ui usage
-  - TypeScript best practices and naming conventions
-  - Environment variable management
-  - Code organization and project structure
-- **Consistent Patterns**: Standardized approaches across the entire stack make it easy for AI to understand and extend the codebase following established conventions.
-- **Type Safety**: Full TypeScript coverage provides clear contracts and types that AI can work with confidently. We prefer types the function instead of an interface.
-
-Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, this scaffold gives your AI assistant the context and examples it needs to generate high-quality, consistent code that follows your project's patterns.
 
 ## Getting Started
 
@@ -102,8 +94,7 @@ Whether you're pair programming with Claude, GitHub Copilot, or Cursor's AI, thi
 
 # Authors
 
-- [@ocavue](https://github.com/ocavue)
-- [@maccman](https://github.com/maccman)
+- [@stevepeak](https://github.com/stevepeak)
 
 # License
 
