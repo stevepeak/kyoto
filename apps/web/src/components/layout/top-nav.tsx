@@ -1,7 +1,7 @@
 'use client'
 
 import { navigate } from 'astro:transitions/client'
-import { LogOut, Sparkles } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { MdTempleBuddhist } from 'react-icons/md'
 
@@ -69,14 +69,16 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
     <div className="flex items-center gap-2">
       <Button
         className={cn(
-          'h-8 px-3 text-sm text-white',
-          'bg-linear-to-r from-violet-500 via-indigo-500 to-sky-500 shadow-sm',
-          'hover:from-violet-600 hover:via-indigo-600 hover:to-sky-600 hover:shadow-md',
-          'focus-visible:ring-indigo-500/70 focus-visible:ring-offset-1',
+          'h-8 px-3 text-sm font-medium gap-1.5',
+          'bg-linear-to-r from-white via-[#ffe6f2] to-[#ffcde8] text-foreground shadow-sm',
+          'hover:from-white hover:via-[#ffd9ec] hover:to-[#ffbcd9] hover:shadow-md',
+          'focus-visible:ring-primary/40 focus-visible:ring-offset-1',
         )}
         onClick={() => void navigate('/upcoming-features')}
       >
-        <Sparkles className="h-4 w-4" />
+        <span aria-hidden="true" className="text-base leading-none">
+          🌸
+        </span>
         What&apos;s next?
       </Button>
 
