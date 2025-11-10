@@ -1,5 +1,8 @@
 import { defineConfig } from '@trigger.dev/sdk'
-import { esbuildPlugin } from '@trigger.dev/build/extensions'
+import {
+  esbuildPlugin,
+  type BuildExtension,
+} from '@trigger.dev/build/extensions'
 import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin'
 import * as Sentry from '@sentry/node'
 
@@ -18,7 +21,7 @@ export default defineConfig({
           authToken: process.env.SENTRY_AUTH_TOKEN,
         }),
         { placement: 'last', target: 'deploy' },
-      ),
+      ) as BuildExtension,
     ],
   },
   // eslint-disable-next-line @typescript-eslint/require-await

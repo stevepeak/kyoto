@@ -26,6 +26,8 @@
     "@trigger.dev/sdk": "^4.0.6"
   },
   "devDependencies": {
+    "@sentry/esbuild-plugin": "^4.6.0",
+    "@trigger.dev/build": "^4.0.6",
     "@types/node": "^22.18.10",
     "typescript": "^5.9.3"
   }

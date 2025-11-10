@@ -53,6 +53,12 @@ setEnv(
     'http://localhost:3001',
 )
 
+type VitePlugins = NonNullable<
+  NonNullable<Parameters<typeof defineConfig>[0]['vite']>['plugins']
+>
+
+const tailwindPlugins = tailwindcss() as unknown as VitePlugins
+
 // https://astro.build/config
 const config = defineConfig({
   output: 'server',
@@ -111,7 +117,7 @@ const config = defineConfig({
         },
       },
     },
-    plugins: [tailwindcss()],
+    plugins: tailwindPlugins,
     resolve: {
       alias: {
         '@': path.resolve('./src'),
@@ -195,7 +201,7 @@ const config = defineConfig({
       SENTRY_AUTH_TOKEN: envField.string({
         context: 'server',
         access: 'secret',
-        optional: false,
+        optional: true,
       }),
       TRIGGER_SECRET_KEY: envField.string({
         context: 'server',
