@@ -62,6 +62,7 @@ export const runCiTask = task({
       commitSha,
       commitMessage,
       runSummary,
+      prNumber: payload.prNumber ?? null,
     })
 
     const runId = runInsert.id

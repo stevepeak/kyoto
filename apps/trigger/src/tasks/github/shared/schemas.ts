@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const idSchema = z.union([z.number().int(), z.string(), z.bigint()])
 
-export const accountSchema = z
+const accountSchema = z
   .object({
     login: z.string(),
     id: idSchema.optional(),
@@ -13,7 +13,7 @@ export const accountSchema = z
   })
   .passthrough()
 
-export const repositorySchema = z.object({
+const repositorySchema = z.object({
   id: idSchema.optional(),
   name: z.string(),
   full_name: z.string().optional(),
@@ -21,6 +21,7 @@ export const repositorySchema = z.object({
   description: z.string().nullable().optional(),
   default_branch: z.string().nullable().optional(),
   html_url: z.string().nullable().optional(),
+  owner: accountSchema.optional(),
 })
 
 export const installationEventSchema = z.object({
@@ -39,6 +40,46 @@ export const installationRepositoriesEventSchema = z.object({
   }),
   repositories_added: z.array(repositorySchema).optional(),
   repositories_removed: z.array(repositorySchema).optional(),
+})
+
+const pushRepositoryOwnerSchema = z
+  .object({
+    login: z.string().optional(),
+    name: z.string().optional(),
+  })
+  .passthrough()
+
+export const pushEventSchema = z.object({
+  ref: z.string(),
+  after: z.string().optional(),
+  repository: repositorySchema.extend({
+    owner: pushRepositoryOwnerSchema.optional(),
+  }),
+})
+
+const pullRequestUserSchema = z
+  .object({
+    login: z.string(),
+  })
+  .passthrough()
+
+export const pullRequestEventSchema = z.object({
+  action: z.string(),
+  number: z.number().int(),
+  repository: repositorySchema.extend({
+    owner: pushRepositoryOwnerSchema.optional(),
+  }),
+  pull_request: z.object({
+    number: z.number().int(),
+    head: z.object({
+      ref: z.string(),
+      sha: z.string().optional(),
+      repo: repositorySchema.extend({
+        owner: pushRepositoryOwnerSchema.optional(),
+      }),
+    }),
+    user: pullRequestUserSchema.optional(),
+  }),
 })
 
 export type AccountPayload = z.infer<typeof accountSchema>

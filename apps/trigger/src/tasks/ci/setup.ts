@@ -120,6 +120,7 @@ interface CreateRunRecordParams {
   commitSha: string | null
   commitMessage: string | null
   runSummary: string | null
+  prNumber?: string | null
 }
 
 export async function createRunRecord({
@@ -131,6 +132,7 @@ export async function createRunRecord({
   commitSha,
   commitMessage,
   runSummary,
+  prNumber = null,
 }: CreateRunRecordParams): Promise<RunInsert> {
   const insertedRun = await sql<RunInsert>`
       INSERT INTO public.runs (
@@ -149,7 +151,7 @@ export async function createRunRecord({
         ${JSON.stringify(initialRunStories)}::jsonb,
         ${commitSha},
         ${commitMessage},
-        NULL,
+        ${prNumber},
         ${runSummary}
       )
       RETURNING id, number

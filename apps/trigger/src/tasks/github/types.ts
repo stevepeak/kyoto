@@ -1,4 +1,4 @@
-export interface WebhookHandlerContext {
+interface WebhookHandlerContext {
   deliveryId: string
   rawPayload: unknown
 }

@@ -1,10 +1,56 @@
-import { setupDb } from '@app/db'
+import type { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
 import type { AccountPayload, RepositoryPayload } from './schemas'
 import { parseId, resolveAccountExternalId, toNullableString } from './utils'
 
-export type DbClient = ReturnType<typeof setupDb>
+type DbClient = ReturnType<typeof setupDb>
+
+export interface RepoLookupResult {
+  repoId: string
+  ownerId: string
+  repoName: string
+  ownerLogin: string
+  defaultBranch: string | null
+  enabled: boolean
+}
+
+export async function findRepoByOwnerAndName(
+  db: DbClient,
+  params: { ownerLogin: string; repoName: string },
+): Promise<RepoLookupResult | null> {
+  const repoRecord = await db
+    .selectFrom('repos')
+    .innerJoin('owners', 'repos.ownerId', 'owners.id')
+    .select([
+      'repos.id as repoId',
+      'repos.ownerId as ownerId',
+      'repos.name as repoName',
+      'repos.defaultBranch as defaultBranch',
+      'repos.enabled as enabled',
+      'owners.login as ownerLogin',
+    ])
+    .where('owners.login', '=', params.ownerLogin)
+    .where('repos.name', '=', params.repoName)
+    .executeTakeFirst()
+
+  return repoRecord ?? null
+}
+
+export async function findActiveRunForPr(
+  db: DbClient,
+  params: { repoId: string; prNumber: string },
+): Promise<{ id: string } | null> {
+  const run = await db
+    .selectFrom('runs')
+    .select(['id'])
+    .where('repoId', '=', params.repoId)
+    .where('prNumber', '=', params.prNumber)
+    .where('status', '=', 'running')
+    .executeTakeFirst()
+
+  return run ?? null
+}
 
 export async function upsertOwnerRecord(
   db: DbClient,

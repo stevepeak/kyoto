@@ -4,6 +4,7 @@ export interface RunCiPayload {
   orgSlug: string
   repoName: string
   branchName?: string | null
+  prNumber?: string | null
 }
 
 export type StoryRow = {

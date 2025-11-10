@@ -1,8 +1,8 @@
 import { logger } from '@trigger.dev/sdk'
-import { z } from 'zod'
+import type { z } from 'zod'
 
 import type { AccountPayload } from './schemas'
-import { idSchema } from './schemas'
+import type { idSchema } from './schemas'
 
 export function parseId(value: z.infer<typeof idSchema>, field: string): bigint {
   try {
@@ -41,4 +41,45 @@ export function resolveAccountExternalId(account: AccountPayload): bigint | null
 
   return null
 }
+
+export function resolveRepositoryOwnerLogin(
+  owner: { login?: string | null; name?: string | null } | null | undefined,
+): string | null {
+  if (!owner) {
+    return null
+  }
+
+  const candidate = owner.login ?? owner.name
+
+  if (typeof candidate !== 'string') {
+    return null
+  }
+
+  const trimmed = candidate.trim()
+
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export function extractBranchNameFromRef(ref: string | null | undefined): string | null {
+  if (typeof ref !== 'string') {
+    return null
+  }
+
+  const trimmed = ref.trim()
+
+  if (trimmed.length === 0) {
+    return null
+  }
+
+  const headPrefix = 'refs/heads/'
+
+  if (!trimmed.startsWith(headPrefix)) {
+    return null
+  }
+
+  const branch = trimmed.slice(headPrefix.length).trim()
+
+  return branch.length > 0 ? branch : null
+}
+
 
