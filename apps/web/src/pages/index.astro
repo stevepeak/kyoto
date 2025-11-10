@@ -1,10 +1,16 @@
 ---
 import Layout from '@/layouts/layout.astro'
-import { HomeApp } from '@/components/apps/home-app'
-
-export const prerender = false
 ---
 
-<Layout title="App">
-  <HomeApp client:load />
+<Layout title="Kyoto">
+  <main class="flex min-h-screen items-center justify-center bg-background px-6 py-16">
+    <div class="max-w-xl text-center">
+      <h1 class="text-4xl font-semibold text-foreground sm:text-5xl">
+        Hello World
+      </h1>
+      <p class="mt-4 text-base text-muted-foreground sm:text-lg">
+        We&apos;re building something great. Check back soon for more updates.
+      </p>
+    </div>
+  </main>
 </Layout>

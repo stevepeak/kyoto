@@ -1,0 +1,11 @@
+---
+import Layout from '@/layouts/layout.astro'
+import { HomeApp } from '@/components/apps/home-app'
+
+export const prerender = false
+---
+
+<Layout title="App">
+  <HomeApp client:load />
+</Layout>
+
