@@ -1,4 +1,389 @@
+import { parseEnv } from '@app/agents'
+import { setupDb } from '@app/db'
 import { task, logger } from '@trigger.dev/sdk'
+import { z } from 'zod'
+
+type DbClient = ReturnType<typeof setupDb>
+
+const idSchema = z.union([z.number().int(), z.string(), z.bigint()])
+
+const accountSchema = z
+  .object({
+    login: z.string(),
+    id: idSchema.optional(),
+    name: z.string().optional(),
+    type: z.string().optional(),
+    avatar_url: z.string().optional(),
+    html_url: z.string().optional(),
+  })
+  .passthrough()
+
+const repositorySchema = z.object({
+  id: idSchema.optional(),
+  name: z.string(),
+  full_name: z.string().optional(),
+  private: z.boolean().optional(),
+  description: z.string().nullable().optional(),
+  default_branch: z.string().nullable().optional(),
+  html_url: z.string().nullable().optional(),
+})
+
+const installationEventSchema = z.object({
+  action: z.string(),
+  installation: z.object({
+    id: idSchema,
+    account: accountSchema,
+  }),
+  repositories: z.array(repositorySchema).optional(),
+})
+
+const installationRepositoriesEventSchema = z.object({
+  action: z.enum(['added', 'removed']),
+  installation: z.object({
+    id: idSchema,
+  }),
+  repositories_added: z.array(repositorySchema).optional(),
+  repositories_removed: z.array(repositorySchema).optional(),
+})
+
+type AccountPayload = z.infer<typeof accountSchema>
+type RepositoryPayload = z.infer<typeof repositorySchema>
+function parseId(value: z.infer<typeof idSchema>, field: string): bigint {
+  try {
+    return BigInt(String(value))
+  } catch (error) {
+    throw new TypeError(`Invalid ${field}: ${String(value)}`, {
+      cause: error instanceof Error ? error : undefined,
+    })
+  }
+}
+
+function toNullableString(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const trimmed = value.trim()
+
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function resolveAccountExternalId(account: AccountPayload): bigint | null {
+  if (account.id === undefined) {
+    return null
+  }
+
+  try {
+    return parseId(account.id, 'account.id')
+  } catch (error) {
+    logger.warn('Unable to parse account external id', {
+      error,
+      accountId: account.id,
+      login: account.login,
+    })
+  }
+
+  return null
+}
+
+async function upsertOwnerRecord(
+  db: DbClient,
+  params: {
+    account: AccountPayload
+    installationId: bigint
+  },
+): Promise<{ id: string; login: string }> {
+  const accountName = toNullableString(params.account.name ?? null)
+  const accountType = toNullableString(params.account.type ?? null)
+  const avatarUrl = toNullableString(params.account.avatar_url ?? null)
+  const htmlUrl = toNullableString(params.account.html_url ?? null)
+  const externalId = resolveAccountExternalId(params.account)
+
+  const owner = await db
+    .insertInto('owners')
+    .values({
+      login: params.account.login,
+      name: accountName,
+      type: accountType,
+      avatarUrl,
+      htmlUrl,
+      externalId,
+      installationId: params.installationId,
+    })
+    .onConflict((oc) =>
+      oc.column('login').doUpdateSet({
+        name: accountName,
+        type: accountType,
+        avatarUrl,
+        htmlUrl,
+        externalId,
+        installationId: params.installationId,
+      }),
+    )
+    .returning(['id', 'login'])
+    .executeTakeFirst()
+
+  if (!owner) {
+    throw new Error('Failed to upsert owner record')
+  }
+
+  return owner
+}
+
+async function upsertRepositories(
+  db: DbClient,
+  params: {
+    ownerId: string
+    repositories: RepositoryPayload[]
+    enabled: boolean
+  },
+): Promise<void> {
+  if (params.repositories.length === 0) {
+    return
+  }
+
+  await db.transaction().execute(async (trx) => {
+    for (const repo of params.repositories) {
+      const externalId =
+        repo.id === undefined ? null : parseId(repo.id, 'repository.id')
+
+      await trx
+        .insertInto('repos')
+        .values({
+          ownerId: params.ownerId,
+          externalId,
+          name: repo.name,
+          fullName: repo.full_name ?? null,
+          description: repo.description ?? null,
+          defaultBranch: repo.default_branch ?? null,
+          htmlUrl: repo.html_url ?? null,
+          private: repo.private ?? false,
+          enabled: params.enabled,
+        })
+        .onConflict((oc) =>
+          oc.columns(['ownerId', 'name']).doUpdateSet({
+            externalId,
+            fullName: repo.full_name ?? null,
+            description: repo.description ?? null,
+            defaultBranch: repo.default_branch ?? null,
+            htmlUrl: repo.html_url ?? null,
+            private: repo.private ?? false,
+            enabled: params.enabled,
+          }),
+        )
+        .execute()
+    }
+  })
+}
+
+async function disableRepositories(
+  db: DbClient,
+  params: {
+    ownerId: string
+    repositories: RepositoryPayload[]
+  },
+): Promise<void> {
+  if (params.repositories.length === 0) {
+    return
+  }
+
+  const externalIds: string[] = []
+  const names = new Set<string>()
+
+  for (const repo of params.repositories) {
+    if (repo.id !== undefined) {
+      try {
+        externalIds.push(parseId(repo.id, 'repository.id').toString())
+        continue
+      } catch (error) {
+        logger.warn('Failed to parse repository id when disabling repo', {
+          error,
+          repositoryId: repo.id,
+          repositoryName: repo.name,
+        })
+      }
+    }
+
+    names.add(repo.name)
+  }
+
+  await db.transaction().execute(async (trx) => {
+    if (externalIds.length > 0) {
+      await trx
+        .updateTable('repos')
+        .set({ enabled: false })
+        .where('ownerId', '=', params.ownerId)
+        .where('externalId', 'in', externalIds)
+        .execute()
+    }
+
+    const nameList = Array.from(names)
+
+    if (nameList.length > 0) {
+      await trx
+        .updateTable('repos')
+        .set({ enabled: false })
+        .where('ownerId', '=', params.ownerId)
+        .where('name', 'in', nameList)
+        .execute()
+    }
+  })
+}
+
+async function handleInstallationEvent(
+  rawPayload: unknown,
+  deliveryId: string,
+): Promise<void> {
+  const parsed = installationEventSchema.parse(rawPayload)
+  const { installation, repositories = [] } = parsed
+  const action = parsed.action.toLowerCase()
+  const installationId = parseId(installation.id, 'installation.id')
+
+  const env = parseEnv()
+  const db = setupDb(env.DATABASE_URL)
+
+  try {
+    const owner = await upsertOwnerRecord(db, {
+      account: installation.account,
+      installationId,
+    })
+
+    switch (action) {
+      case 'deleted': {
+        await db.transaction().execute(async (trx) => {
+          await trx
+            .updateTable('repos')
+            .set({ enabled: false })
+            .where('ownerId', '=', owner.id)
+            .execute()
+
+          await trx
+            .updateTable('owners')
+            .set({ installationId: null })
+            .where('id', '=', owner.id)
+            .execute()
+        })
+
+        logger.info('Processed installation deletion event', {
+          deliveryId,
+          installationId: String(installationId),
+          ownerLogin: owner.login,
+        })
+        break
+      }
+
+      case 'suspend':
+      case 'suspended': {
+        await db
+          .updateTable('repos')
+          .set({ enabled: false })
+          .where('ownerId', '=', owner.id)
+          .execute()
+
+        logger.info('Processed installation suspension event', {
+          deliveryId,
+          installationId: String(installationId),
+          ownerLogin: owner.login,
+        })
+        break
+      }
+
+      case 'unsuspend':
+      case 'unsuspended': {
+        await db
+          .updateTable('repos')
+          .set({ enabled: true })
+          .where('ownerId', '=', owner.id)
+          .execute()
+
+        logger.info('Processed installation unsuspension event', {
+          deliveryId,
+          installationId: String(installationId),
+          ownerLogin: owner.login,
+        })
+        break
+      }
+
+      default: {
+        if (repositories.length > 0) {
+          await upsertRepositories(db, {
+            ownerId: owner.id,
+            repositories,
+            enabled: false,
+          })
+        }
+
+        logger.info('Processed installation event', {
+          deliveryId,
+          action,
+          installationId: String(installationId),
+          ownerLogin: owner.login,
+          repositoryCount: repositories.length,
+        })
+      }
+    }
+  } finally {
+    await db.destroy()
+  }
+}
+
+async function handleInstallationRepositoriesEvent(
+  rawPayload: unknown,
+  deliveryId: string,
+): Promise<void> {
+  const parsed = installationRepositoriesEventSchema.parse(rawPayload)
+  const installationId = parseId(parsed.installation.id, 'installation.id')
+  const installationIdValue = installationId.toString()
+
+  const env = parseEnv()
+  const db = setupDb(env.DATABASE_URL)
+
+  try {
+    const owner = await db
+      .selectFrom('owners')
+      .select(['id', 'login'])
+      .where('installationId', '=', installationIdValue)
+      .executeTakeFirst()
+
+    if (!owner) {
+      logger.warn('Owner not found for installation_repositories event', {
+        deliveryId,
+        installationId: installationIdValue,
+      })
+
+      return
+    }
+
+    const repositoriesAdded = parsed.repositories_added ?? []
+    const repositoriesRemoved = parsed.repositories_removed ?? []
+
+    if (repositoriesAdded.length > 0) {
+      await upsertRepositories(db, {
+        ownerId: owner.id,
+        repositories: repositoriesAdded,
+        enabled: true,
+      })
+    }
+
+    if (repositoriesRemoved.length > 0) {
+      await disableRepositories(db, {
+        ownerId: owner.id,
+        repositories: repositoriesRemoved,
+      })
+    }
+
+    logger.info('Processed installation_repositories event', {
+      deliveryId,
+      action: parsed.action,
+      installationId: installationIdValue,
+      ownerLogin: owner.login,
+      repositoriesAdded: repositoriesAdded.length,
+      repositoriesRemoved: repositoriesRemoved.length,
+    })
+  } finally {
+    await db.destroy()
+  }
+}
 
 /**
  * Trigger.dev task that handles GitHub webhook events.
@@ -72,11 +457,17 @@ export const handleGithubWebhookTask = task({
         logger.info('Processing installation event', {
           deliveryId: payload.deliveryId,
         })
-        // TODO: Handle GitHub App installation events (created, deleted, suspended, unsuspended)
-        // - Extract installation_id and account (owner) information from payload
-        // - Create or update owner record with installation_id
-        // - On 'deleted' or 'suspended': Mark repositories as disabled
-        // - On 'unsuspended': Re-enable repositories
+
+        try {
+          await handleInstallationEvent(payload.payload, payload.deliveryId)
+        } catch (error) {
+          logger.error('Failed to process installation event', {
+            deliveryId: payload.deliveryId,
+            error,
+          })
+          throw error
+        }
+
         break
       }
 
@@ -84,11 +475,20 @@ export const handleGithubWebhookTask = task({
         logger.info('Processing installation_repositories event', {
           deliveryId: payload.deliveryId,
         })
-        // TODO: Handle repository addition/removal from installation
-        // - Extract installation_id and repository list from payload
-        // - For 'added' repositories: Create repo records, set enabled=true
-        // - For 'removed' repositories: Set enabled=false or mark for deletion
-        // - Sync repository metadata (name, full_name, default_branch, etc.)
+
+        try {
+          await handleInstallationRepositoriesEvent(
+            payload.payload,
+            payload.deliveryId,
+          )
+        } catch (error) {
+          logger.error('Failed to process installation_repositories event', {
+            deliveryId: payload.deliveryId,
+            error,
+          })
+          throw error
+        }
+
         break
       }
 
@@ -109,58 +509,6 @@ export const handleGithubWebhookTask = task({
       // ============================================================================
       // IMPORTANT EVENTS (Medium Priority)
       // ============================================================================
-
-      case 'check_run': {
-        logger.info('Processing check_run event', {
-          deliveryId: payload.deliveryId,
-        })
-        // TODO: Monitor external check runs for context
-        // - Extract check run status, conclusion, and associated commit SHA
-        // - Store check run information for visibility
-        // - Use to understand external CI/CD status that might affect our runs
-        break
-      }
-
-      case 'check_suite': {
-        logger.info('Processing check_suite event', {
-          deliveryId: payload.deliveryId,
-        })
-        // TODO: Monitor check suite lifecycle (requested, completed, rerequested)
-        // - Extract check suite status and associated commit SHA
-        // - Track check suite information for context
-        break
-      }
-
-      case 'status': {
-        logger.info('Processing status event', {
-          deliveryId: payload.deliveryId,
-        })
-        // TODO: Track commit status from other systems
-        // - Extract commit SHA, state (pending, success, failure, error), and context
-        // - Log status information for visibility and debugging
-        break
-      }
-
-      case 'branch_protection_rule': {
-        logger.info('Processing branch_protection_rule event', {
-          deliveryId: payload.deliveryId,
-        })
-        // TODO: Track branch protection rule changes (created, deleted, edited)
-        // - Extract branch name and protection rules from payload
-        // - Store protection rules for context (may affect how we handle runs)
-        break
-      }
-
-      case 'create': {
-        logger.info('Processing create event', {
-          deliveryId: payload.deliveryId,
-        })
-        // TODO: Handle branch/tag creation
-        // - Extract ref name, ref type (branch/tag), and commit SHA
-        // - On branch creation: Optionally discover stories for new branches
-        // - Track branch lifecycle for repository management
-        break
-      }
 
       case 'delete': {
         logger.info('Processing delete event', {
