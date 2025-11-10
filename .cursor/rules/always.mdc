@@ -6,11 +6,9 @@ alwaysApply: true
 
 ## IMPORTANT: Development cycle
 
-1. Before writing any code, come up with an extremely good plan, review the plan, and then execute the plan.
-2. After you have executed the plan, run: `pnpm typecheck` and `pnpm lint`
-3. If there are any linting errors, run `pnpm fix` before attempting to fix the errors yourself.
-4. To run tests: `pnpm test --filter @app/<web/api/db>`
-5. Never try to start a dev server or curl a local endpoint.
+- After you have executed the plan, run: `pnpm run ci` and fix any issues related to the changes
+- If there are any linting errors, run `pnpm fix` before attempting to fix the errors yourself.
+- Never try to start a dev server or curl a local endpoint.
 
 ## Current dev status
 

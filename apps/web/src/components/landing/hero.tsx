@@ -22,7 +22,7 @@ export function LandingHero() {
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button size="lg" asChild>
-              <a href="/signup" className="gap-2">
+              <a href="/login" className="gap-2">
                 Get started
                 <ArrowRight className="size-4" />
               </a>

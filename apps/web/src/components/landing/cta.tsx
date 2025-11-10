@@ -21,7 +21,7 @@ export function CallToAction() {
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild>
-                <a href="/signup" className="gap-2">
+                <a href="/login" className="gap-2">
                   start free
                 </a>
               </Button>
