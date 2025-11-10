@@ -77,7 +77,7 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
       <Button
         className={cn(
           'h-8 px-3 text-sm text-white',
-          'bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 shadow-sm',
+          'bg-linear-to-r from-violet-500 via-indigo-500 to-sky-500 shadow-sm',
           'hover:from-violet-600 hover:via-indigo-600 hover:to-sky-600 hover:shadow-md',
           'focus-visible:ring-indigo-500/70 focus-visible:ring-offset-1',
         )}
@@ -154,7 +154,7 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <a
             href="/app"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             <MdTempleBuddhist size={20} /> Kyoto
           </a>
