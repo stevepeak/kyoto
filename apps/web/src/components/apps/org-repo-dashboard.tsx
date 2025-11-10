@@ -237,12 +237,16 @@ export function OrgRepoDashboard({ org, repos }: Props) {
         <div className="border-b border-border bg-background/80 px-6 py-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xl font-semibold text-foreground">
-                <SiGithub className="h-5 w-5 text-muted-foreground" />
+              <div className="text-xl font-semibold text-foreground">
                 <span>{org?.name ?? 'Organization'}</span>
               </div>
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                {org?.slug ? <span>{org.slug}</span> : null}
+                {org?.slug ? (
+                  <div className="flex items-center gap-2">
+                    <SiGithub className="h-4 w-4 text-muted-foreground" />
+                    <span>{org.slug}</span>
+                  </div>
+                ) : null}
                 <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
                   {repoCount} {repoCount === 1 ? 'repository' : 'repositories'}
                 </span>
