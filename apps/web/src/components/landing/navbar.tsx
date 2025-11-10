@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 
 export function LandingNavbar() {
   return (
-    <header className="relative z-20 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="relative z-20 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex flex-col items-center gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
         <a
           href="/"
@@ -15,7 +15,7 @@ export function LandingNavbar() {
           </span>
           <span className="font-display">Kyoto</span>
         </a>
-        <nav className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-muted-foreground">
+        <nav className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8 text-sm font-medium text-muted-foreground">
           <a
             href="#product"
             className="transition-colors hover:text-foreground focus-visible:text-foreground"

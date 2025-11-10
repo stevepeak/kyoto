@@ -15,10 +15,23 @@ export function FeatureGrid() {
             Dear fellow developers,
           </h2>
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-            Meet Kyoto, crafted with intention to ensure your product is shipped
-            working. We test code by evaluating your user stories with your
-            codebase to build confidence in your most important features working
-            as a CI.
+            In this new age of AI, writing tests is becoming less common as we
+            vibe code new and existing products. Yet the importance of testing
+            code has not changed, but maybe the way we test can change. Kyoto is
+            that new way to test code through story-telling and natural
+            language.
+          </p>
+          <p className="mt-6 pl-6 text-base italic text-muted-foreground sm:text-lg">
+            <i>
+              Made with passion by the creator of{' '}
+              <a href="https://codecov.io" className="text-primary">
+                Codecov
+              </a>{' '}
+              and{' '}
+              <a href="https://gwiz.ai" className="text-primary">
+                Gwiz
+              </a>
+            </i>
           </p>
         </div>
 

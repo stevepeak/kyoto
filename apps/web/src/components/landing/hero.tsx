@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button'
 export function LandingHero() {
   return (
     <section
-      className="relative overflow-hidden bg-cover bg-center bg-no-repeat py-24 sm:py-28 lg:py-32"
+      className="relative min-h-[90vh] overflow-hidden bg-cover bg-left-bottom bg-no-repeat pt-8 pb-20 sm:pt-10 sm:pb-24 lg:pt-12 lg:pb-32"
       style={{ backgroundImage: "url('/kyoto.png')" }}
     >
-      <div className="container flex flex-col gap-12 px-6 py-10 lg:flex-row lg:items-center lg:justify-between">
+      <div className="container flex flex-col gap-12 px-6 pt-4 pb-12 lg:flex-row lg:items-center lg:justify-between lg:pb-16">
         <div className="max-w-xl space-y-8">
           <span className="inline-flex items-center gap-2 rounded-full bg-background/70 px-4 py-1 text-sm font-medium text-muted-foreground">
             👋 Hello Kyoto
