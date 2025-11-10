@@ -36,6 +36,10 @@ export type Faq = {
   answer: string
 }
 
+export type Story = {
+  quote: string
+}
+
 export const coreFeatures: Feature[] = [
   {
     katakana: 'かいぜん',
@@ -80,7 +84,7 @@ export const platformMetrics: Metric[] = [
   },
 ]
 
-export const stories = [
+export const stories: Story[] = [
   {
     quote:
       'When I click create new post, then I see a dialog where I can enter a title and content. Then when I hit post I see my post as the first item in the list.',

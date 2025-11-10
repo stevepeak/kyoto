@@ -18,13 +18,13 @@ export function Testimonials() {
         </div>
 
         <div className="mt-16 grid gap-6 lg:grid-cols-3">
-          {stories.map((quote) => (
+          {stories.map((story) => (
             <figure
-              key={quote.author}
+              key={story.quote}
               className="rounded-3xl border border-border/60 bg-card/70 p-8 shadow-lg transition hover:border-primary/30 hover:shadow-xl"
             >
               <blockquote className="text-lg text-foreground">
-                {quote.quote}
+                {story.quote}
               </blockquote>
             </figure>
           ))}
