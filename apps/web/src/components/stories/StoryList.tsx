@@ -31,7 +31,8 @@ export function StoryList({
   if (stories.length === 0) {
     return (
       <div className="px-4 py-6 text-sm text-muted-foreground">
-        No stories yet. Create one to get started.
+        No stories yet. Create one to get started. (Soon we will generate some
+        for you automatically.)
       </div>
     )
   }
