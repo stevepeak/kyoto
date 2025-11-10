@@ -1,8 +1,10 @@
 ---
 import Layout from '@/layouts/layout.astro'
+import SignedInBanner from '@/components/common/signed-in-banner'
 ---
 
 <Layout title="Kyoto">
+  <SignedInBanner client:idle />
   <main class="flex min-h-screen items-center justify-center bg-background px-6 py-16">
     <div class="max-w-xl text-center">
       <h1 class="text-4xl font-semibold text-foreground sm:text-5xl">
