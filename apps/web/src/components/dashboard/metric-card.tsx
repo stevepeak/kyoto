@@ -19,7 +19,7 @@ export function MetricCard({
   strokeColor = 'hsl(var(--chart-1))',
   className,
 }: MetricCardProps) {
-  const latestCount = data.length > 0 ? data[data.length - 1]?.count ?? 0 : 0
+  const latestCount = data.length > 0 ? (data[data.length - 1]?.count ?? 0) : 0
 
   return (
     <Card className={className}>
@@ -42,4 +42,3 @@ export function MetricCard({
     </Card>
   )
 }
-

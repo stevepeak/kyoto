@@ -6,11 +6,12 @@ interface SetupInstallAppWrapperProps {
   installUrl: string
 }
 
-export function SetupInstallAppWrapper({ installUrl }: SetupInstallAppWrapperProps) {
+export function SetupInstallAppWrapper({
+  installUrl,
+}: SetupInstallAppWrapperProps) {
   return (
     <AppProvider>
       <SetupInstallApp installUrl={installUrl} />
     </AppProvider>
   )
 }
-

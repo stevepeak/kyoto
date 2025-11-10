@@ -175,4 +175,3 @@ export function buildRunDetailsUrl(
 
   return `${baseUrl}/org/${repoRecord.ownerLogin}/${repoRecord.repoName}/runs/${runNumber}`
 }
-

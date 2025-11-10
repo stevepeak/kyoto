@@ -26,4 +26,3 @@ export interface RunInsert {
 }
 
 export type DbClient = ReturnType<typeof setupDb>
-

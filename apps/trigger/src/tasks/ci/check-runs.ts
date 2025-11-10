@@ -214,4 +214,3 @@ export async function endBecauseNoStoriesExist({
     stories: emptyStories,
   }
 }
-

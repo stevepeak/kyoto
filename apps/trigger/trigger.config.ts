@@ -21,6 +21,7 @@ export default defineConfig({
       ),
     ],
   },
+  // eslint-disable-next-line @typescript-eslint/require-await
   init: async () => {
     Sentry.init({
       defaultIntegrations: false,
@@ -31,6 +32,7 @@ export default defineConfig({
         process.env.NODE_ENV === 'production' ? 'production' : 'development',
     })
   },
+  // eslint-disable-next-line @typescript-eslint/require-await
   onFailure: async ({ payload, error, ctx }) => {
     Sentry.captureException(error, {
       extra: {

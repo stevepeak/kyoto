@@ -41,9 +41,7 @@ export function LineChart({
         data.length === 1
           ? VIEWBOX_WIDTH
           : (index / (data.length - 1)) * VIEWBOX_WIDTH
-      const y =
-        VIEWBOX_HEIGHT -
-        ((point.count - min) / range) * VIEWBOX_HEIGHT
+      const y = VIEWBOX_HEIGHT - ((point.count - min) / range) * VIEWBOX_HEIGHT
 
       return `${x.toFixed(2)},${y.toFixed(2)}`
     })
@@ -55,8 +53,7 @@ export function LineChart({
       ? VIEWBOX_WIDTH
       : ((data.length - 1) / (data.length - 1)) * VIEWBOX_WIDTH
   const lastY =
-    VIEWBOX_HEIGHT -
-    ((lastPoint.count - min) / range) * VIEWBOX_HEIGHT
+    VIEWBOX_HEIGHT - ((lastPoint.count - min) / range) * VIEWBOX_HEIGHT
 
   return (
     <svg
@@ -91,4 +88,3 @@ export function LineChart({
     </svg>
   )
 }
-
