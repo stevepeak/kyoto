@@ -2,7 +2,10 @@ import { coreFeatures } from './content'
 
 export function FeatureGrid() {
   return (
-    <section className="bg-linear-to-b from-background via-background to-muted/30 py-24 sm:py-28">
+    <section
+      id="product"
+      className="bg-linear-to-b from-background via-background to-muted/30 py-24 sm:py-28"
+    >
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold tracking-[0.3em] text-primary">

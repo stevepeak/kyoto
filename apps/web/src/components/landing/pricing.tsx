@@ -4,7 +4,7 @@ import { pricingTiers } from './content'
 
 export function Pricing() {
   return (
-    <section className="bg-background py-24 sm:py-28">
+    <section id="pricing" className="bg-background py-24 sm:py-28">
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold tracking-[0.3em] text-primary">
@@ -56,7 +56,7 @@ export function Pricing() {
                     : 'border-primary/40 text-primary'
                 }
               >
-                <a href="/login">{tier.cta}</a>
+                <a href="/auth">{tier.cta}</a>
               </Button>
 
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">

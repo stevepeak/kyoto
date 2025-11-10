@@ -32,7 +32,7 @@ export default function SignedInBanner({ className }: SignedInBannerProps) {
           </p>
         </div>
         <Button asChild className="w-full sm:w-auto">
-          <a href="/app">Enter ⛩️ Kyoto</a>
+          <a href="/app">Enter Kyoto</a>
         </Button>
       </div>
     </div>

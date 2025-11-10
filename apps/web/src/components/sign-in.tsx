@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { signIn } from '@/client/auth-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -19,24 +20,21 @@ export function SignIn() {
     return redirectParam || '/'
   })
 
-  const handleGitHubSignIn = () => {
-    if (loading) {
-      return
-    }
-
-    setLoading(true)
-
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    const loginUrl = new URL('/login', window.location.origin)
-
-    if (callbackURL && callbackURL !== '/') {
-      loginUrl.searchParams.set('redirect', callbackURL)
-    }
-
-    window.location.href = loginUrl.toString()
+  const handleGitHubSignIn = async () => {
+    await signIn.social(
+      {
+        provider: 'github',
+        callbackURL,
+      },
+      {
+        onRequest: () => {
+          setLoading(true)
+        },
+        onResponse: () => {
+          setLoading(false)
+        },
+      },
+    )
   }
 
   return (
