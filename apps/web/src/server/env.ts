@@ -1,6 +1,7 @@
 import type { Env } from '@app/api'
 import { SITE_BASE_URL } from 'astro:env/client'
 import {
+  CONTEXT7_API_KEY,
   DATABASE_URL,
   GITHUB_APP_ID,
   GITHUB_APP_PRIVATE_KEY,
@@ -17,4 +18,5 @@ export const env: Env = {
   openAiApiKey: OPENAI_API_KEY,
   databaseUrl: DATABASE_URL,
   triggerSecretKey: TRIGGER_SECRET_KEY,
+  context7ApiKey: CONTEXT7_API_KEY,
 }

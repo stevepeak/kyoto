@@ -46,6 +46,7 @@ const envSchema = z.object({
   TRIGGER_PROJECT_ID: z.string().optional(),
   OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
   DAYTONA_API_KEY: z.string().min(1, 'DAYTONA_API_KEY is required'),
+  CONTEXT7_API_KEY: z.string().optional(),
   SITE_BASE_URL: z
     .string()
     .trim()
@@ -64,6 +65,7 @@ export function parseEnv(): ParsedEnv {
     TRIGGER_PROJECT_ID: process.env.TRIGGER_PROJECT_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     DAYTONA_API_KEY: process.env.DAYTONA_API_KEY,
+    CONTEXT7_API_KEY: process.env.CONTEXT7_API_KEY,
     SITE_BASE_URL: process.env.SITE_BASE_URL,
   })
 }
