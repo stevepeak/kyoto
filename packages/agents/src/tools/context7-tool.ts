@@ -24,7 +24,9 @@ const getLibraryDocsInputSchema = z.object({
     .string()
     .min(1)
     .max(256)
-    .describe('Optional topic to focus documentation on (e.g., "hooks", "routing")')
+    .describe(
+      'Optional topic to focus documentation on (e.g., "hooks", "routing")',
+    )
     .optional(),
   tokens: z
     .number()
@@ -166,4 +168,3 @@ export function createGetLibraryDocsTool(context: Context7ToolContext = {}) {
     },
   })
 }
-

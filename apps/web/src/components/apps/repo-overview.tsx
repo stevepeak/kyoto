@@ -4,6 +4,7 @@ import type { AppRouter } from '@app/api'
 import { GitBranch } from 'lucide-react'
 import { SiGithub } from 'react-icons/si'
 import { LuOrigami } from 'react-icons/lu'
+import { CiBoxList } from 'react-icons/ci'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
@@ -120,10 +121,16 @@ export function RepoOverview({
       <div className="p-6 flex flex-col h-full overflow-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <SiGithub className="h-5 w-5" />
-            <span>
-              {orgSlug}/{repoName}
-            </span>
+            <a
+              href={`https://github.com/${orgSlug}/${repoName}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-70 transition-opacity"
+              aria-label="View repository on GitHub"
+            >
+              <SiGithub className="h-5 w-5" />
+            </a>
+            <span>{repoName}</span>
           </h1>
           <div className="flex items-center gap-3">
             {branches.length > 0 && (
@@ -193,12 +200,15 @@ export function RepoOverview({
             <div className="border rounded-md overflow-hidden">
               <div className="flex items-center justify-between bg-muted px-4 py-2 border-b">
                 <div className="flex items-baseline gap-2">
-                  <h2 className="text-sm font-medium text-foreground">
-                    Latest runs
-                  </h2>
-                  <span className="text-xs text-muted-foreground">
-                    {filteredRuns.length} total
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <CiBoxList
+                      className="h-5 w-5 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    <h2 className="text-base font-semibold text-foreground">
+                      Trace Evaluations
+                    </h2>
+                  </div>
                 </div>
                 {defaultBranch && (
                   <Button

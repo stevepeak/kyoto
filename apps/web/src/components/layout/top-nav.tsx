@@ -3,7 +3,6 @@
 import { navigate } from 'astro:transitions/client'
 import { LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { MdTempleBuddhist } from 'react-icons/md'
 
 import { Button } from '@/components/ui/button'
 import {

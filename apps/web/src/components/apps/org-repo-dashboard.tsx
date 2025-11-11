@@ -242,19 +242,24 @@ export function OrgRepoDashboard({ org, repos }: Props) {
               </div>
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 {org?.slug ? (
-                  <div className="flex items-center gap-2">
+                  <a
+                    href={`https://github.com/${org.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 hover:text-foreground transition-colors"
+                  >
                     <SiGithub className="h-4 w-4 text-muted-foreground" />
                     <span>{org.slug}</span>
-                  </div>
+                  </a>
                 ) : null}
                 <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
                   {repoCount} {repoCount === 1 ? 'repository' : 'repositories'}
                 </span>
               </div>
             </div>
-            <Button onClick={handleOpenDialog} size="icon">
+            <Button onClick={handleOpenDialog} className="gap-2">
               <Plus className="h-5 w-5" />
-              <span className="sr-only">New repository</span>
+              <span>Add new repository</span>
             </Button>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -300,9 +305,9 @@ export function OrgRepoDashboard({ org, repos }: Props) {
               title="No repositories activated yet"
               description="Enable your first repository to start tracking stories, CI runs, and more."
               action={
-                <Button onClick={handleOpenDialog} size="icon">
+                <Button onClick={handleOpenDialog} className="gap-2">
                   <Plus className="h-5 w-5" />
-                  <span className="sr-only">New repository</span>
+                  <span>Add new repository</span>
                 </Button>
               }
             />
