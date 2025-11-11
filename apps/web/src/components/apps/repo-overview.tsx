@@ -155,27 +155,27 @@ export function RepoOverview({
           <div>
             <div className="border rounded-md overflow-hidden">
               <div className="flex items-center justify-between bg-muted px-4 py-2 border-b">
-                <div className="flex items-baseline gap-2">
-                  <div className="flex items-center gap-2">
-                    <LuOrigami
-                      aria-hidden="true"
-                      className="h-4 w-4 text-muted-foreground"
-                    />
-                    <h2 className="text-sm font-medium text-foreground">
-                      Stories
-                    </h2>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <LuOrigami
+                    aria-hidden="true"
+                    className="h-5 w-5 text-muted-foreground"
+                  />
+                  <h2 className="text-base font-semibold text-foreground">
+                    Stories
+                  </h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">
                     {filteredStories.length} total
                   </span>
+                  <Button asChild variant="outline" size="sm">
+                    <a
+                      href={`/org/${orgSlug}/repo/${repoName}/stories/new?branch=${encodeURIComponent(selectedBranch)}`}
+                    >
+                      Add new story
+                    </a>
+                  </Button>
                 </div>
-                <Button asChild variant="outline" size="sm">
-                  <a
-                    href={`/org/${orgSlug}/repo/${repoName}/stories/new?branch=${encodeURIComponent(selectedBranch)}`}
-                  >
-                    Add new story
-                  </a>
-                </Button>
               </div>
               <div className="max-h-[600px] overflow-auto">
                 <StoryList
