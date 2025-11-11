@@ -105,6 +105,11 @@ export function OrgListApp() {
           <EmptyState
             title="No organizations found"
             description="Install the GitHub app to get started with your organizations."
+            action={
+              <Button asChild>
+                <a href="/setup">Add new organization</a>
+              </Button>
+            }
           />
         </div>
       </AppLayout>
