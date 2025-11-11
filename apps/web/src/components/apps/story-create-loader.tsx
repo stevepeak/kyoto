@@ -255,20 +255,25 @@ export function StoryCreateLoader({
               Create New Story
             </h1>
           </div>
-          <Button
-            type="button"
-            className={cn(
-              'h-9 px-4 text-sm text-white',
-              'bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 shadow-sm',
-              'hover:from-violet-600 hover:via-indigo-600 hover:to-sky-600 hover:shadow-md',
-              'focus-visible:ring-indigo-500/70 focus-visible:ring-offset-1',
-            )}
-            onClick={() => void handleEnrichStory()}
-            disabled={isEnriching || isSaving}
-          >
-            <Sparkles className="h-4 w-4" />
-            {isEnriching ? 'Enhancing...' : 'Enhance'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Story'}
+            </Button>
+            <Button
+              type="button"
+              className={cn(
+                'h-9 px-4 text-sm text-white',
+                'bg-gradient-to-r from-violet-500 via-indigo-500 to-sky-500 shadow-sm',
+                'hover:from-violet-600 hover:via-indigo-600 hover:to-sky-600 hover:shadow-md',
+                'focus-visible:ring-indigo-500/70 focus-visible:ring-offset-1',
+              )}
+              onClick={() => void handleEnrichStory()}
+              disabled={isEnriching || isSaving}
+            >
+              <Sparkles className="h-4 w-4" />
+              {isEnriching ? 'Enhancing...' : 'Enhance'}
+            </Button>
+          </div>
         </div>
         <div className="mb-6 shrink-0">
           <div className="grid gap-4">
@@ -384,9 +389,6 @@ export function StoryCreateLoader({
             disabled={isSaving}
           >
             Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Story'}
           </Button>
         </div>
       </div>
