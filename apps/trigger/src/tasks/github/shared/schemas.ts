@@ -13,6 +13,15 @@ const accountSchema = z
   })
   .passthrough()
 
+const senderSchema = z
+  .object({
+    id: idSchema,
+    login: z.string(),
+    type: z.string().optional(),
+    avatar_url: z.string().optional(),
+  })
+  .passthrough()
+
 const repositorySchema = z.object({
   id: idSchema.optional(),
   name: z.string(),
@@ -31,6 +40,7 @@ export const installationEventSchema = z.object({
     account: accountSchema,
   }),
   repositories: z.array(repositorySchema).optional(),
+  sender: senderSchema,
 })
 
 export const installationRepositoriesEventSchema = z.object({
@@ -40,6 +50,7 @@ export const installationRepositoriesEventSchema = z.object({
   }),
   repositories_added: z.array(repositorySchema).optional(),
   repositories_removed: z.array(repositorySchema).optional(),
+  sender: senderSchema,
 })
 
 const pushRepositoryOwnerSchema = z

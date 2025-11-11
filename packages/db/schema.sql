@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VtNnnp4UUnjuMwJTZz2d2ID8kObbvBdWCOYuE51YkRAsqZNFZkhLQtfGEtJdmjh
+\restrict OaaZtxGZvUgoPhKMDcyIBSkzJ0Ss4FXKXzlkguXLYefudMPtvNbMET0u2N9IM0W
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -436,6 +436,69 @@ COMMENT ON COLUMN public.feature_votes.updated_at IS 'Last update timestamp';
 
 
 --
+-- Name: owner_memberships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.owner_memberships (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    owner_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    role text DEFAULT 'member'::text NOT NULL
+);
+
+
+--
+-- Name: TABLE owner_memberships; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.owner_memberships IS 'Links users to owners (organizations) with membership roles';
+
+
+--
+-- Name: COLUMN owner_memberships.id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.owner_memberships.id IS 'Unique identifier for each owner membership';
+
+
+--
+-- Name: COLUMN owner_memberships.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.owner_memberships.created_at IS 'Creation timestamp';
+
+
+--
+-- Name: COLUMN owner_memberships.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.owner_memberships.updated_at IS 'Update timestamp (auto-managed by trigger)';
+
+
+--
+-- Name: COLUMN owner_memberships.owner_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.owner_memberships.owner_id IS 'FK to owners.id that this membership grants access to';
+
+
+--
+-- Name: COLUMN owner_memberships.user_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.owner_memberships.user_id IS 'FK to users.id that has access to the owner';
+
+
+--
+-- Name: COLUMN owner_memberships.role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.owner_memberships.role IS 'Membership role for this owner (e.g., member, admin)';
+
+
+--
 -- Name: owners; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -545,6 +608,69 @@ CREATE SEQUENCE public.pgmigrations_id_seq
 --
 
 ALTER SEQUENCE public.pgmigrations_id_seq OWNED BY public.pgmigrations.id;
+
+
+--
+-- Name: repo_memberships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.repo_memberships (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    repo_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    role text DEFAULT 'member'::text NOT NULL
+);
+
+
+--
+-- Name: TABLE repo_memberships; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.repo_memberships IS 'Links users to individual repositories with membership roles';
+
+
+--
+-- Name: COLUMN repo_memberships.id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.repo_memberships.id IS 'Unique identifier for each repo membership';
+
+
+--
+-- Name: COLUMN repo_memberships.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.repo_memberships.created_at IS 'Creation timestamp';
+
+
+--
+-- Name: COLUMN repo_memberships.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.repo_memberships.updated_at IS 'Update timestamp (auto-managed by trigger)';
+
+
+--
+-- Name: COLUMN repo_memberships.repo_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.repo_memberships.repo_id IS 'FK to repos.id that this membership grants access to';
+
+
+--
+-- Name: COLUMN repo_memberships.user_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.repo_memberships.user_id IS 'FK to users.id that has access to the repo';
+
+
+--
+-- Name: COLUMN repo_memberships.role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.repo_memberships.role IS 'Membership role for this repo (e.g., member, admin)';
 
 
 --
@@ -1182,6 +1308,22 @@ ALTER TABLE ONLY public.feature_votes
 
 
 --
+-- Name: owner_memberships owner_memberships_owner_user_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.owner_memberships
+    ADD CONSTRAINT owner_memberships_owner_user_unique UNIQUE (owner_id, user_id);
+
+
+--
+-- Name: owner_memberships owner_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.owner_memberships
+    ADD CONSTRAINT owner_memberships_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: owners owners_external_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1211,6 +1353,22 @@ ALTER TABLE ONLY public.owners
 
 ALTER TABLE ONLY public.pgmigrations
     ADD CONSTRAINT pgmigrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: repo_memberships repo_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.repo_memberships
+    ADD CONSTRAINT repo_memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: repo_memberships repo_memberships_repo_user_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.repo_memberships
+    ADD CONSTRAINT repo_memberships_repo_user_unique UNIQUE (repo_id, user_id);
 
 
 --
@@ -1316,10 +1474,31 @@ CREATE UNIQUE INDEX feature_votes_feature_user_unique ON public.feature_votes US
 
 
 --
+-- Name: owner_memberships_user_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX owner_memberships_user_id_idx ON public.owner_memberships USING btree (user_id);
+
+
+--
 -- Name: owners_installation_id_unique; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX owners_installation_id_unique ON public.owners USING btree (installation_id) WHERE (installation_id IS NOT NULL);
+
+
+--
+-- Name: repo_memberships_repo_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX repo_memberships_repo_id_idx ON public.repo_memberships USING btree (repo_id);
+
+
+--
+-- Name: repo_memberships_user_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX repo_memberships_user_id_idx ON public.repo_memberships USING btree (user_id);
 
 
 --
@@ -1442,10 +1621,24 @@ CREATE TRIGGER set_timestamp_feature_votes BEFORE UPDATE ON public.feature_votes
 
 
 --
+-- Name: owner_memberships set_timestamp_owner_memberships; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_timestamp_owner_memberships BEFORE UPDATE ON public.owner_memberships FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+
+
+--
 -- Name: owners set_timestamp_owners; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_timestamp_owners BEFORE UPDATE ON public.owners FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+
+
+--
+-- Name: repo_memberships set_timestamp_repo_memberships; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_timestamp_repo_memberships BEFORE UPDATE ON public.repo_memberships FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
 
 
 --
@@ -1545,6 +1738,38 @@ ALTER TABLE ONLY public.feature_votes
 
 
 --
+-- Name: owner_memberships owner_memberships_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.owner_memberships
+    ADD CONSTRAINT owner_memberships_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.owners(id) ON DELETE CASCADE;
+
+
+--
+-- Name: owner_memberships owner_memberships_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.owner_memberships
+    ADD CONSTRAINT owner_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: repo_memberships repo_memberships_repo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.repo_memberships
+    ADD CONSTRAINT repo_memberships_repo_id_fkey FOREIGN KEY (repo_id) REFERENCES public.repos(id) ON DELETE CASCADE;
+
+
+--
+-- Name: repo_memberships repo_memberships_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.repo_memberships
+    ADD CONSTRAINT repo_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: repos repos_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1596,5 +1821,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VtNnnp4UUnjuMwJTZz2d2ID8kObbvBdWCOYuE51YkRAsqZNFZkhLQtfGEtJdmjh
+\unrestrict OaaZtxGZvUgoPhKMDcyIBSkzJ0Ss4FXKXzlkguXLYefudMPtvNbMET0u2N9IM0W
 

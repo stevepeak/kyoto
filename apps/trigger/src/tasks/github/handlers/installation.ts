@@ -4,6 +4,13 @@ import { logger } from '@trigger.dev/sdk'
 
 import {
   disableAllReposAndClearInstallation,
+  ensureOwnerMemberships,
+  ensureRepoMemberships,
+  findRepoIdsByNames,
+  findRepoIdsByOwnerId,
+  findUserIdsByGithubAccountId,
+  listOwnerMemberUserIds,
+  removeAllMembershipsForOwner,
   setRepositoriesEnabledForOwner,
   upsertOwnerRecord,
   upsertRepositories,
@@ -30,9 +37,29 @@ export const installationHandler: WebhookHandler = async ({
       installationId,
     })
 
+    const senderUserIds = await findUserIdsByGithubAccountId(
+      db,
+      parsed.sender?.id ?? null,
+    )
+
+    if (senderUserIds.length === 0) {
+      logger.info('No matching local users for GitHub sender', {
+        deliveryId,
+        senderLogin: parsed.sender?.login ?? null,
+        senderId: parsed.sender?.id ?? null,
+      })
+    } else {
+      await ensureOwnerMemberships(db, {
+        ownerId: owner.id,
+        userIds: senderUserIds,
+        role: 'admin',
+      })
+    }
+
     switch (action) {
       case 'deleted': {
         await disableAllReposAndClearInstallation(db, owner.id)
+        await removeAllMembershipsForOwner(db, owner.id)
 
         logger.info('Processed installation deletion event', {
           deliveryId,
@@ -81,12 +108,30 @@ export const installationHandler: WebhookHandler = async ({
           })
         }
 
+        const memberUserIds = await listOwnerMemberUserIds(db, owner.id)
+
+        if (memberUserIds.length > 0) {
+          const repoIds =
+            repositories.length > 0
+              ? await findRepoIdsByNames(db, {
+                  ownerId: owner.id,
+                  repoNames: repositories.map((repo) => repo.name),
+                })
+              : await findRepoIdsByOwnerId(db, owner.id)
+
+          await ensureRepoMemberships(db, {
+            repoIds,
+            userIds: memberUserIds,
+          })
+        }
+
         logger.info('Processed installation event', {
           deliveryId,
           action,
           installationId: String(installationId),
           ownerLogin: owner.login,
           repositoryCount: repositories.length,
+          memberCount: memberUserIds.length,
         })
       }
     }

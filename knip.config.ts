@@ -64,12 +64,7 @@ const config: KnipConfig = {
     '**/seed.sql',
     '**/schema.sql',
   ],
-  ignoreDependencies: [
-    'vitest',
-    '@types/*',
-    '@vitejs/plugin-react',
-    'astro:env/*',
-  ],
+  ignoreDependencies: ['vitest', '@types/*', '@vitejs/plugin-react'],
   ignoreBinaries: ['pg_dump', 'psql', 'sed'],
 }
 

@@ -1,7 +1,9 @@
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { configure, tasks } from '@trigger.dev/sdk'
 
 import type { RunStory, StoryAnalysisV1 } from '@app/db'
+import { findOwnerForUser, findRepoForUser } from '../helpers/memberships'
 import { protectedProcedure, router } from '../trpc'
 import { parseEnv } from '../helpers/env'
 
@@ -9,24 +11,26 @@ export const runRouter = router({
   listByRepo: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
     .query(async ({ ctx, input }) => {
-      // Look up owner
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('login', '=', input.orgSlug)
-        .executeTakeFirst()
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
 
       if (!owner) {
         return { runs: [] }
       }
 
-      // Look up repo
-      const repo = await ctx.db
-        .selectFrom('repos')
-        .selectAll()
-        .where('ownerId', '=', owner.id)
-        .where('name', '=', input.repoName)
-        .executeTakeFirst()
+      const repo = await findRepoForUser(ctx.db, {
+        ownerId: owner.id,
+        repoName: input.repoName,
+        userId,
+      })
 
       if (!repo) {
         return { runs: [] }
@@ -101,24 +105,26 @@ export const runRouter = router({
         return { run: null }
       }
 
-      // Look up owner
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('login', '=', input.orgSlug)
-        .executeTakeFirst()
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
 
       if (!owner) {
         return { run: null }
       }
 
-      // Look up repo
-      const repo = await ctx.db
-        .selectFrom('repos')
-        .selectAll()
-        .where('ownerId', '=', owner.id)
-        .where('name', '=', input.repoName)
-        .executeTakeFirst()
+      const repo = await findRepoForUser(ctx.db, {
+        ownerId: owner.id,
+        repoName: input.repoName,
+        userId,
+      })
 
       if (!repo) {
         return { run: null }
@@ -315,6 +321,37 @@ export const runRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
+
+      if (!owner) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Owner not accessible',
+        })
+      }
+
+      const repo = await findRepoForUser(ctx.db, {
+        ownerId: owner.id,
+        repoName: input.repoName,
+        userId,
+      })
+
+      if (!repo) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Repository not accessible',
+        })
+      }
+
       const env = parseEnv(ctx.env)
 
       configure({

@@ -179,6 +179,33 @@ export interface FeatureVote {
   userId: string;
 }
 
+export interface OwnerMembership {
+  /**
+   * Creation timestamp
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * Unique identifier for each owner membership
+   */
+  id: Generated<string>;
+  /**
+   * FK to owners.id that this membership grants access to
+   */
+  ownerId: string;
+  /**
+   * Membership role for this owner (e.g., member, admin)
+   */
+  role: Generated<string>;
+  /**
+   * Update timestamp (auto-managed by trigger)
+   */
+  updatedAt: Generated<Timestamp | null>;
+  /**
+   * FK to users.id that has access to the owner
+   */
+  userId: string;
+}
+
 export interface Owner {
   /**
    * Avatar image URL
@@ -217,6 +244,33 @@ export interface Owner {
    * Update timestamp (auto-managed by trigger)
    */
   updatedAt: Generated<Timestamp | null>;
+}
+
+export interface RepoMembership {
+  /**
+   * Creation timestamp
+   */
+  createdAt: Generated<Timestamp | null>;
+  /**
+   * Unique identifier for each repo membership
+   */
+  id: Generated<string>;
+  /**
+   * FK to repos.id that this membership grants access to
+   */
+  repoId: string;
+  /**
+   * Membership role for this repo (e.g., member, admin)
+   */
+  role: Generated<string>;
+  /**
+   * Update timestamp (auto-managed by trigger)
+   */
+  updatedAt: Generated<Timestamp | null>;
+  /**
+   * FK to users.id that has access to the repo
+   */
+  userId: string;
 }
 
 export interface Repo {
@@ -511,7 +565,9 @@ export interface DB {
   credentials: Credential;
   featureRequests: FeatureRequest;
   featureVotes: FeatureVote;
+  ownerMemberships: OwnerMembership;
   owners: Owner;
+  repoMemberships: RepoMembership;
   repos: Repo;
   runs: Run;
   sessions: Session;

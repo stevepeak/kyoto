@@ -1,5 +1,7 @@
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
+import { findOwnerForUser, findRepoForUser } from '../helpers/memberships'
 import { protectedProcedure, router } from '../trpc'
 
 type RepoListItemStatus = 'pass' | 'fail' | 'skipped' | 'running' | 'error'
@@ -19,11 +21,16 @@ export const repoRouter = router({
   listByOrg: protectedProcedure
     .input(z.object({ orgSlug: z.string() }))
     .query(async ({ ctx, input }) => {
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('login', '=', input.orgSlug)
-        .executeTakeFirst()
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
 
       if (!owner) {
         return {
@@ -34,9 +41,17 @@ export const repoRouter = router({
 
       const repos = await ctx.db
         .selectFrom('repos')
-        .select(['id', 'name', 'defaultBranch', 'enabled', 'private'])
-        .where('ownerId', '=', owner.id)
-        .orderBy('name')
+        .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
+        .select([
+          'repos.id as id',
+          'repos.name as name',
+          'repos.defaultBranch as defaultBranch',
+          'repos.enabled as enabled',
+          'repos.private as private',
+        ])
+        .where('repos.ownerId', '=', owner.id)
+        .where('repoMemberships.userId', '=', userId)
+        .orderBy('repos.name')
         .execute()
 
       const repoIds = repos.map((repo) => repo.id)
@@ -137,22 +152,26 @@ export const repoRouter = router({
   getBySlug: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
     .query(async ({ ctx, input }) => {
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('login', '=', input.orgSlug)
-        .executeTakeFirst()
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
 
       if (!owner) {
         return { repo: null }
       }
 
-      const repo = await ctx.db
-        .selectFrom('repos')
-        .select(['id', 'name', 'defaultBranch', 'enabled'])
-        .where('ownerId', '=', owner.id)
-        .where('name', '=', input.repoName)
-        .executeTakeFirst()
+      const repo = await findRepoForUser(ctx.db, {
+        ownerId: owner.id,
+        repoName: input.repoName,
+        userId,
+      })
 
       if (!repo) {
         return { repo: null }
@@ -171,36 +190,41 @@ export const repoRouter = router({
   enableRepo: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('login', '=', input.orgSlug)
-        .executeTakeFirst()
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
 
       if (!owner) {
-        throw new Error(`Owner with slug ${input.orgSlug} not found`)
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Owner not accessible',
+        })
       }
 
-      // Check if repo exists
-      const repo = await ctx.db
-        .selectFrom('repos')
-        .selectAll()
-        .where('ownerId', '=', owner.id)
-        .where('name', '=', input.repoName)
-        .executeTakeFirst()
+      const repo = await findRepoForUser(ctx.db, {
+        ownerId: owner.id,
+        repoName: input.repoName,
+        userId,
+      })
 
       if (!repo) {
-        throw new Error(
-          `Repository ${input.repoName} not found for owner ${input.orgSlug}`,
-        )
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Repository not accessible',
+        })
       }
 
-      // Check if already enabled
       if (repo.enabled) {
         return { enabled: true, repoId: repo.id }
       }
 
-      // Enable the repo
       await ctx.db
         .updateTable('repos')
         .set({ enabled: true })
@@ -213,31 +237,41 @@ export const repoRouter = router({
   disableRepo: protectedProcedure
     .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('login', '=', input.orgSlug)
-        .executeTakeFirst()
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const owner = await findOwnerForUser(ctx.db, {
+        orgSlug: input.orgSlug,
+        userId,
+      })
 
       if (!owner) {
-        throw new Error(`Owner with slug ${input.orgSlug} not found`)
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Owner not accessible',
+        })
       }
 
-      // Check if repo exists
-      const repo = await ctx.db
-        .selectFrom('repos')
-        .selectAll()
-        .where('ownerId', '=', owner.id)
-        .where('name', '=', input.repoName)
-        .executeTakeFirst()
+      const repo = await findRepoForUser(ctx.db, {
+        ownerId: owner.id,
+        repoName: input.repoName,
+        userId,
+      })
 
       if (!repo) {
-        throw new Error(
-          `Repository ${input.repoName} not found for owner ${input.orgSlug}`,
-        )
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Repository not accessible',
+        })
       }
 
-      // Disable the repo
+      if (!repo.enabled) {
+        return { enabled: false, repoId: repo.id }
+      }
+
       await ctx.db
         .updateTable('repos')
         .set({ enabled: false })

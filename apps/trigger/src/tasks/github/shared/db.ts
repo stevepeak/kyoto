@@ -6,6 +6,246 @@ import { parseId, resolveAccountExternalId, toNullableString } from './utils'
 
 type DbClient = ReturnType<typeof setupDb>
 
+function normalizeGithubAccountId(
+  accountId: string | number | bigint | null | undefined,
+): string | null {
+  if (accountId === null || accountId === undefined) {
+    return null
+  }
+
+  const candidate = String(accountId).trim()
+
+  if (candidate.length === 0) {
+    return null
+  }
+
+  return candidate
+}
+
+export async function findUserIdsByGithubAccountId(
+  db: DbClient,
+  accountId: string | number | bigint | null | undefined,
+): Promise<string[]> {
+  const normalizedId = normalizeGithubAccountId(accountId)
+
+  if (!normalizedId) {
+    return []
+  }
+
+  const candidateIds = new Set<string>([
+    normalizedId,
+    `github:${normalizedId}`,
+    `github|${normalizedId}`,
+  ])
+
+  const accounts = await db
+    .selectFrom('accounts')
+    .select('userId')
+    .where('providerId', '=', 'github')
+    .where('accountId', 'in', Array.from(candidateIds))
+    .execute()
+
+  return Array.from(new Set(accounts.map((account) => account.userId)))
+}
+
+export async function ensureOwnerMemberships(
+  db: DbClient,
+  params: { ownerId: string; userIds: readonly string[]; role?: string },
+): Promise<void> {
+  const uniqueUserIds = Array.from(new Set(params.userIds))
+
+  if (uniqueUserIds.length === 0) {
+    return
+  }
+
+  const role = params.role ?? 'member'
+
+  await db
+    .insertInto('ownerMemberships')
+    .values(
+      uniqueUserIds.map((userId) => ({
+        ownerId: params.ownerId,
+        userId,
+        role,
+      })),
+    )
+    .onConflict((oc) =>
+      oc.columns(['ownerId', 'userId']).doUpdateSet({
+        role,
+      }),
+    )
+    .execute()
+}
+
+export async function ensureRepoMemberships(
+  db: DbClient,
+  params: {
+    repoIds: readonly string[]
+    userIds: readonly string[]
+    role?: string
+  },
+): Promise<void> {
+  const uniqueRepoIds = Array.from(new Set(params.repoIds))
+  const uniqueUserIds = Array.from(new Set(params.userIds))
+
+  if (uniqueRepoIds.length === 0 || uniqueUserIds.length === 0) {
+    return
+  }
+
+  const role = params.role ?? 'member'
+
+  await db
+    .insertInto('repoMemberships')
+    .values(
+      uniqueRepoIds.flatMap((repoId) =>
+        uniqueUserIds.map((userId) => ({
+          repoId,
+          userId,
+          role,
+        })),
+      ),
+    )
+    .onConflict((oc) =>
+      oc.columns(['repoId', 'userId']).doUpdateSet({
+        role,
+      }),
+    )
+    .execute()
+}
+
+export async function removeRepoMemberships(
+  db: DbClient,
+  params: { repoIds: readonly string[]; userIds?: readonly string[] },
+): Promise<void> {
+  const uniqueRepoIds = Array.from(new Set(params.repoIds))
+
+  if (uniqueRepoIds.length === 0) {
+    return
+  }
+
+  let query = db
+    .deleteFrom('repoMemberships')
+    .where('repoId', 'in', uniqueRepoIds)
+
+  if (params.userIds && params.userIds.length > 0) {
+    query = query.where('userId', 'in', Array.from(new Set(params.userIds)))
+  }
+
+  await query.execute()
+}
+
+export async function pruneRepoMemberships(
+  db: DbClient,
+  params: { repoIds: readonly string[]; keepUserIds: readonly string[] },
+): Promise<void> {
+  const uniqueRepoIds = Array.from(new Set(params.repoIds))
+  const keepUserIds = Array.from(new Set(params.keepUserIds))
+
+  if (uniqueRepoIds.length === 0) {
+    return
+  }
+
+  const baseQuery = db
+    .deleteFrom('repoMemberships')
+    .where('repoId', 'in', uniqueRepoIds)
+
+  if (keepUserIds.length === 0) {
+    await baseQuery.execute()
+    return
+  }
+
+  await baseQuery.where('userId', 'not in', keepUserIds).execute()
+}
+
+export async function removeAllMembershipsForOwner(
+  db: DbClient,
+  ownerId: string,
+): Promise<void> {
+  await db.transaction().execute(async (trx) => {
+    await trx
+      .deleteFrom('repoMemberships')
+      .where('repoId', 'in', (qb) =>
+        qb.selectFrom('repos').select('id').where('ownerId', '=', ownerId),
+      )
+      .execute()
+
+    await trx
+      .deleteFrom('ownerMemberships')
+      .where('ownerId', '=', ownerId)
+      .execute()
+  })
+}
+
+export async function pruneOwnerMemberships(
+  db: DbClient,
+  params: { ownerId: string; keepUserIds: readonly string[] },
+): Promise<void> {
+  const keepUserIds = Array.from(new Set(params.keepUserIds))
+
+  const baseQuery = db
+    .deleteFrom('ownerMemberships')
+    .where('ownerId', '=', params.ownerId)
+
+  if (keepUserIds.length === 0) {
+    await baseQuery.execute()
+    return
+  }
+
+  await baseQuery.where('userId', 'not in', keepUserIds).execute()
+}
+
+export async function listOwnerMemberUserIds(
+  db: DbClient,
+  ownerId: string,
+): Promise<string[]> {
+  const rows = await db
+    .selectFrom('ownerMemberships')
+    .select('userId')
+    .where('ownerId', '=', ownerId)
+    .execute()
+
+  return rows.map((row) => row.userId)
+}
+
+export async function findRepoIdsByNames(
+  db: DbClient,
+  params: { ownerId: string; repoNames: readonly string[] },
+): Promise<string[]> {
+  const uniqueNames = Array.from(
+    new Set(
+      params.repoNames
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0),
+    ),
+  )
+
+  if (uniqueNames.length === 0) {
+    return []
+  }
+
+  const rows = await db
+    .selectFrom('repos')
+    .select('id')
+    .where('ownerId', '=', params.ownerId)
+    .where('name', 'in', uniqueNames)
+    .execute()
+
+  return rows.map((row) => row.id)
+}
+
+export async function findRepoIdsByOwnerId(
+  db: DbClient,
+  ownerId: string,
+): Promise<string[]> {
+  const rows = await db
+    .selectFrom('repos')
+    .select('id')
+    .where('ownerId', '=', ownerId)
+    .execute()
+
+  return rows.map((row) => row.id)
+}
+
 export interface RepoLookupResult {
   repoId: string
   ownerId: string

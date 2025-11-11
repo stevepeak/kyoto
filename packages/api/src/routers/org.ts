@@ -1,27 +1,8 @@
+import { TRPCError } from '@trpc/server'
 import { configure, tasks } from '@trigger.dev/sdk'
 
 import { parseEnv } from '../helpers/env'
-import {
-  listGithubAppInstallations,
-  type GithubInstallationSummary,
-} from '../helpers/github-app'
 import { router, protectedProcedure } from '../trpc'
-
-function formatTriggerError(reason: unknown): string {
-  if (reason instanceof Error) {
-    return reason.message
-  }
-
-  if (typeof reason === 'string') {
-    return reason
-  }
-
-  try {
-    return JSON.stringify(reason)
-  } catch {
-    return String(reason)
-  }
-}
 
 export const orgRouter = router({
   getDefault: protectedProcedure.query(() => {
@@ -34,55 +15,106 @@ export const orgRouter = router({
     }
   }),
   listInstalled: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user?.id
+
+    if (!userId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
+
     const owners = await ctx.db
       .selectFrom('owners')
-      .leftJoin('repos', 'owners.id', 'repos.ownerId')
-      .select((eb) => [
-        eb.ref('owners.login').as('slug'),
-        eb.ref('owners.name').as('accountName'),
-        eb.fn
-          .count('repos.id')
-          .filterWhere('repos.enabled', '=', true)
-          .as('repoCount'),
+      .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
+      .select([
+        'owners.id as ownerId',
+        'owners.login as slug',
+        'owners.name as accountName',
       ])
       .where('owners.installationId', 'is not', null)
-      .groupBy(['owners.login', 'owners.name'])
+      .where('ownerMemberships.userId', '=', userId)
       .orderBy('owners.login')
       .execute()
+
+    const ownerIds = owners.map((owner) => owner.ownerId)
+
+    const repoCounts =
+      ownerIds.length === 0
+        ? []
+        : await ctx.db
+            .selectFrom('repoMemberships')
+            .innerJoin('repos', 'repos.id', 'repoMemberships.repoId')
+            .select((eb) => [
+              'repos.ownerId as ownerId',
+              eb.fn
+                .count('repoMemberships.id')
+                .filterWhere('repos.enabled', '=', true)
+                .as('count'),
+            ])
+            .where('repoMemberships.userId', '=', userId)
+            .where('repos.ownerId', 'in', ownerIds)
+            .groupBy('repos.ownerId')
+            .execute()
+
+    const repoCountByOwner = new Map(
+      repoCounts.map((entry) => [entry.ownerId, Number(entry.count ?? 0)]),
+    )
 
     return {
       orgs: owners.map((owner) => ({
         slug: owner.slug,
         name: owner.accountName ?? owner.slug,
         accountName: owner.accountName ?? null,
-        repoCount: Number(owner.repoCount ?? 0),
+        repoCount: repoCountByOwner.get(owner.ownerId) ?? 0,
       })),
     }
   }),
   getSetupStatus: protectedProcedure.query(async ({ ctx }) => {
-    const installed = await ctx.db
-      .selectFrom('owners')
-      .select(['id'])
-      .where('installationId', 'is not', null)
-      .executeTakeFirst()
+    const userId = ctx.user?.id
 
-    if (!installed) {
+    if (!userId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
+
+    const installedOwners = await ctx.db
+      .selectFrom('owners')
+      .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
+      .select(['owners.id as ownerId'])
+      .where('owners.installationId', 'is not', null)
+      .where('ownerMemberships.userId', '=', userId)
+      .execute()
+
+    if (installedOwners.length === 0) {
       return { hasInstallation: false, hasEnabledRepos: false }
     }
 
+    const ownerIds = installedOwners.map((owner) => owner.ownerId)
+
     const enabledRepo = await ctx.db
       .selectFrom('repos')
-      .select(['id'])
-      .where('enabled', '=', true)
+      .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
+      .select(['repos.id'])
+      .where('repoMemberships.userId', '=', userId)
+      .where('repos.ownerId', 'in', ownerIds)
+      .where('repos.enabled', '=', true)
       .executeTakeFirst()
 
     return { hasInstallation: true, hasEnabledRepos: Boolean(enabledRepo) }
   }),
   refreshInstallations: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.user?.id
+
+    if (!userId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
+
     const installationRows = await ctx.db
       .selectFrom('owners')
-      .select(['installationId', 'login'])
-      .where('installationId', 'is not', null)
+      .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
+      .select([
+        'owners.installationId as installationId',
+        'owners.login as login',
+      ])
+      .where('owners.installationId', 'is not', null)
+      .where('ownerMemberships.userId', '=', userId)
       .execute()
 
     const installations = installationRows
@@ -140,59 +172,6 @@ export const orgRouter = router({
       triggered: installations.length - failed,
       total: installations.length,
       failed,
-    }
-  }),
-  syncHubInstallations: protectedProcedure.mutation(async ({ ctx }) => {
-    const env = parseEnv(ctx.env)
-
-    const installationSummaries = await listGithubAppInstallations({
-      appId: env.GITHUB_APP_ID,
-      privateKey: env.GITHUB_APP_PRIVATE_KEY,
-    })
-
-    if (installationSummaries.length === 0) {
-      return {
-        triggered: 0,
-        total: 0,
-        failed: 0,
-        installations: [],
-      }
-    }
-
-    configure({
-      secretKey: env.TRIGGER_SECRET_KEY,
-    })
-
-    const results = await Promise.allSettled<unknown>(
-      installationSummaries.map((installation) =>
-        tasks.trigger('sync-github-installation', {
-          installationId: installation.installationId,
-        }),
-      ),
-    )
-
-    let failed = 0
-
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        failed += 1
-
-        const summary: GithubInstallationSummary | undefined =
-          installationSummaries[index]
-        const errorMessage = formatTriggerError(result.reason)
-
-        console.error('Failed to trigger sync for installation', {
-          installationId: summary?.installationId ?? null,
-          error: errorMessage,
-        })
-      }
-    })
-
-    return {
-      triggered: installationSummaries.length - failed,
-      total: installationSummaries.length,
-      failed,
-      installations: installationSummaries,
     }
   }),
 })

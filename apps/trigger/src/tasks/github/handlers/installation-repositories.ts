@@ -2,7 +2,16 @@ import { parseEnv } from '@app/agents'
 import { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
-import { disableRepositories, upsertRepositories } from '../shared/db'
+import {
+  disableRepositories,
+  ensureOwnerMemberships,
+  ensureRepoMemberships,
+  findRepoIdsByNames,
+  findUserIdsByGithubAccountId,
+  listOwnerMemberUserIds,
+  removeRepoMemberships,
+  upsertRepositories,
+} from '../shared/db'
 import { installationRepositoriesEventSchema } from '../shared/schemas'
 import { parseId } from '../shared/utils'
 import type { WebhookHandler } from '../types'
@@ -37,12 +46,44 @@ export const installationRepositoriesHandler: WebhookHandler = async ({
     const repositoriesAdded = parsed.repositories_added ?? []
     const repositoriesRemoved = parsed.repositories_removed ?? []
 
+    const senderUserIds = await findUserIdsByGithubAccountId(
+      db,
+      parsed.sender?.id ?? null,
+    )
+
+    if (senderUserIds.length > 0) {
+      await ensureOwnerMemberships(db, {
+        ownerId: owner.id,
+        userIds: senderUserIds,
+        role: 'admin',
+      })
+    } else {
+      logger.info('No matching local users for GitHub sender on repo event', {
+        deliveryId,
+        senderLogin: parsed.sender?.login ?? null,
+        senderId: parsed.sender?.id ?? null,
+      })
+    }
+
     if (repositoriesAdded.length > 0) {
       await upsertRepositories(db, {
         ownerId: owner.id,
         repositories: repositoriesAdded,
         enabled: true,
       })
+
+      const memberUserIds = await listOwnerMemberUserIds(db, owner.id)
+      const repoIds = await findRepoIdsByNames(db, {
+        ownerId: owner.id,
+        repoNames: repositoriesAdded.map((repo) => repo.name),
+      })
+
+      if (memberUserIds.length > 0 && repoIds.length > 0) {
+        await ensureRepoMemberships(db, {
+          repoIds,
+          userIds: memberUserIds,
+        })
+      }
     }
 
     if (repositoriesRemoved.length > 0) {
@@ -50,6 +91,17 @@ export const installationRepositoriesHandler: WebhookHandler = async ({
         ownerId: owner.id,
         repositories: repositoriesRemoved,
       })
+
+      const repoIds = await findRepoIdsByNames(db, {
+        ownerId: owner.id,
+        repoNames: repositoriesRemoved.map((repo) => repo.name),
+      })
+
+      if (repoIds.length > 0) {
+        await removeRepoMemberships(db, {
+          repoIds,
+        })
+      }
     }
 
     logger.info('Processed installation_repositories event', {
