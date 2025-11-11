@@ -1,14 +1,12 @@
 import { logger, task } from '@trigger.dev/sdk'
 import { parseEnv } from '@app/agents'
 import { setupDb } from '@app/db'
-import { Octokit } from '@octokit/rest'
 
 import { createOctokit } from '../helpers/github'
 import {
   ensureOwnerMemberships,
   ensureRepoMemberships,
   findRepoIdsByOwnerId,
-  findUserIdsByGithubAccountId,
   pruneOwnerMemberships,
   pruneRepoMemberships,
 } from './github/shared/db'
