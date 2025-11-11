@@ -1,5 +1,6 @@
 import { json } from '@app/db'
 import type { RunStory, StoryAnalysisV1 } from '@app/db'
+import { z } from 'zod'
 import type { AggregatedCounts } from '../../helpers/github-checks'
 import type { DbClient, StoryRow } from './types'
 import type { BatchTriggerResult } from './sandbox'
@@ -36,12 +37,15 @@ export function aggregateBatchResults({
     }
 
     if (result.ok) {
-      const output = result.output as {
-        resultId: string
-        status: 'pass' | 'fail' | 'running' | 'error'
-        analysisVersion: number
-        analysis: StoryAnalysisV1 | null
-      }
+      // Validate the output structure with Zod instead of unsafe type assertion
+      const storyTestOutputSchema = z.object({
+        resultId: z.string(),
+        status: z.enum(['pass', 'fail', 'running', 'error']),
+        analysisVersion: z.number(),
+        analysis: z.custom<StoryAnalysisV1 | null>().nullable(),
+      })
+
+      const output = storyTestOutputSchema.parse(result.output)
 
       if (output.status === 'pass') {
         aggregated.pass += 1
@@ -61,14 +65,8 @@ export function aggregateBatchResults({
       })
     } else {
       aggregated.error += 1
-      const errorMessage =
-        result.error &&
-        typeof result.error === 'object' &&
-        'message' in result.error &&
-        typeof (result.error as { message?: unknown }).message === 'string'
-          ? ((result.error as { message: string }).message ??
-            'Evaluation failed')
-          : 'Evaluation failed'
+      // Simplify error message extraction with proper type guard
+      const errorMessage = extractErrorMessage(result.error)
 
       updatedRunStories.push({
         storyId: story.id,
@@ -120,6 +118,26 @@ function buildSummaryParts(aggregated: AggregatedCounts): string[] {
     `${aggregated.fail} failed`,
     `${aggregated.error} errors`,
   ]
+}
+
+/**
+ * Extracts error message from unknown error type with proper type guards
+ */
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message
+  }
+
+  return 'Evaluation failed'
 }
 
 export async function updateRunResults({

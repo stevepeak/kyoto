@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro'
 import { configure, tasks } from '@trigger.dev/sdk'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { z } from 'zod'
 import { env } from '@/server/env'
 
 /**
@@ -56,12 +57,17 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('Invalid webhook signature', { status: 401 })
     }
 
-    // Parse the JSON payload
-    let payload: unknown
+    // Parse and validate the JSON payload with Zod
+    // GitHub webhooks can have various event types, so we validate it's at least a valid object
+    const githubWebhookPayloadSchema = z.record(z.unknown())
+    let payload: z.infer<typeof githubWebhookPayloadSchema>
     try {
-      payload = JSON.parse(rawBody)
-    } catch (_error) {
-      return new Response('Invalid JSON payload', { status: 400 })
+      const parsed = JSON.parse(rawBody)
+      payload = githubWebhookPayloadSchema.parse(parsed)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid JSON payload'
+      return new Response(`Invalid JSON payload: ${errorMessage}`, { status: 400 })
     }
 
     // Get the event type from headers
@@ -73,12 +79,15 @@ export const POST: APIRoute = async ({ request }) => {
     // Get the delivery ID for logging
     const deliveryId = request.headers.get('X-GitHub-Delivery') || 'unknown'
 
-    // Log the webhook data
-    console.log('GitHub webhook received', {
-      eventType,
-      deliveryId,
-      payload,
-    })
+    // Log the webhook data (using console.log is acceptable for API routes in Astro)
+    // Note: In production, consider using a proper logging service
+    if (import.meta.env.DEV) {
+      console.log('GitHub webhook received', {
+        eventType,
+        deliveryId,
+        payload,
+      })
+    }
 
     // Configure Trigger.dev
     configure({
@@ -98,9 +107,13 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response('Webhook received', { status: 200 })
   } catch (error) {
-    console.error('Failed to process GitHub webhook:', error)
+    // Log error (using console.error is acceptable for API routes in Astro)
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'
+    console.error('Failed to process GitHub webhook:', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     const errorDetails = import.meta.env.DEV ? errorMessage : undefined
     return new Response(
       `Failed to process webhook${errorDetails ? `: ${errorDetails}` : ''}`,
