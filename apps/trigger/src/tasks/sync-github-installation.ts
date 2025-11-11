@@ -135,40 +135,9 @@ async function fetchGithubMemberIdentifiers(
   return identifier ? [identifier] : []
 }
 
-interface GithubAccountRow {
-  userId: string
-  accountId: string
-  accessToken: string | null
-}
-
-function buildAccountIdentifierIndex(
-  accounts: GithubAccountRow[],
-): Map<string, string> {
-  const index = new Map<string, string>()
-
-  for (const account of accounts) {
-    const trimmed = account.accountId.trim()
-
-    if (trimmed.length === 0) {
-      continue
-    }
-
-    const variants = [trimmed, `github:${trimmed}`, `github|${trimmed}`]
-
-    for (const key of variants) {
-      if (!index.has(key)) {
-        index.set(key, account.userId)
-      }
-    }
-  }
-
-  return index
-}
-
 async function mapGithubMembersToLocalUserIds(
   db: ReturnType<typeof setupDb>,
   githubIdentifiers: readonly string[],
-  identifierIndex: Map<string, string>,
 ): Promise<Set<string>> {
   const uniqueIdentifiers = Array.from(new Set(githubIdentifiers))
 
@@ -176,104 +145,28 @@ async function mapGithubMembersToLocalUserIds(
     return new Set()
   }
 
+  const accountIdVariants = uniqueIdentifiers.flatMap((identifier) => {
+    const trimmed = identifier.trim()
+    if (trimmed.length === 0) {
+      return []
+    }
+    return [trimmed, `github:${trimmed}`, `github|${trimmed}`]
+  })
+
+  const matchedAccounts = await db
+    .selectFrom('accounts')
+    .select(['userId', 'accountId'])
+    .where('providerId', '=', 'github')
+    .where('accountId', 'in', accountIdVariants)
+    .execute()
+
   const memberUserIds = new Set<string>()
 
-  for (const identifier of uniqueIdentifiers) {
-    const trimmed = identifier.trim()
-
-    if (trimmed.length === 0) {
-      continue
-    }
-
-    const variants = [trimmed, `github:${trimmed}`, `github|${trimmed}`]
-
-    let matchedUserId: string | null = null
-
-    for (const key of variants) {
-      const userId = identifierIndex.get(key)
-
-      if (userId) {
-        matchedUserId = userId
-        break
-      }
-    }
-
-    if (!matchedUserId) {
-      const [userId] = await findUserIdsByGithubAccountId(db, trimmed)
-
-      if (userId) {
-        matchedUserId = userId
-      }
-    }
-
-    if (matchedUserId) {
-      memberUserIds.add(matchedUserId)
-    }
+  for (const account of matchedAccounts) {
+    memberUserIds.add(account.userId)
   }
 
   return memberUserIds
-}
-
-async function fetchLocalGithubAccounts(
-  db: ReturnType<typeof setupDb>,
-): Promise<GithubAccountRow[]> {
-  const accounts = await db
-    .selectFrom('accounts')
-    .select(['userId', 'accountId', 'accessToken'])
-    .where('providerId', '=', 'github')
-    .execute()
-
-  return accounts.map((account) => ({
-    userId: account.userId,
-    accountId: account.accountId ?? '',
-    accessToken: account.accessToken ?? null,
-  }))
-}
-
-async function resolveMembershipViaUserTokens(
-  accounts: GithubAccountRow[],
-  orgLogin: string,
-): Promise<Set<string>> {
-  const confirmedUserIds = new Set<string>()
-
-  for (const account of accounts) {
-    if (!account.accessToken) {
-      continue
-    }
-
-    const userOctokit = new Octokit({
-      auth: account.accessToken,
-    })
-
-    try {
-      const membership =
-        await userOctokit.rest.orgs.getMembershipForAuthenticatedUser({
-          org: orgLogin,
-        })
-
-      if (membership.data?.state === 'active') {
-        confirmedUserIds.add(account.userId)
-      }
-    } catch (error) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        'status' in error &&
-        (error as { status?: number }).status === 404
-      ) {
-        // User is not a member of the organization.
-        continue
-      }
-
-      logger.warn('Failed to verify org membership via user token', {
-        orgLogin,
-        userId: account.userId,
-        error,
-      })
-    }
-  }
-
-  return confirmedUserIds
 }
 
 function parseInstallationId(
@@ -397,9 +290,6 @@ export const syncGithubInstallationTask = task({
 
       const repoIds = await findRepoIdsByOwnerId(db, owner.id)
 
-      const githubAccounts = await fetchLocalGithubAccounts(db)
-      const identifierIndex = buildAccountIdentifierIndex(githubAccounts)
-
       const githubMemberIdentifiers = await fetchGithubMemberIdentifiers(
         octokit,
         account,
@@ -407,17 +297,7 @@ export const syncGithubInstallationTask = task({
       const memberUserIds = await mapGithubMembersToLocalUserIds(
         db,
         githubMemberIdentifiers,
-        identifierIndex,
       )
-
-      const verifiedUserIds = await resolveMembershipViaUserTokens(
-        githubAccounts,
-        owner.login,
-      )
-
-      for (const userId of verifiedUserIds) {
-        memberUserIds.add(userId)
-      }
 
       const memberUserIdList = Array.from(memberUserIds)
 
@@ -452,7 +332,6 @@ export const syncGithubInstallationTask = task({
             installationId,
             ownerLogin: owner.login,
             githubMemberIdentifiers: githubMemberIdentifiers.length,
-            localGithubAccounts: githubAccounts.length,
           },
         )
       }
