@@ -88,6 +88,10 @@ export async function runStoriesWithSandbox({
           `repo_${repo.repoName}`,
           `agent_${agentVersion}`,
         ],
+        metadata: {
+          name: story.name,
+          story: story.story,
+        },
       })),
     )
 
