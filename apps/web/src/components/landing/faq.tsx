@@ -12,7 +12,10 @@ export function Faq() {
     <section className="bg-linear-to-b from-background via-muted/20 to-background py-24 sm:py-28">
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold tracking-[0.3em] text-primary">
+          <p
+            className="text-sm font-semibold tracking-[0.3em] text-primary"
+            title="Yoku aru shitsumon — Frequently asked questions"
+          >
             よくある質問
           </p>
           <h2 className="mt-4 font-display text-3xl text-foreground sm:text-4xl">

@@ -11,6 +11,7 @@ import {
 
 export type Feature = {
   katakana: string
+  romaji: string
   name: string
   description: string
   icon: LucideIcon
@@ -43,6 +44,7 @@ export type Story = {
 export const coreFeatures: Feature[] = [
   {
     katakana: 'かいぜん',
+    romaji: 'Kaizen - Continuous improvement.',
     name: 'Continuous Improvement',
     description:
       'Like all the other CI tools, Kyoto is a continuously monitors and provides feedback on every commit.',
@@ -50,6 +52,7 @@ export const coreFeatures: Feature[] = [
   },
   {
     katakana: 'ぎゃっこう',
+    romaji: 'Gyakkou - Against the light.',
     name: 'Prevent Regression',
     description:
       "Don't let regressions sneak into your production. Kyoto will catch them before you deploy.",
@@ -57,6 +60,7 @@ export const coreFeatures: Feature[] = [
   },
   {
     katakana: '守り',
+    romaji: 'Mamori - Protection',
     name: 'One click protection.',
     description:
       'Immediate protection after sign up. No configuration, no setup required.',
@@ -64,6 +68,7 @@ export const coreFeatures: Feature[] = [
   },
   {
     katakana: '言語学',
+    romaji: 'Gengogaku - Natural language.',
     name: 'Natural Language Tests',
     description:
       'Tests are written in natural language, without any required format.',

@@ -1,42 +1,34 @@
-import { platformMetrics } from './content'
-
 export function Metrics() {
   return (
     <section className="bg-background py-24 sm:py-28">
-      <div className="container grid gap-8 lg:grid-cols-[1fr_minmax(0,2fr)] lg:items-center">
-        <div className="max-w-md space-y-5">
-          <p className="text-sm font-semibold tracking-[0.3em] text-primary">
-            未然に防ぐ
-          </p>
-          <h2 className="font-display text-3xl text-foreground sm:text-4xl">
-            Kyoto catches regressions before they deploy.
-          </h2>
-          <p className="text-base text-muted-foreground sm:text-lg">
-            Teams that adopt Kyoto reduce regression risk, ship faster, and
-            spend more time pairing with customers instead of debugging brittle
-            pipelines.
-          </p>
+      <div className="container grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center">
+        <div className="relative aspect-4/3 w-full overflow-hidden rounded-3xl border border-dashed border-border/60 bg-muted/40">
+          <img
+            src="/github-status.png"
+            alt="Kyoto status checks showing green passes for CI integrations."
+            className="size-full object-cover"
+          />
         </div>
-
-        <div className="grid gap-6 sm:grid-cols-3">
-          {platformMetrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="rounded-3xl border border-border/60 bg-card/60 p-6 text-center shadow-md"
-            >
-              <p className="text-3xl font-semibold text-foreground sm:text-4xl">
-                {metric.value}
-              </p>
-              <p className="mt-2 text-sm font-medium tracking-[0.2em] text-muted-foreground">
-                {metric.label.toLowerCase()}
-              </p>
-              {metric.helper ? (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {metric.helper}
-                </p>
-              ) : null}
-            </div>
-          ))}
+        <div className="space-y-4">
+          <p
+            className="text-sm font-semibold tracking-[0.3em] text-primary"
+            title="Ito o motte tsukurareta — Made with intention"
+          >
+            意図をもって作られた
+          </p>
+          <h3 className="font-display text-3xl text-foreground sm:text-4xl">
+            Kyoto tests intent.
+          </h3>
+          <p className="text-base text-muted-foreground sm:text-lg">
+            Kyoto weaves into your existing checks. Not replacing other tools,
+            but complementing them.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Our beloved CI tools test code quality, test coverage, security, and
+            more. While Kyoto tests user stories and ensures the code works as
+            expected by reading and understanding the intent of your code. We
+            call this &quot;Intent Testing&quot;.
+          </p>
         </div>
       </div>
     </section>

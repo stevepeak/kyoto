@@ -8,8 +8,11 @@ export function FeatureGrid() {
     >
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold tracking-[0.3em] text-primary">
-            侘寂プラットフォーム
+          <p
+            className="text-sm font-semibold tracking-[0.3em] text-primary"
+            title="Kyōto no koto - All that is Kyoto."
+          >
+            京都のこと
           </p>
           <h2 className="mt-4 font-display text-3xl text-foreground sm:text-4xl">
             Dear fellow developers,
@@ -42,7 +45,10 @@ export function FeatureGrid() {
                 <div className="inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <feature.icon className="size-6" />
                 </div>
-                <p className="text-sm font-semibold tracking-[0.3em] text-primary">
+                <p
+                  className="text-sm font-semibold tracking-[0.3em] text-primary"
+                  title={`${feature.romaji} — ${feature.name}`}
+                >
                   {feature.katakana}
                 </p>
                 <h3 className="text-xl font-semibold text-foreground">

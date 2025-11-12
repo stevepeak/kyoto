@@ -18,6 +18,7 @@ import {
   type StoryEvaluationAgentResult,
   type StoryTestModelOutput,
 } from '../schema'
+import { logger } from '@trigger.dev/sdk'
 
 const DEFAULT_STORY_MODEL = 'gpt-5-mini'
 const DEFAULT_MAX_STEPS = 60
@@ -212,6 +213,9 @@ export async function runStoryEvaluationAgent(
         }
       : undefined,
     stopWhen: stepCountIs(maxSteps),
+    onFinish: (result) => {
+      logger.debug('🌸 Agent Result', { result })
+    },
     output: Output.object({ schema: storyTestResultSchema }),
   })
 

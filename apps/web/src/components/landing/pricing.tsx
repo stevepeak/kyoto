@@ -7,7 +7,10 @@ export function Pricing() {
     <section id="pricing" className="bg-background py-24 sm:py-28">
       <div className="container">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold tracking-[0.3em] text-primary">
+          <p
+            className="text-sm font-semibold tracking-[0.3em] text-primary"
+            title="Nedan souou — Worth the price"
+          >
             値段相応
           </p>
           <h2 className="mt-4 font-display text-3xl text-foreground sm:text-4xl">
