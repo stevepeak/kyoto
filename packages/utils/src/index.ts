@@ -10,5 +10,3 @@ export {
 } from './assert'
 export { isError } from './is-error'
 export { noop } from './noop'
-export { isNotEmpty } from './not-empty'
-export { sleep } from './sleep'
