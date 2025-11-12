@@ -93,6 +93,10 @@ export async function runStoriesWithSandbox({
           story: story.story,
         },
       })),
+      {
+        // ! Temporarily while we figure out rate limiting
+        triggerSequentially: true,
+      },
     )
 
     return aggregateBatchResults({
