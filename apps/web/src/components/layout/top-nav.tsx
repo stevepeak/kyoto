@@ -1,6 +1,5 @@
 'use client'
 
-import { navigate } from 'astro:transitions/client'
 import { LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -17,7 +16,6 @@ import { useSession, signOut } from '@/client/auth-client'
 import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
 
 interface TopNavProps {
   breadcrumbs?: BreadcrumbItem[]
