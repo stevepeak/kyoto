@@ -576,9 +576,13 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
                       : runStory.status === 'running'
                         ? 'In progress'
                         : null
-                    const statusPill = getStatusPillStyles(
-                      storyResult ? storyResult.status : runStory.status,
-                    )
+                    const displayStatus = storyResult
+                      ? storyResult.status
+                      : runStory.status
+                    const statusPill =
+                      displayStatus === 'running'
+                        ? null
+                        : getStatusPillStyles(displayStatus)
                     const isSelected =
                       selectedStory?.storyId === runStory.storyId
 
@@ -601,14 +605,16 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
                                 <span className="truncate text-sm font-medium text-foreground">
                                   {storyTitle}
                                 </span>
-                                <span
-                                  className={cn(
-                                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                                    statusPill.className,
-                                  )}
-                                >
-                                  {statusPill.label}
-                                </span>
+                                {statusPill ? (
+                                  <span
+                                    className={cn(
+                                      'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                                      statusPill.className,
+                                    )}
+                                  >
+                                    {statusPill.label}
+                                  </span>
+                                ) : null}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {completedRelative
