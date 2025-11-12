@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro'
 import { configure, tasks } from '@trigger.dev/sdk'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { env } from '@/server/env'
+import z from 'zod'
 
 /**
  * Verifies the GitHub webhook signature using HMAC SHA256.
@@ -73,12 +74,19 @@ export const POST: APIRoute = async ({ request }) => {
     // Get the delivery ID for logging
     const deliveryId = request.headers.get('X-GitHub-Delivery') || 'unknown'
 
-    // Log the webhook data
-    console.log('GitHub webhook received', {
-      eventType,
-      deliveryId,
-      payload,
-    })
+    const parsed = z
+      .object({
+        repository: z.object({
+          full_name: z.string(),
+        }),
+      })
+      .safeParse(payload)
+    const ownerLogin = parsed.success
+      ? parsed.data.repository.full_name.split('/')[0]
+      : null
+    const repoName = parsed.success
+      ? parsed.data.repository.full_name.split('/')[1]
+      : null
 
     // Configure Trigger.dev
     configure({
@@ -93,7 +101,13 @@ export const POST: APIRoute = async ({ request }) => {
         deliveryId,
         payload,
       },
-      { tags: ['webhook', `github_${eventType}`] },
+      {
+        tags: [
+          `gh_${deliveryId}`,
+          ...(ownerLogin ? [`owner_${ownerLogin}`] : []),
+          ...(repoName ? [`repo_${repoName}`] : []),
+        ],
+      },
     )
 
     return new Response('Webhook received', { status: 200 })
