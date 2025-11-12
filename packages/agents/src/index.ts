@@ -10,7 +10,12 @@ export {
   normalizeStoryTestResult as normalizeStoryTestResultV2,
 } from './agents/v2/story-evaluator'
 
+export {
+  runStoryAnalysisAgent,
+} from './agents/v2/story-analyzer'
+
 export type { StoryEvaluationAgentResult } from './agents/schema'
+export type { StoryAnalysisAgentResult } from './agents/v2/story-analyzer'
 
 export {
   createSearchCodeTool as createSandboxSearchTool,
