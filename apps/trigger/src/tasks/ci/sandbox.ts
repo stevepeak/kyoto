@@ -46,7 +46,6 @@ export async function runStoriesWithSandbox({
 
   try {
     sandbox = await daytona.create({
-      language: 'typescript',
       labels: {
         'kyoto.repoId': repoRecord.repoId,
         'kyoto.repo': `${repo.ownerLogin}/${repo.repoName}`,
