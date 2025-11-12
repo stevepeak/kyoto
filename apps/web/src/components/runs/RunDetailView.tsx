@@ -828,21 +828,6 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
                               ) : null}
                             </div>
                           </div>
-                          <div className="flex flex-wrap items-start justify-end gap-2">
-                            <span
-                              className={cn(
-                                'inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide',
-                                statusPill.className,
-                              )}
-                            >
-                              {statusPill.label}
-                            </span>
-                            {storyResult ? (
-                              <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-foreground">
-                                Analysis v{storyResult.analysisVersion}
-                              </span>
-                            ) : null}
-                          </div>
                         </div>
 
                         {scenarioText ? (
