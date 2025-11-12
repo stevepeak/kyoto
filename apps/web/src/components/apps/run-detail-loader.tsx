@@ -116,72 +116,225 @@ function normalizeRunStatus(status: unknown): Run['status'] {
     : 'error'
 }
 
-function isStoryAnalysisEvidence(
-  value: unknown,
-): value is StoryAnalysisEvidence {
-  if (!value || typeof value !== 'object') {
-    return false
+function toNullableString(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null
   }
-
-  const evidence = value as {
-    step?: unknown
-    conclusion?: unknown
-    filePath?: unknown
-    startLine?: unknown
-    endLine?: unknown
-    note?: unknown
-  }
-
-  const isNullableString = (input: unknown): input is string | null =>
-    input === null || typeof input === 'string'
-  const isNullableNumber = (input: unknown): input is number | null =>
-    input === null || typeof input === 'number'
-  const isNullableConclusion = (
-    input: unknown,
-  ): input is 'pass' | 'fail' | null =>
-    input === null ||
-    input === undefined ||
-    input === 'pass' ||
-    input === 'fail'
-
-  return (
-    isNullableString(evidence.step) &&
-    typeof evidence.filePath === 'string' &&
-    isNullableNumber(evidence.startLine) &&
-    isNullableNumber(evidence.endLine) &&
-    isNullableString(evidence.note) &&
-    isNullableConclusion(evidence.conclusion ?? null)
-  )
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
 }
 
-function isStoryAnalysis(value: unknown): value is StoryAnalysis {
-  if (!value || typeof value !== 'object') {
-    return false
+function toNullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function pickString(
+  source: Record<string, unknown>,
+  keys: readonly string[],
+): string | null {
+  for (const key of keys) {
+    if (key in source) {
+      const value = toNullableString(source[key])
+      if (value !== null) {
+        return value
+      }
+    }
+  }
+  return null
+}
+
+function pickNumber(
+  source: Record<string, unknown>,
+  keys: readonly string[],
+): number | null {
+  for (const key of keys) {
+    if (key in source) {
+      const value = toNullableNumber(source[key])
+      if (value !== null) {
+        return value
+      }
+    }
+  }
+  return null
+}
+
+function normalizeEvidence(value: unknown): StoryAnalysisEvidence | null {
+  if (!value) {
+    return null
   }
 
-  const candidate = value as {
-    conclusion?: unknown
-    explanation?: unknown
-    evidence?: unknown
+  let candidateValue = value
+  if (typeof candidateValue === 'string') {
+    try {
+      candidateValue = JSON.parse(candidateValue) as Record<string, unknown>
+    } catch {
+      return null
+    }
   }
 
+  if (typeof candidateValue !== 'object' || candidateValue === null) {
+    return null
+  }
+
+  const candidate = candidateValue as Record<string, unknown>
+
+  const filePath =
+    pickString(candidate, ['filePath', 'filepath', 'path', 'file']) ?? null
+  if (!filePath) {
+    return null
+  }
+
+  let startLine = pickNumber(candidate, [
+    'startLine',
+    'start_line',
+    'lineStart',
+    'start',
+  ])
+  let endLine = pickNumber(candidate, [
+    'endLine',
+    'end_line',
+    'lineEnd',
+    'end',
+  ])
+
+  const lines = candidate['lines']
+  if (Array.isArray(lines)) {
+    if (startLine === null) {
+      startLine = toNullableNumber(lines[0])
+    }
+    if (endLine === null) {
+      endLine = toNullableNumber(lines[1])
+    }
+  } else if (typeof lines === 'string') {
+    const parts = lines.split('-')
+    if (parts.length >= 1 && startLine === null) {
+      startLine = toNullableNumber(parts[0])
+    }
+    if (parts.length >= 2 && endLine === null) {
+      endLine = toNullableNumber(parts[1])
+    }
+  } else if (typeof lines === 'object' && lines !== null) {
+    const linesRecord = lines as Record<string, unknown>
+    if (startLine === null) {
+      startLine = toNullableNumber(linesRecord['start'])
+    }
+    if (endLine === null) {
+      endLine = toNullableNumber(linesRecord['end'])
+    }
+  }
+
+  const step =
+    pickString(candidate, ['step', 'title', 'goal']) ?? null
+  const note =
+    pickString(candidate, ['note', 'summary', 'description', 'explanation']) ??
+    null
+
+  const rawConclusion =
+    pickString(candidate, ['conclusion', 'status', 'result']) ?? undefined
+  const conclusion: StoryAnalysisEvidence['conclusion'] =
+    rawConclusion === 'pass' ? 'pass' : 'fail'
+
+  return {
+    step,
+    conclusion,
+    filePath,
+    startLine,
+    endLine: endLine ?? startLine,
+    note,
+  }
+}
+
+function normalizeStoryAnalysis(value: unknown): StoryAnalysis | null {
+  if (!value) {
+    return null
+  }
+
+  let candidateValue = value
+  if (typeof candidateValue === 'string') {
+    try {
+      candidateValue = JSON.parse(candidateValue) as Record<string, unknown>
+    } catch {
+      return null
+    }
+  }
+
+  if (typeof candidateValue !== 'object' || candidateValue === null) {
+    return null
+  }
+
+  const candidate = candidateValue as Record<string, unknown>
+
+  const evidenceValue = candidate['evidence']
+  let evidenceSource: unknown[] = []
+  if (Array.isArray(evidenceValue)) {
+    evidenceSource = evidenceValue
+  } else if (typeof evidenceValue === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(evidenceValue)
+      if (Array.isArray(parsed)) {
+        evidenceSource = parsed
+      }
+    } catch {
+      // ignore parse failures
+    }
+  }
+
+  if (evidenceSource.length === 0) {
+    const legacyEvidence = candidate['codeReferences']
+    if (Array.isArray(legacyEvidence)) {
+      evidenceSource = legacyEvidence
+    } else if (typeof legacyEvidence === 'string') {
+      try {
+        const parsed: unknown = JSON.parse(legacyEvidence)
+        if (Array.isArray(parsed)) {
+          evidenceSource = parsed
+        }
+      } catch {
+        // ignore parse failures
+      }
+    }
+  }
+
+  const evidence = evidenceSource
+    .map(normalizeEvidence)
+    .filter((item): item is StoryAnalysisEvidence => item !== null)
+
+  const explanation =
+    pickString(candidate, ['explanation', 'summary', 'description', 'details']) ??
+    (evidence.length > 0 ? 'Evidence available.' : null)
+
+  if (!explanation) {
+    return null
+  }
+
+  const rawConclusion =
+    pickString(candidate, ['conclusion', 'status', 'outcome']) ?? null
+
+  let conclusion: StoryAnalysis['conclusion'] = 'error'
   if (
-    candidate.conclusion !== 'pass' &&
-    candidate.conclusion !== 'fail' &&
-    candidate.conclusion !== 'error'
+    rawConclusion === 'pass' ||
+    rawConclusion === 'fail' ||
+    rawConclusion === 'error'
   ) {
-    return false
+    conclusion = rawConclusion
+  } else if (rawConclusion === 'success' || rawConclusion === 'passed') {
+    conclusion = 'pass'
+  } else if (rawConclusion === 'failed' || rawConclusion === 'failure') {
+    conclusion = 'fail'
   }
 
-  if (typeof candidate.explanation !== 'string') {
-    return false
+  return {
+    conclusion,
+    explanation,
+    evidence,
   }
-
-  if (!Array.isArray(candidate.evidence)) {
-    return false
-  }
-
-  return candidate.evidence.every(isStoryAnalysisEvidence)
 }
 
 function toIsoString(value: unknown): string | null {
@@ -220,16 +373,9 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
         ? (storyResultMap.get(runStory.resultId) ?? null)
         : null
 
-    let analysis: StoryAnalysis | null = null
-    if (rawResult && isStoryAnalysis(rawResult.analysis)) {
-      analysis = {
-        ...rawResult.analysis,
-        evidence: rawResult.analysis.evidence.map((item) => ({
-          ...item,
-          conclusion: item.conclusion === 'pass' ? 'pass' : 'fail',
-        })),
-      }
-    }
+      const analysis = rawResult
+        ? normalizeStoryAnalysis(rawResult.analysis)
+        : null
 
     const result: StoryResult | null = rawResult
       ? {
