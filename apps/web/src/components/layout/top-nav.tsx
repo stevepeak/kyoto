@@ -66,21 +66,6 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
 
   const rightActions = (
     <div className="flex items-center gap-2">
-      <Button
-        className={cn(
-          'h-8 px-3 text-sm font-medium gap-1.5',
-          'bg-linear-to-r from-white via-[#ffe6f2] to-[#ffcde8] text-foreground shadow-sm',
-          'hover:from-white hover:via-[#ffd9ec] hover:to-[#ffbcd9] hover:shadow-md',
-          'focus-visible:ring-primary/40 focus-visible:ring-offset-1',
-        )}
-        onClick={() => void navigate('/upcoming-features')}
-      >
-        <span aria-hidden="true" className="text-base leading-none">
-          🌸
-        </span>
-        What&apos;s next?
-      </Button>
-
       {right ? <div>{right}</div> : null}
 
       <DropdownMenu>

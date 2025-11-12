@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict CkT6klcddfHqkZWm8ayKVEtTFcU6hAJwBPtgDevob5A77vNOGiJ24ytMa48T3EL
+\restrict Xsg0gZqVKEDcky9yUZQc2CIdT0gplOpmi0ayHuxC0NRGLC3QpPjhK7Mn7zkhVh9
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -321,132 +321,6 @@ COMMENT ON COLUMN public.credentials.created_at IS 'The time when the credential
 --
 
 COMMENT ON COLUMN public.credentials.updated_at IS 'The time when the credential was last updated';
-
-
---
--- Name: feature_requests; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.feature_requests (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    title text NOT NULL,
-    description text NOT NULL,
-    vote_count integer DEFAULT 0 NOT NULL,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
-
---
--- Name: TABLE feature_requests; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.feature_requests IS 'Upcoming feature requests submitted by users';
-
-
---
--- Name: COLUMN feature_requests.id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.id IS 'Unique identifier for each feature request';
-
-
---
--- Name: COLUMN feature_requests.title; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.title IS 'Short title for the feature request';
-
-
---
--- Name: COLUMN feature_requests.description; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.description IS 'Detailed description of the feature request';
-
-
---
--- Name: COLUMN feature_requests.vote_count; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.vote_count IS 'Cached total number of user votes';
-
-
---
--- Name: COLUMN feature_requests.created_by; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.created_by IS 'FK to users.id for the creator of the request';
-
-
---
--- Name: COLUMN feature_requests.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.created_at IS 'Creation timestamp';
-
-
---
--- Name: COLUMN feature_requests.updated_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_requests.updated_at IS 'Last update timestamp';
-
-
---
--- Name: feature_votes; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.feature_votes (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    feature_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
-
---
--- Name: TABLE feature_votes; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.feature_votes IS 'Individual user votes for feature requests';
-
-
---
--- Name: COLUMN feature_votes.id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_votes.id IS 'Unique identifier for each vote';
-
-
---
--- Name: COLUMN feature_votes.feature_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_votes.feature_id IS 'FK to feature_requests.id';
-
-
---
--- Name: COLUMN feature_votes.user_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_votes.user_id IS 'FK to users.id for the voter';
-
-
---
--- Name: COLUMN feature_votes.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_votes.created_at IS 'Creation timestamp';
-
-
---
--- Name: COLUMN feature_votes.updated_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.feature_votes.updated_at IS 'Last update timestamp';
 
 
 --
@@ -1290,22 +1164,6 @@ ALTER TABLE ONLY public.credentials
 
 
 --
--- Name: feature_requests feature_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.feature_requests
-    ADD CONSTRAINT feature_requests_pkey PRIMARY KEY (id);
-
-
---
--- Name: feature_votes feature_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.feature_votes
-    ADD CONSTRAINT feature_votes_pkey PRIMARY KEY (id);
-
-
---
 -- Name: owner_memberships owner_memberships_owner_user_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1458,20 +1316,6 @@ ALTER TABLE ONLY public.verifications
 
 
 --
--- Name: feature_requests_title_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX feature_requests_title_unique ON public.feature_requests USING btree (title);
-
-
---
--- Name: feature_votes_feature_user_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX feature_votes_feature_user_unique ON public.feature_votes USING btree (feature_id, user_id);
-
-
---
 -- Name: owner_memberships_user_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1591,20 +1435,6 @@ CREATE TRIGGER set_timestamp_accounts BEFORE UPDATE ON public.accounts FOR EACH 
 
 
 --
--- Name: feature_requests set_timestamp_feature_requests; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER set_timestamp_feature_requests BEFORE UPDATE ON public.feature_requests FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
-
-
---
--- Name: feature_votes set_timestamp_feature_votes; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER set_timestamp_feature_votes BEFORE UPDATE ON public.feature_votes FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
-
-
---
 -- Name: owner_memberships set_timestamp_owner_memberships; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1698,30 +1528,6 @@ ALTER TABLE ONLY public.credentials
 
 
 --
--- Name: feature_requests feature_requests_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.feature_requests
-    ADD CONSTRAINT feature_requests_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: feature_votes feature_votes_feature_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.feature_votes
-    ADD CONSTRAINT feature_votes_feature_id_fkey FOREIGN KEY (feature_id) REFERENCES public.feature_requests(id) ON DELETE CASCADE;
-
-
---
--- Name: feature_votes feature_votes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.feature_votes
-    ADD CONSTRAINT feature_votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
 -- Name: owner_memberships owner_memberships_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1805,5 +1611,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CkT6klcddfHqkZWm8ayKVEtTFcU6hAJwBPtgDevob5A77vNOGiJ24ytMa48T3EL
+\unrestrict Xsg0gZqVKEDcky9yUZQc2CIdT0gplOpmi0ayHuxC0NRGLC3QpPjhK7Mn7zkhVh9
 
