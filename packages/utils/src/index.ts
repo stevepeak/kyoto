@@ -1,12 +1,2 @@
-export {
-  assert,
-  assertArray,
-  assertBoolean,
-  assertDefined,
-  assertIsStringAndNotEmpty,
-  assertNumber,
-  assertObject,
-  assertString,
-} from './assert'
-export { isError } from './is-error'
+export { default as is, assert } from '@sindresorhus/is'
 export { noop } from './noop'

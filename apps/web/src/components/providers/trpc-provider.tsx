@@ -1,5 +1,5 @@
 import type { AppRouter } from '@app/api'
-import { isError } from '@app/utils'
+import { is } from '@app/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchStreamLink, loggerLink } from '@trpc/client'
 import { useState } from 'react'
@@ -78,7 +78,7 @@ function TrpcProviderInner({ children }: { children: React.ReactNode }) {
             }
 
             // Log errors
-            if (options.direction === 'down' && isError(options.result)) {
+            if (options.direction === 'down' && is.error(options.result)) {
               return true
             }
 
