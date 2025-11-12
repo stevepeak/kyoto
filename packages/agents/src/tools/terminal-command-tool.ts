@@ -26,7 +26,7 @@ export function createTerminalCommandTool(ctx: {
   return tool({
     name: 'terminalCommand',
     description:
-      'Execute read-only, non-interactive shell commands (e.g. rg, fd, tree, sed, grep, git, find, etc.) within the repository workspace.',
+      'Execute shell commands (e.g. rg, fd, tree, sed, grep, git, find, etc.) within the repository workspace.',
     inputSchema: terminalCommandInputSchema,
     execute: async (input) => {
       const result = await ctx.sandbox.process.executeCommand(

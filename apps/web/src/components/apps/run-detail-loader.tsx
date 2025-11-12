@@ -221,7 +221,11 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
         : null
 
     let analysis: StoryAnalysis | null = null
-    if (rawResult && rawResult.analysis && isStoryAnalysis(rawResult.analysis)) {
+    if (
+      rawResult &&
+      rawResult.analysis &&
+      isStoryAnalysis(rawResult.analysis)
+    ) {
       const validatedAnalysis = rawResult.analysis
       analysis = {
         conclusion: validatedAnalysis.conclusion,

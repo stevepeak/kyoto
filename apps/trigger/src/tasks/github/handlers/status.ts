@@ -3,10 +3,7 @@ import { logger } from '@trigger.dev/sdk'
 import { statusEventSchema } from '../shared/schemas'
 import type { WebhookHandler } from '../types'
 
-export const statusHandler: WebhookHandler = ({
-  deliveryId,
-  rawPayload,
-}) => {
+export const statusHandler: WebhookHandler = ({ deliveryId, rawPayload }) => {
   const parsed = statusEventSchema.safeParse(rawPayload)
 
   if (!parsed.success) {
@@ -20,7 +17,8 @@ export const statusHandler: WebhookHandler = ({
   const { context, target_url: targetUrl } = parsed.data
   const isVercelContext = context.toLowerCase().includes('vercel')
   const isVercelTarget =
-    typeof targetUrl === 'string' && targetUrl.toLowerCase().includes('vercel.app')
+    typeof targetUrl === 'string' &&
+    targetUrl.toLowerCase().includes('vercel.app')
 
   if (isVercelContext || isVercelTarget) {
     logger.info('Vercel deployment status detected', {
