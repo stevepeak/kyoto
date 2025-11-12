@@ -220,14 +220,6 @@ export async function runStoryEvaluationAgent(
 
   const result = await agent.generate({ prompt })
 
-  logger.info('Story evaluation agent v2 completed run', {
-    storyName: options.storyName,
-    repoId: options.repoId,
-    runId: options.runId ?? undefined,
-    stepCount: result.steps.length,
-    finishReason: result.finishReason,
-  })
-
   const parsedOutput = storyTestResultSchema.parse(result.output)
   const toolCallCount = result.steps.reduce(
     (count, step) => count + step.toolCalls.length,

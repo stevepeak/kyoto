@@ -108,16 +108,6 @@ export const testStoryTask = task({
         )
       }
 
-      logger.info('Story evaluation agent completed', {
-        storyId: payload.storyId,
-        runId: payload.runId,
-        resultId,
-        agentVersion,
-        finishReason: evaluation.finishReason,
-        agentSteps: evaluation.metrics.stepCount,
-        contextToolCalls: evaluation.metrics.toolCallCount,
-      })
-
       const completedAt = normalized.completedAt
         ? new Date(normalized.completedAt)
         : null
@@ -137,13 +127,16 @@ export const testStoryTask = task({
         .where('id', '=', resultId)
         .execute()
 
-      logger.info('Story evaluation completed', {
-        storyId: payload.storyId,
-        runId: payload.runId,
-        evaluation,
-        status: normalized.status,
-        resultId,
-      })
+      logger.info(
+        `Story evaluation ${evaluation.output.status === 'pass' ? '🟢' : '🔴'}`,
+        {
+          storyId: payload.storyId,
+          runId: payload.runId,
+          evaluation,
+          status: normalized.status,
+          resultId,
+        },
+      )
 
       return {
         // Provide a succinct summary for orchestration tasks and UI consumption

@@ -179,14 +179,6 @@ export async function runStoryEvaluationAgent(
   // ! we get `AI_NoOutputGeneratedError: No output generated.` if we hit
   // ! our max steps limit.
 
-  logger.info('Story evaluation agent completed run', {
-    storyName: options.storyName,
-    repoId: options.repoId,
-    runId: options.runId ?? undefined,
-    stepCount: result.steps.length,
-    finishReason: result.finishReason,
-  })
-
   const parsedOutput = storyTestResultSchema.parse(result.output)
   const toolCallCount = result.steps.reduce(
     (count, step) => count + step.toolCalls.length,

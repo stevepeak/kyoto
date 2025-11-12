@@ -23,6 +23,8 @@ async function startSdk(): Promise<Tracer | undefined> {
       Sentry.init({
         defaultIntegrations: false,
         dsn: process.env.SENTRY_DSN,
+        tracesSampleRate: 1.0,
+        sendDefaultPii: false,
         integrations: [
           Sentry.openAIIntegration({
             recordInputs: true,
