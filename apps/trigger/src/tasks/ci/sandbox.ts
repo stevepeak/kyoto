@@ -46,9 +46,11 @@ export async function runStoriesWithSandbox({
 
   try {
     sandbox = await daytona.create({
+      ephemeral: true,
+      autoArchiveInterval: 5,
       labels: {
         'kyoto.repoId': repoRecord.repoId,
-        'kyoto.repo': `${repo.ownerLogin}/${repo.repoName}`,
+        'kyoto.slug': `${repo.ownerLogin}/${repo.repoName}`,
         'kyoto.runId': runId,
       },
     })
