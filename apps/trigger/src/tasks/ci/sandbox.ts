@@ -82,6 +82,11 @@ export async function runStoriesWithSandbox({
           daytonaSandboxId: sandbox?.id,
           agentVersion,
         },
+        tags: [
+          `org_${repo.ownerLogin}`,
+          `repo_${repo.repoName}`,
+          `agent_${agentVersion}`,
+        ],
       })),
     )
 
