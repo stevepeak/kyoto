@@ -15,8 +15,9 @@
     "typecheck": "tsc -b",
     "test": "turbo run test",
     "knip": "knip",
+    "knip:fix": "knip --fix",
     "ci": "pnpm run typecheck && pnpm run lint && pnpm run knip && pnpm run build",
-    "fix": "pnpm run fix:tsconfig && knip --fix && pnpm run fix:eslint && pnpm run fix:prettier",
+    "fix": "pnpm run fix:tsconfig && pnpm run fix:eslint && pnpm run fix:prettier",
     "fix:prettier": "prettier --write .",
     "fix:eslint": "turbo run lint:fix",
     "fix:tsconfig": "monorepo-typescript-references fix"
