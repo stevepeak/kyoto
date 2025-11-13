@@ -7,7 +7,8 @@ type DaytonaSandbox = Awaited<ReturnType<DaytonaClient['create']>>
 
 interface CreateSandboxParams {
   repoId: string
-  branchName: string
+  /** Defaults to repo default branch */
+  branchName?: string
   commit?: string
   additionalLabels?: Record<string, string>
 }

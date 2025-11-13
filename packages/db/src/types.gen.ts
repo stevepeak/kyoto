@@ -356,6 +356,10 @@ export interface Story {
    */
   createdAt: Generated<Timestamp | null>;
   /**
+   * Structured decomposition result containing steps (given preconditions and requirements with assertions)
+   */
+  decomposition: Json | null;
+  /**
    * Array of file references in format ["path@startLine:endLine", ...]
    */
   files: Generated<Json>;

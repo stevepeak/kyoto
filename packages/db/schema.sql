@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Xsg0gZqVKEDcky9yUZQc2CIdT0gplOpmi0ayHuxC0NRGLC3QpPjhK7Mn7zkhVh9
+\restrict 5uJnCiBGn8dYqyzWxHJvSMsG1v54YbzT69Qq5DJxaXL0guAWb4gMJ3GXfg5dspC
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -839,7 +839,8 @@ CREATE TABLE public.stories (
     repo_id uuid NOT NULL,
     name text NOT NULL,
     story text NOT NULL,
-    files jsonb DEFAULT '[]'::jsonb NOT NULL
+    files jsonb DEFAULT '[]'::jsonb NOT NULL,
+    decomposition jsonb
 );
 
 
@@ -890,6 +891,13 @@ COMMENT ON COLUMN public.stories.story IS 'The Gherkin story text';
 --
 
 COMMENT ON COLUMN public.stories.files IS 'Array of file references in format ["path@startLine:endLine", ...]';
+
+
+--
+-- Name: COLUMN stories.decomposition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.decomposition IS 'Structured decomposition result containing steps (given preconditions and requirements with assertions)';
 
 
 --
@@ -1611,5 +1619,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Xsg0gZqVKEDcky9yUZQc2CIdT0gplOpmi0ayHuxC0NRGLC3QpPjhK7Mn7zkhVh9
+\unrestrict 5uJnCiBGn8dYqyzWxHJvSMsG1v54YbzT69Qq5DJxaXL0guAWb4gMJ3GXfg5dspC
 

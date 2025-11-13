@@ -44,7 +44,8 @@ const storyDecompositionOutputSchema = z.object({
 
 export type StoryDecompositionAgentOptions = {
   story: {
-    id: string
+    /** Optional because we can test decomposition with just the text alone */
+    id?: string
     text: string
   }
   repo: {
@@ -167,7 +168,7 @@ export async function runStoryDecompositionAgent({
       isEnabled: true,
       functionId: 'story-decomposition-v3',
       metadata: {
-        storyId: story.id,
+        ...(story.id && { storyId: story.id }),
         repoId: repo.id,
         repoSlug: repo.slug,
         daytonaSandboxId: options.daytonaSandboxId,

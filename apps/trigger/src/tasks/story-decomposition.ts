@@ -8,15 +8,13 @@ import { getTelemetryTracer } from '@/telemetry'
 interface StoryDecompositionPayload {
   /** A raw user story written in Gherkin or natural language */
   story: {
-    id: string
+    id?: string
     text: string
   }
   /** Identifier for the repository in {owner}/{repo} format */
   repo: {
     id: string
     slug: string
-    /** Branch name to clone (defaults to 'main') */
-    branchName?: string
   }
 }
 
@@ -26,29 +24,8 @@ export const storyDecompositionTask = task({
     const env = parseEnv()
     const db = setupDb(env.DATABASE_URL)
 
-    const [ownerLogin, repoName] = repo.slug.split('/')
-    const branchName = repo.branchName ?? 'main'
-
-    // Retrieve the repository record (read-only access)
-    const repoRecord = await db
-      .selectFrom('repos')
-      .innerJoin('owners', 'repos.ownerId', 'owners.id')
-      .select(['repos.id as repoId', 'repos.name as repoName'])
-      .where('owners.login', '=', ownerLogin)
-      .where('repos.name', '=', repoName)
-      .executeTakeFirst()
-
-    if (!repoRecord) {
-      throw new Error(
-        `Repository not found: ${repo.slug}. Make sure the repository exists in the database.`,
-      )
-    }
-
     // Create the sandbox and clone the repository
-    const sandbox = await createDaytonaSandbox({
-      repoId: repoRecord.repoId,
-      branchName,
-    })
+    const sandbox = await createDaytonaSandbox({ repoId: repo.id })
 
     try {
       // Run the story decomposition agent
@@ -68,7 +45,18 @@ export const storyDecompositionTask = task({
         stepsCount: decompositionResult.steps.length,
       })
 
-      // Return the structured output (no side effects)
+      // Save decomposition results to the story record if story.id exists
+      if (story.id) {
+        await db
+          .updateTable('stories')
+          .set({
+            decomposition: JSON.stringify(decompositionResult.steps),
+          })
+          .where('id', '=', story.id)
+          .execute()
+      }
+
+      // Return the structured output
       return {
         steps: decompositionResult.steps,
       }

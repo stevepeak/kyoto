@@ -219,6 +219,19 @@ export const storyRouter = router({
         .returningAll()
         .executeTakeFirstOrThrow()
 
+      // Trigger story decomposition task
+      await tasks.trigger('story-decomposition', {
+        story: {
+          id: newStory.id,
+          text: newStory.story,
+        },
+        repo: {
+          id: repo.id,
+          slug: `${input.orgSlug}/${input.repoName}`,
+          branchName: repo.defaultBranch ?? undefined,
+        },
+      })
+
       return {
         story: {
           id: newStory.id,
@@ -284,6 +297,21 @@ export const storyRouter = router({
         .where('id', '=', input.storyId)
         .returningAll()
         .executeTakeFirstOrThrow()
+
+      // Trigger story decomposition task if story text was updated
+      if (input.story !== undefined) {
+        await tasks.trigger('story-decomposition', {
+          story: {
+            id: updatedStory.id,
+            text: updatedStory.story,
+          },
+          repo: {
+            id: repo.id,
+            slug: `${input.orgSlug}/${input.repoName}`,
+            branchName: repo.defaultBranch ?? undefined,
+          },
+        })
+      }
 
       return {
         story: {
