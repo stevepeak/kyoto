@@ -23,7 +23,7 @@ type RepoListItem = {
 
 export const repoRouter = router({
   listByOrg: protectedProcedure
-    .input(z.object({ orgSlug: z.string() }))
+    .input(z.object({ orgName: z.string() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.id
 
@@ -32,7 +32,7 @@ export const repoRouter = router({
       }
 
       const owner = await findOwnerForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         userId,
       })
 
@@ -154,7 +154,7 @@ export const repoRouter = router({
     }),
 
   getBySlug: protectedProcedure
-    .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
+    .input(z.object({ orgName: z.string(), repoName: z.string() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.id
 
@@ -163,7 +163,7 @@ export const repoRouter = router({
       }
 
       const repo = await findRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -183,7 +183,7 @@ export const repoRouter = router({
     }),
 
   enableRepo: protectedProcedure
-    .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
+    .input(z.object({ orgName: z.string(), repoName: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.id
 
@@ -192,7 +192,7 @@ export const repoRouter = router({
       }
 
       const repo = await requireRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -211,7 +211,7 @@ export const repoRouter = router({
     }),
 
   disableRepo: protectedProcedure
-    .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
+    .input(z.object({ orgName: z.string(), repoName: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.id
 
@@ -220,7 +220,7 @@ export const repoRouter = router({
       }
 
       const repo = await requireRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })

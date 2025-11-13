@@ -19,10 +19,10 @@ interface StoryItem {
 }
 
 export function RepoStoriesLoader({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   const trpc = useTRPCClient()
@@ -35,7 +35,7 @@ export function RepoStoriesLoader({
     async function load() {
       try {
         const resp = await trpc.story.listByRepo.query({
-          orgSlug,
+          orgName,
           repoName,
         })
         if (!isMounted) {
@@ -52,13 +52,13 @@ export function RepoStoriesLoader({
     return () => {
       isMounted = false
     }
-  }, [trpc, orgSlug, repoName])
+  }, [trpc, orgName, repoName])
 
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
-        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+        { label: orgName, href: `/org/${orgName}` },
+        { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
       ]}
     >
       {isLoading ? (
@@ -71,7 +71,7 @@ export function RepoStoriesLoader({
           <div className="mt-4 border rounded-md p-3">
             <StoryList
               stories={stories}
-              orgSlug={orgSlug}
+              orgName={orgName}
               repoName={repoName}
             />
           </div>

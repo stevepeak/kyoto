@@ -68,7 +68,7 @@ export function SetupApp() {
     let mounted = true
     void (async () => {
       setLoadingRepos(true)
-      const data = await trpc.repo.listByOrg.query({ orgSlug: selectedOrg })
+      const data = await trpc.repo.listByOrg.query({ orgName: selectedOrg })
       if (!mounted) {
         return
       }
@@ -107,11 +107,11 @@ export function SetupApp() {
     setEnabling(true)
     try {
       await trpc.repo.enableRepo.mutate({
-        orgSlug: selectedOrg,
+        orgName: selectedOrg,
         repoName: selectedRepoName,
       })
       // Refresh the repos list
-      const data = await trpc.repo.listByOrg.query({ orgSlug: selectedOrg })
+      const data = await trpc.repo.listByOrg.query({ orgName: selectedOrg })
       const repos = data.repos as Array<{
         id: string
         name: string
@@ -137,11 +137,11 @@ export function SetupApp() {
     }
     try {
       await trpc.repo.disableRepo.mutate({
-        orgSlug: selectedOrg,
+        orgName: selectedOrg,
         repoName,
       })
       // Refresh the repos list
-      const data = await trpc.repo.listByOrg.query({ orgSlug: selectedOrg })
+      const data = await trpc.repo.listByOrg.query({ orgName: selectedOrg })
       const repos = data.repos as Array<{
         id: string
         name: string

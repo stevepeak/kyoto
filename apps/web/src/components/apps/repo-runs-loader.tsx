@@ -14,10 +14,10 @@ interface RunItem {
 }
 
 export function RepoRunsLoader({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   const trpc = useTRPCClient()
@@ -29,7 +29,7 @@ export function RepoRunsLoader({
     let isMounted = true
     async function load() {
       try {
-        const resp = await trpc.run.listByRepo.query({ orgSlug, repoName })
+        const resp = await trpc.run.listByRepo.query({ orgName, repoName })
         if (!isMounted) {
           return
         }
@@ -44,13 +44,13 @@ export function RepoRunsLoader({
     return () => {
       isMounted = false
     }
-  }, [trpc, orgSlug, repoName])
+  }, [trpc, orgName, repoName])
 
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
-        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+        { label: orgName, href: `/org/${orgName}` },
+        { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
       ]}
     >
       {isLoading ? (
@@ -61,7 +61,7 @@ export function RepoRunsLoader({
         <div className="p-6">
           <h1 className="text-xl font-semibold text-foreground">Runs</h1>
           <div className="mt-4 border rounded-md p-3">
-            <RunList runs={runs} orgSlug={orgSlug} repoName={repoName} />
+            <RunList runs={runs} orgName={orgName} repoName={repoName} />
           </div>
         </div>
       )}

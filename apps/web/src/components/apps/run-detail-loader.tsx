@@ -299,11 +299,11 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
 }
 
 export function RunDetailLoader({
-  orgSlug,
+  orgName,
   repoName,
   runId,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
   runId: string
 }) {
@@ -317,7 +317,7 @@ export function RunDetailLoader({
     async function load() {
       try {
         const resp = await trpc.run.getByRunId.query({
-          orgSlug,
+          orgName,
           repoName,
           runId,
         })
@@ -345,13 +345,13 @@ export function RunDetailLoader({
     return () => {
       isMounted = false
     }
-  }, [trpc, orgSlug, repoName, runId])
+  }, [trpc, orgName, repoName, runId])
 
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
-        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+        { label: orgName, href: `/org/${orgName}` },
+        { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
       ]}
     >
       {isLoading ? (
@@ -359,7 +359,7 @@ export function RunDetailLoader({
       ) : error ? (
         <div className="p-6 text-sm text-red-500">{error}</div>
       ) : run ? (
-        <RunDetailView run={run} orgSlug={orgSlug} repoName={repoName} />
+        <RunDetailView run={run} orgName={orgName} repoName={repoName} />
       ) : null}
     </AppLayout>
   )

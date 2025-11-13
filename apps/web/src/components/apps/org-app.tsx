@@ -2,10 +2,10 @@ import { AppProvider } from '@/components/providers/app-provider'
 
 import { OrgRepoBySlugLoader } from './org-repo-by-slug-loader'
 
-export function OrgApp({ orgSlug }: { orgSlug: string }) {
+export function OrgApp({ orgName }: { orgName: string }) {
   return (
     <AppProvider>
-      <OrgRepoBySlugLoader orgSlug={orgSlug} />
+      <OrgRepoBySlugLoader orgName={orgName} />
     </AppProvider>
   )
 }

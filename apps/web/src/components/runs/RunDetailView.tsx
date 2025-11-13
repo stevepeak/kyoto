@@ -79,7 +79,7 @@ interface Run {
 
 interface RunDetailViewProps {
   run: Run
-  orgSlug: string
+  orgName: string
   repoName: string
 }
 
@@ -324,7 +324,7 @@ function formatEvidenceSummary(
   return `${safeSlice.trimEnd()}…`
 }
 
-export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
+export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
   const statusDisplay = getStatusDisplay(run.status)
   const runStatusDescriptor = getRunStatusDescriptor(run.status)
   const commitTitle =
@@ -338,12 +338,12 @@ export function RunDetailView({ run, orgSlug, repoName }: RunDetailViewProps) {
     Number.isFinite(durationMs) && durationMs > 0 ? durationMs : null,
   )
   const commitUrl =
-    run.commitSha && orgSlug && repoName
-      ? `https://github.com/${orgSlug}/${repoName}/commit/${run.commitSha}`
+    run.commitSha && orgName && repoName
+      ? `https://github.com/${orgName}/${repoName}/commit/${run.commitSha}`
       : null
   const pullRequestUrl =
-    run.prNumber && orgSlug && repoName
-      ? `https://github.com/${orgSlug}/${repoName}/pull/${run.prNumber}`
+    run.prNumber && orgName && repoName
+      ? `https://github.com/${orgName}/${repoName}/pull/${run.prNumber}`
       : null
   const actorHandle = '@unknown'
   const actorInitial =

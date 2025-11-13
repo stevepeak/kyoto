@@ -21,7 +21,7 @@ interface RunItem {
 
 interface GitHubStyleRunListProps {
   runs: RunItem[]
-  orgSlug: string
+  orgName: string
   repoName: string
 }
 
@@ -83,7 +83,7 @@ function getStatusIcon(status: RunItem['status']) {
 
 export function GitHubStyleRunList({
   runs,
-  orgSlug,
+  orgName,
   repoName,
 }: GitHubStyleRunListProps) {
   if (runs.length === 0) {
@@ -105,7 +105,7 @@ export function GitHubStyleRunList({
         return (
           <li key={run.id}>
             <a
-              href={`/org/${orgSlug}/repo/${repoName}/runs/${run.runId}`}
+              href={`/org/${orgName}/repo/${repoName}/runs/${run.runId}`}
               className="flex items-start gap-3 py-3 px-4 hover:bg-accent/50 transition-colors"
             >
               <div className="mt-0.5">{statusIcon}</div>

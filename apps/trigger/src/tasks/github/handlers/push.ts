@@ -74,7 +74,7 @@ export const pushHandler: WebhookHandler = async ({
 
     const agentVersion: AgentVersion = AGENT_CONFIG.version
     await runCiTask.trigger({
-      orgSlug: ownerLogin,
+      orgName: ownerLogin,
       repoName,
       branchName,
       agentVersion,

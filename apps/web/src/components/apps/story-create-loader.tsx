@@ -68,10 +68,10 @@ const STORY_TEMPLATES: StoryTemplate[] = [
 ]
 
 export function StoryCreateLoader({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   const trpc = useTRPCClient()
@@ -95,7 +95,7 @@ export function StoryCreateLoader({
 
     try {
       await trpc.story.create.mutate({
-        orgSlug,
+        orgName,
         repoName,
         name: storyName.trim(),
         story: storyContent,
@@ -103,7 +103,7 @@ export function StoryCreateLoader({
       })
 
       // Navigate back to the repository page after creating the story
-      window.location.href = `/org/${orgSlug}/repo/${repoName}`
+      window.location.href = `/org/${orgName}/repo/${repoName}`
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create story')
       setIsSaving(false)
@@ -118,8 +118,8 @@ export function StoryCreateLoader({
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
-        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+        { label: orgName, href: `/org/${orgName}` },
+        { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
         { label: 'New Story', href: '#' },
       ]}
     >
@@ -249,7 +249,7 @@ export function StoryCreateLoader({
           <Button
             variant="outline"
             onClick={() => {
-              window.location.href = `/org/${orgSlug}/repo/${repoName}`
+              window.location.href = `/org/${orgName}/repo/${repoName}`
             }}
             disabled={isSaving}
           >

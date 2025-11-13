@@ -3,15 +3,15 @@ import { AppProvider } from '@/components/providers/app-provider'
 import { RepoRunsLoader } from './repo-runs-loader'
 
 export function RepoRunsApp({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   return (
     <AppProvider>
-      <RepoRunsLoader orgSlug={orgSlug} repoName={repoName} />
+      <RepoRunsLoader orgName={orgName} repoName={repoName} />
     </AppProvider>
   )
 }

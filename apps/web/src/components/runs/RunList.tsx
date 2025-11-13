@@ -8,17 +8,17 @@ interface RunItem {
 
 interface RunListProps {
   runs: RunItem[]
-  orgSlug: string
+  orgName: string
   repoName: string
 }
 
-export function RunList({ runs, orgSlug, repoName }: RunListProps) {
+export function RunList({ runs, orgName, repoName }: RunListProps) {
   return (
     <ul className="divide-y">
       {runs.map((r) => (
         <li key={r.id} className="py-3 flex items-center justify-between">
           <a
-            href={`/org/${orgSlug}/repo/${repoName}/runs/${r.runId}`}
+            href={`/org/${orgName}/repo/${repoName}/runs/${r.runId}`}
             className="flex-1 text-foreground hover:underline"
           >
             <div className="font-medium">Run #{r.runId}</div>

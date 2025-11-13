@@ -7,7 +7,7 @@ import { protectedProcedure, router } from '../trpc'
 
 export const runRouter = router({
   listByRepo: protectedProcedure
-    .input(z.object({ orgSlug: z.string(), repoName: z.string() }))
+    .input(z.object({ orgName: z.string(), repoName: z.string() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.id
 
@@ -16,7 +16,7 @@ export const runRouter = router({
       }
 
       const repo = await findRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -82,7 +82,7 @@ export const runRouter = router({
   getByRunId: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
         runId: z.string(),
       }),
@@ -101,7 +101,7 @@ export const runRouter = router({
       }
 
       const repo = await findRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -174,7 +174,7 @@ export const runRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
         branchName: z.string().optional(),
       }),
@@ -187,7 +187,7 @@ export const runRouter = router({
       }
 
       await requireRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -195,11 +195,11 @@ export const runRouter = router({
       await tasks.trigger(
         'run-ci',
         {
-          orgSlug: input.orgSlug,
+          orgName: input.orgName,
           repoName: input.repoName,
           branchName: input.branchName,
         },
-        { tags: [`org_${input.orgSlug}`, `repo_${input.repoName}`] },
+        { tags: [`org_${input.orgName}`, `repo_${input.repoName}`] },
       )
 
       return {

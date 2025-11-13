@@ -17,10 +17,10 @@ type RunItem = RunsOutput['runs'][number]
 type StoryItem = StoriesOutput['stories'][number]
 
 export function RepoOverviewLoader({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   const trpc = useTRPCClient()
@@ -35,9 +35,9 @@ export function RepoOverviewLoader({
     setIsLoading(true)
     try {
       const [repoResp, runsResp, storiesResp] = await Promise.all([
-        trpc.repo.getBySlug.query({ orgSlug, repoName }),
-        trpc.run.listByRepo.query({ orgSlug, repoName }),
-        trpc.story.listByRepo.query({ orgSlug, repoName }),
+        trpc.repo.getBySlug.query({ orgName, repoName }),
+        trpc.run.listByRepo.query({ orgName, repoName }),
+        trpc.story.listByRepo.query({ orgName, repoName }),
       ])
 
       if (repoResp.repo) {
@@ -55,7 +55,7 @@ export function RepoOverviewLoader({
     } finally {
       setIsLoading(false)
     }
-  }, [trpc, orgSlug, repoName])
+  }, [trpc, orgName, repoName])
 
   useEffect(() => {
     void loadData()
@@ -75,7 +75,7 @@ export function RepoOverviewLoader({
 
   return (
     <RepoOverview
-      orgSlug={orgSlug}
+      orgName={orgName}
       repoName={repoName}
       defaultBranch={repo?.defaultBranch ?? null}
       runs={runs}

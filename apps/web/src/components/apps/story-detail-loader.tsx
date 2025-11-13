@@ -35,11 +35,11 @@ interface FileTouched {
 }
 
 export function StoryDetailLoader({
-  orgSlug,
+  orgName,
   repoName,
   storyId,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
   storyId: string
 }) {
@@ -59,7 +59,7 @@ export function StoryDetailLoader({
     let isMounted = true
     async function load() {
       try {
-        const resp = await trpc.story.get.query({ orgSlug, repoName, storyId })
+        const resp = await trpc.story.get.query({ orgName, repoName, storyId })
         if (!isMounted) {
           return
         }
@@ -79,13 +79,13 @@ export function StoryDetailLoader({
     return () => {
       isMounted = false
     }
-  }, [trpc, orgSlug, repoName, storyId])
+  }, [trpc, orgName, repoName, storyId])
 
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
-        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+        { label: orgName, href: `/org/${orgName}` },
+        { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
       ]}
     >
       {isLoading ? (
@@ -131,7 +131,7 @@ export function StoryDetailLoader({
                       setError(null)
                       try {
                         const result = await trpc.story.update.mutate({
-                          orgSlug,
+                          orgName,
                           repoName,
                           storyId,
                           name: storyName,
@@ -267,11 +267,11 @@ export function StoryDetailLoader({
                 setError(null)
                 try {
                   await trpc.story.delete.mutate({
-                    orgSlug,
+                    orgName,
                     repoName,
                     storyId,
                   })
-                  window.location.href = `/org/${orgSlug}/repo/${repoName}`
+                  window.location.href = `/org/${orgName}/repo/${repoName}`
                 } catch (e) {
                   setError(
                     e instanceof Error ? e.message : 'Failed to delete story',

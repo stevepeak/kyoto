@@ -28,13 +28,13 @@ export async function getRepoRecord(
       'repos.name as repoName',
       'owners.login as ownerLogin',
     ])
-    .where('owners.login', '=', payload.orgSlug)
+    .where('owners.login', '=', payload.orgName)
     .where('repos.name', '=', payload.repoName)
     .executeTakeFirst()
 
   if (!repoRecord) {
     throw new Error(
-      `Repository ${payload.orgSlug}/${payload.repoName} not found in database`,
+      `Repository ${payload.orgName}/${payload.repoName} not found in database`,
     )
   }
 

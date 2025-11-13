@@ -2,12 +2,27 @@ import type { setupDb } from '@app/db'
 import type { AgentVersion } from '@app/agents'
 
 export interface RunCiPayload {
-  orgSlug: string
+  orgName: string
   repoName: string
   branchName?: string | null
   prNumber?: string | null
   agentVersion?: AgentVersion
 }
+
+/*
+TODO change to this soon.
+TODO add allow for commit sha testing 
+export interface RunCiPayload {
+  repo: {
+    id: string
+    slug: string
+  }
+  git: {
+    branch?: string
+    sha?: string
+  }
+}
+*/
 
 export type StoryRow = {
   id: string

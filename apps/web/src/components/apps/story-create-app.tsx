@@ -3,15 +3,15 @@ import { AppProvider } from '@/components/providers/app-provider'
 import { StoryCreateLoader } from './story-create-loader'
 
 export function StoryCreateApp({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   return (
     <AppProvider>
-      <StoryCreateLoader orgSlug={orgSlug} repoName={repoName} />
+      <StoryCreateLoader orgName={orgName} repoName={repoName} />
     </AppProvider>
   )
 }

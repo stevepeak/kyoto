@@ -101,7 +101,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     }
     setLoadingRepos(true)
     try {
-      const data = await trpc.repo.listByOrg.query({ orgSlug: org.slug })
+      const data = await trpc.repo.listByOrg.query({ orgName: org.slug })
       const reposList = data.repos as Array<{
         id: string
         name: string
@@ -171,7 +171,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     setEnabling(true)
     try {
       await trpc.repo.enableRepo.mutate({
-        orgSlug: org.slug,
+        orgName: org.slug,
         repoName: selectedRepoName,
       })
       window.location.reload()

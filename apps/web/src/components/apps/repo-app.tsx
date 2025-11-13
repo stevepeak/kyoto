@@ -3,15 +3,15 @@ import { AppProvider } from '@/components/providers/app-provider'
 import { RepoOverviewLoader } from './repo-overview-loader'
 
 export function RepoApp({
-  orgSlug,
+  orgName,
   repoName,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
 }) {
   return (
     <AppProvider>
-      <RepoOverviewLoader orgSlug={orgSlug} repoName={repoName} />
+      <RepoOverviewLoader orgName={orgName} repoName={repoName} />
     </AppProvider>
   )
 }

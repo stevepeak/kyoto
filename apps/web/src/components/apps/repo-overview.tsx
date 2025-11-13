@@ -16,7 +16,7 @@ type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]
 type StoryItem = RouterOutputs['story']['listByRepo']['stories'][number]
 
 interface Props {
-  orgSlug: string
+  orgName: string
   repoName: string
   defaultBranch: string | null
   runs: RunItem[]
@@ -25,7 +25,7 @@ interface Props {
 }
 
 export function RepoOverview({
-  orgSlug,
+  orgName,
   repoName,
   defaultBranch,
   runs,
@@ -44,7 +44,7 @@ export function RepoOverview({
     setCreateError(null)
     try {
       await trpc.run.create.mutate({
-        orgSlug,
+        orgName,
         repoName,
       })
       // Refresh runs list after successful creation
@@ -63,15 +63,15 @@ export function RepoOverview({
   return (
     <AppLayout
       breadcrumbs={[
-        { label: orgSlug, href: `/org/${orgSlug}` },
-        { label: repoName, href: `/org/${orgSlug}/repo/${repoName}` },
+        { label: orgName, href: `/org/${orgName}` },
+        { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
       ]}
     >
       <div className="p-6 flex flex-col h-full overflow-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <a
-              href={`https://github.com/${orgSlug}/${repoName}`}
+              href={`https://github.com/${orgName}/${repoName}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:opacity-70 transition-opacity"
@@ -107,7 +107,7 @@ export function RepoOverview({
                     {stories.length} total
                   </span>
                   <Button asChild variant="outline" size="sm">
-                    <a href={`/org/${orgSlug}/repo/${repoName}/stories/new`}>
+                    <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
                       Add new story
                     </a>
                   </Button>
@@ -116,7 +116,7 @@ export function RepoOverview({
               <div className="max-h-[600px] overflow-auto">
                 <StoryList
                   stories={stories}
-                  orgSlug={orgSlug}
+                  orgName={orgName}
                   repoName={repoName}
                 />
               </div>
@@ -151,7 +151,7 @@ export function RepoOverview({
               </div>
               <GitHubStyleRunList
                 runs={runs}
-                orgSlug={orgSlug}
+                orgName={orgName}
                 repoName={repoName}
               />
             </div>

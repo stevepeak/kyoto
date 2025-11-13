@@ -8,13 +8,13 @@ interface WithUserId {
 
 export async function findOwnerForUser(
   db: Kysely<DB>,
-  params: WithUserId & { orgSlug: string },
+  params: WithUserId & { orgName: string },
 ): Promise<Selectable<Owner> | null> {
   const owner = await db
     .selectFrom('owners')
     .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
     .selectAll('owners')
-    .where('owners.login', '=', params.orgSlug)
+    .where('owners.login', '=', params.orgName)
     .where('ownerMemberships.userId', '=', params.userId)
     .executeTakeFirst()
 
@@ -23,7 +23,7 @@ export async function findOwnerForUser(
 
 export async function findRepoForUser(
   db: Kysely<DB>,
-  params: WithUserId & { orgSlug: string; repoName: string },
+  params: WithUserId & { orgName: string; repoName: string },
 ): Promise<Selectable<Repo> | null> {
   const repo = await db
     .selectFrom('repos')
@@ -35,7 +35,7 @@ export async function findRepoForUser(
         .onRef('ownerMemberships.userId', '=', 'repoMemberships.userId'),
     )
     .selectAll('repos')
-    .where('owners.login', '=', params.orgSlug)
+    .where('owners.login', '=', params.orgName)
     .where('repos.name', '=', params.repoName)
     .where('repoMemberships.userId', '=', params.userId)
     .executeTakeFirst()
@@ -45,7 +45,7 @@ export async function findRepoForUser(
 
 export async function requireRepoForUser(
   db: Kysely<DB>,
-  params: WithUserId & { orgSlug: string; repoName: string },
+  params: WithUserId & { orgName: string; repoName: string },
 ): Promise<Selectable<Repo>> {
   const repo = await findRepoForUser(db, params)
 

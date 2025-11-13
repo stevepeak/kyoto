@@ -58,7 +58,7 @@ export const storyRouter = router({
   listByRepo: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
       }),
     )
@@ -70,7 +70,7 @@ export const storyRouter = router({
       }
 
       const repo = await findRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -137,7 +137,7 @@ export const storyRouter = router({
   get: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
         storyId: z.string(),
       }),
@@ -150,7 +150,7 @@ export const storyRouter = router({
       }
 
       const repo = await findRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -187,7 +187,7 @@ export const storyRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
         name: z.string().min(1),
         story: z.string().min(1),
@@ -202,7 +202,7 @@ export const storyRouter = router({
       }
 
       const repo = await requireRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -227,7 +227,7 @@ export const storyRouter = router({
         },
         repo: {
           id: repo.id,
-          slug: `${input.orgSlug}/${input.repoName}`,
+          slug: `${input.orgName}/${input.repoName}`,
           branchName: repo.defaultBranch ?? undefined,
         },
       })
@@ -246,7 +246,7 @@ export const storyRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
         storyId: z.string(),
         name: z.string().min(1).optional(),
@@ -261,7 +261,7 @@ export const storyRouter = router({
       }
 
       const repo = await requireRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })
@@ -307,7 +307,7 @@ export const storyRouter = router({
           },
           repo: {
             id: repo.id,
-            slug: `${input.orgSlug}/${input.repoName}`,
+            slug: `${input.orgName}/${input.repoName}`,
             branchName: repo.defaultBranch ?? undefined,
           },
         })
@@ -327,7 +327,7 @@ export const storyRouter = router({
   delete: protectedProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgName: z.string(),
         repoName: z.string(),
         storyId: z.string(),
       }),
@@ -340,7 +340,7 @@ export const storyRouter = router({
       }
 
       const repo = await requireRepoForUser(ctx.db, {
-        orgSlug: input.orgSlug,
+        orgName: input.orgName,
         repoName: input.repoName,
         userId,
       })

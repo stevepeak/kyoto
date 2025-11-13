@@ -22,7 +22,7 @@ interface RepoItem {
   lastRunAt: Date | null
 }
 
-export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
+export function OrgRepoBySlugLoader({ orgName }: { orgName: string }) {
   const trpc = useTRPCClient()
   const [isLoading, setIsLoading] = useState(true)
   const [org, setOrg] = useState<OrgData | null>(null)
@@ -34,7 +34,7 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
     async function load() {
       try {
         // When using slug, we can derive org minimal data from slug
-        const reposResp = await trpc.repo.listByOrg.query({ orgSlug })
+        const reposResp = await trpc.repo.listByOrg.query({ orgName })
         if (!isMounted) {
           return
         }
@@ -45,7 +45,7 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
             name: reposResp.owner.name,
           })
         } else {
-          setOrg({ id: orgSlug, slug: orgSlug, name: orgSlug })
+          setOrg({ id: orgName, slug: orgName, name: orgName })
         }
         setRepos(
           (
@@ -87,7 +87,7 @@ export function OrgRepoBySlugLoader({ orgSlug }: { orgSlug: string }) {
     return () => {
       isMounted = false
     }
-  }, [trpc, orgSlug])
+  }, [trpc, orgName])
 
   return (
     <AppProvider>

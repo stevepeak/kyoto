@@ -8,5 +8,5 @@ const { org, repo } = Astro.params
 ---
 
 <Layout title={`${org}/${repo}`}>
-  <RepoApp orgSlug={org!} repoName={repo!} client:load />
+  <RepoApp orgName={org!} repoName={repo!} client:load />
 </Layout>

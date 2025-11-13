@@ -3,17 +3,17 @@ import { AppProvider } from '@/components/providers/app-provider'
 import { RunDetailLoader } from './run-detail-loader'
 
 export function RunApp({
-  orgSlug,
+  orgName,
   repoName,
   runId,
 }: {
-  orgSlug: string
+  orgName: string
   repoName: string
   runId: string
 }) {
   return (
     <AppProvider>
-      <RunDetailLoader orgSlug={orgSlug} repoName={repoName} runId={runId} />
+      <RunDetailLoader orgName={orgName} repoName={repoName} runId={runId} />
     </AppProvider>
   )
 }

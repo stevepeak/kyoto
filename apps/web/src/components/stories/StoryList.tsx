@@ -15,11 +15,11 @@ interface StoryItem {
 
 interface StoryListProps {
   stories: StoryItem[]
-  orgSlug: string
+  orgName: string
   repoName: string
 }
 
-export function StoryList({ stories, orgSlug, repoName }: StoryListProps) {
+export function StoryList({ stories, orgName, repoName }: StoryListProps) {
   if (stories.length === 0) {
     return (
       <div className="px-4 py-6 text-sm text-muted-foreground">
@@ -36,7 +36,7 @@ export function StoryList({ stories, orgSlug, repoName }: StoryListProps) {
           <StoryCard
             id={story.id}
             name={story.name}
-            href={`/org/${orgSlug}/repo/${repoName}/stories/${story.id}`}
+            href={`/org/${orgName}/repo/${repoName}/stories/${story.id}`}
             groups={story.groups}
             latestStatus={story.latestStatus}
           />
