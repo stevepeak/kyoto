@@ -14,7 +14,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { GherkinViewer } from '@/components/gherkin/GherkinViewer'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
 import { StoryStatusCheck } from './StoryStatusCheck'
 
 interface StoryAnalysisEvidence {
@@ -838,7 +838,11 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
 
                         {scenarioText ? (
                           <div className="space-y-2">
-                            <GherkinViewer text={scenarioText} />
+                            <TiptapEditor
+                              value={scenarioText}
+                              onChange={() => {}}
+                              readOnly={true}
+                            />
                           </div>
                         ) : null}
 
