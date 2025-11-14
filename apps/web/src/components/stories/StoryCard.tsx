@@ -56,6 +56,12 @@ export function StoryCard({
 }: StoryCardProps) {
   const statusKey: StoryStatusKey = latestStatus ?? 'not_run'
   const statusDisplay = STATUS_META[statusKey]
+  
+  // Check if story is being processed (title is missing or placeholder)
+  const isProcessing = !name || name.trim() === '' || name.trim() === 'foobar'
+  const displayName = isProcessing
+    ? 'Newly crafted story is being processed...'
+    : name
 
   return (
     <a
@@ -63,7 +69,16 @@ export function StoryCard({
       className="block px-4 py-3 text-sm transition-colors hover:bg-muted"
     >
       <div className="flex flex-col gap-2">
-        <span className="font-medium text-foreground line-clamp-1">{name}</span>
+        <span
+          className={cn(
+            'font-medium line-clamp-1',
+            isProcessing
+              ? 'text-muted-foreground italic'
+              : 'text-foreground',
+          )}
+        >
+          {displayName}
+        </span>
         <div className="flex items-center gap-2 text-xs">
           <span
             className={cn(

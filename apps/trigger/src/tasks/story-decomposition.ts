@@ -49,7 +49,7 @@ The title should be clear, specific, and capture the essence of what the story i
         // Save the generated title immediately
         await db
           .updateTable('stories')
-          .set({ name: generatedTitle })
+          .set({ name: generatedTitle.replace(/^["']|["']$/g, '') })
           .where('id', '=', story.id)
           .execute()
 
