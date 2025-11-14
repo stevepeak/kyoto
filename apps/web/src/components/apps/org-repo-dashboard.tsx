@@ -416,7 +416,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                   <p>
                     Need to connect another repo?{' '}
                     <a
-                      href="/setup"
+                      href={`/setup?owner=${org?.slug}`}
                       className="font-medium text-primary underline"
                       target="_blank"
                       rel="noreferrer"
