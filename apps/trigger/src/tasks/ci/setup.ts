@@ -49,6 +49,7 @@ export async function getStories(
     .selectFrom('stories')
     .select(['id', 'name', 'story'])
     .where('repoId', '=', repoId)
+    .where('archived', '=', false)
 
   return (await storiesQuery.execute()) as StoryRow[]
 }

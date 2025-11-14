@@ -352,6 +352,10 @@ export interface Session {
 
 export interface Story {
   /**
+   * Whether the story has been archived (soft delete)
+   */
+  archived: Generated<boolean>;
+  /**
    * The time when the story was created
    */
   createdAt: Generated<Timestamp | null>;

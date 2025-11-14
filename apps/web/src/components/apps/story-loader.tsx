@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Trash2, FileText, Sparkles } from 'lucide-react'
+import { Archive, FileText, Sparkles } from 'lucide-react'
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
@@ -43,8 +43,8 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
   const [storyContent, setStoryContent] = useState('')
   const [originalStoryContent, setOriginalStoryContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
   const [isDecomposing, setIsDecomposing] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [createMore, setCreateMore] = useState(false)
@@ -247,9 +247,9 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                           {!isCreateMode && (
                             <Button
                               variant="ghost"
-                              onClick={() => setShowDeleteDialog(true)}
+                              onClick={() => setShowArchiveDialog(true)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Archive className="h-4 w-4" />
                             </Button>
                           )}
                           {isCreateMode && (
@@ -505,30 +505,30 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
           </div>
         </DialogContent>
       </Dialog>
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Story</DialogTitle>
+            <DialogTitle>Archive Story</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{story?.name}&rdquo;? This
-              action cannot be undone.
+              Are you sure you want to archive &ldquo;{story?.name}&rdquo;? The
+              story will be hidden from the list but can be restored later.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={isDeleting}
+              onClick={() => setShowArchiveDialog(false)}
+              disabled={isArchiving}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={async () => {
-                setIsDeleting(true)
+                setIsArchiving(true)
                 setError(null)
                 try {
-                  await trpc.story.delete.mutate({
+                  await trpc.story.archive.mutate({
                     orgName,
                     repoName,
                     storyId: storyId!,
@@ -536,15 +536,15 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                   window.location.href = `/org/${orgName}/repo/${repoName}`
                 } catch (e) {
                   setError(
-                    e instanceof Error ? e.message : 'Failed to delete story',
+                    e instanceof Error ? e.message : 'Failed to archive story',
                   )
-                  setIsDeleting(false)
-                  setShowDeleteDialog(false)
+                  setIsArchiving(false)
+                  setShowArchiveDialog(false)
                 }
               }}
-              disabled={isDeleting}
+              disabled={isArchiving}
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isArchiving ? 'Archiving...' : 'Archive'}
             </Button>
           </DialogFooter>
         </DialogContent>

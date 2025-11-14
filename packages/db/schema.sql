@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ZJ99JE4Gt8Lf60XlRHA3c23zz0mxaMg39mDUrDfpoQTFFL3M1gYi7gRth2NvY2E
+\restrict zP9fy8EBn5LD7CGYuWmgKDKorYbX1Q2axsHIXwnhElt3hkUFJlf5JrZOsQLRAif
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -885,7 +885,8 @@ CREATE TABLE public.stories (
     name text NOT NULL,
     story text NOT NULL,
     files jsonb DEFAULT '[]'::jsonb NOT NULL,
-    decomposition jsonb
+    decomposition jsonb,
+    archived boolean DEFAULT false NOT NULL
 );
 
 
@@ -943,6 +944,13 @@ COMMENT ON COLUMN public.stories.files IS 'Array of file references in format ["
 --
 
 COMMENT ON COLUMN public.stories.decomposition IS 'Structured decomposition result containing steps (given preconditions and requirements with assertions)';
+
+
+--
+-- Name: COLUMN stories.archived; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.archived IS 'Whether the story has been archived (soft delete)';
 
 
 --
@@ -1446,6 +1454,13 @@ CREATE INDEX runs_status_idx ON public.runs USING btree (status);
 
 
 --
+-- Name: stories_repo_id_archived_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX stories_repo_id_archived_idx ON public.stories USING btree (repo_id, archived) WHERE (archived = false);
+
+
+--
 -- Name: stories_repo_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1678,5 +1693,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ZJ99JE4Gt8Lf60XlRHA3c23zz0mxaMg39mDUrDfpoQTFFL3M1gYi7gRth2NvY2E
+\unrestrict zP9fy8EBn5LD7CGYuWmgKDKorYbX1Q2axsHIXwnhElt3hkUFJlf5JrZOsQLRAif
 

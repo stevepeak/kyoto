@@ -68,6 +68,7 @@ export const repoRouter = router({
               .select(['repoId'])
               .select((eb) => eb.fn.count('stories.id').as('count'))
               .where('repoId', 'in', repoIds)
+              .where('archived', '=', false)
               .groupBy('repoId')
               .execute()
 

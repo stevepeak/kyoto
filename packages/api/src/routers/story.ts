@@ -83,6 +83,7 @@ export const storyRouter = router({
         .selectFrom('stories')
         .selectAll()
         .where('repoId', '=', repo.id)
+        .where('archived', '=', false)
         .orderBy('createdAt', 'desc')
         .execute()
 
@@ -303,7 +304,7 @@ export const storyRouter = router({
       }
     }),
 
-  delete: protectedProcedure
+  archive: protectedProcedure
     .input(
       z.object({
         orgName: z.string(),
@@ -339,9 +340,10 @@ export const storyRouter = router({
         })
       }
 
-      // Delete story
+      // Archive story (soft delete)
       await ctx.db
-        .deleteFrom('stories')
+        .updateTable('stories')
+        .set({ archived: true })
         .where('id', '=', input.storyId)
         .execute()
 
