@@ -180,7 +180,11 @@ export const storyRouter = router({
       z.object({
         orgName: z.string(),
         repoName: z.string(),
-        name: z.string().min(1),
+        name: z
+          .string()
+          .optional()
+          .default('')
+          .describe('Generated if not provided.'),
         story: z.string().min(1),
         files: z.array(z.string()).default([]),
       }),
@@ -215,6 +219,7 @@ export const storyRouter = router({
         story: {
           id: newStory.id,
           text: newStory.story,
+          title: input.name?.trim() || '',
         },
         repo: {
           id: repo.id,
@@ -290,6 +295,7 @@ export const storyRouter = router({
           story: {
             id: updatedStory.id,
             text: updatedStory.story,
+            title: input.name || updatedStory.name || '',
           },
           repo: {
             id: repo.id,
@@ -429,6 +435,7 @@ export const storyRouter = router({
         story: {
           id: storyWithRepo.story.id,
           text: storyWithRepo.story.story,
+          title: storyWithRepo.story.name || '',
         },
         repo: {
           id: storyWithRepo.repo.id,

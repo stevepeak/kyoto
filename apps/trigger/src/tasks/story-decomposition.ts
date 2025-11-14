@@ -1,7 +1,7 @@
 import { task, logger } from '@trigger.dev/sdk'
 
 import { setupDb } from '@app/db'
-import { agents } from '@app/agents'
+import { agents, generateText } from '@app/agents'
 import { parseEnv } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
@@ -12,6 +12,8 @@ interface DecompositionPayload {
   story: {
     id?: string
     text: string
+    /** Story title - empty string if needs to be generated */
+    title?: string
   }
   /** Identifier for the repository in {owner}/{repo} format */
   repo: {
@@ -33,6 +35,30 @@ export const storyDecompositionTask = task({
     const sandbox = await createDaytonaSandbox({ repoId: repo.id })
 
     try {
+      // Generate title if empty and save it immediately
+      if (story.id && (!story.title || story.title.trim() === '')) {
+        const generatedTitle = await generateText({
+          prompt: `Generate a concise, descriptive title (maximum 60 characters) for this user story:
+
+${story.text}
+
+The title should be clear, specific, and capture the essence of what the story is about. Return only the title, no additional text.`,
+          modelId: 'gpt-4o-mini',
+        })
+
+        // Save the generated title immediately
+        await db
+          .updateTable('stories')
+          .set({ name: generatedTitle })
+          .where('id', '=', story.id)
+          .execute()
+
+        logger.info('Generated and saved story title', {
+          storyId: story.id,
+          title: generatedTitle,
+        })
+      }
+
       // Run the story decomposition agent
       const decompositionResult = await agents.decomposition.run({
         story,
