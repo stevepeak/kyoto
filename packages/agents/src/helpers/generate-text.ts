@@ -18,12 +18,11 @@ export async function generateText({
 }: GenerateTextOptions): Promise<string> {
   const { OPENAI_API_KEY } = parseEnv()
   const openAiProvider = createOpenAI({ apiKey: OPENAI_API_KEY })
-  
+
   const { text } = await aiGenerateText({
     model: openAiProvider(modelId),
     prompt,
   })
-  
+
   return text
 }
-

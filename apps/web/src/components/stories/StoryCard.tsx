@@ -56,7 +56,7 @@ export function StoryCard({
 }: StoryCardProps) {
   const statusKey: StoryStatusKey = latestStatus ?? 'not_run'
   const statusDisplay = STATUS_META[statusKey]
-  
+
   // Check if story is being processed (title is missing or placeholder)
   const isProcessing = !name || name.trim() === '' || name.trim() === 'foobar'
   const displayName = isProcessing
@@ -72,9 +72,7 @@ export function StoryCard({
         <span
           className={cn(
             'font-medium line-clamp-1',
-            isProcessing
-              ? 'text-muted-foreground italic'
-              : 'text-foreground',
+            isProcessing ? 'text-muted-foreground italic' : 'text-foreground',
           )}
         >
           {displayName}

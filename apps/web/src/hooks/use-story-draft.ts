@@ -5,10 +5,7 @@ interface DraftData {
   storyContent?: string
 }
 
-export function useStoryDraft(
-  storageKey: string,
-  isCreateMode: boolean,
-) {
+export function useStoryDraft(storageKey: string, isCreateMode: boolean) {
   // Load draft from localStorage using lazy initialization (create mode only)
   const [storyName, setStoryName] = useState(() => {
     if (!isCreateMode) {
@@ -99,4 +96,3 @@ export function useStoryDraft(
     clearDraft,
   }
 }
-

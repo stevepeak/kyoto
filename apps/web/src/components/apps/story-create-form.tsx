@@ -69,11 +69,7 @@ export function StoryCreateForm({
             </label>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={onTemplates}
-              disabled={isSaving}
-            >
+            <Button variant="ghost" onClick={onTemplates} disabled={isSaving}>
               <FileText className="h-4 w-4 mr-2" />
               Templates
             </Button>
@@ -94,4 +90,3 @@ export function StoryCreateForm({
     </div>
   )
 }
-

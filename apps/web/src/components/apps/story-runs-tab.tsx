@@ -21,4 +21,3 @@ export function StoryRunsTab({ isTesting, onTest }: StoryRunsTabProps) {
     </div>
   )
 }
-
