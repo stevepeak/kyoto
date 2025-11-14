@@ -109,7 +109,7 @@ export const pricingTiers: PricingTier[] = [
     name: 'Pebble',
     price: '$0',
     description: 'Everything you need to launch automated QA in minutes.',
-    cta: 'Create free workspace',
+    cta: 'Get started for free',
     features: [
       '1 Repository',
       '10 Stories',

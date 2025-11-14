@@ -1,6 +1,6 @@
-import { Github } from 'lucide-react'
+'use client'
 
-import { Button } from '@/components/ui/button'
+import { GitHubSignInButton } from '@/components/github-sign-in-button'
 
 export function LandingNavbar() {
   return (
@@ -36,12 +36,7 @@ export function LandingNavbar() {
           </a>
         </nav>
         <div className="w-full sm:w-auto">
-          <Button asChild size="sm" className="w-full sm:w-auto">
-            <a href="/auth" className="gap-2">
-              <Github className="size-4" aria-hidden="true" />
-              Sign in with GitHub
-            </a>
-          </Button>
+          <GitHubSignInButton size="sm" className="w-full sm:w-auto gap-2" />
         </div>
       </div>
     </header>

@@ -1,5 +1,8 @@
+'use client'
+
 import { ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
+import { GitHubSignInButton } from '@/components/github-sign-in-button'
 
 export function LandingHero() {
   return (
@@ -21,12 +24,10 @@ export function LandingHero() {
             prevent regressions and ship with confidence.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" asChild>
-              <a href="/auth" className="gap-2">
-                Get started
-                <ArrowRight className="size-4" />
-              </a>
-            </Button>
+            <GitHubSignInButton size="lg" className="gap-2">
+              Get started
+              <ArrowRight className="size-4" />
+            </GitHubSignInButton>
             {/* <Button
               size="lg"
               variant="outline"
