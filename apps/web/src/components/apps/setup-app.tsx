@@ -5,6 +5,7 @@ import { useTRPCClient } from '@/client/trpc'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { EmptyState } from '@/components/common/EmptyState'
 import {
   Dialog,
   DialogContent,
@@ -203,10 +204,10 @@ export function SetupApp() {
                       </Button>
                     </div>
                     {enabledRepos.length === 0 ? (
-                      <div className="text-sm text-muted-foreground py-4">
-                        No repositories enabled yet. Click &quot;Add new
-                        repo&quot; to get started.
-                      </div>
+                      <EmptyState
+                        title="No repositories enabled yet"
+                        description='Click "Connect Repository" to get started.'
+                      />
                     ) : (
                       <div className="border rounded-md">
                         <ul className="divide-y">

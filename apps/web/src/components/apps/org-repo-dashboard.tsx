@@ -302,27 +302,22 @@ export function OrgRepoDashboard({ org, repos }: Props) {
         <div className="flex-1 overflow-auto px-6 py-6">
           {repoCount === 0 ? (
             <EmptyState
-              title="No repositories activated yet"
-              description="Enable your first repository to start tracking stories, CI runs, and more."
+              kanji="せつぞく"
+              kanjiTitle="Setsuzoku - to connect."
+              title="Connect your first repository"
+              description="Enable your first repository to start tracking stories, CI runs, and more. Connect a repository to begin monitoring your codebase and ensuring it aligns with your requirements."
               action={
-                <Button onClick={handleOpenDialog} className="gap-2">
+                <Button onClick={handleOpenDialog} size="lg" className="gap-2">
                   <Plus className="h-5 w-5" />
                   <span>Connect Repository</span>
                 </Button>
               }
             />
           ) : displayedRepos.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="max-w-md rounded-lg border border-dashed border-border p-8 text-center">
-                <h3 className="text-sm font-medium text-foreground">
-                  No repositories match your search
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Try adjusting your filters or clear the search to view all
-                  repositories.
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              title="No repositories match your search"
+              description="Try adjusting your filters or clear the search to view all repositories."
+            />
           ) : (
             <ul className="overflow-hidden rounded-lg border border-border bg-card">
               {displayedRepos.map((repo) => {
