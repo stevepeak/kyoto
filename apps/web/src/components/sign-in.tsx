@@ -1,15 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 
-import { signIn } from '@/client/auth-client'
+import { signIn, useSession } from '@/client/auth-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 export function SignIn() {
   const [loading, setLoading] = useState(false)
+  const session = useSession()
+
+  // Redirect to /app if user is already logged in
+  useEffect(() => {
+    if (session.data?.user && !session.isPending) {
+      window.location.href = '/app'
+    }
+  }, [session.data, session.isPending])
 
   const handleGitHubSignIn = async () => {
     setLoading(true)
