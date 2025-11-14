@@ -64,7 +64,7 @@ export function StoryList({ stories, orgName, repoName }: StoryListProps) {
               variant="outline"
               size="lg"
               onClick={() => {
-                // TODO: Implement story generation
+                window.alert('Coming soon')
               }}
               className="gap-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 hover:from-primary/20 hover:via-primary/10 hover:to-primary/20 hover:border-primary/50 transition-all shadow-sm hover:shadow-md backdrop-blur-sm relative overflow-hidden group"
             >
