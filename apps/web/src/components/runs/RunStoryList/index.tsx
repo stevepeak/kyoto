@@ -25,4 +25,3 @@ export function RunStoryList({
     </ul>
   )
 }
-

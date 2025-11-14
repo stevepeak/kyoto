@@ -59,4 +59,3 @@ export function StoryStatusCheck({ status, className }: StoryStatusCheckProps) {
       return null
   }
 }
-

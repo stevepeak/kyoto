@@ -43,7 +43,10 @@ export function SignIn() {
                 className="gap-2"
               >
                 {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
                 ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -63,11 +66,17 @@ export function SignIn() {
             </div>
             <div className="text-balance text-center text-xs text-muted-foreground">
               By clicking continue, you agree to our{' '}
-              <a href="#" className="underline underline-offset-4 hover:text-primary">
+              <a
+                href="#"
+                className="underline underline-offset-4 hover:text-primary"
+              >
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href="#" className="underline underline-offset-4 hover:text-primary">
+              <a
+                href="#"
+                className="underline underline-offset-4 hover:text-primary"
+              >
                 Privacy Policy
               </a>
               .

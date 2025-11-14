@@ -53,9 +53,7 @@ export function RunStoryListItem({
               <div className="text-xs text-muted-foreground">
                 {completedRelative
                   ? `${completedRelative}${
-                      durationDisplay !== '—'
-                        ? ` · ${durationDisplay}`
-                        : ''
+                      durationDisplay !== '—' ? ` · ${durationDisplay}` : ''
                     }`
                   : durationDisplay !== '—'
                     ? `Duration ${durationDisplay}`
@@ -68,4 +66,3 @@ export function RunStoryListItem({
     </li>
   )
 }
-

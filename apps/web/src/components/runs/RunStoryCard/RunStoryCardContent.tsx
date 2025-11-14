@@ -29,7 +29,7 @@ function parseEvidenceToGitHubLink(
 ): { text: string; url: string | null } {
   // Match pattern: filepath:startLine-endLine
   const match = evidence.match(/^(.+):(\d+)-(\d+)$/)
-  
+
   if (!match) {
     return { text: evidence, url: null }
   }
@@ -41,7 +41,7 @@ function parseEvidenceToGitHubLink(
   }
 
   const url = `https://github.com/${orgName}/${repoName}/blob/${commitSha}/${filePath}#L${startLine}-L${endLine}`
-  
+
   return { text: evidence, url }
 }
 
@@ -328,4 +328,3 @@ export function RunStoryCardContent({
 
   return <div className="w-full space-y-4">{conclusionContent}</div>
 }
-
