@@ -108,7 +108,7 @@ export function RepoOverview({
                   </span>
                   <Button asChild variant="outline" size="sm">
                     <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
-                      Add new story
+                      Craft new story
                     </a>
                   </Button>
                 </div>

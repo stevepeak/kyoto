@@ -1,6 +1,6 @@
 ---
 import Layout from '@/layouts/layout.astro'
-import { StoryApp } from '@/components/apps/story-app'
+import { StoryPage } from '@/components/apps/story-page'
 
 export const prerender = false
 
@@ -8,5 +8,5 @@ const { org, repo, storyId } = Astro.params
 ---
 
 <Layout title={`${org}/${repo}#${storyId}`}>
-  <StoryApp orgName={org!} repoName={repo!} storyId={storyId!} client:load />
+  <StoryPage orgName={org!} repoName={repo!} storyId={storyId!} client:load />
 </Layout>

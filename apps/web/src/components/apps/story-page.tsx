@@ -1,8 +1,8 @@
 import { AppProvider } from '@/components/providers/app-provider'
 
-import { StoryDetailLoader } from './story-detail-loader'
+import { StoryLoader } from './story-loader'
 
-export function StoryApp({
+export function StoryPage({
   orgName,
   repoName,
   storyId,
@@ -13,11 +13,8 @@ export function StoryApp({
 }) {
   return (
     <AppProvider>
-      <StoryDetailLoader
-        orgName={orgName}
-        repoName={repoName}
-        storyId={storyId}
-      />
+      <StoryLoader orgName={orgName} repoName={repoName} storyId={storyId} />
     </AppProvider>
   )
 }
+
