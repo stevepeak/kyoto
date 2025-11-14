@@ -148,7 +148,10 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
               </aside>
               <section className="flex-1 min-w-0">
                 {selectedStory ? (
-                  <RunStoryDetails story={selectedStory} />
+                  <RunStoryDetails
+                    story={selectedStory}
+                    testResult={selectedStory.testResult}
+                  />
                 ) : (
                   <div className="rounded-md border border-dashed bg-muted/40 p-6 text-sm text-muted-foreground">
                     Select a story to inspect the analysis details.

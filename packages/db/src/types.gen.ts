@@ -285,6 +285,10 @@ export interface Run {
    */
   createdAt: Generated<Timestamp | null>;
   /**
+   * Git commit author information stored as JSON: {id, login, name}
+   */
+  gitAuthor: Json | null;
+  /**
    * Unique identifier for each run
    */
   id: Generated<string>;

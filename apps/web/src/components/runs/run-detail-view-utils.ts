@@ -113,7 +113,9 @@ export function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-export function formatDurationMs(durationMs: number | null | undefined): string {
+export function formatDurationMs(
+  durationMs: number | null | undefined,
+): string {
   if (!durationMs || durationMs < 1) {
     return '—'
   }
@@ -130,14 +132,10 @@ export function formatDurationMs(durationMs: number | null | undefined): string 
   }
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
-  return remainingMinutes > 0
-    ? `${hours}h ${remainingMinutes}m`
-    : `${hours}h`
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
 }
 
-export function getConclusionStyles(
-  conclusion: StoryAnalysis['conclusion'],
-): {
+export function getConclusionStyles(conclusion: StoryAnalysis['conclusion']): {
   container: string
   badge: string
   label: string
@@ -242,23 +240,22 @@ export function formatEvidenceSummary(
 }
 
 export function getDisplayStatus(story: RunStory): StoryStatusPillStatus {
-  return story.result?.status ?? story.status
+  return story.testResult?.status ?? story.status
 }
 
 export function getStoryTimestamps(story: RunStory) {
-  const result = story.result
+  const testResult = story.testResult
   return {
-    startedAt: result?.startedAt ?? story.startedAt,
-    completedAt: result?.completedAt ?? story.completedAt,
+    startedAt: testResult?.startedAt ?? story.startedAt,
+    completedAt: testResult?.completedAt ?? story.completedAt,
     durationMs:
-      result?.durationMs ??
-      (result?.startedAt && result?.completedAt
-        ? new Date(result.completedAt).getTime() -
-          new Date(result.startedAt).getTime()
+      testResult?.durationMs ??
+      (testResult?.startedAt && testResult?.completedAt
+        ? new Date(testResult.completedAt).getTime() -
+          new Date(testResult.startedAt).getTime()
         : story.startedAt && story.completedAt
           ? new Date(story.completedAt).getTime() -
             new Date(story.startedAt).getTime()
           : null),
   }
 }
-

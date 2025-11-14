@@ -15,12 +15,12 @@ export interface StoryAnalysis {
   evidence: StoryAnalysisEvidence[]
 }
 
-export interface StoryResult {
+export interface StoryTestResult {
   id: string
   storyId: string
   status: 'pass' | 'fail' | 'running' | 'error'
   analysisVersion: number
-  analysis: StoryAnalysis | null
+  analysis: any // ! Cross domain issue here where the type is in @app/agents
   startedAt: string | null
   completedAt: string | null
   durationMs: number | null
@@ -35,7 +35,6 @@ export interface RunStory {
   summary: string | null
   startedAt: string | null
   completedAt: string | null
-  result: StoryResult | null
   story: {
     id: string
     name: string
@@ -46,6 +45,7 @@ export interface RunStory {
     updatedAt: string
     decomposition: unknown
   } | null
+  testResult: StoryTestResult | null
 }
 
 export interface Run {
@@ -76,11 +76,12 @@ export interface StatusDisplay {
   shouldSpin: boolean
 }
 
-export type StoryStatusPillStatus = RunStory['status'] | StoryResult['status']
+export type StoryStatusPillStatus =
+  | RunStory['status']
+  | StoryTestResult['status']
 
 export interface EvidenceConclusionDisplay {
   Icon: LucideIcon
   iconClassName: string
   label: string
 }
-

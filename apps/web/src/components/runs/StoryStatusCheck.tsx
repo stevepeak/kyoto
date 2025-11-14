@@ -16,7 +16,7 @@ interface StoryStatusCheckProps {
 
 export function StoryStatusCheck({ status, className }: StoryStatusCheckProps) {
   const iconProps = {
-    className: cn('size-4', className),
+    className: cn('size-10', className),
   }
 
   switch (status) {

@@ -43,7 +43,7 @@ export const runCiTask = task({
 
     const { repo, octokit } = await getOctokitClient(repoRecord.repoId)
 
-    const { commitSha, commitMessage } = await fetchBranchDetails(
+    const { commitSha, commitMessage, gitAuthor } = await fetchBranchDetails(
       octokit,
       repoRecord,
       branchName,
@@ -59,6 +59,7 @@ export const runCiTask = task({
       commitMessage,
       runSummary,
       prNumber: payload.prNumber ?? null,
+      gitAuthor,
     })
 
     const runId = runInsert.id

@@ -7,13 +7,7 @@ interface StoryCardProps {
   groups: string[]
 }
 
-export function StoryCard({
-  id: _id,
-  name,
-  href,
-  groups,
-}: StoryCardProps) {
-
+export function StoryCard({ id: _id, name, href, groups }: StoryCardProps) {
   // Check if story is being processed (title is missing or placeholder)
   const isProcessing = !name || name.trim() === '' || name.trim() === 'foobar'
   const displayName = isProcessing

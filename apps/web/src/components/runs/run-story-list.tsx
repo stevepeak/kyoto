@@ -1,6 +1,11 @@
 import { cn } from '@/lib/utils'
 import { StoryStatusCheck } from './StoryStatusCheck'
-import { formatDurationMs, formatRelativeTime, getDisplayStatus, getStatusPillStyles, getStoryTimestamps } from './run-detail-view-utils'
+import {
+  formatDurationMs,
+  formatRelativeTime,
+  getDisplayStatus,
+  getStoryTimestamps,
+} from './run-detail-view-utils'
 import type { RunStory } from './run-detail-view-types'
 
 interface RunStoryListProps {
@@ -27,12 +32,8 @@ export function RunStoryList({
           ? formatRelativeTime(completedTimestamp)
           : null
         const displayStatus = getDisplayStatus(runStory)
-        const statusPill =
-          displayStatus === 'running'
-            ? null
-            : getStatusPillStyles(displayStatus)
         const isSelected = selectedStoryId === runStory.storyId
-        const isRunning = runStory.status === 'running'
+        const isRunning = displayStatus === 'running'
 
         return (
           <li key={runStory.storyId}>
@@ -47,22 +48,12 @@ export function RunStoryList({
               )}
             >
               <div className="flex items-start gap-3">
-                <StoryStatusCheck status={runStory.status} />
+                <StoryStatusCheck status={displayStatus} />
                 <div className="min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-sm font-medium text-foreground">
                       {storyTitle}
                     </span>
-                    {statusPill ? (
-                      <span
-                        className={cn(
-                          'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                          statusPill.className,
-                        )}
-                      >
-                        {statusPill.label}
-                      </span>
-                    ) : null}
                   </div>
                   {!isRunning && (
                     <div className="text-xs text-muted-foreground">
@@ -86,4 +77,3 @@ export function RunStoryList({
     </ul>
   )
 }
-

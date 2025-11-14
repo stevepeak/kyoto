@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict zP9fy8EBn5LD7CGYuWmgKDKorYbX1Q2axsHIXwnhElt3hkUFJlf5JrZOsQLRAif
+\restrict E1SDW8LcBB0KUZFyogvvmIokCjtyxwjG3UGupctRvrlfGFLat3Wfk9lVcM7Dq7E
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -720,6 +720,7 @@ CREATE TABLE public.runs (
     summary text,
     stories jsonb DEFAULT '[]'::jsonb NOT NULL,
     number integer NOT NULL,
+    git_author jsonb,
     CONSTRAINT runs_status_check CHECK ((status = ANY (ARRAY['pass'::text, 'fail'::text, 'skipped'::text, 'running'::text, 'error'::text])))
 );
 
@@ -799,6 +800,13 @@ COMMENT ON COLUMN public.runs.summary IS 'Summary of the run execution';
 --
 
 COMMENT ON COLUMN public.runs.stories IS 'Array of story execution details with storyId and status';
+
+
+--
+-- Name: COLUMN runs.git_author; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.runs.git_author IS 'Git commit author information stored as JSON: {id, login, name}';
 
 
 --
@@ -1693,5 +1701,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zP9fy8EBn5LD7CGYuWmgKDKorYbX1Q2axsHIXwnhElt3hkUFJlf5JrZOsQLRAif
+\unrestrict E1SDW8LcBB0KUZFyogvvmIokCjtyxwjG3UGupctRvrlfGFLat3Wfk9lVcM7Dq7E
 

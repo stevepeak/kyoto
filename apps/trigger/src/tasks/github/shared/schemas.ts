@@ -60,12 +60,31 @@ const pushRepositoryOwnerSchema = z
   })
   .passthrough()
 
+const commitAuthorSchema = z
+  .object({
+    id: idSchema.optional(),
+    login: z.string().optional(),
+    name: z.string().optional(),
+    email: z.string().optional(),
+  })
+  .passthrough()
+
+const commitSchema = z
+  .object({
+    id: z.string().optional(),
+    message: z.string().optional(),
+    author: commitAuthorSchema.optional(),
+  })
+  .passthrough()
+
 export const pushEventSchema = z.object({
   ref: z.string(),
   after: z.string().optional(),
   repository: repositorySchema.extend({
     owner: pushRepositoryOwnerSchema.optional(),
   }),
+  commits: z.array(commitSchema).optional(),
+  head_commit: commitSchema.optional(),
 })
 
 const pullRequestUserSchema = z

@@ -81,9 +81,57 @@ export async function getOctokitClient(repoId: string): Promise<OctokitClient> {
   }
 }
 
+export interface GitAuthor {
+  id: number | string | null
+  login: string | null
+  name: string | null
+}
+
 interface BranchDetails {
   commitSha: string | null
   commitMessage: string | null
+  gitAuthor: GitAuthor | null
+}
+
+export async function getGithubCommitAuthor(
+  octokit: Octokit,
+  params: {
+    owner: string
+    repo: string
+    commitSha: string
+  },
+): Promise<GitAuthor | null> {
+  try {
+    const commitData = await octokit.rest.repos.getCommit({
+      owner: params.owner,
+      repo: params.repo,
+      ref: params.commitSha,
+    })
+
+    const author = commitData.data.author
+    const commit = commitData.data.commit
+
+    if (!author) {
+      // If author is not available, try to get from commit author info
+      const commitAuthor = commit?.author
+      if (commitAuthor?.name) {
+        return {
+          id: null,
+          login: null,
+          name: commitAuthor.name,
+        }
+      }
+      return null
+    }
+
+    return {
+      id: author.id ?? null,
+      login: author.login ?? null,
+      name: author.name ?? commit?.author?.name ?? null,
+    }
+  } catch (_error) {
+    return null
+  }
 }
 
 export async function getGithubBranchDetails(
@@ -100,8 +148,21 @@ export async function getGithubBranchDetails(
     branch: params.branch,
   })
 
+  const commitSha = branchData.data.commit?.sha ?? null
+  const commitMessage = branchData.data.commit?.commit?.message ?? null
+
+  let gitAuthor: GitAuthor | null = null
+  if (commitSha) {
+    gitAuthor = await getGithubCommitAuthor(octokit, {
+      owner: params.owner,
+      repo: params.repo,
+      commitSha,
+    })
+  }
+
   return {
-    commitSha: branchData.data.commit?.sha ?? null,
-    commitMessage: branchData.data.commit?.commit?.message ?? null,
+    commitSha,
+    commitMessage,
+    gitAuthor,
   }
 }

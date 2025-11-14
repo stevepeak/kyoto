@@ -2,7 +2,7 @@ import type { Octokit } from '@octokit/rest'
 import { logger } from '@trigger.dev/sdk'
 import { sql } from '@app/db'
 import type { RunStory } from '@app/db'
-import { getGithubBranchDetails } from '../../helpers/github'
+import { getGithubBranchDetails, type GitAuthor } from '../../helpers/github'
 import type {
   DbClient,
   RepoRecord,
@@ -89,6 +89,7 @@ export async function fetchBranchDetails(
 ): Promise<{
   commitSha: string | null
   commitMessage: string | null
+  gitAuthor: GitAuthor | null
 }> {
   try {
     return await getGithubBranchDetails(octokit, {
@@ -106,6 +107,7 @@ export async function fetchBranchDetails(
     return {
       commitSha: null,
       commitMessage: null,
+      gitAuthor: null,
     }
   }
 }
@@ -120,6 +122,7 @@ interface CreateRunRecordParams {
   commitMessage: string | null
   runSummary: string | null
   prNumber?: string | null
+  gitAuthor?: GitAuthor | null
 }
 
 export async function createRunRecord({
@@ -132,7 +135,17 @@ export async function createRunRecord({
   commitMessage,
   runSummary,
   prNumber = null,
+  gitAuthor = null,
 }: CreateRunRecordParams): Promise<RunInsert> {
+  const gitAuthorJson =
+    gitAuthor && (gitAuthor.id || gitAuthor.login || gitAuthor.name)
+      ? {
+          id: gitAuthor.id ?? null,
+          login: gitAuthor.login ?? null,
+          name: gitAuthor.name ?? null,
+        }
+      : null
+
   const insertedRun = await sql<RunInsert>`
       INSERT INTO public.runs (
         repo_id,
@@ -142,7 +155,8 @@ export async function createRunRecord({
         commit_sha,
         commit_message,
         pr_number,
-        summary
+        summary,
+        git_author
       ) VALUES (
         ${repoId},
         ${branchName},
@@ -151,7 +165,8 @@ export async function createRunRecord({
         ${commitSha},
         ${commitMessage},
         ${prNumber},
-        ${runSummary}
+        ${runSummary},
+        ${gitAuthorJson ? sql`${JSON.stringify(gitAuthorJson)}::jsonb` : sql`NULL`}
       )
       RETURNING id, number
     `.execute(db)

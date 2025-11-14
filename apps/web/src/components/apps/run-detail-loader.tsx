@@ -30,7 +30,7 @@ interface StoryAnalysis {
   evidence: StoryAnalysisEvidence[]
 }
 
-interface StoryResult {
+interface StoryTestResult {
   id: string
   storyId: string
   status: 'pass' | 'fail' | 'running' | 'error'
@@ -50,7 +50,6 @@ interface RunStory {
   summary: string | null
   startedAt: string | null
   completedAt: string | null
-  result: StoryResult | null
   story: {
     id: string
     name: string
@@ -61,6 +60,7 @@ interface RunStory {
     updatedAt: string
     decomposition: unknown
   } | null
+  testResult: StoryTestResult | null
 }
 
 interface Run {
@@ -76,7 +76,7 @@ interface Run {
   stories: RunStory[]
 }
 
-const STORY_RESULT_STATUS_VALUES: readonly StoryResult['status'][] = [
+const STORY_RESULT_STATUS_VALUES: readonly StoryTestResult['status'][] = [
   'pass',
   'fail',
   'running',
@@ -99,9 +99,13 @@ const RUN_STATUS_VALUES: readonly Run['status'][] = [
   'error',
 ] as const
 
-function normalizeStoryResultStatus(status: unknown): StoryResult['status'] {
-  return STORY_RESULT_STATUS_VALUES.includes(status as StoryResult['status'])
-    ? (status as StoryResult['status'])
+function normalizeStoryResultStatus(
+  status: unknown,
+): StoryTestResult['status'] {
+  return STORY_RESULT_STATUS_VALUES.includes(
+    status as StoryTestResult['status'],
+  )
+    ? (status as StoryTestResult['status'])
     : 'error'
 }
 
@@ -115,74 +119,6 @@ function normalizeRunStatus(status: unknown): Run['status'] {
   return RUN_STATUS_VALUES.includes(status as Run['status'])
     ? (status as Run['status'])
     : 'error'
-}
-
-function isStoryAnalysisEvidence(
-  value: unknown,
-): value is StoryAnalysisEvidence {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-
-  const evidence = value as {
-    step?: unknown
-    conclusion?: unknown
-    filePath?: unknown
-    startLine?: unknown
-    endLine?: unknown
-    note?: unknown
-  }
-
-  const isNullableString = (input: unknown): input is string | null =>
-    input === null || typeof input === 'string'
-  const isNullableNumber = (input: unknown): input is number | null =>
-    input === null || typeof input === 'number'
-  const isNullableConclusion = (
-    input: unknown,
-  ): input is 'pass' | 'fail' | null =>
-    input === null ||
-    input === undefined ||
-    input === 'pass' ||
-    input === 'fail'
-
-  return (
-    isNullableString(evidence.step) &&
-    typeof evidence.filePath === 'string' &&
-    isNullableNumber(evidence.startLine) &&
-    isNullableNumber(evidence.endLine) &&
-    isNullableString(evidence.note) &&
-    isNullableConclusion(evidence.conclusion ?? null)
-  )
-}
-
-function isStoryAnalysis(value: unknown): value is StoryAnalysis {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-
-  const candidate = value as {
-    conclusion?: unknown
-    explanation?: unknown
-    evidence?: unknown
-  }
-
-  if (
-    candidate.conclusion !== 'pass' &&
-    candidate.conclusion !== 'fail' &&
-    candidate.conclusion !== 'error'
-  ) {
-    return false
-  }
-
-  if (typeof candidate.explanation !== 'string') {
-    return false
-  }
-
-  if (!Array.isArray(candidate.evidence)) {
-    return false
-  }
-
-  return candidate.evidence.every(isStoryAnalysisEvidence)
 }
 
 function toIsoString(value: unknown): string | null {
@@ -206,8 +142,11 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
   const storyMap = new Map<string, ApiStory>(
     (data.stories ?? []).map((story) => [story.id, story]),
   )
-  const storyResultMap = new Map<string, ApiStoryResult>(
+  const storyResultMapById = new Map<string, ApiStoryResult>(
     (data.storyResults ?? []).map((result) => [result.id, result]),
+  )
+  const storyResultMapByStoryId = new Map<string, ApiStoryResult>(
+    (data.storyResults ?? []).map((result) => [result.storyId, result]),
   )
 
   const run: ApiRun = data.run
@@ -216,39 +155,25 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
 
   const stories: RunStory[] = (run.stories ?? []).map((runStory) => {
     const story = storyMap.get(runStory.storyId)
-    const rawResult =
-      runStory.resultId !== undefined && runStory.resultId !== null
-        ? (storyResultMap.get(runStory.resultId) ?? null)
-        : null
+    let rawResult: ApiStoryResult | null = null
 
-    let analysis: StoryAnalysis | null = null
-    if (
-      rawResult &&
-      rawResult.analysis &&
-      isStoryAnalysis(rawResult.analysis)
-    ) {
-      const validatedAnalysis = rawResult.analysis
-      analysis = {
-        conclusion: validatedAnalysis.conclusion,
-        explanation: validatedAnalysis.explanation,
-        evidence: validatedAnalysis.evidence.map((item) => ({
-          step: item.step,
-          conclusion: item.conclusion === 'pass' ? 'pass' : 'fail',
-          filePath: item.filePath,
-          startLine: item.startLine,
-          endLine: item.endLine,
-          note: item.note,
-        })),
-      }
+    // First try to find by resultId if it exists
+    if (runStory.resultId !== undefined && runStory.resultId !== null) {
+      rawResult = storyResultMapById.get(runStory.resultId) ?? null
     }
 
-    const result: StoryResult | null = rawResult
+    // If not found by resultId, try to find by storyId
+    if (!rawResult) {
+      rawResult = storyResultMapByStoryId.get(runStory.storyId) ?? null
+    }
+
+    const testResult: StoryTestResult | null = rawResult
       ? {
           id: rawResult.id,
           storyId: rawResult.storyId,
           status: normalizeStoryResultStatus(rawResult.status),
           analysisVersion: rawResult.analysisVersion,
-          analysis,
+          analysis: rawResult.analysis as any, // Keep as any - cross-domain type issue
           startedAt: toIsoString(rawResult.startedAt),
           completedAt: toIsoString(rawResult.completedAt),
           durationMs: rawResult.durationMs ?? null,
@@ -264,13 +189,12 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
       summary: runStory.summary ?? null,
       startedAt:
         runStory.startedAt ??
-        (result ? toIsoString(result.startedAt) : null) ??
+        (testResult ? toIsoString(testResult.startedAt) : null) ??
         null,
       completedAt:
         runStory.completedAt ??
-        (result ? toIsoString(result.completedAt) : null) ??
+        (testResult ? toIsoString(testResult.completedAt) : null) ??
         null,
-      result,
       story: story
         ? {
             id: story.id,
@@ -283,6 +207,7 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
             decomposition: story.decomposition ?? null,
           }
         : null,
+      testResult,
     }
   })
 

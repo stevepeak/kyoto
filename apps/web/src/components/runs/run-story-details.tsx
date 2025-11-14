@@ -16,15 +16,16 @@ import {
   getStatusPillStyles,
   getStoryTimestamps,
 } from './run-detail-view-utils'
-import type { RunStory } from './run-detail-view-types'
+import type { RunStory, StoryTestResult } from './run-detail-view-types'
 
 interface RunStoryDetailsProps {
   story: RunStory
+  testResult: StoryTestResult | null
 }
 
-export function RunStoryDetails({ story }: RunStoryDetailsProps) {
+export function RunStoryDetails({ story, testResult }: RunStoryDetailsProps) {
   const storyTitle = story.story ? story.story.name : 'Story not found'
-  const storyResult = story.result
+  const storyResult = testResult
   const analysis = storyResult?.analysis ?? null
   const scenarioText = story.story?.story ?? null
   const decomposition = story.story?.decomposition ?? null
@@ -40,9 +41,10 @@ export function RunStoryDetails({ story }: RunStoryDetailsProps) {
   const completedRelative = completedTimestamp
     ? formatRelativeTime(completedTimestamp)
     : null
-  const statusPill = getStatusPillStyles(getDisplayStatus(story))
+  const displayStatus = getDisplayStatus(story)
+  const statusPill = getStatusPillStyles(displayStatus)
   const statusDescriptor = statusPill.label.toLowerCase()
-  const isRunning = story.status === 'running'
+  const isRunning = displayStatus === 'running'
   const timelineParts: string[] = []
   if (completedRelative && !isRunning) {
     timelineParts.push(completedRelative)
@@ -68,7 +70,17 @@ export function RunStoryDetails({ story }: RunStoryDetailsProps) {
       )
     }
 
-    const conclusionStyles = getConclusionStyles(analysis.conclusion)
+    // Handle both old structure (conclusion) and new structure (status)
+    const conclusion = analysis.conclusion ?? analysis.status
+    if (
+      !conclusion ||
+      (conclusion !== 'pass' && conclusion !== 'fail' && conclusion !== 'error')
+    ) {
+      // If we can't determine the conclusion, just show the raw analysis
+      return null
+    }
+
+    const conclusionStyles = getConclusionStyles(conclusion)
 
     return (
       <div className="space-y-4">
@@ -81,16 +93,18 @@ export function RunStoryDetails({ story }: RunStoryDetailsProps) {
           <p className="text-sm font-semibold text-foreground">
             {conclusionStyles.label}
           </p>
-          <p className="mt-2 text-sm text-foreground">{analysis.explanation}</p>
+          <p className="mt-2 text-sm text-foreground">
+            {analysis.explanation ?? ''}
+          </p>
         </div>
 
-        {analysis.evidence.length > 0 ? (
+        {Array.isArray(analysis.evidence) && analysis.evidence.length > 0 ? (
           <div className="space-y-2">
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Evidence
             </div>
             <div className="space-y-2">
-              {analysis.evidence.map((evidence, index) => {
+              {analysis.evidence.map((evidence: any, index: number) => {
                 const summaryTitle =
                   evidence.step?.trim() && evidence.step.trim().length > 0
                     ? evidence.step.trim()
@@ -156,7 +170,7 @@ export function RunStoryDetails({ story }: RunStoryDetailsProps) {
       <CardContent className="space-y-6 p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
-            <StoryStatusCheck status={story.status} />
+            <StoryStatusCheck status={displayStatus} />
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-foreground">
                 {storyTitle}
@@ -193,7 +207,7 @@ export function RunStoryDetails({ story }: RunStoryDetailsProps) {
                 className="flex flex-row items-center gap-1.5 h-auto px-3 py-2 data-[state=active]:bg-background"
               >
                 <ClipboardCheck className="h-4 w-4" />
-                <span className="text-sm font-medium">Analysis</span>
+                <span className="text-sm font-medium">Composition</span>
               </TabsTrigger>
               <TabsTrigger
                 value="results"
@@ -235,9 +249,9 @@ export function RunStoryDetails({ story }: RunStoryDetailsProps) {
             {conclusionContent}
           </TabsContent>
           <TabsContent value="results" className="mt-0" tabIndex={-1}>
-            {storyResult ? (
+            {testResult ? (
               <pre className="rounded-md bg-background text-foreground p-4 overflow-auto text-sm leading-6 whitespace-pre-wrap border">
-                {JSON.stringify(storyResult, null, 2)}
+                {JSON.stringify(testResult, null, 2)}
               </pre>
             ) : (
               <div className="rounded-md border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
