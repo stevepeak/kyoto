@@ -7,6 +7,8 @@ export function Metrics() {
             src="/github-status.png"
             alt="Kyoto status checks showing green passes for CI integrations."
             className="size-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
         </div>
         <div className="space-y-4">

@@ -9,6 +9,7 @@ export function LandingNavbar() {
         <a
           href="/"
           className="inline-flex items-center gap-2 text-lg font-semibold text-foreground"
+          data-astro-prefetch
         >
           <span aria-hidden="true" className="text-xl">
             ⛩️
@@ -19,18 +20,21 @@ export function LandingNavbar() {
           <a
             href="/#product"
             className="transition-colors hover:text-foreground focus-visible:text-foreground"
+            data-astro-prefetch
           >
             Product
           </a>
           <a
             href="#/pricing"
             className="transition-colors hover:text-foreground focus-visible:text-foreground"
+            data-astro-prefetch
           >
             Pricing
           </a>
           <a
             href="/about"
             className="transition-colors hover:text-foreground focus-visible:text-foreground"
+            data-astro-prefetch
           >
             About
           </a>

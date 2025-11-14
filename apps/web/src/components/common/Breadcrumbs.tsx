@@ -32,6 +32,7 @@ export function Breadcrumbs({ items, className, right }: BreadcrumbsProps) {
               {hasHref ? (
                 <a
                   href={item.href}
+                  data-astro-prefetch
                   className={cn(
                     'px-2 py-1 -mx-2 -my-1 rounded-md hover:bg-muted/80 transition-colors hover:text-foreground',
                     'text-muted-foreground',

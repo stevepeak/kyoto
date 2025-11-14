@@ -114,6 +114,7 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <a
             href="/"
+            data-astro-prefetch
             className="flex items-center gap-2 text-foreground transition-colors shrink-0"
           >
             <span className="font-display text-lg">⛩️ Kyoto</span>

@@ -11,6 +11,9 @@ import '../styles/global.css'
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>Kyoto - AI-powered QA</title>
+    {/* Preconnect to external domains */}
+    <link rel="preconnect" href="https://api.github.com" crossorigin />
+    <link rel="dns-prefetch" href="https://api.github.com" />
     <ClientRouter />
   </head>
   <body>
