@@ -117,7 +117,8 @@ export function RepoOverview({
                 <div className="flex items-center gap-2">
                   {stories.length > 0 && (
                     <span className="text-sm text-muted-foreground">
-                      {stories.length} stories
+                      {stories.length}{' '}
+                      {stories.length === 1 ? 'story' : 'stories'}
                     </span>
                   )}
                 </div>
@@ -125,6 +126,10 @@ export function RepoOverview({
                   <Button asChild variant="outline" size="sm">
                     <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
                       Craft new story
+                      <span className="ml-2 text-xs opacity-60">
+                        {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
+                        +Enter
+                      </span>
                     </a>
                   </Button>
                 )}
@@ -146,7 +151,7 @@ export function RepoOverview({
                 <div className="flex items-center gap-2">
                   {runs.length > 0 && (
                     <span className="text-sm text-muted-foreground">
-                      {runs.length} intent testing runs
+                      {runs.length} {runs.length === 1 ? 'run' : 'runs'}
                     </span>
                   )}
                 </div>
