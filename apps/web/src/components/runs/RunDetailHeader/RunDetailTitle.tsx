@@ -1,8 +1,8 @@
 import { GitBranch, GitCommit, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Run, StatusDisplay } from './run-detail-view-types'
+import type { Run, StatusDisplay } from '../types'
 
-interface RunTitleSectionProps {
+interface RunDetailTitleProps {
   commitTitle: string
   runStatusDescriptor: string
   relativeStarted: string
@@ -14,7 +14,7 @@ interface RunTitleSectionProps {
   commitUrl: string | null
 }
 
-export function RunTitleSection({
+export function RunDetailTitle({
   commitTitle,
   runStatusDescriptor,
   relativeStarted,
@@ -24,7 +24,7 @@ export function RunTitleSection({
   run,
   shortSha,
   commitUrl,
-}: RunTitleSectionProps) {
+}: RunDetailTitleProps) {
   return (
     <div className="flex items-start gap-3">
       <statusDisplay.Icon
@@ -92,3 +92,4 @@ export function RunTitleSection({
     </div>
   )
 }
+

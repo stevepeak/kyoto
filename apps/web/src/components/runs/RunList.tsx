@@ -6,7 +6,7 @@ import {
   getCommitTitle,
   getShortSha,
   getStatusDisplay,
-} from './run-detail-view-utils'
+} from './utils'
 
 interface RunItem {
   id: string

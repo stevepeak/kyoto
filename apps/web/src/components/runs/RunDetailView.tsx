@@ -8,16 +8,15 @@ import {
   getRunStatusDescriptor,
   getShortSha,
   getStatusDisplay,
-} from './run-detail-view-utils'
+} from './utils'
 import type {
   RunDetailViewProps,
   RunStory,
   StoryStatusPillStatus,
-} from './run-detail-view-types'
-import { RunTitleSection } from './run-title-section'
-import { RunCommitBlock } from './run-commit-block'
-import { RunStoryList } from './run-story-list'
-import { RunStoryDetails } from './run-story-details'
+} from './types'
+import { RunDetailHeader } from './RunDetailHeader'
+import { RunStoryList } from './RunStoryList'
+import { RunStoryCard } from './RunStoryCard'
 
 export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
   const statusDisplay = getStatusDisplay(run.status)
@@ -100,7 +99,7 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
       {/* Top Section: Metadata */}
       <div className="border-b bg-muted/30">
         <div className="p-6 space-y-6">
-          <RunTitleSection
+          <RunDetailHeader
             commitTitle={commitTitle}
             runStatusDescriptor={runStatusDescriptor}
             relativeStarted={relativeStarted}
@@ -110,10 +109,6 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
             run={run}
             shortSha={shortSha}
             commitUrl={commitUrl}
-          />
-
-          <RunCommitBlock
-            run={run}
             pullRequestUrl={pullRequestUrl}
           />
         </div>
@@ -148,7 +143,7 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
               </aside>
               <section className="flex-1 min-w-0">
                 {selectedStory ? (
-                  <RunStoryDetails
+                  <RunStoryCard
                     story={selectedStory}
                     testResult={selectedStory.testResult}
                   />

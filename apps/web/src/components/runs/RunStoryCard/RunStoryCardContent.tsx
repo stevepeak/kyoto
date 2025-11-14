@@ -1,63 +1,146 @@
-import ReactMarkdown from 'react-markdown'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ClipboardCheck, FileText } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
-import { StoryStatusCheck } from './StoryStatusCheck'
 import {
-  formatDate,
-  formatDurationMs,
-  formatRelativeTime,
   getConclusionStyles,
   getDisplayStatus,
   getEvidenceConclusionDisplay,
-  getStatusPillStyles,
-  getStoryTimestamps,
-} from './run-detail-view-utils'
-import type { RunStory, StoryTestResult } from './run-detail-view-types'
+  getLoadingConclusionDisplay,
+} from '../utils'
+import type { RunStory, StoryTestResult } from '../types'
+import { z } from 'zod'
 
-interface RunStoryDetailsProps {
+interface RunStoryCardContentProps {
   story: RunStory
   testResult: StoryTestResult | null
 }
 
-export function RunStoryDetails({ story, testResult }: RunStoryDetailsProps) {
-  const storyTitle = story.story ? story.story.name : 'Story not found'
+export function RunStoryCardContent({
+  story,
+  testResult,
+}: RunStoryCardContentProps) {
   const storyResult = testResult
   const analysis = storyResult?.analysis ?? null
   const scenarioText = story.story?.story ?? null
-  const {
-    startedAt: startedTimestamp,
-    completedAt: completedTimestamp,
-    durationMs,
-  } = getStoryTimestamps(story)
-  const durationDisplay = formatDurationMs(durationMs)
-  const startedTooltip = startedTimestamp
-    ? formatDate(startedTimestamp)
-    : undefined
-  const completedRelative = completedTimestamp
-    ? formatRelativeTime(completedTimestamp)
-    : null
   const displayStatus = getDisplayStatus(story)
-  const statusPill = getStatusPillStyles(displayStatus)
-  const statusDescriptor = statusPill.label.toLowerCase()
   const isRunning = displayStatus === 'running'
-  const timelineParts: string[] = []
-  if (completedRelative && !isRunning) {
-    timelineParts.push(completedRelative)
+
+  // Parse decomposition data
+  const decompositionSchema = z.object({
+    steps: z.array(
+      z.discriminatedUnion('type', [
+        z.object({
+          type: z.literal('given'),
+          given: z.string().min(1),
+        }),
+        z.object({
+          type: z.literal('requirement'),
+          goal: z.string().min(1),
+          assertions: z.array(z.string().min(1)),
+        }),
+      ]),
+    ),
+  })
+
+  const parseDecomposition = (decomposition: unknown) => {
+    if (!decomposition) {
+      return null
+    }
+    try {
+      const parsed =
+        typeof decomposition === 'string'
+          ? JSON.parse(decomposition)
+          : decomposition
+      return decompositionSchema.parse(parsed)
+    } catch {
+      return null
+    }
   }
-  if (durationDisplay !== '—' && !isRunning) {
-    timelineParts.push(`in ${durationDisplay}`)
-  }
-  const statusLine =
-    timelineParts.length > 0
-      ? `${statusDescriptor} ${timelineParts.join(' ')}`
-      : statusDescriptor
+
+  const decomposition = parseDecomposition(story.story?.decomposition)
+  const showDecompositionLoading =
+    (!storyResult || isRunning) && decomposition !== null
 
   const conclusionContent = (() => {
+    // Show decomposition data when results are still loading
+    if (showDecompositionLoading && decomposition) {
+      const requirementSteps =
+        decomposition.steps.filter((step) => step.type === 'requirement') ?? []
+
+      if (requirementSteps.length === 0) {
+        return (
+          <div className="rounded-md border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
+            No decomposition steps available yet.
+          </div>
+        )
+      }
+
+      const loadingDisplay = getLoadingConclusionDisplay()
+
+      return (
+        <div className="space-y-4">
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-4 text-sm">
+            <p className="font-semibold text-primary">
+              Evaluation in progress...
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Showing expected steps and assertions from decomposition. Results
+              will appear as evaluation completes.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {requirementSteps.map((step, stepIndex) => (
+              <details
+                key={`decomp-step-${step.goal}-${stepIndex}`}
+                className="group rounded-md border bg-muted/40 text-sm text-foreground"
+              >
+                <summary className="flex w-full cursor-pointer select-none items-center gap-2 px-3 py-3 text-left [&::-webkit-details-marker]:hidden">
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
+                  <loadingDisplay.Icon
+                    aria-label={loadingDisplay.label}
+                    className={cn(
+                      'size-4 shrink-0',
+                      loadingDisplay.iconClassName,
+                    )}
+                  />
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {step.goal}
+                  </span>
+                </summary>
+                <div className="space-y-3 border-t px-3 py-3 text-sm text-foreground">
+                  {step.assertions && step.assertions.length > 0 ? (
+                    <div className="space-y-2">
+                      {step.assertions.map((assertion, assertionIndex) => (
+                        <div
+                          key={`decomp-assertion-${step.goal}-${stepIndex}-${assertionIndex}`}
+                          className="rounded-md border bg-background p-3 opacity-75"
+                        >
+                          <div className="text-sm font-medium text-foreground">
+                            {assertion}
+                          </div>
+                          <div className="mt-2 text-xs text-muted-foreground italic">
+                            Evidence will appear when evaluation completes
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
     if (!storyResult) {
-      return null
+      return (
+        <div className="rounded-md border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">
+          No evaluation results available yet.
+        </div>
+      )
     }
 
     if (!analysis) {
@@ -191,73 +274,46 @@ export function RunStoryDetails({ story, testResult }: RunStoryDetailsProps) {
   })()
 
   return (
-    <Card className="border">
-      <CardContent className="space-y-6 p-4 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-3">
-            <StoryStatusCheck status={displayStatus} />
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {storyTitle}
-              </h3>
-              {!isRunning && (
-                <div
-                  className="text-sm text-muted-foreground"
-                  title={startedTooltip}
-                >
-                  {statusLine}
-                </div>
-              )}
-              {story.summary ? (
-                <div className="prose prose-sm max-w-none text-muted-foreground">
-                  <ReactMarkdown>{story.summary}</ReactMarkdown>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <Tabs defaultValue="story" className="w-full">
-          <div className="flex items-center justify-center mb-4">
-            <TabsList className="h-auto p-1">
-              <TabsTrigger
-                value="story"
-                className="flex flex-row items-center gap-1.5 h-auto px-3 py-2 data-[state=active]:bg-background"
-              >
-                <FileText className="h-4 w-4" />
-                <span className="text-sm font-medium">Story</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="analysis"
-                className="flex flex-row items-center gap-1.5 h-auto px-3 py-2 data-[state=active]:bg-background"
-              >
-                <ClipboardCheck className="h-4 w-4" />
-                <span className="text-sm font-medium">Composition</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value="story" className="mt-0 space-y-2" tabIndex={-1}>
-            {scenarioText ? (
-              <TiptapEditor
-                value={scenarioText}
-                onChange={() => {}}
-                readOnly={true}
-              />
-            ) : (
-              <div className="rounded-md border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
-                No story content available.
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent
-            value="analysis"
-            className="mt-0 space-y-4"
-            tabIndex={-1}
+    <Tabs defaultValue="story" className="w-full">
+      <div className="flex items-center justify-center mb-4">
+        <TabsList className="h-auto p-1">
+          <TabsTrigger
+            value="story"
+            className="flex flex-row items-center gap-1.5 h-auto px-3 py-2 data-[state=active]:bg-background"
           >
-            {conclusionContent}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            <FileText className="h-4 w-4" />
+            <span className="text-sm font-medium">Story</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="analysis"
+            className="flex flex-row items-center gap-1.5 h-auto px-3 py-2 data-[state=active]:bg-background"
+          >
+            <ClipboardCheck className="h-4 w-4" />
+            <span className="text-sm font-medium">Composition</span>
+          </TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="story" className="mt-0 space-y-2" tabIndex={-1}>
+        {scenarioText ? (
+          <TiptapEditor
+            value={scenarioText}
+            onChange={() => {}}
+            readOnly={true}
+          />
+        ) : (
+          <div className="rounded-md border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
+            No story content available.
+          </div>
+        )}
+      </TabsContent>
+      <TabsContent
+        value="analysis"
+        className="mt-0 space-y-4"
+        tabIndex={-1}
+      >
+        {conclusionContent}
+      </TabsContent>
+    </Tabs>
   )
 }
+

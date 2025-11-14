@@ -5,7 +5,7 @@ import type {
   StatusDisplay,
   StoryStatusPillStatus,
   EvaluationConclusion,
-} from './run-detail-view-types'
+} from './types'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -214,6 +214,14 @@ export function getEvidenceConclusionDisplay(
     Icon: XCircle,
     iconClassName: 'text-destructive',
     label: 'Fail',
+  }
+}
+
+export function getLoadingConclusionDisplay(): EvidenceConclusionDisplay {
+  return {
+    Icon: Loader2,
+    iconClassName: 'text-primary animate-spin',
+    label: 'Loading',
   }
 }
 

@@ -1,15 +1,15 @@
 import ReactMarkdown from 'react-markdown'
-import type { Run } from './run-detail-view-types'
+import type { Run } from '../types'
 
-interface RunCommitBlockProps {
+interface RunDetailCommitBlockProps {
   run: Run
   pullRequestUrl: string | null
 }
 
-export function RunCommitBlock({
+export function RunDetailCommitBlock({
   run,
   pullRequestUrl,
-}: RunCommitBlockProps) {
+}: RunDetailCommitBlockProps) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 text-sm sm:grid-cols-2">
@@ -43,3 +43,4 @@ export function RunCommitBlock({
     </div>
   )
 }
+
