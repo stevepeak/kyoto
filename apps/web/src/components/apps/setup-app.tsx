@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Book } from 'lucide-react'
+import { navigate } from 'astro:transitions/client'
 
 import { useTRPCClient } from '@/client/trpc'
 import { Button } from '@/components/ui/button'
@@ -111,20 +112,7 @@ export function SetupApp() {
         orgName: selectedOrg,
         repoName: selectedRepoName,
       })
-      // Refresh the repos list
-      const data = await trpc.repo.listByOrg.query({ orgName: selectedOrg })
-      const repos = data.repos as Array<{
-        id: string
-        name: string
-        defaultBranch: string | null
-        enabled: boolean
-        isPrivate: boolean
-      }>
-      setAllRepos(repos)
-      setEnabledRepos(repos.filter((r) => r.enabled))
-      setIsDialogOpen(false)
-      setSearchQuery('')
-      setSelectedRepoName(null)
+      void navigate(`/org/${selectedOrg}/repo/${selectedRepoName}`)
     } catch (error) {
       console.error('Failed to connect repository:', error)
     } finally {
