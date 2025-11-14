@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@app/api'
 import { SiGithub } from 'react-icons/si'
+import { Loader2 } from 'lucide-react'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
@@ -33,6 +34,11 @@ export function RepoOverview({
   const trpc = useTRPCClient()
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+
+  // Check if any CI build is in progress
+  const hasRunningBuild = runs.some(
+    (run) => run.status === 'queued' || run.status === 'running',
+  )
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -146,12 +152,21 @@ export function RepoOverview({
                 </div>
                 {defaultBranch && stories.length > 0 && (
                   <Button
-                    disabled={isCreatingRun}
+                    disabled={isCreatingRun || hasRunningBuild}
                     variant="default"
                     size="sm"
                     onClick={handleStartRun}
                   >
-                    {isCreatingRun ? 'Starting...' : 'Begin new run'}
+                    {isCreatingRun ? (
+                      'Starting...'
+                    ) : hasRunningBuild ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Tests running...
+                      </>
+                    ) : (
+                      'Begin new run'
+                    )}
                   </Button>
                 )}
               </div>
