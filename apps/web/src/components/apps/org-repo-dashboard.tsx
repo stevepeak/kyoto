@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SiGithub } from 'react-icons/si'
-import { Clock3, ChevronDown, Plus, BookMarked } from 'lucide-react'
+import { Clock3, Plus, BookMarked } from 'lucide-react'
+import { navigate } from 'astro:transitions/client'
 
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -14,13 +15,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useTRPCClient } from '@/client/trpc'
 import { cn } from '@/lib/utils'
 
@@ -40,12 +34,18 @@ interface OrgData {
   name: string
 }
 
+interface DialogRepoItem {
+  id: string
+  name: string
+  defaultBranch: string | null
+  enabled: boolean
+  isPrivate: boolean
+}
+
 interface Props {
   org: OrgData | null
   repos: RepoItem[]
 }
-
-type SortOption = 'name' | 'stories' | 'lastRun'
 
 export function OrgRepoDashboard({ org, repos }: Props) {
   const statusConfig: Record<
@@ -79,90 +79,51 @@ export function OrgRepoDashboard({ org, repos }: Props) {
 
   const trpc = useTRPCClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [listSearchQuery, setListSearchQuery] = useState('')
   const [dialogSearchQuery, setDialogSearchQuery] = useState('')
   const [selectedRepoName, setSelectedRepoName] = useState<string | null>(null)
-  const [sortOption, setSortOption] = useState<SortOption>('name')
   const [enabling, setEnabling] = useState(false)
-  const [allRepos, setAllRepos] = useState<
-    Array<{
-      id: string
-      name: string
-      defaultBranch: string | null
-      enabled: boolean
-      isPrivate: boolean
-    }>
-  >([])
+  const [allRepos, setAllRepos] = useState<DialogRepoItem[]>([])
   const [loadingRepos, setLoadingRepos] = useState(false)
 
-  const loadRepos = async () => {
+  const loadRepos = useCallback(async () => {
     if (!org?.slug) {
       return
     }
     setLoadingRepos(true)
     try {
       const data = await trpc.repo.listByOrg.query({ orgName: org.slug })
-      const reposList = data.repos as Array<{
-        id: string
-        name: string
-        defaultBranch: string | null
-        enabled: boolean
-        isPrivate: boolean
-      }>
+      const reposList: DialogRepoItem[] = data.repos.map((repo) => ({
+        id: repo.id,
+        name: repo.name,
+        defaultBranch: repo.defaultBranch,
+        enabled: repo.enabled,
+        isPrivate: repo.isPrivate,
+      }))
       setAllRepos(reposList)
     } catch (error) {
       console.error('Failed to load repositories:', error)
     } finally {
       setLoadingRepos(false)
     }
-  }
+  }, [org?.slug, trpc.repo.listByOrg])
 
-  const dialogFilteredRepos = allRepos.filter((repo) => {
-    if (!dialogSearchQuery.trim()) {
-      return !repo.enabled
-    }
-    const query = dialogSearchQuery.toLowerCase()
-    return (
-      !repo.enabled &&
-      (repo.name.toLowerCase().includes(query) ||
-        `${org?.slug}/${repo.name}`.toLowerCase().includes(query))
-    )
-  })
-
-  const repoCount = repos.length
-
-  const filteredRepos = useMemo(() => {
-    const query = listSearchQuery.trim().toLowerCase()
-    if (!query) {
-      return repos
-    }
-
-    return repos.filter((repo) =>
-      `${org?.slug ?? ''}/${repo.name}`.toLowerCase().includes(query),
-    )
-  }, [listSearchQuery, org?.slug, repos])
+  const dialogFilteredRepos = useMemo(() => {
+    return allRepos.filter((repo) => {
+      if (!dialogSearchQuery.trim()) {
+        return !repo.enabled
+      }
+      const query = dialogSearchQuery.toLowerCase()
+      return (
+        !repo.enabled &&
+        (repo.name.toLowerCase().includes(query) ||
+          `${org?.slug}/${repo.name}`.toLowerCase().includes(query))
+      )
+    })
+  }, [allRepos, dialogSearchQuery, org?.slug])
 
   const displayedRepos = useMemo(() => {
-    const sorted = [...filteredRepos]
-    switch (sortOption) {
-      case 'stories':
-        sorted.sort((a, b) => b.storyCount - a.storyCount)
-        break
-      case 'lastRun':
-        sorted.sort((a, b) => {
-          const aTime = a.lastRunAt ? a.lastRunAt.getTime() : 0
-          const bTime = b.lastRunAt ? b.lastRunAt.getTime() : 0
-          return bTime - aTime
-        })
-        break
-      case 'name':
-      default:
-        sorted.sort((a, b) => a.name.localeCompare(b.name))
-        break
-    }
-
-    return sorted
-  }, [filteredRepos, sortOption])
+    return [...repos].sort((a, b) => a.name.localeCompare(b.name))
+  }, [repos])
 
   const handleEnableRepo = async () => {
     if (!org?.slug || !selectedRepoName) {
@@ -174,7 +135,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
         orgName: org.slug,
         repoName: selectedRepoName,
       })
-      window.location.reload()
+      void navigate(`/org/${org.slug}/repo/${selectedRepoName}`)
     } catch (error) {
       console.error('Failed to connect repository:', error)
     } finally {
@@ -182,10 +143,10 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     }
   }
 
-  const handleOpenDialog = () => {
+  const handleOpenDialog = useCallback(() => {
     setIsDialogOpen(true)
     void loadRepos()
-  }
+  }, [loadRepos])
 
   const formatRelativeTime = (value: Date | null): string | null => {
     if (!value) {
@@ -220,6 +181,24 @@ export function OrgRepoDashboard({ org, repos }: Props) {
   const formatStoryCount = (count: number): string =>
     `${count} ${count === 1 ? 'story' : 'stories'}`
 
+  useEffect(() => {
+    if (repos.length > 0 || isDialogOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault()
+        handleOpenDialog()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [repos.length, isDialogOpen, handleOpenDialog])
+
   return (
     <AppLayout
       breadcrumbs={
@@ -238,7 +217,7 @@ export function OrgRepoDashboard({ org, repos }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-col gap-2">
               <div className="text-xl font-semibold text-foreground">
-                <span>{org?.name ?? 'Organization'}</span>
+                {org?.name ?? 'Organization'}
               </div>
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 {org?.slug ? (
@@ -252,55 +231,18 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                     <span>{org.slug}</span>
                   </a>
                 ) : null}
-                <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-                  {repoCount} {repoCount === 1 ? 'repository' : 'repositories'}
-                </span>
               </div>
             </div>
-            <Button onClick={handleOpenDialog} className="gap-2">
-              <Plus className="h-5 w-5" />
-              <span>Add Repository</span>
-            </Button>
-          </div>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Input
-              placeholder="Find a repository..."
-              value={listSearchQuery}
-              onChange={(event) => setListSearchQuery(event.target.value)}
-              className="min-w-[220px] flex-1"
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 text-sm"
-                >
-                  Sort
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-44">
-                <DropdownMenuRadioGroup
-                  value={sortOption}
-                  onValueChange={(value) => setSortOption(value as SortOption)}
-                >
-                  <DropdownMenuRadioItem value="name">
-                    Name
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="stories">
-                    Story count
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="lastRun">
-                    Last CI run
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {repos.length > 0 && (
+              <Button onClick={handleOpenDialog} className="gap-2">
+                <Plus className="h-5 w-5" />
+                <span>Add Repository</span>
+              </Button>
+            )}
           </div>
         </div>
         <div className="flex-1 overflow-auto px-6 py-6">
-          {repoCount === 0 ? (
+          {repos.length === 0 ? (
             <EmptyState
               kanji="せつぞく"
               kanjiTitle="Setsuzoku - to connect."
