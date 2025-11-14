@@ -16,11 +16,13 @@
 ### Current Issues
 
 **Landing Page (`index.astro`):**
+
 - `LandingNavbar` uses `client:load` - loads immediately (needed for interactivity ✅)
 - `LandingHero` uses `client:load` - loads immediately (could be optimized)
 - `Faq` uses `client:load` - loads immediately (could be optimized)
 
 **App Pages:**
+
 - All app pages use `client:load` - necessary for interactive components ✅
 
 ### Recommendations
@@ -36,7 +38,7 @@
    - Only needs to hydrate when user scrolls to it
    - Saves initial bundle size
 
-3. **Other Landing Components**: 
+3. **Other Landing Components**:
    - `FeatureGrid`, `Metrics`, `Testimonials`, `Pricing` are already server-rendered ✅
    - Consider making interactive parts use `client:visible` if they have interactivity
 
@@ -98,16 +100,23 @@ No resource hints in `<head>` for critical resources.
 ### Recommendations
 
 Add to `layout.astro`:
+
 ```astro
 <head>
   <!-- Preconnect to external domains -->
-  <link rel="preconnect" href="https://api.github.com">
-  
+  <link rel="preconnect" href="https://api.github.com" />
+
   <!-- Preload critical fonts -->
-  <link rel="preload" href="/fonts/manrope/..." as="font" type="font/woff2" crossorigin>
-  
+  <link
+    rel="preload"
+    href="/fonts/manrope/..."
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+
   <!-- DNS prefetch for external resources -->
-  <link rel="dns-prefetch" href="https://vercel.com">
+  <link rel="dns-prefetch" href="https://vercel.com" />
 </head>
 ```
 
@@ -116,6 +125,7 @@ Add to `layout.astro`:
 ### Current Pattern
 
 All app components wrap in `AppProvider` which includes:
+
 - `TrpcProvider` (React Query + tRPC)
 - `AuthProvider`
 - `Toaster`
@@ -123,6 +133,7 @@ All app components wrap in `AppProvider` which includes:
 ### Optimization Opportunity
 
 **Consider splitting providers:**
+
 - Some pages might not need all providers
 - Could lazy-load providers for non-critical pages
 - But current pattern is fine for consistency
@@ -136,6 +147,7 @@ Using `ClientRouter` from `astro:transitions` ✅
 ### Potential Enhancements
 
 1. **Add transition animations**:
+
    ```astro
    <ViewTransitions>
      <ClientRouter />
@@ -178,7 +190,7 @@ All API routes are server-rendered (`export const prerender = false`) ✅
 ### High Priority (Immediate Impact)
 
 1. ✅ Change FAQ to `client:visible`
-2. ✅ Change Hero to `client:idle` 
+2. ✅ Change Hero to `client:idle`
 3. ✅ Add link prefetching to navigation
 4. ✅ Optimize images with Astro Image component
 
@@ -197,6 +209,7 @@ All API routes are server-rendered (`export const prerender = false`) ✅
 ## Metrics to Track
 
 After implementing optimizations, monitor:
+
 - **First Contentful Paint (FCP)**
 - **Largest Contentful Paint (LCP)**
 - **Time to Interactive (TTI)**
@@ -244,4 +257,3 @@ After implementing optimizations, monitor:
 3. Monitor Core Web Vitals
 4. Iterate based on metrics
 5. Consider implementing medium-priority optimizations
-

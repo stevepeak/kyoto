@@ -22,11 +22,10 @@ const installationId = parsedQuery.success
   : undefined
 
 if (parsedQuery.success) {
-
   const { setup_action, owner } = parsedQuery.data
 
   // If update action and installation_id is provided, trigger sync task before redirecting
-  if ( setup_action === 'update') {
+  if (setup_action === 'update') {
     return Astro.redirect('/app', 307)
   }
 

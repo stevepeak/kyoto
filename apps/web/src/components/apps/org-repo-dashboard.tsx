@@ -271,47 +271,49 @@ export function OrgRepoDashboard({ org, repos }: Props) {
                 return (
                   <li
                     key={repo.id}
-                    className="border-b border-border px-6 py-5 last:border-b-0"
+                    className="border-b border-border last:border-b-0"
                   >
-                    <div className="flex flex-col gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <a
-                          href={`/org/${org?.slug}/repo/${repo.name}`}
-                          className="text-base font-semibold text-primary hover:underline"
-                        >
-                          {repo.name}
-                        </a>
-                        <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          {repo.isPrivate ? 'Private' : 'Public'}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <span>{formatStoryCount(repo.storyCount)}</span>
+                    <a
+                      href={`/org/${org?.slug}/repo/${repo.name}`}
+                      className="block px-6 py-5 cursor-pointer"
+                    >
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base font-semibold text-primary">
+                            {repo.name}
+                          </span>
+                          <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                            {repo.isPrivate ? 'Private' : 'Public'}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {statusMeta ? (
-                            <>
-                              <span
-                                className={cn(
-                                  'h-2 w-2 rounded-full',
-                                  statusMeta.dotClass,
-                                )}
-                              />
-                              <span className="text-muted-foreground">
-                                Last CI run {statusMeta.label.toLowerCase()}
-                                {relativeTime ? ` • ${relativeTime}` : ''}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Clock3 className="h-4 w-4 text-muted-foreground" />
-                              <span>No CI runs yet</span>
-                            </>
-                          )}
+                        <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <span>{formatStoryCount(repo.storyCount)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {statusMeta ? (
+                              <>
+                                <span
+                                  className={cn(
+                                    'h-2 w-2 rounded-full',
+                                    statusMeta.dotClass,
+                                  )}
+                                />
+                                <span className="text-muted-foreground">
+                                  Last CI run {statusMeta.label.toLowerCase()}
+                                  {relativeTime ? ` • ${relativeTime}` : ''}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Clock3 className="h-4 w-4 text-muted-foreground" />
+                                <span>No CI runs yet</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </a>
                   </li>
                 )
               })}
