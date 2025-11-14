@@ -2,8 +2,6 @@ import { useState } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@app/api'
 import { SiGithub } from 'react-icons/si'
-import { LuOrigami } from 'react-icons/lu'
-import { CiBoxList } from 'react-icons/ci'
 
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
@@ -94,25 +92,18 @@ export function RepoOverview({
             <div className="border rounded-md overflow-hidden">
               <div className="flex items-center justify-between bg-muted px-4 py-2 border-b">
                 <div className="flex items-center gap-2">
-                  <LuOrigami
-                    aria-hidden="true"
-                    className="h-5 w-5 text-muted-foreground"
-                  />
-                  <h2 className="text-base font-semibold text-foreground">
-                    Stories
-                  </h2>
+                  {stories.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {stories.length} stories
+                    </span>
+                  )}
                 </div>
                 {stories.length > 0 && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      {stories.length} total
-                    </span>
-                    <Button asChild variant="outline" size="sm">
-                      <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
-                        Craft new story
-                      </a>
-                    </Button>
-                  </div>
+                  <Button asChild variant="outline" size="sm">
+                    <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
+                      Craft new story
+                    </a>
+                  </Button>
                 )}
               </div>
               <div className="max-h-[600px] overflow-auto">
@@ -129,18 +120,14 @@ export function RepoOverview({
           <div>
             <div className="border rounded-md overflow-hidden">
               <div className="flex items-center justify-between bg-muted px-4 py-2 border-b">
-                <div className="flex items-baseline gap-2">
-                  <div className="flex items-center gap-2">
-                    <CiBoxList
-                      className="h-5 w-5 text-muted-foreground"
-                      aria-hidden="true"
-                    />
-                    <h2 className="text-base font-semibold text-foreground">
-                      Intent Test Runs
-                    </h2>
-                  </div>
+                <div className="flex items-center gap-2">
+                  {runs.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {runs.length} intent testing runs
+                    </span>
+                  )}
                 </div>
-                {defaultBranch && (
+                {defaultBranch && stories.length > 0 && (
                   <Button
                     disabled={isCreatingRun}
                     variant="default"
