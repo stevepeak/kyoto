@@ -38,11 +38,11 @@ export const storyDecompositionTask = task({
       // Generate title if empty and save it immediately
       if (story.id && (!story.title || story.title.trim() === '')) {
         const generatedTitle = await generateText({
-          prompt: `Generate a concise, descriptive title (maximum 60 characters) for this user story:
+          prompt: `Generate a concise, descriptive sentence (maximum 60 characters) for this user story:
 
 ${story.text}
 
-The title should be clear, specific, and capture the essence of what the story is about. Return only the title, no additional text.`,
+The sentence should be clear, specific, and capture the essence of what the story is about. Use sentence case (only capitalize the first word and proper nouns), not title case. Return only the sentence, no additional text.`,
           modelId: 'gpt-4o-mini',
         })
 
