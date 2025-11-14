@@ -1,5 +1,5 @@
 ---
-description: 
+description: SQL Database Rules
 globs: 
 alwaysApply: false
 ---
@@ -19,14 +19,36 @@ Run from the root directory:
 
 ### Create a new migration
 
-1. Run `db:migrate:create <myname>`
-2. Edit the file it creates, always add an Up and Down migration.
-3. Run `db:migrate`
+**CRITICAL RULES:**
 
-Note:
+1. **ALWAYS use the migration script** - NEVER create migration files manually:
+   ```bash
+   DATABASE_URL=postgres://localhost:5432/kyoto pnpm --filter @app/db db:migrate:create <migration-name>
+   ```
+   - The script generates the correct timestamped filename and template
+   - Creating files manually can cause conflicts and incorrect naming
+
+2. **Edit the generated migration file** - Always add both Up and Down migrations:
+   - Up migration: The changes to apply
+   - Down migration: How to reverse the changes
+
+3. **NEVER run migrations automatically** - Always wait for human approval:
+   - After creating and editing a migration, present it to the user for review
+   - Only run `db:migrate` after explicit user confirmation
+   - Do not run migrations as part of automated workflows without approval
+
+**Migration Workflow:**
+
+1. Run `db:migrate:create <migration-name>` to generate the migration file
+2. Edit the generated file with your Up and Down SQL
+3. Show the migration to the user and request approval
+4. After approval, run `db:migrate` to apply the migration
+
+**Additional Notes:**
 
 - Do not generate types.gen.ts files yourself - they'll be auto generated.
 - Never alter an `OWNER` in a migration.
+- Never create migration files directly in the `migrations/` directory
 
 ### Using Kysely Type Helpers
 
