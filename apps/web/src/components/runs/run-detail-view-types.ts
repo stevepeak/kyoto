@@ -34,6 +34,12 @@ export interface RunStory {
   testResult: StoryTestResult | null
 }
 
+export interface GitAuthor {
+  id: number
+  login: string
+  name: string
+}
+
 export interface Run {
   id: string
   commitSha: string | null
@@ -45,6 +51,7 @@ export interface Run {
   createdAt: string
   updatedAt: string
   stories: RunStory[]
+  gitAuthor: GitAuthor | null
 }
 
 export interface RunDetailViewProps {

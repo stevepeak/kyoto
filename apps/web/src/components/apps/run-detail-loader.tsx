@@ -49,6 +49,12 @@ interface RunStory {
   testResult: StoryTestResult | null
 }
 
+interface GitAuthor {
+  id: number
+  login: string
+  name: string
+}
+
 interface Run {
   id: string
   commitSha: string | null
@@ -60,6 +66,7 @@ interface Run {
   createdAt: string
   updatedAt: string
   stories: RunStory[]
+  gitAuthor: GitAuthor | null
 }
 
 const STORY_RESULT_STATUS_VALUES: readonly StoryTestResult['status'][] = [
@@ -197,6 +204,32 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
     }
   })
 
+  // Parse gitAuthor from JSONB
+  let gitAuthor: GitAuthor | null = null
+  if (run.gitAuthor) {
+    try {
+      const parsed =
+        typeof run.gitAuthor === 'string'
+          ? (JSON.parse(run.gitAuthor) as unknown)
+          : run.gitAuthor
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'id' in parsed &&
+        'login' in parsed &&
+        'name' in parsed
+      ) {
+        gitAuthor = {
+          id: Number(parsed.id),
+          login: String(parsed.login),
+          name: String(parsed.name),
+        }
+      }
+    } catch {
+      // Invalid JSON, leave as null
+    }
+  }
+
   return {
     id: run.id,
     commitSha: run.commitSha ?? null,
@@ -208,6 +241,7 @@ function transformRunResponse(data: RunQueryOutput): Run | null {
     createdAt,
     updatedAt,
     stories,
+    gitAuthor,
   }
 }
 

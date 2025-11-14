@@ -93,7 +93,7 @@ interface BranchDetails {
   gitAuthor: GitAuthor | null
 }
 
-export async function getGithubCommitAuthor(
+async function getGithubCommitAuthor(
   octokit: Octokit,
   params: {
     owner: string

@@ -18,6 +18,9 @@
       "path": "../../packages/db/tsconfig.json"
     },
     {
+      "path": "../../packages/schemas/tsconfig.json"
+    },
+    {
       "path": "../../packages/utils/tsconfig.json"
     }
   ]

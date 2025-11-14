@@ -107,14 +107,13 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
             absoluteStarted={absoluteStarted}
             durationDisplay={durationDisplay}
             statusDisplay={statusDisplay}
+            run={run}
+            shortSha={shortSha}
+            commitUrl={commitUrl}
           />
 
           <RunCommitBlock
             run={run}
-            relativeStarted={relativeStarted}
-            absoluteStarted={absoluteStarted}
-            shortSha={shortSha}
-            commitUrl={commitUrl}
             pullRequestUrl={pullRequestUrl}
           />
         </div>

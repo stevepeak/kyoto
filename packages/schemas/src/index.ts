@@ -36,4 +36,3 @@ export const analysisSchema = z.object({
 })
 
 export type EvaluationAnalysisResult = z.infer<typeof analysisSchema>
-
