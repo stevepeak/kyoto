@@ -22,14 +22,16 @@ export function StoryDecompositionTab({
             >
               ぶんかい
             </p>
-            <h2 className="mb-0">Decomposition</h2>
+            <h1 className="text-2xl font-display text-foreground">
+              Intent Composition
+            </h1>
           </div>
           <Button
             variant="outline"
             onClick={onDecompose}
             disabled={isDecomposing}
           >
-            {isDecomposing ? 'Decomposing...' : 'Decompose'}
+            {isDecomposing ? 'Transcribing...' : 'Re-transcribe'}
           </Button>
         </div>
         <div className="mt-3">

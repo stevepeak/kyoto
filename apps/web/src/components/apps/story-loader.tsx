@@ -338,9 +338,7 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                 <div className="px-6 pt-4 flex items-center justify-center">
                   <TabsList>
                     <TabsTrigger value="story">Story</TabsTrigger>
-                    <TabsTrigger value="decomposition">
-                      Decomposition
-                    </TabsTrigger>
+                    <TabsTrigger value="decomposition">Composition</TabsTrigger>
                     <TabsTrigger value="runs">Recent Runs</TabsTrigger>
                   </TabsList>
                 </div>
