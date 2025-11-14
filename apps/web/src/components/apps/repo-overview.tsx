@@ -151,7 +151,7 @@ export function RepoOverview({
                     size="sm"
                     onClick={handleStartRun}
                   >
-                    {isCreatingRun ? 'Starting...' : 'Start new run'}
+                    {isCreatingRun ? 'Starting...' : 'Begin new run'}
                   </Button>
                 )}
               </div>
