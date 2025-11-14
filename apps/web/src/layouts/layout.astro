@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions'
+import { PageTransitionLoader } from '@/components/common/page-transition-loader'
 import '../styles/global.css'
 ---
 
@@ -14,9 +15,32 @@ import '../styles/global.css'
     {/* Preconnect to external domains */}
     <link rel="preconnect" href="https://api.github.com" crossorigin />
     <link rel="dns-prefetch" href="https://api.github.com" />
+    {/* Preload critical fonts */}
+    <link
+      rel="preload"
+      href="/fonts/manrope/Manrope-Regular.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/manrope/Manrope-SemiBold.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/cormorant-garamond/CormorantGaramond-SemiBold.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
     <ClientRouter />
   </head>
   <body>
+    <PageTransitionLoader client:load />
     <slot />
   </body>
 </html>

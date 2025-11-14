@@ -5,6 +5,20 @@ import { auth } from './server/auth'
 
 // `context` and `next` are automatically typed
 export const onRequest = defineMiddleware(async (context, next) => {
+  const url = new URL(context.request.url)
+
+  // Skip middleware for static assets and API routes
+  // This reduces unnecessary auth checks and improves performance
+  if (
+    url.pathname.startsWith('/_astro/') ||
+    url.pathname.startsWith('/fonts/') ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/favicon') ||
+    /\.(ico|png|jpg|jpeg|svg|webp|woff|woff2|ttf|css|js)$/.test(url.pathname)
+  ) {
+    return await next()
+  }
+
   const sessionData = await auth.api.getSession({
     headers: context.request.headers,
   })

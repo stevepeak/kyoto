@@ -46,6 +46,22 @@ function NavItem({
     }
   }
 
+  // Prefetch route on hover/focus for faster navigation
+  const handleMouseEnter = () => {
+    if (href && !disabled) {
+      // Check if already prefetched to avoid duplicates
+      const existingLink = document.querySelector(
+        `link[rel="prefetch"][href="${href}"]`,
+      )
+      if (!existingLink) {
+        const link = document.createElement('link')
+        link.rel = 'prefetch'
+        link.href = href
+        document.head.appendChild(link)
+      }
+    }
+  }
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -61,6 +77,8 @@ function NavItem({
                 : 'text-muted-foreground hover:bg-accent',
             )}
             onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+            onFocus={handleMouseEnter}
           >
             {icon}
           </Button>

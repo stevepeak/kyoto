@@ -228,6 +228,18 @@
     position: relative;
     @apply bg-background text-foreground font-sans;
   }
+  /* View transition optimizations */
+  @view-transition {
+    navigation: auto;
+  }
+  /* Smooth page transitions */
+  html[data-astro-transition-scope] {
+    opacity: 0;
+    transition: opacity 150ms ease-in-out;
+  }
+  html[data-astro-transition-scope][data-astro-transition-ready] {
+    opacity: 1;
+  }
   body,
   .font-text {
     font-family: var(--font-text);
