@@ -138,11 +138,13 @@ function buildStepPrompt({
   const requirementSection =
     stepContext.step.type === 'requirement'
       ? dedent`
-          # Goal to Verify
+          # Goal
           **${stepContext.step.goal}**
 
-          You must verify whether the repository satisfies ALL of the following assertions:
+          To verify is this goal is acheivable you must verify the following assertion:
           ${bulletList(stepContext.step.assertions)}
+
+          Do not come up with more assertions, this is the complete list to verify and provide evidence for.
         `
       : ''
 
