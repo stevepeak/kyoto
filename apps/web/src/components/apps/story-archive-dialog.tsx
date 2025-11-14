@@ -29,8 +29,8 @@ export function StoryArchiveDialog({
         <DialogHeader>
           <DialogTitle>Archive Story</DialogTitle>
           <DialogDescription>
-            Are you sure you want to archive &ldquo;{storyName}&rdquo;? The story
-            will be hidden from the list but can be restored later.
+            Are you sure you want to archive &ldquo;{storyName}&rdquo;? The
+            story will be hidden from the list but can be restored later.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -41,7 +41,11 @@ export function StoryArchiveDialog({
           >
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onArchive} disabled={isArchiving}>
+          <Button
+            variant="destructive"
+            onClick={onArchive}
+            disabled={isArchiving}
+          >
             {isArchiving ? 'Archiving...' : 'Archive'}
           </Button>
         </DialogFooter>
@@ -49,4 +53,3 @@ export function StoryArchiveDialog({
     </Dialog>
   )
 }
-

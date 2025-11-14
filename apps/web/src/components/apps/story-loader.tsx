@@ -347,6 +347,7 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                 <TabsContent
                   value="story"
                   className="flex-1 overflow-auto mt-0"
+                  tabIndex={-1}
                 >
                   <StoryEditForm
                     storyName={storyName}
@@ -363,6 +364,7 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                 <TabsContent
                   value="decomposition"
                   className="flex-1 overflow-hidden mt-0"
+                  tabIndex={-1}
                 >
                   <StoryDecompositionTab
                     decomposition={story?.decomposition}
@@ -370,7 +372,11 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                     onDecompose={handleDecompose}
                   />
                 </TabsContent>
-                <TabsContent value="runs" className="flex-1 overflow-auto mt-0">
+                <TabsContent
+                  value="runs"
+                  className="flex-1 overflow-auto mt-0"
+                  tabIndex={-1}
+                >
                   <StoryRunsTab isTesting={isTesting} onTest={handleTest} />
                 </TabsContent>
               </Tabs>
