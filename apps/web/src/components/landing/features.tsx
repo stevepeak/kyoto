@@ -57,11 +57,6 @@ export function FeatureGrid() {
                 <p className="text-sm text-muted-foreground">
                   {feature.description}
                 </p>
-                <div className="mt-auto">
-                  <span className="text-sm font-medium text-primary">
-                    Learn more →
-                  </span>
-                </div>
               </div>
             </div>
           ))}
