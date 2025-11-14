@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Archive, FileText, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
@@ -36,6 +37,9 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
   const trpc = useTRPCClient()
   const isCreateMode = !storyId
 
+  // localStorage key for draft story
+  const draftStorageKey = `story-draft-${orgName}-${repoName}`
+
   const [isLoading, setIsLoading] = useState(!isCreateMode)
   const [story, setStory] = useState<Story | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +55,61 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
   const [showTemplatesDialog, setShowTemplatesDialog] = useState(false)
 
   const hasChanges = storyContent !== originalStoryContent
+
+  // Load draft from localStorage on mount (create mode only)
+  useEffect(() => {
+    if (!isCreateMode) {
+      return
+    }
+
+    try {
+      const draft = localStorage.getItem(draftStorageKey)
+      if (draft) {
+        const parsed = JSON.parse(draft) as {
+          storyName?: string
+          storyContent?: string
+        }
+        if (parsed.storyName) {
+          setStoryName(parsed.storyName)
+        }
+        if (parsed.storyContent) {
+          setStoryContent(parsed.storyContent)
+          setOriginalStoryContent(parsed.storyContent)
+        }
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+      console.error('Failed to load draft from localStorage:', e)
+    }
+  }, [isCreateMode, draftStorageKey])
+
+  // Save draft to localStorage whenever content changes (create mode only)
+  useEffect(() => {
+    if (!isCreateMode) {
+      return
+    }
+
+    try {
+      const draft = {
+        storyName,
+        storyContent,
+      }
+      localStorage.setItem(draftStorageKey, JSON.stringify(draft))
+    } catch (e) {
+      // Ignore localStorage errors
+      console.error('Failed to save draft to localStorage:', e)
+    }
+  }, [isCreateMode, draftStorageKey, storyName, storyContent])
+
+  // Clear draft from localStorage
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(draftStorageKey)
+    } catch (e) {
+      // Ignore localStorage errors
+      console.error('Failed to clear draft from localStorage:', e)
+    }
+  }
 
   useEffect(() => {
     if (isCreateMode) {
@@ -118,12 +177,16 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
         return
       }
 
+      // Clear draft from localStorage after successful creation
+      clearDraft()
+
       // Navigate back to the repository page after saving (create mode only)
       // Unless "create more" is checked, then reset the form
       if (createMore) {
         setStoryContent('')
         setOriginalStoryContent('')
         setIsSaving(false)
+        toast.success('Story created.')
       } else {
         window.location.href = `/org/${orgName}/repo/${repoName}`
       }
@@ -159,7 +222,8 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
 
   const handleCancel = () => {
     if (isCreateMode) {
-      window.location.href = `/org/${orgName}/repo/${repoName}`
+      // Don't clear draft on cancel - user might come back
+      window.history.back()
     } else {
       setStoryContent(originalStoryContent)
     }
