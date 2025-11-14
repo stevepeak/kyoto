@@ -1,9 +1,9 @@
-import { analysisSchema } from './agents/schema'
+import { analysisSchema } from '@app/schemas'
 import { decompositionOutputSchema } from './agents/v3/story-decomposition'
 import { runDecompositionAgent } from './agents/v3/story-decomposition'
 import { main } from './agents/v3/story-evaluator'
 
-export { type Status } from './agents/schema'
+export { type Status } from '@app/schemas'
 export { generateText } from './helpers/generate-text'
 
 export const agents = {

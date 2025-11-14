@@ -3,9 +3,8 @@ import type {
   Run,
   RunStory,
   StatusDisplay,
-  StoryAnalysis,
-  StoryAnalysisEvidence,
   StoryStatusPillStatus,
+  EvaluationConclusion,
 } from './run-detail-view-types'
 import {
   AlertTriangle,
@@ -135,7 +134,7 @@ export function formatDurationMs(
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
 }
 
-export function getConclusionStyles(conclusion: StoryAnalysis['conclusion']): {
+export function getConclusionStyles(conclusion: EvaluationConclusion): {
   container: string
   badge: string
   label: string
@@ -201,7 +200,7 @@ export function getStatusPillStyles(status: StoryStatusPillStatus): {
 }
 
 export function getEvidenceConclusionDisplay(
-  conclusion: StoryAnalysisEvidence['conclusion'],
+  conclusion: 'pass' | 'fail',
 ): EvidenceConclusionDisplay {
   if (conclusion === 'pass') {
     return {

@@ -8,7 +8,6 @@ import { StoryStatusCheck } from './StoryStatusCheck'
 import {
   formatDate,
   formatDurationMs,
-  formatEvidenceSummary,
   formatRelativeTime,
   getConclusionStyles,
   getDisplayStatus,
@@ -70,17 +69,13 @@ export function RunStoryDetails({ story, testResult }: RunStoryDetailsProps) {
       )
     }
 
-    // Handle both old structure (conclusion) and new structure (status)
-    const conclusion = analysis.conclusion ?? analysis.status
-    if (
-      !conclusion ||
-      (conclusion !== 'pass' && conclusion !== 'fail' && conclusion !== 'error')
-    ) {
-      // If we can't determine the conclusion, just show the raw analysis
+    const status = analysis.status
+    if (status !== 'pass' && status !== 'fail' && status !== 'error') {
+      // Skip rendering conclusion for 'running' or 'skipped' status
       return null
     }
 
-    const conclusionStyles = getConclusionStyles(conclusion)
+    const conclusionStyles = getConclusionStyles(status)
 
     return (
       <div className="space-y-4">
@@ -93,36 +88,23 @@ export function RunStoryDetails({ story, testResult }: RunStoryDetailsProps) {
           <p className="text-sm font-semibold text-foreground">
             {conclusionStyles.label}
           </p>
-          <p className="mt-2 text-sm text-foreground">
-            {analysis.explanation ?? ''}
-          </p>
+          <p className="mt-2 text-sm text-foreground">{analysis.explanation}</p>
         </div>
 
-        {Array.isArray(analysis.evidence) && analysis.evidence.length > 0 ? (
+        {analysis.steps && analysis.steps.length > 0 ? (
           <div className="space-y-2">
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Evidence
+              Steps
             </div>
             <div className="space-y-2">
-              {analysis.evidence.map((evidence: any, index: number) => {
-                const summaryTitle =
-                  evidence.step?.trim() && evidence.step.trim().length > 0
-                    ? evidence.step.trim()
-                    : formatEvidenceSummary(evidence.note, evidence.filePath)
-
-                const lineInfo =
-                  evidence.startLine && evidence.endLine
-                    ? `L${evidence.startLine}-L${evidence.endLine}`
-                    : evidence.startLine
-                      ? `L${evidence.startLine}`
-                      : null
+              {analysis.steps.map((step, stepIndex) => {
                 const conclusionDisplay = getEvidenceConclusionDisplay(
-                  evidence.conclusion,
+                  step.conclusion === 'pass' ? 'pass' : 'fail',
                 )
 
                 return (
                   <details
-                    key={`${storyResult.id}-evidence-${index}`}
+                    key={`${storyResult.id}-step-${stepIndex}`}
                     className="group rounded-md border bg-muted/40 text-sm text-foreground"
                   >
                     <summary className="flex w-full cursor-pointer select-none items-center gap-2 px-3 py-3 text-left [&::-webkit-details-marker]:hidden">
@@ -135,25 +117,44 @@ export function RunStoryDetails({ story, testResult }: RunStoryDetailsProps) {
                         )}
                       />
                       <span className="truncate text-sm font-medium text-foreground">
-                        {summaryTitle}
+                        {step.type === 'given' ? 'Given' : 'Requirement'}:{' '}
+                        {step.outcome}
                       </span>
                     </summary>
                     <div className="space-y-3 border-t px-3 py-3 text-sm text-foreground">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <code className="rounded bg-background px-1.5 py-0.5 font-mono text-[11px]">
-                          {evidence.filePath}
-                        </code>
-                        {lineInfo ? <span>{lineInfo}</span> : null}
+                      <div className="text-sm text-muted-foreground">
+                        {step.outcome}
                       </div>
-                      {evidence.note ? (
-                        <div className="prose prose-sm max-w-none text-foreground">
-                          <ReactMarkdown>{evidence.note}</ReactMarkdown>
+                      {step.assertions && step.assertions.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Assertions
+                          </div>
+                          {step.assertions.map((assertion, assertionIndex) => (
+                            <div
+                              key={`${storyResult.id}-assertion-${stepIndex}-${assertionIndex}`}
+                              className="rounded-md border bg-background p-3"
+                            >
+                              <div className="text-sm font-medium text-foreground">
+                                {assertion.fact}
+                              </div>
+                              {assertion.evidence &&
+                              assertion.evidence.length > 0 ? (
+                                <div className="mt-2 space-y-1">
+                                  <div className="text-xs font-medium text-muted-foreground">
+                                    Evidence:
+                                  </div>
+                                  <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
+                                    {assertion.evidence.map((ev, evIndex) => (
+                                      <li key={evIndex}>{ev}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : null}
+                            </div>
+                          ))}
                         </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No conclusion note provided.
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   </details>
                 )

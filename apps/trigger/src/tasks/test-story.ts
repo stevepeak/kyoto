@@ -5,7 +5,7 @@ import { setupDb } from '@app/db'
 import { agents } from '@app/agents'
 import { parseEnv } from '@app/config'
 import { getTelemetryTracer } from '@/telemetry'
-import type { EvaluationAnalysisResult } from 'node_modules/@app/agents/src/agents/schema'
+import type { EvaluationAnalysisResult } from '@app/schemas'
 import { createDaytonaSandbox } from '@/helpers/daytona'
 
 export type TestStoryTaskResult = {

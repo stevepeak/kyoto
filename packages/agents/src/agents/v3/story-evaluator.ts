@@ -15,10 +15,10 @@ import { createLspTool } from '../../tools/lsp-tool'
 import {
   statusSchema,
   type Status,
-  type evaluationAgentOptions,
-  type EvaluationAnalysisResult,
   analysisSchema,
-} from '../schema'
+  type EvaluationAnalysisResult,
+} from '@app/schemas'
+import type { evaluationAgentOptions } from '../schema'
 import { logger } from '@trigger.dev/sdk'
 import zodToJsonSchema from 'zod-to-json-schema'
 import { agents } from '../..'

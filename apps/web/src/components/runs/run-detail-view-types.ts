@@ -1,26 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
-
-export interface StoryAnalysisEvidence {
-  step: string | null
-  conclusion: 'pass' | 'fail'
-  filePath: string
-  startLine: number | null
-  endLine: number | null
-  note: string | null
-}
-
-export interface StoryAnalysis {
-  conclusion: 'pass' | 'fail' | 'error'
-  explanation: string
-  evidence: StoryAnalysisEvidence[]
-}
+import type { EvaluationAnalysisResult } from '@app/schemas'
 
 export interface StoryTestResult {
   id: string
   storyId: string
   status: 'pass' | 'fail' | 'running' | 'error'
   analysisVersion: number
-  analysis: any // ! Cross domain issue here where the type is in @app/agents
+  analysis: EvaluationAnalysisResult | null
   startedAt: string | null
   completedAt: string | null
   durationMs: number | null
@@ -85,3 +71,6 @@ export interface EvidenceConclusionDisplay {
   iconClassName: string
   label: string
 }
+
+// Helper type for accessing conclusion from evaluation analysis
+export type EvaluationConclusion = 'pass' | 'fail' | 'error'

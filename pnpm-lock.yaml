@@ -50,6 +50,9 @@ importers:
       '@app/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@app/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
       '@daytonaio/sdk':
         specifier: ^0.113.1
         version: 0.113.1(ws@8.18.3(bufferutil@4.0.9))
@@ -105,6 +108,9 @@ importers:
       '@app/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@app/schemas':
+        specifier: workspace:^
+        version: link:../../packages/schemas
       '@app/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -280,6 +286,9 @@ importers:
       '@app/config':
         specifier: workspace:*
         version: link:../config
+      '@app/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       '@daytonaio/sdk':
         specifier: ^0.113.1
         version: 0.113.1(ws@8.18.3(bufferutil@4.0.9))
@@ -388,6 +397,19 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.0.9))(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.7.1)
+
+  packages/schemas:
+    dependencies:
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.18.10
+        version: 22.19.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/utils:
     dependencies:

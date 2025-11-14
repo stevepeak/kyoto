@@ -70,17 +70,17 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm max-w-none focus:outline-none min-h-[200px]',
-          'prose-headings:font-semibold prose-headings:text-foreground',
-          'prose-p:text-foreground prose-p:my-2',
-          'prose-ul:text-foreground prose-ul:my-2',
-          'prose-ol:text-foreground prose-ol:my-2',
-          'prose-li:text-foreground prose-li:my-1',
-          'prose-strong:text-foreground prose-strong:font-semibold',
-          'prose-code:text-foreground prose-code:text-sm prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded',
-          'prose-pre:text-foreground prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-md',
-          'prose-blockquote:text-foreground prose-blockquote:border-l-4 prose-blockquote:border-muted-foreground prose-blockquote:pl-4',
-          'prose-a:text-primary prose-a:underline',
+          'prose prose-sm max-w-none focus:outline-none min-h-[200px] font-sans',
+          'prose-headings:font-semibold prose-headings:text-foreground prose-headings:font-sans',
+          'prose-p:text-foreground prose-p:my-2 prose-p:font-sans',
+          'prose-ul:text-foreground prose-ul:my-2 prose-ul:font-sans',
+          'prose-ol:text-foreground prose-ol:my-2 prose-ol:font-sans',
+          'prose-li:text-foreground prose-li:my-1 prose-li:font-sans',
+          'prose-strong:text-foreground prose-strong:font-semibold prose-strong:font-sans',
+          'prose-code:text-foreground prose-code:text-sm prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:font-sans',
+          'prose-pre:text-foreground prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-md prose-pre:font-sans',
+          'prose-blockquote:text-foreground prose-blockquote:border-l-4 prose-blockquote:border-muted-foreground prose-blockquote:pl-4 prose-blockquote:font-sans',
+          'prose-a:text-primary prose-a:underline prose-a:font-sans',
         ),
       },
       handleKeyDown: (view, event) => {
@@ -156,6 +156,9 @@ export function TiptapEditor({
             pointer-events: none;
             height: 0;
           }
+          .tiptap * {
+            font-family: var(--font-sans) !important;
+          }
         `}</style>
         <div
           className={cn(
@@ -178,6 +181,9 @@ export function TiptapEditor({
           color: hsl(var(--muted-foreground));
           pointer-events: none;
           height: 0;
+        }
+        .tiptap * {
+          font-family: var(--font-sans) !important;
         }
       `}</style>
       <div

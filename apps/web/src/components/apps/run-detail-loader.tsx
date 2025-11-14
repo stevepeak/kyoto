@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 import { RunDetailView } from '@/components/runs/RunDetailView'
 import type { AppRouter } from '@app/api'
+import type { EvaluationAnalysisResult } from '@app/schemas'
 
 type RunQueryOutput = inferRouterOutputs<AppRouter>['run']['getByRunId']
 type ApiRun = NonNullable<RunQueryOutput['run']>
@@ -15,27 +16,12 @@ type ApiStory = NonNullable<RunQueryOutput['stories']>[number] & {
 }
 type ApiStoryResult = NonNullable<RunQueryOutput['storyResults']>[number]
 
-interface StoryAnalysisEvidence {
-  step: string | null
-  conclusion: 'pass' | 'fail'
-  filePath: string
-  startLine: number | null
-  endLine: number | null
-  note: string | null
-}
-
-interface StoryAnalysis {
-  conclusion: 'pass' | 'fail' | 'error'
-  explanation: string
-  evidence: StoryAnalysisEvidence[]
-}
-
 interface StoryTestResult {
   id: string
   storyId: string
   status: 'pass' | 'fail' | 'running' | 'error'
   analysisVersion: number
-  analysis: StoryAnalysis | null
+  analysis: EvaluationAnalysisResult | null
   startedAt: string | null
   completedAt: string | null
   durationMs: number | null
