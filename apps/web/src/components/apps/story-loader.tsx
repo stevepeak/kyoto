@@ -53,6 +53,9 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
     clearDraft,
   } = useStoryDraft(draftStorageKey, isCreateMode)
 
+  // Track original story name for edit mode
+  const [originalStoryName, setOriginalStoryName] = useState('')
+
   // UI state (dialogs and flags)
   const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [showTemplatesDialog, setShowTemplatesDialog] = useState(false)
@@ -65,7 +68,9 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
   const [isTesting, setIsTesting] = useState(false)
 
   // Derived values
-  const hasChanges = storyContent !== originalStoryContent
+  const hasContentChanges = storyContent !== originalStoryContent
+  const hasNameChanges = storyName !== originalStoryName
+  const hasChanges = hasContentChanges || hasNameChanges
   const breadcrumbs = [
     { label: orgName, href: `/org/${orgName}` },
     { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
@@ -91,6 +96,7 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
         if (resp.story) {
           setStory(resp.story)
           setStoryName(resp.story.name)
+          setOriginalStoryName(resp.story.name)
           setStoryContent(resp.story.story)
           setOriginalStoryContent(resp.story.story)
         }
@@ -126,15 +132,31 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
           files: [],
         })
       } else {
-        const result = await trpc.story.update.mutate({
+        // Build update payload with only changed fields
+        const updatePayload: {
+          orgName: string
+          repoName: string
+          storyId: string
+          name?: string
+          story?: string
+        } = {
           orgName,
           repoName,
           storyId: storyId,
-          name: storyName,
-          story: storyContent,
-        })
+        }
+
+        // Only include fields that have changed
+        if (hasNameChanges) {
+          updatePayload.name = storyName
+        }
+        if (hasContentChanges) {
+          updatePayload.story = storyContent
+        }
+
+        const result = await trpc.story.update.mutate(updatePayload)
         setStory(result.story)
         setOriginalStoryContent(storyContent)
+        setOriginalStoryName(storyName)
         setIsSaving(false)
         return
       }
@@ -193,6 +215,7 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
       window.history.back()
     } else {
       setStoryContent(originalStoryContent)
+      setStoryName(originalStoryName)
     }
   }
 
@@ -231,6 +254,8 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
       })
       if (resp.story) {
         setStory(resp.story)
+        setStoryName(resp.story.name)
+        setOriginalStoryName(resp.story.name)
         setStoryContent(resp.story.story)
         setOriginalStoryContent(resp.story.story)
       }
@@ -317,6 +342,7 @@ export function StoryLoader({ orgName, repoName, storyId }: StoryLoaderProps) {
                     storyContent={storyContent}
                     hasChanges={hasChanges}
                     isSaving={isSaving}
+                    onNameChange={setStoryName}
                     onContentChange={setStoryContent}
                     onSave={handleSave}
                     onCancel={handleCancel}
