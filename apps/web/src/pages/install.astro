@@ -9,7 +9,7 @@ const session = await auth.api.getSession({
 
 // If not authenticated, redirect to sign in
 if (!session?.user?.id) {
-  return Astro.redirect('/sign-in')
+  return Astro.redirect('/auth', 307)
 }
 
 const userId = session.user.id
@@ -26,11 +26,11 @@ const organizations = await db
 
 if (organizations.length > 0) {
   // User has access to at least one organization, redirect to /app
-  return Astro.redirect('/app')
+  return Astro.redirect('/app', 307)
 }
 
 // User has no organizations, redirect to GitHub App installation
 const installUrl = `https://github.com/apps/${GITHUB_APP_SLUG}/installations/new`
-return Astro.redirect(installUrl)
+return Astro.redirect(installUrl, 307)
 ---
 
