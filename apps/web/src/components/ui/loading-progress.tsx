@@ -6,5 +6,5 @@ interface LoadingProgressProps {
 }
 
 export function LoadingProgress({}: LoadingProgressProps) {
-  return <div>Loading...</div>
+  return <div></div>
 }
