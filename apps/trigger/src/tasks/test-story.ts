@@ -52,8 +52,6 @@ export const testStoryTask = task({
       daytonaSandboxId = sandbox.id
     }
 
-    console.log('🌸', { storyRecord, payload, daytonaSandboxId })
-
     /**
      * Agent to evaluate the story
      */
