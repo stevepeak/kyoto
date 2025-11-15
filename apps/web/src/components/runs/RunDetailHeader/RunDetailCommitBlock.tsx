@@ -1,4 +1,3 @@
-import ReactMarkdown from 'react-markdown'
 import type { Run } from '../types'
 
 interface RunDetailCommitBlockProps {
@@ -29,13 +28,6 @@ export function RunDetailCommitBlock({
               ) : (
                 `#${run.prNumber}`
               )}
-            </div>
-          </div>
-        ) : null}
-        {run.summary ? (
-          <div className="space-y-2 md:col-span-2">
-            <div className="prose prose-sm max-w-none text-foreground">
-              <ReactMarkdown>{run.summary}</ReactMarkdown>
             </div>
           </div>
         ) : null}

@@ -45,7 +45,7 @@ export const agents = {
     run: main,
     options: {
       maxSteps: 50,
-      model: model('openrouter', 'openai/gpt-5.1-codex-mini'),
+      model: model('openai', 'gpt-5.1-codex-mini'),
     },
   },
 } as const

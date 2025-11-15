@@ -83,7 +83,8 @@ You must discover evidence by gathering, searching, and evaluating source code t
 - When a step depends on another, you may reference previous step evidence but must still verify the current step's implementation.
 
 # Tools
-- **terminalCommand**: Execute read-only shell commands (e.g., \`rg\`, \`fd\`, \`tree\`, \`git\`, \`grep\`, etc.) to search for code patterns, files, and symbols.
+- **terminalCommand**: Execute read-only shell commands (e.g., \`rg\`, \`fd\`, \`grep\`, etc.) to search for code patterns, files, and symbols.
+  - Use this tool ONLY for code search.
 - **readFile**: Read the full contents of a file to verify context and extract precise code snippets.
 - **resolveLibrary**: Resolve a library/package name to get its Context7 library ID. Use this when you need to understand how a specific library or framework works.
 - **getLibraryDocs**: Fetch up-to-date documentation for a library using its Context7 ID. Use this after resolveLibrary to get detailed documentation about APIs, patterns, or features.
@@ -242,7 +243,7 @@ async function agent(args: {
       // - **lsp**: Use the Language Server Protocol to list symbols in a file (\`documentSymbols\`) or discover symbols across the codebase (\`sandboxSymbols\`). Only supports TypeScript and Python sources.
       // lsp: createLspTool({ sandbox }),
     },
-    toolChoice: 'required',
+    toolChoice: 'auto', // must be auto to the agent can choose when to finish.
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-step-evaluation-v3',
