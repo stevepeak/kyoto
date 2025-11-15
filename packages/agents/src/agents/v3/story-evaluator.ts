@@ -1,6 +1,10 @@
-import { ToolLoopAgent, Output, stepCountIs, generateText } from 'ai'
+import {
+  Experimental_Agent as Agent,
+  Output,
+  stepCountIs,
+  generateText,
+} from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
-import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import type { DecompositionAgentResult } from './story-decomposition'
 import dedent from 'dedent'
 
@@ -232,14 +236,9 @@ async function agent(args: {
     evaluationAgentOptions: { repo, options },
     sandbox,
   } = args
-  const env = parseEnv()
 
-  const aiProvider = createOpenRouter({ apiKey: env.OPENROUTER_API_KEY })
-  const effectiveModelId = options?.modelId ?? agents.evaluation.options.model
-
-  const agent = new ToolLoopAgent({
-    id: 'story-step-evaluation-v3',
-    model: aiProvider(effectiveModelId),
+  const agent = new Agent({
+    model: agents.evaluation.options.model,
     instructions: buildEvaluationInstructions(stepContext.repoOutline),
     tools: {
       terminalCommand: createTerminalCommandTool({ sandbox }),
@@ -257,7 +256,6 @@ async function agent(args: {
         repoId: repo.id,
         repoSlug: repo.slug,
         daytonaSandboxId: options?.daytonaSandboxId ?? '',
-        modelId: effectiveModelId,
         stepIndex: stepContext.stepIndex,
       },
       tracer: options?.telemetryTracer,
@@ -265,7 +263,7 @@ async function agent(args: {
     onStepFinish: (step) => {
       logger.info(`🤖 ai.onStepFinish`, step)
     },
-    maxRetries: 1, // @default 2
+    maxRetries: 3, // @default 2
     stopWhen: stepCountIs(
       options?.maxSteps ?? agents.evaluation.options.maxSteps,
     ),

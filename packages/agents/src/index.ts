@@ -2,9 +2,30 @@ import { analysisSchema } from '@app/schemas'
 import { decompositionOutputSchema } from './agents/v3/story-decomposition'
 import { runDecompositionAgent } from './agents/v3/story-decomposition'
 import { main } from './agents/v3/story-evaluator'
+import { parseEnv } from '@app/config'
+import { createOpenAI } from '@ai-sdk/openai'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 export { type Status } from '@app/schemas'
 export { generateText } from './helpers/generate-text'
+
+const env = parseEnv()
+
+function model(
+  gateway: 'openai' | 'openrouter' | 'ai-gateway',
+  modelId: string,
+): any {
+  if (gateway === 'openai') {
+    return createOpenAI({ apiKey: env.OPENAI_API_KEY })(modelId)
+  }
+  if (gateway === 'openrouter') {
+    return createOpenRouter({ apiKey: env.OPENROUTER_API_KEY })(modelId)
+  }
+  if (gateway === 'ai-gateway') {
+    return modelId
+  }
+  throw new Error(`Unsupported provider: ${gateway}`)
+}
 
 export const agents = {
   decomposition: {
@@ -14,7 +35,7 @@ export const agents = {
     run: runDecompositionAgent,
     options: {
       maxSteps: 15, // typically ends in 3-5 steps
-      model: 'gpt-5-mini',
+      model: model('openai', 'gpt-5.1-mini'),
     },
   },
   evaluation: {
@@ -24,7 +45,7 @@ export const agents = {
     run: main,
     options: {
       maxSteps: 50,
-      model: 'gpt-5-mini',
+      model: model('openrouter', 'openai/gpt-5.1-mini'),
     },
   },
 } as const

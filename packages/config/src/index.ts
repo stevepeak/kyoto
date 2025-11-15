@@ -48,6 +48,7 @@ const envSchema = z.object({
   DAYTONA_API_KEY: z.string().min(1, 'DAYTONA_API_KEY is required'),
   CONTEXT7_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().min(1, 'OPENROUTER_API_KEY is required'),
+  AI_GATEWAY_API_KEY: z.string().min(1, 'AI_GATEWAY_API_KEY is required'),
   SITE_BASE_URL: z
     .string()
     .trim()
@@ -67,6 +68,7 @@ export function parseEnv(): ParsedEnv {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     DAYTONA_API_KEY: process.env.DAYTONA_API_KEY,
     OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+    AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
     CONTEXT7_API_KEY: process.env.CONTEXT7_API_KEY,
     SITE_BASE_URL: process.env.SITE_BASE_URL,
   })
