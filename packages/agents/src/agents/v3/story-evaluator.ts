@@ -14,7 +14,6 @@ import {
   createResolveLibraryTool,
   createGetLibraryDocsTool,
 } from '../../tools/context7-tool'
-import { createLspTool } from '../../tools/lsp-tool'
 import {
   type Status,
   analysisSchema,
@@ -88,7 +87,6 @@ You must discover evidence by gathering, searching, and evaluating source code t
 - **readFile**: Read the full contents of a file to verify context and extract precise code snippets.
 - **resolveLibrary**: Resolve a library/package name to get its Context7 library ID. Use this when you need to understand how a specific library or framework works.
 - **getLibraryDocs**: Fetch up-to-date documentation for a library using its Context7 ID. Use this after resolveLibrary to get detailed documentation about APIs, patterns, or features.
-- **lsp**: Use the Language Server Protocol to list symbols in a file (\`documentSymbols\`) or discover symbols across the codebase (\`sandboxSymbols\`). Only supports TypeScript and Python sources.
 
 # Rules
 - Always append a \`.\` when using \`rg\` (e.g., \`rg pattern .\`).
@@ -240,7 +238,9 @@ async function agent(args: {
       readFile: createReadFileTool({ sandbox }),
       resolveLibrary: createResolveLibraryTool(),
       getLibraryDocs: createGetLibraryDocsTool(),
-      lsp: createLspTool({ sandbox }),
+      // TODO fix this getting: Error: "error starting LSP server"
+      // - **lsp**: Use the Language Server Protocol to list symbols in a file (\`documentSymbols\`) or discover symbols across the codebase (\`sandboxSymbols\`). Only supports TypeScript and Python sources.
+      // lsp: createLspTool({ sandbox }),
     },
     toolChoice: 'required',
     experimental_telemetry: {
