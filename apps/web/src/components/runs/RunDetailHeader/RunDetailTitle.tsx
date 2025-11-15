@@ -12,6 +12,8 @@ interface RunDetailTitleProps {
   run: Run
   shortSha: string | null
   commitUrl: string | null
+  orgName: string
+  repoName: string
 }
 
 export function RunDetailTitle({
@@ -24,6 +26,8 @@ export function RunDetailTitle({
   run,
   shortSha,
   commitUrl,
+  orgName,
+  repoName,
 }: RunDetailTitleProps) {
   return (
     <div className="flex items-start gap-3">
@@ -51,23 +55,33 @@ export function RunDetailTitle({
                 {durationDisplay !== '—' ? ` in ${durationDisplay}` : ''}
               </span>
             </span>
-            {run.gitAuthor ? (
+            {run.gitAuthor && run.gitAuthor.login ? (
               <div className="flex items-center gap-2">
                 <img
                   src={`https://avatars.githubusercontent.com/u/${run.gitAuthor.id}?v=4&s=32`}
                   alt={run.gitAuthor.name}
                   className="size-6 rounded-full"
                 />
-                <span className="text-foreground">
+                <a
+                  href={`https://github.com/${run.gitAuthor.login}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground hover:text-primary hover:underline"
+                >
                   <strong>@{run.gitAuthor.login}</strong>
-                </span>
+                </a>
               </div>
             ) : null}
             <div className="flex items-center gap-2">
               <GitBranch className="size-4 text-muted-foreground" />
-              <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-mono font-medium text-blue-800">
+              <a
+                href={`https://github.com/${orgName}/${repoName}/tree/${run.branchName}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs font-medium text-primary underline hover:text-primary/80"
+              >
                 {run.branchName}
-              </span>
+              </a>
             </div>
             <div className="flex items-center gap-2">
               <GitCommit className="size-4 text-muted-foreground" />

@@ -13,6 +13,8 @@ interface RunDetailHeaderProps {
   shortSha: string | null
   commitUrl: string | null
   pullRequestUrl: string | null
+  orgName: string
+  repoName: string
 }
 
 export function RunDetailHeader({
@@ -26,6 +28,8 @@ export function RunDetailHeader({
   shortSha,
   commitUrl,
   pullRequestUrl,
+  orgName,
+  repoName,
 }: RunDetailHeaderProps) {
   return (
     <>
@@ -39,6 +43,8 @@ export function RunDetailHeader({
         run={run}
         shortSha={shortSha}
         commitUrl={commitUrl}
+        orgName={orgName}
+        repoName={repoName}
       />
       <RunDetailCommitBlock run={run} pullRequestUrl={pullRequestUrl} />
     </>

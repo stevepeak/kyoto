@@ -110,6 +110,8 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
             shortSha={shortSha}
             commitUrl={commitUrl}
             pullRequestUrl={pullRequestUrl}
+            orgName={orgName}
+            repoName={repoName}
           />
         </div>
       </div>
