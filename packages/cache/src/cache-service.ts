@@ -112,14 +112,7 @@ export async function saveCachedEvidence(args: {
       cacheData: JSON.stringify(cacheData),
       runId,
     })
-    .onConflict((oc) =>
-      oc.columns(['storyId', 'commitSha']).doUpdateSet({
-        branchName,
-        cacheData: JSON.stringify(cacheData) as any,
-        runId,
-        updatedAt: new Date(),
-      }),
-    )
+    .onConflict((oc) => oc.columns(['storyId', 'commitSha']).doNothing())
     .execute()
 }
 
