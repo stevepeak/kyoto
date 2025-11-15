@@ -1,5 +1,6 @@
 import { ToolLoopAgent, Output, stepCountIs, generateText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import type { DecompositionAgentResult } from './story-decomposition'
 import dedent from 'dedent'
 
@@ -251,12 +252,12 @@ async function agent(args: {
   } = args
   const env = parseEnv()
 
-  const openAiProvider = createOpenAI({ apiKey: env.OPENAI_API_KEY })
+  const aiProvider = createOpenRouter({ apiKey: env.OPENROUTER_API_KEY })
   const effectiveModelId = options?.modelId ?? agents.evaluation.options.model
 
   const agent = new ToolLoopAgent({
     id: 'story-step-evaluation-v3',
-    model: openAiProvider(effectiveModelId),
+    model: aiProvider(effectiveModelId),
     instructions: buildEvaluationInstructions(stepContext.repoOutline),
     tools: {
       terminalCommand: createTerminalCommandTool({ sandbox }),
