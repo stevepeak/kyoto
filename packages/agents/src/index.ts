@@ -23,7 +23,14 @@ function model(
     return createOpenAI({ apiKey: env.OPENAI_API_KEY })(modelId)
   }
   if (gateway === 'openrouter') {
-    return createOpenRouter({ apiKey: env.OPENROUTER_API_KEY })(modelId)
+    return createOpenRouter({
+      apiKey: env.OPENROUTER_API_KEY,
+      // extraBody: {
+      //   reasoning: {
+      //     max_tokens: 10,
+      //   },
+      // },
+    })(modelId)
   }
   if (gateway === 'ai-gateway') {
     return modelId
@@ -51,7 +58,9 @@ export const agents = {
       maxSteps: 50,
       // model: model('openai', 'gpt-5.1-codex-mini'),
       // model: model('openrouter', 'anthropic/claude-sonnet-4.5'),
-      model: model('openai', 'gpt-5-mini'),
+      // model: model('openai', 'gpt-5-mini'),
+      model: model('openrouter', 'openai/gpt-5.1-codex-mini'),
+      // model: 'openai/gpt-5-mini',
     },
   },
 } as const

@@ -1,9 +1,7 @@
-import { ToolLoopAgent, Output, stepCountIs } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import type { Tracer } from '@opentelemetry/api'
 import { z } from 'zod'
 
-import { parseEnv } from '@app/config'
 import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
 import { createReadFileTool } from '../../tools/read-file-tool'
@@ -135,16 +133,11 @@ export async function runDecompositionAgent({
   repo,
   options,
 }: DecompositionAgentOptions): Promise<DecompositionAgentResult> {
-  const { OPENAI_API_KEY } = parseEnv()
-
-  const openAiProvider = createOpenAI({ apiKey: OPENAI_API_KEY })
-  const effectiveModelId = options.modelId ?? agents.decomposition.options.model
-
   const sandbox = await getDaytonaSandbox(options.daytonaSandboxId)
 
-  const agent = new ToolLoopAgent({
+  const agent = new Agent({
     id: 'story-decomposition-v3',
-    model: openAiProvider(effectiveModelId),
+    model: agents.decomposition.options.model,
     instructions: buildDecompositionInstructions(),
     tools: {
       terminalCommand: createTerminalCommandTool({ sandbox }),
@@ -160,7 +153,7 @@ export async function runDecompositionAgent({
         repoId: repo.id,
         repoSlug: repo.slug,
         daytonaSandboxId: options.daytonaSandboxId,
-        modelId: effectiveModelId,
+        modelId: options.modelId ?? 'gpt-5-mini',
       },
       tracer: options.telemetryTracer,
     },
