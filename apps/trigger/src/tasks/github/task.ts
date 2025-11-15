@@ -1,43 +1,38 @@
 import { logger, task } from '@trigger.dev/sdk'
 
-import { branchProtectionRuleHandler } from './handlers/branch-protection-rule'
-import { checkRunHandler } from './handlers/check-run'
-import { checkSuiteHandler } from './handlers/check-suite'
-import { createHandler } from './handlers/create'
-import { deleteHandler } from './handlers/delete'
 import { installationHandler } from './handlers/installation'
 import { installationRepositoriesHandler } from './handlers/installation-repositories'
 import { installationTargetsHandler } from './handlers/installation-targets'
-import { metaHandler } from './handlers/meta'
-import { privateHandler } from './handlers/private'
-import { publicHandler } from './handlers/public'
 import { pullRequestHandler } from './handlers/pull-request'
 import { pushHandler } from './handlers/push'
-import { releaseHandler } from './handlers/release'
-import { repositoryHandler } from './handlers/repository'
-import { repositoryVulnerabilityAlertHandler } from './handlers/repository-vulnerability-alert'
-import { statusHandler } from './handlers/status'
 import type { WebhookHandler } from './types'
 
-const handlers: Record<string, WebhookHandler> = {
+const handlers: Record<string, WebhookHandler | null> = {
   push: pushHandler,
   pull_request: pullRequestHandler,
   installation: installationHandler,
   installation_repositories: installationRepositoriesHandler,
-  repository: repositoryHandler,
-  check_run: checkRunHandler,
-  check_suite: checkSuiteHandler,
-  status: statusHandler,
-  branch_protection_rule: branchProtectionRuleHandler,
-  create: createHandler,
-  delete: deleteHandler,
   installation_targets: installationTargetsHandler,
-  meta: metaHandler,
-  public: publicHandler,
-  private: privateHandler,
-  repository_vulnerability_alert: repositoryVulnerabilityAlertHandler,
-  release: releaseHandler,
+  // * Events we may want to listen to in the future
+  repository: null,
+  check_run: null,
+  check_suite: null,
+  status: null,
+  branch_protection_rule: null,
+  create: null,
+  delete: null,
+  meta: null,
+  public: null,
+  private: null,
+  repository_vulnerability_alert: null,
+  release: null,
 }
+
+export const supportedEventTypes = new Set(
+  Object.entries(handlers)
+    .filter(([, handler]) => handler !== null)
+    .map(([eventType]) => eventType),
+)
 
 export const handleGithubWebhookTask = task({
   id: 'handle-github-webhook',

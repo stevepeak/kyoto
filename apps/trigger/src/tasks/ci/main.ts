@@ -42,14 +42,23 @@ export const runCiTask = task({
 
     const { repo, octokit } = await getOctokitClient(repoRecord.repoId)
 
-    // commitSha is latest on that branch
-    // TODO we may need to provide as an argument to the task
-    const { commitSha, commitMessage, gitAuthor } =
-      await getGithubBranchDetails(octokit, {
+    // Use provided commit data if available, otherwise fetch from branch
+    let commitSha = payload.commitSha ?? null
+    let commitMessage = payload.commitMessage ?? null
+    let gitAuthor = payload.gitAuthor ?? null
+
+    // Fetch missing data from branch if any field is missing
+    if (!commitSha || !commitMessage || !gitAuthor) {
+      const branchDetails = await getGithubBranchDetails(octokit, {
         owner: repoRecord.ownerLogin,
         repo: repoRecord.repoName,
         branch: branchName,
       })
+
+      commitSha = commitSha ?? branchDetails.commitSha
+      commitMessage = commitMessage ?? branchDetails.commitMessage
+      gitAuthor = gitAuthor ?? branchDetails.gitAuthor
+    }
 
     const runInsert = await createRunRecord({
       db,

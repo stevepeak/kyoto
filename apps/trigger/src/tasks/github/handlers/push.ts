@@ -109,13 +109,16 @@ export const pushHandler: WebhookHandler = async ({
       } catch (error) {
         // If API call fails, log but don't block the push handler
         // This ensures we don't miss CI runs if GitHub API is down
-        logger.warn('Failed to check for open PRs, proceeding with push handler', {
-          deliveryId,
-          ownerLogin,
-          repoName,
-          branchName,
-          error,
-        })
+        logger.warn(
+          'Failed to check for open PRs, proceeding with push handler',
+          {
+            deliveryId,
+            ownerLogin,
+            repoName,
+            branchName,
+            error,
+          },
+        )
       }
     }
 
