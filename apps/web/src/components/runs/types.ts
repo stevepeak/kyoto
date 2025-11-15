@@ -1,12 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
-import type { EvaluationAnalysisResult } from '@app/schemas'
+import type { EvaluationOutput } from '@app/schemas'
 
 export interface StoryTestResult {
   id: string
   storyId: string
   status: 'pass' | 'fail' | 'running' | 'error'
   analysisVersion: number
-  analysis: EvaluationAnalysisResult | null
+  analysis: EvaluationOutput | null
   startedAt: string | null
   completedAt: string | null
   durationMs: number | null

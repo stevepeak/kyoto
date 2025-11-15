@@ -1,14 +1,19 @@
-import { analysisSchema } from '@app/schemas'
-import { decompositionOutputSchema } from './agents/v3/story-decomposition'
+import {
+  evaluationOutputSchema,
+  decompositionOutputSchema,
+  type DecompositionOutput,
+  type TestStatus,
+} from '@app/schemas'
 import { runDecompositionAgent } from './agents/v3/story-decomposition'
 import { main } from './agents/v3/story-evaluator'
 import { parseEnv } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
-export { type Status } from '@app/schemas'
+export { type TestStatus as Status }
 export { generateText } from './helpers/generate-text'
-export type { DecompositionAgentResult } from './agents/v3/story-decomposition'
+// Re-export for backward compatibility
+export type { DecompositionOutput as DecompositionAgentResult }
 export { getDaytonaSandbox } from './helpers/daytona'
 
 export { getFileContentFromSandbox } from './tools/read-file-tool'
@@ -53,7 +58,7 @@ export const agents = {
   evaluation: {
     id: 'story-evaluation-v3',
     version: 'v3',
-    schema: analysisSchema,
+    schema: evaluationOutputSchema,
     run: main,
     options: {
       maxSteps: 50,

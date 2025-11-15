@@ -1,46 +1,67 @@
-import z from 'zod'
+/**
+ * ============================================================================
+ * SCHEMAS PACKAGE - MAIN EXPORTS
+ * ============================================================================
+ *
+ * This package provides Zod schemas for the complete story evaluation flow:
+ *
+ * 1. Raw Story → User input
+ * 2. Decomposition → AI breaks story into steps
+ * 3. Test/Evaluation → AI evaluates steps with evidence
+ * 4. Cache → Stores file hashes for evidence validation
+ *
+ * See story-flow.ts for complete documentation of the data flow.
+ */
 
-export const statusSchema = z.enum([
-  'pass',
-  'fail',
-  'running',
-  // 'uncertain', // TODO add to database to enable
-  // CI build was cancelled because another commit came in
-  'skipped',
-  // An error occurred while evaluating the story
-  'error',
-])
+// ============================================================================
+// STORY FLOW SCHEMAS (Complete data flow documentation)
+// ============================================================================
 
-export type Status = z.infer<typeof statusSchema>
+export {
+  // Raw Story
+  rawStoryInputSchema,
+  rawStorySchema,
+  type RawStoryInput,
+  type RawStory,
 
-// Agent types
+  // Decomposition
+  decompositionStepSchema,
+  decompositionOutputSchema,
+  decompositionInputSchema,
+  type DecompositionStep,
+  type DecompositionOutput,
+  type DecompositionInput,
+
+  // Test/Evaluation
+  testStatusSchema,
+  assertionEvidenceSchema,
+  stepEvaluationSchema,
+  evaluationOutputSchema,
+  evaluationInputSchema,
+  type TestStatus,
+  type AssertionEvidence,
+  type StepEvaluation,
+  type EvaluationOutput,
+  type EvaluationInput,
+
+  // Cache
+  cacheDataSchema,
+  cacheEntrySchema,
+  cacheValidationResultSchema,
+  type CacheData,
+  type CacheEntry,
+  type CacheValidationResult,
+
+  // Complete story data
+  type CompleteStoryData,
+} from './story-flow'
+
+// ============================================================================
+// AGENT TYPES (Agent-specific configuration types)
+// ============================================================================
+
 export type {
-  CacheEntry,
+  CacheEntry as AgentCacheEntry, // Re-exported for clarity
   ValidationResult,
   evaluationAgentOptions,
 } from './agent-types'
-
-/**
- * Schema for the evaluation agent output
- */
-export const analysisSchema = z.object({
-  version: z.literal(3),
-  status: statusSchema,
-  explanation: z.string().min(1),
-  steps: z.array(
-    z.object({
-      type: z.enum(['given', 'requirement']),
-      conclusion: statusSchema,
-      outcome: z.string().min(1),
-      assertions: z.array(
-        z.object({
-          fact: z.string().min(1),
-          evidence: z.array(z.string().min(1)),
-          cachedFromRunId: z.string().optional(),
-        }),
-      ),
-    }),
-  ),
-})
-
-export type EvaluationAnalysisResult = z.infer<typeof analysisSchema>

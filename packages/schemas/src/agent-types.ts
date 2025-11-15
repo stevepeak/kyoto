@@ -1,38 +1,11 @@
 import type { Tracer } from '@opentelemetry/api'
+import type { CacheEntry, CacheValidationResult } from './story-flow'
 
 /**
- * Cache entry for story evaluation evidence
+ * Re-export cache types for agent usage
+ * These are the same types defined in story-flow.ts
  */
-export type CacheEntry = {
-  id: string
-  branchName: string
-  storyId: string
-  commitSha: string
-  cacheData: {
-    steps: {
-      [stepIndex: string]: {
-        assertions: {
-          [assertionIndex: string]: Record<string, string>
-        }
-      }
-    }
-  }
-  runId: string | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-/**
- * Validation result for cache entries
- */
-export type ValidationResult = {
-  isValid: boolean
-  invalidSteps: number[]
-  invalidAssertions: {
-    stepIndex: number
-    assertionIndex: number
-  }[]
-}
+export type { CacheEntry, CacheValidationResult as ValidationResult }
 
 /**
  * Options for the evaluation agent
@@ -47,7 +20,13 @@ export type evaluationAgentOptions = {
     id: string
     name: string
     text: string
-    decomposition: unknown // DecompositionAgentResult - imported at usage sites
+    /**
+     * Decomposition output from the decomposition agent.
+     * Type is DecompositionOutput from story-flow.ts, but imported at usage sites
+     * to avoid circular dependencies.
+     * Using `any` here to allow flexibility at usage sites where the actual type is imported.
+     */
+    decomposition: any
   }
   options?: {
     /** Maximum number of steps to take */
@@ -63,6 +42,6 @@ export type evaluationAgentOptions = {
     runId?: string
     /** Cache entry and validation result (set by test-story.ts) */
     cacheEntry?: CacheEntry | null
-    validationResult?: ValidationResult | null
+    validationResult?: CacheValidationResult | null
   }
 }

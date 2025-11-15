@@ -7,7 +7,7 @@ import {
   getLoadingConclusionDisplay,
 } from '../utils'
 import type { RunStory, StoryTestResult } from '../types'
-import { z } from 'zod'
+import { decompositionOutputSchema } from '@app/schemas'
 
 interface RunStoryCardContentProps {
   story: RunStory
@@ -57,23 +57,6 @@ export function RunStoryCardContent({
   const displayStatus = getDisplayStatus(story)
   const isRunning = displayStatus === 'running'
 
-  // Parse decomposition data
-  const decompositionSchema = z.object({
-    steps: z.array(
-      z.discriminatedUnion('type', [
-        z.object({
-          type: z.literal('given'),
-          given: z.string().min(1),
-        }),
-        z.object({
-          type: z.literal('requirement'),
-          goal: z.string().min(1),
-          assertions: z.array(z.string().min(1)),
-        }),
-      ]),
-    ),
-  })
-
   const parseDecomposition = (decomposition: unknown) => {
     if (!decomposition) {
       return null
@@ -83,7 +66,7 @@ export function RunStoryCardContent({
         typeof decomposition === 'string'
           ? JSON.parse(decomposition)
           : decomposition
-      return decompositionSchema.parse(parsed)
+      return decompositionOutputSchema.parse(parsed)
     } catch {
       return null
     }

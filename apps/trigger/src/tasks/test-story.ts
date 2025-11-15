@@ -5,7 +5,7 @@ import { setupDb } from '@app/db'
 import { agents, getDaytonaSandbox } from '@app/agents'
 import { parseEnv } from '@app/config'
 import { getTelemetryTracer } from '@/telemetry'
-import type { EvaluationAnalysisResult } from '@app/schemas'
+import type { EvaluationOutput } from '@app/schemas'
 import {
   createDaytonaSandbox,
   getCommitSHAsFromSandbox,
@@ -13,7 +13,7 @@ import {
 import { getCachedEvidence, validateCacheEntry } from '@app/cache'
 
 export type TestStoryTaskResult = {
-  evaluation: EvaluationAnalysisResult
+  evaluation: EvaluationOutput
 }
 
 export const testStoryTask = task({

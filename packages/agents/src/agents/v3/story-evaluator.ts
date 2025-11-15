@@ -15,9 +15,10 @@ import {
   createGetLibraryDocsTool,
 } from '../../tools/context7-tool'
 import {
-  type Status,
-  analysisSchema,
-  type EvaluationAnalysisResult,
+  type TestStatus,
+  evaluationOutputSchema,
+  type EvaluationOutput,
+  assertionEvidenceSchema,
 } from '@app/schemas'
 import type { evaluationAgentOptions } from '@app/schemas'
 import { logger } from '@trigger.dev/sdk'
@@ -27,20 +28,15 @@ import { z } from 'zod'
 
 /**
  * Schema for agent output (step evaluation result)
+ * Uses assertionEvidenceSchema from @app/schemas for assertions
+ * Note: conclusion is simplified to 'pass'/'fail' for internal agent output
  */
 const stepAgentOutputSchema = z.object({
   conclusion: z.enum(['pass', 'fail']),
   outcome: z.string().min(1),
   assertions: z.array(
-    z.object({
-      fact: z.string().min(1),
-      evidence: z.array(
-        z
-          .string()
-          .min(1)
-          .describe('file:line-range only eg., src/auth/session.ts:12-28'),
-      ),
-    }),
+    // Use assertionEvidenceSchema but omit cachedFromRunId (added later)
+    assertionEvidenceSchema.omit({ cachedFromRunId: true }),
   ),
 })
 
@@ -163,7 +159,7 @@ async function combineStepResults(args: {
   analysisStepResults: StepAgentOutput[]
   modelId?: string // TODO implement this later
   cachedRunIds?: Map<string, string> // Map of "stepIndex:assertionIndex" -> runId
-}): Promise<EvaluationAnalysisResult> {
+}): Promise<EvaluationOutput> {
   const { decompositionSteps, analysisStepResults, cachedRunIds } = args
 
   // Map decomposition steps with their corresponding analysis results
@@ -196,7 +192,7 @@ async function combineStepResults(args: {
 
   // Determine overall status based on step conclusions
   // Steps can only have 'pass' or 'fail' conclusions
-  const status: Status = steps.every((step) => step.conclusion === 'pass')
+  const status: TestStatus = steps.every((step) => step.conclusion === 'pass')
     ? 'pass'
     : 'fail'
 
@@ -222,7 +218,7 @@ ${stepSummary}
     `,
   })
 
-  return analysisSchema.parse({
+  return evaluationOutputSchema.parse({
     version: 3,
     status,
     explanation,
@@ -307,7 +303,7 @@ async function agent(args: {
 
 export async function main(
   payload: evaluationAgentOptions,
-): Promise<EvaluationAnalysisResult> {
+): Promise<EvaluationOutput> {
   const { story, options } = payload
   const sandbox = await getDaytonaSandbox(options?.daytonaSandboxId ?? '')
 

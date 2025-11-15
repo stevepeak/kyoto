@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
 import { StoryCard } from './StoryCard'
 
-type StoryStatus = 'pass' | 'fail' | 'error' | 'running' | null
+import type { TestStatus } from '@app/schemas'
+
+type StoryStatus = TestStatus | null
 
 interface StoryItem {
   id: string

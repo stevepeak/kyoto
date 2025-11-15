@@ -11,6 +11,9 @@ alwaysApply: true
 - Never try to start a dev server or curl a local endpoint.
 - 💋 KISS - I want to most simple solution
 
+## Project Outline
+Please open and review the file packages/schemas/src/story-flow.ts for a detailed overview of how the application works.
+
 ## Current dev status
 
 Current status: `in development`

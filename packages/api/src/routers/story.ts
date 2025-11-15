@@ -10,8 +10,7 @@ import {
   requireRepoForUser,
 } from '../helpers/memberships'
 import { protectedProcedure, router } from '../trpc'
-
-type StoryTestStatus = 'pass' | 'fail' | 'error' | 'running'
+import { type TestStatus } from '@app/schemas'
 
 export const storyRouter = router({
   listByRepo: protectedProcedure
@@ -50,7 +49,7 @@ export const storyRouter = router({
 
       let latestStatuses = new Map<
         string,
-        { status: StoryTestStatus; createdAt: Date | null }
+        { status: TestStatus; createdAt: Date | null }
       >()
 
       if (storyIds.length > 0) {
@@ -71,12 +70,12 @@ export const storyRouter = router({
         latestStatuses = statusRows.reduce((acc, row) => {
           if (!acc.has(row.storyId)) {
             acc.set(row.storyId, {
-              status: row.status as StoryTestStatus,
+              status: row.status as TestStatus,
               createdAt: row.createdAt ?? null,
             })
           }
           return acc
-        }, new Map<string, { status: StoryTestStatus; createdAt: Date | null }>())
+        }, new Map<string, { status: TestStatus; createdAt: Date | null }>())
       }
 
       return {

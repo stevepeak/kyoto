@@ -1,6 +1,5 @@
 import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import type { Tracer } from '@opentelemetry/api'
-import { z } from 'zod'
 
 import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
@@ -10,40 +9,14 @@ import { createLspTool } from '../../tools/lsp-tool'
 import { agents } from '../../index'
 import zodToJsonSchema from 'zod-to-json-schema'
 import { logger } from '@trigger.dev/sdk'
+import {
+  decompositionOutputSchema,
+  type DecompositionOutput,
+} from '@app/schemas'
 
-export const decompositionOutputSchema = z.object({
-  steps: z
-    .array(
-      z.discriminatedUnion('type', [
-        z.object({
-          type: z.literal('given'),
-          given: z.string().min(1),
-        }),
-        z.object({
-          type: z.literal('requirement'),
-          goal: z
-            .string()
-            .min(1)
-            .describe(
-              'Use modal verbs (“can,” “should,” “may,” “must,” “is able to”) or capability verbs (“allows,” “enables,” “supports”) to describe intended behavior, not observed behavior.',
-            ),
-          assertions: z.array(
-            z
-              .string()
-              .min(1)
-              .describe(
-                'Declarative, human-readable statements describing what becomes true in this step.',
-              ),
-          ),
-        }),
-      ]),
-    )
-    .describe(
-      'A sequential list of steps, each either a given precondition or a requirement with assertions.',
-    ),
-})
-
-export type DecompositionAgentResult = z.infer<typeof decompositionOutputSchema>
+// Re-export for backward compatibility
+export { decompositionOutputSchema }
+export type DecompositionAgentResult = DecompositionOutput
 
 type DecompositionAgentOptions = {
   story: {
