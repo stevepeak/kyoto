@@ -9,10 +9,68 @@ import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { RunList } from '@/components/runs/RunList'
 import { StoryList } from '@/components/stories/StoryList'
+import {
+  TriggerDevTrackingDialog,
+  useTriggerDevTracking,
+} from '@/components/common/workflow-tracking-dialog'
+import { EmptyState } from '@/components/common/EmptyState'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]
 type StoryItem = RouterOutputs['story']['listByRepo']['stories'][number]
+
+function RunTrackingContent() {
+  const { isLoading, isCompleted, error, closeDialog } = useTriggerDevTracking()
+
+  if (isLoading) {
+    return (
+      <EmptyState
+        kanji="いとかんしょう"
+        kanjiTitle="Ito-kenshō - intent testing."
+        title="Running tests..."
+        description="Your CI run is in progress. This may take a few minutes."
+        action={
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        }
+      />
+    )
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        title="Run failed"
+        description={error}
+        action={
+          <Button onClick={closeDialog} variant="outline">
+            Close
+          </Button>
+        }
+      />
+    )
+  }
+
+  if (isCompleted) {
+    return (
+      <EmptyState
+        kanji="せいこう"
+        kanjiTitle="Seikō - success."
+        title="Run completed"
+        description="Your CI run has completed successfully."
+        action={<Button onClick={closeDialog}>Close</Button>}
+      />
+    )
+  }
+
+  return (
+    <EmptyState
+      title="Waiting for run..."
+      description="Preparing to track your CI run."
+    />
+  )
+}
 
 interface Props {
   orgName: string
@@ -34,6 +92,12 @@ export function RepoOverview({
   const trpc = useTRPCClient()
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  // Dialog state - local to this component
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [runId, setRunId] = useState<string | null>(null)
+  const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
+    null,
+  )
 
   // Check if any CI build is in progress
   const hasRunningBuild = runs.some(
@@ -61,16 +125,28 @@ export function RepoOverview({
     if (!defaultBranch) {
       return
     }
+
     setIsCreatingRun(true)
     setCreateError(null)
+
     try {
-      await trpc.run.create.mutate({
+      const result = await trpc.run.create.mutate({
         orgName,
         repoName,
       })
-      // Refresh runs list after successful creation
-      if (onRefreshRuns) {
-        onRefreshRuns()
+
+      // Open dialog with run tracking info
+      if (result.triggerHandle?.publicAccessToken && result.triggerHandle?.id) {
+        setRunId(result.triggerHandle.id)
+        setPublicAccessToken(result.triggerHandle.publicAccessToken)
+        setDialogOpen(true)
+
+        // Refresh runs list after successful creation
+        if (onRefreshRuns) {
+          onRefreshRuns()
+        }
+      } else {
+        setCreateError('Failed to get run tracking information')
       }
     } catch (error) {
       setCreateError(
@@ -78,6 +154,14 @@ export function RepoOverview({
       )
     } finally {
       setIsCreatingRun(false)
+    }
+  }
+
+  const handleDialogComplete = () => {
+    setDialogOpen(false)
+    // Refresh runs list when dialog completes
+    if (onRefreshRuns) {
+      onRefreshRuns()
     }
   }
 
@@ -180,6 +264,15 @@ export function RepoOverview({
           </div>
         </div>
       </div>
+      <TriggerDevTrackingDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        runId={runId}
+        publicAccessToken={publicAccessToken}
+        onComplete={handleDialogComplete}
+      >
+        <RunTrackingContent />
+      </TriggerDevTrackingDialog>
     </AppLayout>
   )
 }

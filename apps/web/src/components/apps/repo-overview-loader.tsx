@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@app/api'
 
@@ -30,9 +30,13 @@ export function RepoOverviewLoader({
   const [stories, setStories] = useState<StoryItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const hasLoadedOnce = useRef(false)
 
   const loadData = useCallback(async () => {
-    setIsLoading(true)
+    // Only show loading on initial load, not on refreshes
+    if (!hasLoadedOnce.current) {
+      setIsLoading(true)
+    }
     try {
       const [repoResp, runsResp, storiesResp] = await Promise.all([
         trpc.repo.getBySlug.query({ orgName, repoName }),
@@ -50,6 +54,7 @@ export function RepoOverviewLoader({
 
       setRuns(runsResp.runs)
       setError(null)
+      hasLoadedOnce.current = true
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to load data')
     } finally {

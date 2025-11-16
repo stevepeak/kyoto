@@ -7,7 +7,7 @@ import { LoadingProgress } from '@/components/ui/loading-progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/common/EmptyState'
 import { SiGithub } from 'react-icons/si'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -15,6 +15,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { GITHUB_APP_SLUG } from 'astro:env/client'
+import {
+  TriggerDevTrackingDialog,
+  useTriggerDevTracking,
+} from '@/components/common/workflow-tracking-dialog'
 
 interface OrgItem {
   slug: string
@@ -23,12 +27,61 @@ interface OrgItem {
   repoCount: number
 }
 
+function OrgSyncTrackingContent() {
+  const { isLoading, error, closeDialog } = useTriggerDevTracking()
+
+  if (isLoading) {
+    return (
+      <EmptyState
+        kanji="せつぞく"
+        kanjiTitle="Setsuzoku - to connect."
+        title="Syncing repositories..."
+        description="Refreshing your organization's repositories and memberships. This may take a few moments."
+        action={
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">
+              Tracking sync status...
+            </span>
+          </div>
+        }
+      />
+    )
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        title="Sync failed"
+        description={error}
+        action={
+          <Button onClick={closeDialog} variant="outline">
+            Close
+          </Button>
+        }
+      />
+    )
+  }
+
+  return (
+    <EmptyState
+      title="Waiting for sync..."
+      description="Preparing to sync your organization."
+    />
+  )
+}
+
 export function OrgListApp() {
   const trpc = useTRPCClient()
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [orgs, setOrgs] = useState<OrgItem[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [runId, setRunId] = useState<string | null>(null)
+  const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
+    null,
+  )
 
   const installUrl = `https://github.com/apps/${GITHUB_APP_SLUG}/installations/new`
 
@@ -71,7 +124,15 @@ export function OrgListApp() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
-      await trpc.org.refreshInstallations.mutate()
+      const result = await trpc.org.refreshInstallations.mutate()
+
+      // Open dialog with run tracking info if available
+      if (result.triggerHandle?.publicAccessToken && result.triggerHandle?.id) {
+        setRunId(result.triggerHandle.id)
+        setPublicAccessToken(result.triggerHandle.publicAccessToken)
+        setDialogOpen(true)
+      }
+
       const refreshedOrgs = await queryOrganizations()
       setOrgs(refreshedOrgs)
       setError(null)
@@ -84,6 +145,14 @@ export function OrgListApp() {
       setIsLoading(false)
     }
   }, [queryOrganizations, trpc])
+
+  const handleDialogComplete = () => {
+    setDialogOpen(false)
+    // Refresh orgs list when dialog completes
+    void queryOrganizations().then((refreshedOrgs) => {
+      setOrgs(refreshedOrgs)
+    })
+  }
 
   if (isLoading) {
     return (
@@ -172,6 +241,15 @@ export function OrgListApp() {
           ))}
         </div>
       </div>
+      <TriggerDevTrackingDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        runId={runId}
+        publicAccessToken={publicAccessToken}
+        onComplete={handleDialogComplete}
+      >
+        <OrgSyncTrackingContent />
+      </TriggerDevTrackingDialog>
     </AppLayout>
   )
 }
