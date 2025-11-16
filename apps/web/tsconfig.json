@@ -6,6 +6,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
     "paths": {
       "@/*": ["./src/*"]
     }
