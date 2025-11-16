@@ -20,6 +20,8 @@ export { getFileContentFromSandbox } from './tools/read-file-tool'
 
 const env = parseEnv()
 
+// @ts-expect-error - model is not used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function model(
   gateway: 'openai' | 'openrouter' | 'ai-gateway',
   modelId: string,
