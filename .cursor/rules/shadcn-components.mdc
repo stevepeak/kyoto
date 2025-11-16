@@ -4,15 +4,15 @@ globs:
 alwaysApply: false
 ---
 
-The following official shadcn-ui components are available. Please check to see if they are installed under `./apps/web/components/ui` before installing them with `pnpm dlx shadcn@latest add <component-id>`.
+The following official shadcn-ui components are available. Please check to see if they are installed under `./apps/web/components/ui` before installing them with `bunx shadcn@latest add <component-id>`.
 
 Notice that The 'shadcn-ui' package is deprecated. Please use the 'shadcn' package instead. For example:
 
 ```bash
-pnpm dlx shadcn@latest add progress --cwd apps/web
+bunx shadcn@latest add progress --cwd apps/web
 ```
 
-YOU MUST use `pnpm dlx shadcn@latest` when installing shadcn packages.
+YOU MUST use `bunx shadcn@latest` when installing shadcn packages.
 
 Docs for each components are available at `https://ui.shadcn.com/docs/components/<component-id>`. Fetch and read the docs before using the component so that your knowledge is up-to-date.
 

@@ -89,13 +89,13 @@ Test environment variables are configured in `tests/setup.ts`. The following are
 
 ```bash
 # Run all tests
-pnpm test
+bun test
 
 # Run tests in watch mode
-pnpm test:watch
+bun test --watch
 
 # Run specific test file
-pnpm test apps/web/tests/api/webhooks/mailgun/inbound.test.ts
+bun test apps/web/tests/api/webhooks/mailgun/inbound.test.ts
 ```
 
 ## Debugging
