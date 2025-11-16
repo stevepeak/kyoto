@@ -1,7 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions'
 import { PageTransitionLoader } from '@/components/common/page-transition-loader'
-import { LandingNavbar } from '@/components/landing'
+import { AppTopNav } from '@/components/layout/app-top-nav'
 import '../styles/global.css'
 ---
 
@@ -42,7 +42,7 @@ import '../styles/global.css'
   </head>
   <body>
     <PageTransitionLoader client:load />
-    <LandingNavbar client:load data-astro-transition-scope="navbar" />
+    <AppTopNav client:load />
     <slot />
   </body>
 </html>

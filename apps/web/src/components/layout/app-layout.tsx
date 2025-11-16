@@ -1,18 +1,27 @@
-import type { ReactNode } from 'react'
+'use client'
+
+import { useEffect, type ReactNode } from 'react'
 import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
 
-import { TopNav } from './top-nav'
+import { useBreadcrumbs } from '@/components/providers/breadcrumbs-provider'
 
 interface Props {
   children: ReactNode
   breadcrumbs?: BreadcrumbItem[]
-  right?: ReactNode
 }
 
-export function AppLayout({ children, breadcrumbs, right }: Props) {
+export function AppLayout({ children, breadcrumbs }: Props) {
+  const { setBreadcrumbs } = useBreadcrumbs()
+
+  useEffect(() => {
+    setBreadcrumbs(breadcrumbs)
+    return () => {
+      setBreadcrumbs(undefined)
+    }
+  }, [breadcrumbs, setBreadcrumbs])
+
   return (
     <div className="min-h-screen w-full flex flex-col bg-background">
-      <TopNav breadcrumbs={breadcrumbs} right={right} />
       <div className="flex-1">{children}</div>
     </div>
   )

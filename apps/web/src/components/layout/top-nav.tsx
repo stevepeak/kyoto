@@ -13,16 +13,16 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTRPCClient } from '@/client/trpc'
 import { useSession, signOut } from '@/client/auth-client'
-import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
+import { useGlobalBreadcrumbs } from '@/components/providers/breadcrumbs-provider'
 import type { ReactNode } from 'react'
 
 interface TopNavProps {
-  breadcrumbs?: BreadcrumbItem[]
   right?: ReactNode
 }
 
-export function TopNav({ breadcrumbs, right }: TopNavProps) {
+export function TopNav({ right }: TopNavProps) {
+  const breadcrumbs = useGlobalBreadcrumbs()
   const trpc = useTRPCClient()
   const [githubLogin, setGithubLogin] = useState<string | null>(null)
   const session = useSession()
