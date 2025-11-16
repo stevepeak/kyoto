@@ -131,9 +131,7 @@ export const orgRouter = router({
     ).length
 
     // Get the first successful trigger handle for tracking
-    const firstSuccess = results.find(
-      (result) => result.status === 'fulfilled',
-    )
+    const firstSuccess = results.find((result) => result.status === 'fulfilled')
 
     return {
       triggered: installations.length - failed,
