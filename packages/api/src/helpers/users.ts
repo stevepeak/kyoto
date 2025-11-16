@@ -20,7 +20,7 @@ export async function getUser({
   userId: string
 }): Promise<Selectable<User>> {
   return await db
-    .selectFrom('users')
+    .selectFrom('user')
     .where('id', '=', userId)
     .selectAll()
     .executeTakeFirstOrThrow(trpcNotFoundError)
@@ -44,7 +44,7 @@ export async function updateUser({
   values: Partial<Updateable<User>>
 }): Promise<Selectable<User>> {
   return await db
-    .updateTable('users')
+    .updateTable('user')
     .set(values)
     .where('id', '=', userId)
     .returningAll()
@@ -59,7 +59,7 @@ export async function getUserGithubLogin({
   userId: string
 }): Promise<string | null> {
   const githubAccount = await db
-    .selectFrom('accounts')
+    .selectFrom('account')
     .select(['accountId', 'accessToken'])
     .where('userId', '=', userId)
     .where('providerId', '=', 'github')

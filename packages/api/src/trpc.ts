@@ -19,11 +19,20 @@ let isTriggerConfigured = false
 // Middleware to ensure Trigger.dev is configured
 const triggerMiddleware = t.middleware(({ ctx, next }) => {
   if (!isTriggerConfigured) {
-    const parsedEnv = parseEnv(ctx.env)
-    configure({
-      secretKey: parsedEnv.TRIGGER_SECRET_KEY,
-    })
-    isTriggerConfigured = true
+    try {
+      const parsedEnv = parseEnv(ctx.env)
+      configure({
+        secretKey: parsedEnv.TRIGGER_SECRET_KEY,
+      })
+      isTriggerConfigured = true
+    } catch (error) {
+      // Catch any errors from parseEnv and throw a generic server error
+      // This prevents exposing sensitive environment variable names or validation details
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Server configuration error',
+      })
+    }
   }
   return next()
 })

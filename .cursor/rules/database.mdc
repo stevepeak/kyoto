@@ -61,7 +61,7 @@ When working with database types in TypeScript, always use Kysely's type helper 
    
    // Function that returns user data from DB
    async function getUser(id: string): Promise<Selectable<User> | null> {
-     return await db.selectFrom('users').where('id', '=', id).selectAll().executeTakeFirst()
+     return await db.selectFrom('user').where('id', '=', id).selectAll().executeTakeFirst()
    }
    
    // Component props
@@ -82,7 +82,7 @@ When working with database types in TypeScript, always use Kysely's type helper 
    
    // Partial inserts with required fields
    async function createUser(data: Partial<Insertable<User>> & { email: string; tenantId: string }) {
-     return await db.insertInto('users').values({
+     return await db.insertInto('user').values({
        emailVerified: false,
        status: 'active',
        ...data,

@@ -1,22 +1,15 @@
 {
   "name": "@app/web",
-  "type": "module",
   "version": "0.0.0",
   "private": true,
-  "description": "Web application for the monorepo scaffold",
   "scripts": {
-    "dev": "astro dev --port 3001",
-    "build": "astro build",
-    "preview": "touch .env && set -a && source .env && set +a && astro preview --port 3001",
-    "astro": "astro",
-    "postinstall": "astro sync",
-    "clean": "rm -rf .astro",
-    "typecheck": "tsc -b",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "dev": "next dev --port 3001 --webpack",
+    "build": "next build --webpack",
+    "start": "next start --port 3001",
     "lint": "eslint . --max-warnings=0 --cache --concurrency=2",
     "lint:fix": "eslint . --fix --cache --concurrency=2",
-    "lint:ci": "eslint . --max-warnings=0 --cache --concurrency=1 --no-error-on-unmatched-pattern"
+    "lint:ci": "eslint . --max-warnings=0 --cache --concurrency=1 --no-error-on-unmatched-pattern",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@app/api": "workspace:^",
@@ -37,7 +30,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/astro": "^10.23.0",
+    "@sentry/nextjs": "^10.23.0",
     "@tanstack/react-query": "^5.90.5",
     "@tiptap/extension-link": "^3.10.7",
     "@tiptap/extension-placeholder": "^3.10.7",
@@ -54,6 +47,7 @@
     "clsx": "^2.1.1",
     "kysely": "^0.28.8",
     "lucide-react": "^0.553.0",
+    "next": "^16.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
@@ -64,21 +58,18 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@astrojs/node": "^9.5.0",
-    "@astrojs/react": "^4.4.0",
-    "@astrojs/vercel": "^9.0.0",
+    "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.1.16",
     "@trpc/server": "11.6.0",
+    "@types/node": "^22.10.2",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/unist": "^3.0.3",
-    "@vitejs/plugin-react": "^5.1.0",
-    "astro": "^5.15.1",
-    "jsdom": "^26.1.0",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^9.37.0",
+    "eslint-config-next": "^15.1.6",
     "tailwindcss": "^4.1.16",
     "tw-animate-css": "^1.4.0",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3"
   }
 }

@@ -47,7 +47,7 @@ export interface Account {
   /**
    * Unique identifier for each account
    */
-  id: Generated<string>;
+  id: string;
   /**
    * The id token returned from the provider
    */
@@ -94,7 +94,7 @@ export interface Credential {
   /**
    * Unique identifier for each credential
    */
-  id: Generated<string>;
+  id: string;
   /**
    * A user-friendly label for this credential
    */
@@ -331,7 +331,7 @@ export interface Session {
   /**
    * Unique identifier for each session
    */
-  id: Generated<string>;
+  id: string;
   /**
    * The IP address of the device
    */
@@ -487,7 +487,7 @@ export interface User {
   /**
    * Unique identifier for each user
    */
-  id: Generated<string>;
+  id: string;
   /**
    * The image URL of the user
    */
@@ -526,7 +526,7 @@ export interface Verification {
   /**
    * Unique identifier for each verification
    */
-  id: Generated<string>;
+  id: string;
   /**
    * The identifier for the verification request
    */
@@ -542,17 +542,17 @@ export interface Verification {
 }
 
 export interface DB {
-  accounts: Account;
-  credentials: Credential;
+  account: Account;
+  credential: Credential;
   ownerMemberships: OwnerMembership;
   owners: Owner;
   repoMemberships: RepoMembership;
   repos: Repo;
   runs: Run;
-  sessions: Session;
+  session: Session;
   stories: Story;
   storyEvidenceCache: StoryEvidenceCache;
   storyTestResults: StoryTestResult;
-  users: User;
-  verifications: Verification;
+  user: User;
+  verification: Verification;
 }

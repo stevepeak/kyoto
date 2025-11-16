@@ -152,7 +152,7 @@ async function mapGithubMembersToLocalUserIds(
   })
 
   const matchedAccounts = await db
-    .selectFrom('accounts')
+    .selectFrom('account')
     .select(['userId', 'accountId'])
     .where('providerId', '=', 'github')
     .where('accountId', 'in', accountIdVariants)

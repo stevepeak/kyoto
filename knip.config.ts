@@ -4,12 +4,11 @@ const config: KnipConfig = {
   workspaces: {
     '.': {
       entry: ['**/*.config.{js,ts}', 'turbo.json'],
-      project: ['**/*.{js,ts,tsx,astro}'],
+      project: ['**/*.{js,ts,tsx}'],
       ignore: [
         '**/node_modules/**',
         '**/dist/**',
         '**/.turbo/**',
-        '**/.astro/**',
         '**/coverage/**',
         '**/*.d.ts',
         '**/*.config.ts',
@@ -19,8 +18,8 @@ const config: KnipConfig = {
       ],
     },
     'apps/web': {
-      entry: ['src/pages/**/*.{astro,ts}', 'src/layouts/**/*.astro'],
-      ignore: ['**/node_modules/**', '**/.astro/**', '**/dist/**', '**/*.d.ts'],
+      entry: ['app/**/*.{ts,tsx}', 'next.config.js'],
+      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
       ignoreDependencies: ['@radix-ui/react-label'],
     },
     'apps/trigger': {
@@ -59,11 +58,10 @@ const config: KnipConfig = {
     },
   },
   ignore: [
-    'apps/web/src/components/**',
+    'apps/web/components/**',
     '**/node_modules/**',
     '**/dist/**',
     '**/.turbo/**',
-    '**/.astro/**',
     '**/coverage/**',
     '**/*.d.ts',
     '**/types.gen.ts',

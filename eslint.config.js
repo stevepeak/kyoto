@@ -18,7 +18,6 @@ export default defineESLintConfig(
       '**/*.min.js',
       '**/coverage/**',
       '**/.turbo/**',
-      '**/.astro/**',
       '**/.trigger/**',
     ],
   },
@@ -39,14 +38,14 @@ export default defineESLintConfig(
   {
     // Prevent importing server-side code in client-side code
     files: [
-      'apps/web/src/components/**/*.{ts,tsx}',
-      'apps/web/src/hooks/**/*.{ts,tsx}',
-      'apps/web/src/lib/**/*.{ts,tsx}',
+      'apps/web/components/**/*.{ts,tsx}',
+      'apps/web/hooks/**/*.{ts,tsx}',
+      'apps/web/lib/**/*.{ts,tsx}',
     ],
     ignores: [
       // These files legitimately need to import from @app/api
-      'apps/web/src/components/providers/trpc-provider.tsx',
-      'apps/web/src/client/trpc.ts',
+      'apps/web/components/providers/trpc-provider.tsx',
+      'apps/web/client/trpc.ts',
     ],
     rules: {
       'no-restricted-imports': [

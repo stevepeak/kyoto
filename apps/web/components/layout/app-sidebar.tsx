@@ -1,0 +1,131 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { Home, LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { MdTempleBuddhist } from 'react-icons/md'
+
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import { signOut } from '@/client/auth-client'
+
+import { SidebarFooter } from '../ui/sidebar'
+
+interface NavItemProps {
+  icon: React.ReactNode
+  label: string
+  href?: string
+  active?: boolean
+  disabled?: boolean
+  onClick?: () => void
+}
+
+function NavItem({
+  icon,
+  label,
+  href,
+  active = false,
+  disabled = false,
+  onClick,
+}: NavItemProps) {
+  const router = useRouter()
+  const [clickActive, setClickActive] = useState(false)
+
+  const handleClick = () => {
+    if (disabled) {
+      return
+    }
+    if (onClick) {
+      onClick()
+    } else if (href) {
+      setClickActive(true)
+      router.push(href)
+    }
+  }
+
+  // Prefetch route on hover/focus for faster navigation
+  const handleMouseEnter = () => {
+    if (href && !disabled) {
+      // Check if already prefetched to avoid duplicates
+      const existingLink = document.querySelector(
+        `link[rel="prefetch"][href="${href}"]`,
+      )
+      if (!existingLink) {
+        const link = document.createElement('link')
+        link.rel = 'prefetch'
+        link.href = href
+        document.head.appendChild(link)
+      }
+    }
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={disabled}
+            className={cn(
+              'w-10 h-10 rounded-md',
+              active || clickActive
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:bg-accent',
+            )}
+            onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+            onFocus={handleMouseEnter}
+          >
+            {icon}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+export function AppSidebar() {
+  // Start with empty string to match server-side rendering, update after hydration
+  const [currentPath, setCurrentPath] = useState('')
+
+  // Update path after hydration to avoid mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Required for hydration fix
+      setCurrentPath(window.location.pathname)
+    }
+  }, [])
+
+  return (
+    <div className="w-[56px] h-full bg-background border-r flex flex-col items-center py-4 gap-6 px-2">
+      <MdTempleBuddhist size={24} className="text-muted-foreground" />
+
+      <NavItem
+        icon={<Home size={15} />}
+        label="Home"
+        href={'/app'}
+        active={currentPath === '/app' || currentPath.startsWith('/app/')}
+      />
+
+      <div className="grow" />
+
+      <SidebarFooter>
+        <NavItem
+          icon={<LogOut size={15} />}
+          label="Logout"
+          onClick={() => void signOut()}
+        />
+      </SidebarFooter>
+    </div>
+  )
+}

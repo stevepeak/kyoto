@@ -1,17 +1,32 @@
 {
   "extends": "@ocavue/tsconfig/dom/app.json",
-  "include": ["./**/*", "./.astro/**/*", "./src/**/*.json"],
-  "exclude": ["dist", "node_modules"],
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "baseUrl": ".",
-    "resolveJsonModule": true,
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
     "moduleResolution": "bundler",
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./*"]
+    },
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
   },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": [".next", "node_modules"],
   "references": [
     {
       "path": "../../packages/api/tsconfig.json"
