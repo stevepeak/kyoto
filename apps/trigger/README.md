@@ -7,7 +7,7 @@ This app contains Trigger.dev workflows for the application.
 1. **Install dependencies:**
 
    ```bash
-   bun install
+   pnpm install
    ```
 
 2. **Set up Trigger.dev authentication:**
@@ -20,13 +20,13 @@ This app contains Trigger.dev workflows for the application.
 3. **Run the workflow server locally:**
 
    ```bash
-   bun --filter @app/workflows dev
+   pnpm --filter @app/workflows dev
    ```
 
    Or run it as part of the main dev command:
 
    ```bash
-   bun dev
+   pnpm dev
    ```
 
    This starts the Trigger.dev development server which will:

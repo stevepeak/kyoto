@@ -23,7 +23,7 @@ This monorepo includes:
 - **UI**: Basic UI setup with [Tailwind CSS](https://tailwindcss.com/) and [shadcn/ui](https://ui.shadcn.com/).
 - **Tooling**:
   - [Turborepo](https://turbo.build/repo) for high-performance builds.
-  - [Bun](https://bun.sh/) for fast package management and runtime.
+  - [PNPM](https://pnpm.io/) for efficient package management.
   - [TypeScript](https://www.typescriptlang.org/) for static typing.
   - [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for code quality.
 
@@ -39,7 +39,7 @@ This monorepo includes:
 2.  **Install dependencies:**
 
     ```bash
-    bun install
+    pnpm install
     ```
 
 3.  **Set up environment variables:**
@@ -73,23 +73,23 @@ This monorepo includes:
     Make sure you have a PostgreSQL server running. Then, run the migrations:
 
     ```bash
-    DATABASE_URL="postgres://user:password@localhost:5432/kyoto" bun --filter @app/db db:migrate
+    DATABASE_URL="postgres://user:password@localhost:5432/kyoto" pnpm --filter @app/db db:migrate
     ```
 
 5.  **Run the development server:**
 
     ```bash
-    bun dev
+    pnpm dev
     ```
 
     The web application will be available at `http://localhost:3001`.
 
 ## Development
 
-- `bun build`: Build all apps and packages.
-- `bun lint`: Lint all code.
-- `bun typecheck`: Run TypeScript to check for type errors.
-- `bun test`: Run tests.
+- `pnpm build`: Build all apps and packages.
+- `pnpm lint`: Lint all code.
+- `pnpm typecheck`: Run TypeScript to check for type errors.
+- `pnpm test`: Run tests.
 
 # Authors
 

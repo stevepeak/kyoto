@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Lint
-        run: bun run lint
+        run: pnpm run lint
 
   typecheck:
     runs-on: ubuntu-latest
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Typecheck
-        run: bun run typecheck
+        run: pnpm run typecheck
 
   knip:
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Run knip
-        run: bun run knip
+        run: pnpm run knip
 
   test:
     runs-on: ubuntu-latest
@@ -37,4 +37,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Run tests
-        run: bun test
+        run: pnpm test

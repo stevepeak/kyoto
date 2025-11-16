@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "bun run build:clean && bun run build:compile",
+    "build": "pnpm run build:clean && pnpm run build:compile",
     "build:clean": "rm -rf dist",
     "build:compile": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -b",
