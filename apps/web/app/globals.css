@@ -1,65 +1,6 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
-@font-face {
-  font-family: 'Cormorant Garamond';
-  src: url('/fonts/cormorant-garamond/CormorantGaramond-Regular.ttf')
-    format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Cormorant Garamond';
-  src: url('/fonts/cormorant-garamond/CormorantGaramond-Medium.ttf')
-    format('truetype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Cormorant Garamond';
-  src: url('/fonts/cormorant-garamond/CormorantGaramond-SemiBold.ttf')
-    format('truetype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Manrope';
-  src: url('/fonts/manrope/Manrope-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Manrope';
-  src: url('/fonts/manrope/Manrope-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Manrope';
-  src: url('/fonts/manrope/Manrope-SemiBold.ttf') format('truetype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Manrope';
-  src: url('/fonts/manrope/Manrope-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme inline {
   --radius-xs: calc(var(--radius) - 4px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -185,10 +126,7 @@
   --shadow-xl:
     0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --font-cormorant: 'Cormorant Garamond', 'Times New Roman', serif;
-  --font-manrope: 'Manrope', 'DM Sans', 'Inter', sans-serif;
   --font-dm-sans: 'DM Sans', sans-serif;
-  --font-inter: 'Inter', sans-serif;
   --font-sans:
     var(--font-manrope), var(--font-dm-sans), var(--font-inter), ui-sans-serif,
     system-ui, sans-serif;
@@ -198,8 +136,8 @@
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
-  --display-family: var(--font-cormorant);
-  --text-family: var(--font-manrope);
+  --display-family: var(--font-cormorant), 'Times New Roman', serif;
+  --text-family: var(--font-manrope), 'DM Sans', 'Inter', sans-serif;
   --display-weight: 600;
   --text-weight: 400;
 }
@@ -271,4 +209,3 @@
     scrollbar-width: none; /* Firefox */
   }
 }
-
