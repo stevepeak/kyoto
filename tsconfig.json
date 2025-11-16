@@ -4,8 +4,6 @@
     {
       "path": "./apps/trigger/tsconfig.json"
     },
-    // Note: apps/web is excluded because Next.js handles its own compilation
-    // and uses noEmit: true which conflicts with project references
     {
       "path": "./packages/agents/tsconfig.json"
     },

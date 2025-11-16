@@ -20,7 +20,12 @@ const config: KnipConfig = {
     },
     'apps/web': {
       entry: ['app/**/*.{ts,tsx}'],
-      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts', '**/.eslintrc.json'],
+      ignore: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/*.d.ts',
+        '**/.eslintrc.json',
+      ],
       ignoreDependencies: ['@radix-ui/react-label', 'kysely'],
     },
     'apps/trigger': {

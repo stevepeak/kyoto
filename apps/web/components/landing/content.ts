@@ -33,6 +33,12 @@ export type Story = {
   quote: string
 }
 
+export type SupportChannel = {
+  label: string
+  icon: LucideIcon
+  href: string
+}
+
 export const coreFeatures: Feature[] = [
   {
     katakana: 'かいぜん',
@@ -157,7 +163,7 @@ export const faqs: Faq[] = [
   },
 ]
 
-export const supportChannels = []
+export const supportChannels: SupportChannel[] = []
 
 export const companyLinks = [
   { label: 'About', href: '/about' },
