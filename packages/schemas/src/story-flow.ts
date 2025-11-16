@@ -411,11 +411,11 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
 
 /**
  * Cache data structure.
- * Stores file hashes for evidence to avoid re-evaluating when files haven't changed.
+ * Stores evidence with line numbers and file hashes to avoid re-evaluating when files haven't changed.
  *
  * TRANSFORMATION: Evaluation → Cache
  * - Input: Evaluation results (only passing assertions)
- * - Output: File hashes organized by step and assertion
+ * - Output: Evidence strings with line numbers and file hashes organized by step and assertion
  * - Stored in: story_evidence_cache.cache_data (JSONB)
  *
  * Structure:
@@ -425,8 +425,11 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
  *     "0": {                    // Step index
  *       assertions: {
  *         "0": {                // Assertion index
- *           "src/file.ts": "abc123hash",  // filename -> hash
- *           "src/other.ts": "def456hash"
+ *           evidence: ["src/file.ts:12-28", "src/other.ts:45-67"],  // Full evidence with line numbers
+ *           fileHashes: {       // filename -> hash for validation
+ *             "src/file.ts": "abc123hash",
+ *             "src/other.ts": "def456hash"
+ *           }
  *         }
  *       }
  *     }
@@ -441,18 +444,27 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
  *     "0": {
  *       "assertions": {
  *         "0": {
- *           "src/auth/session.ts": "sha256:abc123...",
- *           "src/auth/middleware.ts": "sha256:def456..."
+ *           "evidence": ["src/auth/session.ts:12-28", "src/auth/middleware.ts:45-67"],
+ *           "fileHashes": {
+ *             "src/auth/session.ts": "sha256:abc123...",
+ *             "src/auth/middleware.ts": "sha256:def456..."
+ *           }
  *         }
  *       }
  *     },
  *     "1": {
  *       "assertions": {
  *         "0": {
- *           "src/teams/create.ts": "sha256:ghi789..."
+ *           "evidence": ["src/teams/create.ts:45-67"],
+ *           "fileHashes": {
+ *             "src/teams/create.ts": "sha256:ghi789..."
+ *           }
  *         },
  *         "1": {
- *           "src/teams/api.ts": "sha256:jkl012..."
+ *           "evidence": ["src/teams/api.ts:123-145"],
+ *           "fileHashes": {
+ *             "src/teams/api.ts": "sha256:jkl012..."
+ *           }
  *         }
  *       }
  *     }
@@ -466,7 +478,14 @@ export const cacheDataSchema = z.object({
     z.object({
       assertions: z.record(
         z.string().regex(/^\d+$/), // Assertion index as string
-        z.record(z.string(), z.string()), // filename -> hash
+        z.object({
+          evidence: z.array(z.string()).describe(
+            'Full evidence strings with line numbers, e.g., ["src/file.ts:12-28"]',
+          ),
+          fileHashes: z
+            .record(z.string(), z.string())
+            .describe('File path to hash mapping for validation'),
+        }),
       ),
     }),
   ),

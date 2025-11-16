@@ -389,12 +389,25 @@ export async function main(
               stepCacheData.assertions[assertionIndex.toString()]
 
             if (assertionCacheData) {
-              // Reconstruct evidence from cached file paths
-              const evidence: string[] = []
-              for (const filename of Object.keys(assertionCacheData)) {
-                // We don't have line ranges in cache, so we'll use just the filename
-                // This is acceptable since we're using cached results
-                evidence.push(filename)
+              // Use cached evidence with line numbers if available
+              // Handle both new format (with evidence array) and old format (just fileHashes) for backward compatibility
+              let evidence: string[] = []
+              if (
+                typeof assertionCacheData === 'object' &&
+                'evidence' in assertionCacheData &&
+                Array.isArray(assertionCacheData.evidence)
+              ) {
+                // New format: use stored evidence with line numbers
+                evidence = assertionCacheData.evidence
+              } else if (typeof assertionCacheData === 'object') {
+                // Old format: reconstruct from fileHashes (fallback for backward compatibility)
+                const fileHashes =
+                  'fileHashes' in assertionCacheData
+                    ? assertionCacheData.fileHashes
+                    : (assertionCacheData as Record<string, string>)
+                for (const filename of Object.keys(fileHashes)) {
+                  evidence.push(filename)
+                }
               }
 
               cachedAssertions.push({

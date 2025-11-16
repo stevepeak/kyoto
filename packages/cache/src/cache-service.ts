@@ -1,19 +1,13 @@
 import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 import type { DB } from '@app/db'
-import type { CacheEntry, ValidationResult } from '@app/schemas'
+import type {
+  CacheEntry,
+  CacheData,
+  ValidationResult,
+} from '@app/schemas'
 import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
 import type { Sandbox } from '@daytonaio/sdk'
-
-export type CacheData = {
-  steps: {
-    [stepIndex: string]: {
-      assertions: {
-        [assertionIndex: string]: Record<string, string> // filename -> hash
-      }
-    }
-  }
-}
 
 /**
  * Retrieves cached evidence for a story at a specific commit SHA or from a list of commit SHAs.
@@ -150,14 +144,36 @@ export async function validateCacheEntry(args: {
     }
 
     // Iterate through cached assertions for this step
-    for (const [assertionIndexStr, evidenceHashMap] of Object.entries(
+    for (const [assertionIndexStr, cachedData] of Object.entries(
       stepData.assertions,
     )) {
       const assertionIndex = Number.parseInt(assertionIndexStr, 10)
 
+      // Handle both new format (with evidence and fileHashes) and old format (just fileHashes) for backward compatibility
+      let fileHashes: Record<string, string>
+      if (
+        typeof cachedData === 'object' &&
+        cachedData !== null &&
+        'fileHashes' in cachedData &&
+        typeof cachedData.fileHashes === 'object' &&
+        cachedData.fileHashes !== null
+      ) {
+        // New format: use fileHashes property
+        fileHashes = cachedData.fileHashes
+      } else if (
+        typeof cachedData === 'object' &&
+        cachedData !== null &&
+        !('evidence' in cachedData)
+      ) {
+        // Old format: cachedData is directly the fileHashes Record
+        fileHashes = cachedData as unknown as Record<string, string>
+      } else {
+        continue
+      }
+
       // Check each file hash in the cached evidence
       let assertionIsValid = true
-      for (const [filename, cachedHash] of Object.entries(evidenceHashMap)) {
+      for (const [filename, cachedHash] of Object.entries(fileHashes)) {
         const currentHash = await getFileHashFromSandbox(sandbox, filename)
         if (currentHash !== cachedHash) {
           assertionIsValid = false
@@ -271,7 +287,10 @@ export async function buildCacheDataFromEvaluation(args: {
       if (Object.keys(evidenceHashMap).length > 0) {
         cacheData.steps[stepIndex.toString()].assertions[
           assertionIndex.toString()
-        ] = evidenceHashMap
+        ] = {
+          evidence: assertion.evidence, // Store full evidence strings with line numbers
+          fileHashes: evidenceHashMap, // Store file hashes for validation
+        }
       }
     }
   }

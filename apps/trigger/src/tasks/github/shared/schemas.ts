@@ -112,14 +112,15 @@ export const pullRequestEventSchema = z.object({
   }),
 })
 
-export const statusEventSchema = z.object({
-  state: z.enum(['success', 'failure', 'error', 'pending']),
-  context: z.string(),
-  target_url: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  sha: z.string(),
-  repository: repositorySchema,
-})
+// Unused - kept for potential future use
+// export const statusEventSchema = z.object({
+//   state: z.enum(['success', 'failure', 'error', 'pending']),
+//   context: z.string(),
+//   target_url: z.string().nullable().optional(),
+//   description: z.string().nullable().optional(),
+//   sha: z.string(),
+//   repository: repositorySchema,
+// })
 
 export const installationTargetsEventSchema = z.object({
   action: z.enum(['renamed']),
