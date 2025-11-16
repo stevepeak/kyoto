@@ -1,5 +1,4 @@
 import type { setupDb } from '@app/db'
-import type { GitAuthor } from '../../helpers/github'
 
 export interface RunCiPayload {
   orgName: string
@@ -9,7 +8,6 @@ export interface RunCiPayload {
   agentVersion?: string
   commitSha?: string | null
   commitMessage?: string | null
-  gitAuthor?: GitAuthor | null
 }
 
 /*

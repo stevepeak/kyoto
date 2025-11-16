@@ -1,5 +1,5 @@
 import { configure, tasks } from '@trigger.dev/sdk'
-import { createHmac, timingSafeEqual } from 'crypto'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { NextRequest } from 'next/server'
 
 // Ensure Trigger.dev is configured once per process

@@ -90,10 +90,9 @@ export interface GitAuthor {
 interface BranchDetails {
   commitSha: string
   commitMessage: string
-  gitAuthor: GitAuthor | null
 }
 
-async function getGithubCommitAuthor(
+export async function getGithubCommitAuthor(
   octokit: Octokit,
   params: {
     owner: string
@@ -151,18 +150,8 @@ export async function getGithubBranchDetails(
   const commitSha = branchData.data.commit?.sha ?? null
   const commitMessage = branchData.data.commit?.commit?.message ?? null
 
-  let gitAuthor: GitAuthor | null = null
-  if (commitSha) {
-    gitAuthor = await getGithubCommitAuthor(octokit, {
-      owner: params.owner,
-      repo: params.repo,
-      commitSha,
-    })
-  }
-
   return {
     commitSha,
     commitMessage,
-    gitAuthor,
   }
 }

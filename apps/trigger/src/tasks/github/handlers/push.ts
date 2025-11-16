@@ -81,8 +81,9 @@ export const pushHandler: WebhookHandler = async ({
       .where('id', '=', repoRecord.ownerId)
       .executeTakeFirst()
 
+    let octokit: ReturnType<typeof createOctokit> | null = null
     if (owner?.installationId) {
-      const octokit = createOctokit(Number(owner.installationId))
+      octokit = createOctokit(Number(owner.installationId))
 
       try {
         const prs = await octokit.rest.pulls.list({
@@ -125,19 +126,6 @@ export const pushHandler: WebhookHandler = async ({
     const commitSha = parsed.data.after ?? null
     const headCommit = parsed.data.head_commit
     const commitMessage = headCommit?.message ?? null
-    const commitAuthor = headCommit?.author
-    const gitAuthor = commitAuthor
-      ? {
-          id:
-            commitAuthor.id !== null && commitAuthor.id !== undefined
-              ? typeof commitAuthor.id === 'bigint'
-                ? Number(commitAuthor.id)
-                : commitAuthor.id
-              : null,
-          login: commitAuthor.login ?? null,
-          name: commitAuthor.name ?? null,
-        }
-      : null
 
     await runCiTask.trigger(
       {
@@ -146,7 +134,6 @@ export const pushHandler: WebhookHandler = async ({
         branchName,
         commitSha,
         commitMessage,
-        gitAuthor,
       },
       {
         tags: [

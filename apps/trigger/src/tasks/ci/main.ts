@@ -1,7 +1,11 @@
 import { logger, task } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
 import { parseEnv } from '@app/config'
-import { getGithubBranchDetails, getOctokitClient } from '../../helpers/github'
+import {
+  getGithubBranchDetails,
+  getGithubCommitAuthor,
+  getOctokitClient,
+} from '../../helpers/github'
 import {
   buildCheckRunBase,
   completeCheckRunFailure,
@@ -45,10 +49,9 @@ export const runCiTask = task({
     // Use provided commit data if available, otherwise fetch from branch
     let commitSha = payload.commitSha ?? null
     let commitMessage = payload.commitMessage ?? null
-    let gitAuthor = payload.gitAuthor ?? null
 
     // Fetch missing data from branch if any field is missing
-    if (!commitSha || !commitMessage || !gitAuthor) {
+    if (!commitSha || !commitMessage) {
       const branchDetails = await getGithubBranchDetails(octokit, {
         owner: repoRecord.ownerLogin,
         repo: repoRecord.repoName,
@@ -57,8 +60,13 @@ export const runCiTask = task({
 
       commitSha = commitSha ?? branchDetails.commitSha
       commitMessage = commitMessage ?? branchDetails.commitMessage
-      gitAuthor = gitAuthor ?? branchDetails.gitAuthor
     }
+
+    const gitAuthor = await getGithubCommitAuthor(octokit, {
+      owner: repoRecord.ownerLogin,
+      repo: repoRecord.repoName,
+      commitSha,
+    })
 
     const runInsert = await createRunRecord({
       db,

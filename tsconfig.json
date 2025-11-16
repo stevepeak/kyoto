@@ -5,6 +5,9 @@
       "path": "./apps/trigger/tsconfig.json"
     },
     {
+      "path": "./apps/web/tsconfig.json"
+    },
+    {
       "path": "./packages/agents/tsconfig.json"
     },
     {
