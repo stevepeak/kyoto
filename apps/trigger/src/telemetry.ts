@@ -26,7 +26,8 @@ async function startSdk(): Promise<Tracer | undefined> {
         tracesSampleRate: 1.0,
         sendDefaultPii: false,
         integrations: [
-          Sentry.openAIIntegration({
+          // Add the Vercel AI SDK integration
+          Sentry.vercelAIIntegration({
             recordInputs: true,
             recordOutputs: true,
           }),

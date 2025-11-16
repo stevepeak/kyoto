@@ -216,6 +216,11 @@ ${stepSummary}
 
       Provide a brief, user-friendly explanation of what this evaluation found. Focus on the key outcomes and any issues.
     `,
+    experimental_telemetry: {
+      isEnabled: true,
+      recordInputs: true,
+      recordOutputs: true,
+    },
   })
 
   return evaluationOutputSchema.parse({

@@ -22,6 +22,11 @@ export async function generateText({
   const { text } = await aiGenerateText({
     model: openAiProvider(modelId),
     prompt,
+    experimental_telemetry: {
+      isEnabled: true,
+      recordInputs: true,
+      recordOutputs: true,
+    },
   })
 
   return text
