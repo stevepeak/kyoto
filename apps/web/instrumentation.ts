@@ -15,6 +15,11 @@ export async function register() {
       // Setting this option to true will print useful information to the console while you're setting up Sentry.
       debug: false,
 
+      // Set release to commit SHA from Vercel deployments
+      ...(process.env.VERCEL_GIT_COMMIT_SHA
+        ? { release: process.env.VERCEL_GIT_COMMIT_SHA }
+        : {}),
+
       // Uncomment the line below to enable Spotlight (https://spotlightjs.com)
       // spotlight: process.env.NODE_ENV === 'development',
     })
