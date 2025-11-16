@@ -90,6 +90,7 @@ const config = defineConfig({
         '@codemirror/state',
         '@codemirror/view',
         '@uiw/react-codemirror',
+        '@radix-ui/react-tabs',
       ],
     },
     build: {
