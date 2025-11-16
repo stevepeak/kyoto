@@ -1,100 +1,25 @@
 # ⛩️ Kyoto
 
-> ⛩️ Kyoto - AI-powered QA
+> Ship it working.
 
-# Why Kyoto?
+Kyoto is the first **intent testing** platform using AI agents that evaluate user stories by tracing code execution paths. Craft stories that encapsulate the intent of user behaviors and technical workflows, then let Kyoto ensure your code aligns with your requirements.
 
-In the age of AI many hackers are vibe coding and not writing tests. We don't blame them.
-Instead, let's write user stories and let AI review the code to ensure the functionality
-**may** work as expected.
+## Mission
 
-# Development
+In the age of AI, many developers are vibe coding and not writing tests. We don't blame them. Instead, let's craft user stories and let AI review the code to ensure the functionality works as expected.
 
-## What's inside?
+**Kyoto tests intent.** We call this "Intent Testing."
 
-This monorepo includes:
+## How It Works
 
-- `apps/web`: An [Astro](https://astro.build/) application for the frontend.
-- `apps/trigger`: [Trigger.dev](https://trigger.dev/) background jobs and automation. Manages external webhook processing, scheduled tasks, and integration with monitoring tools (e.g., Sentry).
-- `packages/api`: A [tRPC](https://trpc.io/) API for type-safe client-server communication.
-- `packages/db`: Database schemas, migrations, and query utilities using [Kysely](https://kysely.dev/).
-- `packages/utils`: Shared utilities used across the monorepo.
-- **Authentication**: Example implementation using [better-auth](https://github.com/better-auth/better-auth) with GitHub as an OAuth provider.
-- **UI**: Basic UI setup with [Tailwind CSS](https://tailwindcss.com/) and [shadcn/ui](https://ui.shadcn.com/).
-- **Tooling**:
-  - [Turborepo](https://turbo.build/repo) for high-performance builds.
-  - [PNPM](https://pnpm.io/) for efficient package management.
-  - [TypeScript](https://www.typescriptlang.org/) for static typing.
-  - [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for code quality.
+Stories encapsulate the intent of a user behavior or technical workflow within your product. Articulate your story in natural language, then Kyoto will evaluate the intent to ensure the code aligns with your requirements.
 
-## Getting Started
+Kyoto weaves into your existing checks. Not replacing other tools, but complementing them. While traditional CI tools test code quality, test coverage, and security, Kyoto tests user stories and ensures the code works as expected by reading and understanding the intent of your code.
 
-1.  **Clone the repository:**
+## Crafted with Intention
 
-    ```bash
-    git clone https://github.com/stevepeak/kyoto.git
-    cd kyoto
-    ```
+Made with intention by the creators of [Codecov](https://codecov.io).
 
-2.  **Install dependencies:**
+---
 
-    ```bash
-    pnpm install
-    ```
-
-3.  **Set up environment variables:**
-
-    Create a `.env` file in `apps/web` and add the following variables:
-
-    ```env
-    # Generate a secret with `openssl rand -base64 32`
-    AUTH_SECRET="your_auth_secret"
-
-    # From your GitHub OAuth application
-    GITHUB_CLIENT_ID="your_github_client_id"
-    GITHUB_CLIENT_SECRET="your_github_client_secret"
-
-    # From your GitHub App (for repository access)
-    GITHUB_APP_ID="your_github_app_id"
-    GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
-    GITHUB_APP_SLUG="your_github_app_slug"
-
-    # Your local PostgreSQL connection string
-    DATABASE_URL="postgres://user:password@localhost:5432/kyoto"
-
-    # OpenAI-compatible API key (for AI features)
-
-    # Trigger.dev secret key (for background jobs)
-    TRIGGER_SECRET_KEY="your_trigger_secret_key"
-    ```
-
-4.  **Set up the database:**
-
-    Make sure you have a PostgreSQL server running. Then, run the migrations:
-
-    ```bash
-    DATABASE_URL="postgres://user:password@localhost:5432/kyoto" pnpm --filter @app/db db:migrate
-    ```
-
-5.  **Run the development server:**
-
-    ```bash
-    pnpm dev
-    ```
-
-    The web application will be available at `http://localhost:3001`.
-
-## Development
-
-- `pnpm build`: Build all apps and packages.
-- `pnpm lint`: Lint all code.
-- `pnpm typecheck`: Run TypeScript to check for type errors.
-- `pnpm test`: Run tests.
-
-# Authors
-
-- [@stevepeak](https://github.com/stevepeak)
-
-# License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+For setup and development instructions, see [SETUP.md](./SETUP.md).
