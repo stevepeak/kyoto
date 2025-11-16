@@ -2,24 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict zXGx4K5IOImFH2rH9ABZdzl6VcXNRs3JYRaraIdoywq0wonOnDmG6Ye8Epx9WYX
+\restrict 0sCUZnj7tDeMd7fPD1GxOxbS66N0ozlgHv17meas4d64LmXgQDhtYDyIdsvLc4w
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
-
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
---
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON SCHEMA public IS '';
 
 
 --
@@ -169,12 +155,12 @@ $$;
 
 
 --
--- Name: accounts; Type: TABLE; Schema: public; Owner: -
+-- Name: account; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.accounts (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
+CREATE TABLE public.account (
+    id text NOT NULL,
+    user_id text NOT NULL,
     account_id text NOT NULL,
     provider_id text NOT NULL,
     access_token text,
@@ -190,103 +176,103 @@ CREATE TABLE public.accounts (
 
 
 --
--- Name: COLUMN accounts.id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.id IS 'Unique identifier for each account';
-
-
---
--- Name: COLUMN accounts.user_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.accounts.user_id IS 'The id of the user';
+COMMENT ON COLUMN public.account.id IS 'Unique identifier for each account';
 
 
 --
--- Name: COLUMN accounts.account_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.user_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.account_id IS 'The id of the account as provided by the SSO or equal to user_id for credential accounts';
-
-
---
--- Name: COLUMN accounts.provider_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.accounts.provider_id IS 'The id of the provider';
+COMMENT ON COLUMN public.account.user_id IS 'The id of the user';
 
 
 --
--- Name: COLUMN accounts.access_token; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.account_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.access_token IS 'The access token of the account. Returned by the provider';
-
-
---
--- Name: COLUMN accounts.refresh_token; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.accounts.refresh_token IS 'The refresh token of the account. Returned by the provider';
+COMMENT ON COLUMN public.account.account_id IS 'The id of the account as provided by the SSO or equal to user_id for credential accounts';
 
 
 --
--- Name: COLUMN accounts.id_token; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.provider_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.id_token IS 'The id token returned from the provider';
-
-
---
--- Name: COLUMN accounts.access_token_expires_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.accounts.access_token_expires_at IS 'The time when the access token expires';
+COMMENT ON COLUMN public.account.provider_id IS 'The id of the provider';
 
 
 --
--- Name: COLUMN accounts.refresh_token_expires_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.access_token; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.refresh_token_expires_at IS 'The time when the refresh token expires';
-
-
---
--- Name: COLUMN accounts.scope; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.accounts.scope IS 'The scope of the account. Returned by the provider';
+COMMENT ON COLUMN public.account.access_token IS 'The access token of the account. Returned by the provider';
 
 
 --
--- Name: COLUMN accounts.password; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.refresh_token; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.password IS 'The password of the account. Mainly used for email and password authentication';
-
-
---
--- Name: COLUMN accounts.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.accounts.created_at IS 'The time when the account was created';
+COMMENT ON COLUMN public.account.refresh_token IS 'The refresh token of the account. Returned by the provider';
 
 
 --
--- Name: COLUMN accounts.updated_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN account.id_token; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.accounts.updated_at IS 'The time when the account was last updated';
+COMMENT ON COLUMN public.account.id_token IS 'The id token returned from the provider';
 
 
 --
--- Name: credentials; Type: TABLE; Schema: public; Owner: -
+-- Name: COLUMN account.access_token_expires_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-CREATE TABLE public.credentials (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
+COMMENT ON COLUMN public.account.access_token_expires_at IS 'The time when the access token expires';
+
+
+--
+-- Name: COLUMN account.refresh_token_expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.refresh_token_expires_at IS 'The time when the refresh token expires';
+
+
+--
+-- Name: COLUMN account.scope; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.scope IS 'The scope of the account. Returned by the provider';
+
+
+--
+-- Name: COLUMN account.password; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.password IS 'The password of the account. Mainly used for email and password authentication';
+
+
+--
+-- Name: COLUMN account.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.created_at IS 'The time when the account was created';
+
+
+--
+-- Name: COLUMN account.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.updated_at IS 'The time when the account was last updated';
+
+
+--
+-- Name: credential; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.credential (
+    id text NOT NULL,
+    user_id text NOT NULL,
     provider text NOT NULL,
     provider_account_id text,
     email text,
@@ -299,73 +285,73 @@ CREATE TABLE public.credentials (
 
 
 --
--- Name: COLUMN credentials.id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN credential.id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.credentials.id IS 'Unique identifier for each credential';
-
-
---
--- Name: COLUMN credentials.user_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.credentials.user_id IS 'The id of the user who owns this credential';
+COMMENT ON COLUMN public.credential.id IS 'Unique identifier for each credential';
 
 
 --
--- Name: COLUMN credentials.provider; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN credential.user_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.credentials.provider IS 'The authentication provider name';
-
-
---
--- Name: COLUMN credentials.provider_account_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.credentials.provider_account_id IS 'The account id from the provider';
+COMMENT ON COLUMN public.credential.user_id IS 'The id of the user who owns this credential';
 
 
 --
--- Name: COLUMN credentials.email; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN credential.provider; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.credentials.email IS 'The email associated with this credential';
-
-
---
--- Name: COLUMN credentials.label; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.credentials.label IS 'A user-friendly label for this credential';
+COMMENT ON COLUMN public.credential.provider IS 'The authentication provider name';
 
 
 --
--- Name: COLUMN credentials.tokens; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN credential.provider_account_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.credentials.tokens IS 'JSON object containing provider tokens';
-
-
---
--- Name: COLUMN credentials."primary"; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.credentials."primary" IS 'Whether this is the primary credential for the user';
+COMMENT ON COLUMN public.credential.provider_account_id IS 'The account id from the provider';
 
 
 --
--- Name: COLUMN credentials.created_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN credential.email; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.credentials.created_at IS 'The time when the credential was created';
+COMMENT ON COLUMN public.credential.email IS 'The email associated with this credential';
 
 
 --
--- Name: COLUMN credentials.updated_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN credential.label; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.credentials.updated_at IS 'The time when the credential was last updated';
+COMMENT ON COLUMN public.credential.label IS 'A user-friendly label for this credential';
+
+
+--
+-- Name: COLUMN credential.tokens; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.credential.tokens IS 'JSON object containing provider tokens';
+
+
+--
+-- Name: COLUMN credential."primary"; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.credential."primary" IS 'Whether this is the primary credential for the user';
+
+
+--
+-- Name: COLUMN credential.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.credential.created_at IS 'The time when the credential was created';
+
+
+--
+-- Name: COLUMN credential.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.credential.updated_at IS 'The time when the credential was last updated';
 
 
 --
@@ -377,7 +363,7 @@ CREATE TABLE public.owner_memberships (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     owner_id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    user_id text NOT NULL,
     role text DEFAULT 'member'::text NOT NULL
 );
 
@@ -552,7 +538,7 @@ CREATE TABLE public.repo_memberships (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     repo_id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    user_id text NOT NULL,
     role text DEFAULT 'member'::text NOT NULL
 );
 
@@ -810,12 +796,12 @@ COMMENT ON COLUMN public.runs.git_author IS 'Git commit author information store
 
 
 --
--- Name: sessions; Type: TABLE; Schema: public; Owner: -
+-- Name: session; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.sessions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
+CREATE TABLE public.session (
+    id text NOT NULL,
+    user_id text NOT NULL,
     token text NOT NULL,
     expires_at timestamp with time zone NOT NULL,
     ip_address text,
@@ -826,59 +812,59 @@ CREATE TABLE public.sessions (
 
 
 --
--- Name: COLUMN sessions.id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN session.id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.sessions.id IS 'Unique identifier for each session';
-
-
---
--- Name: COLUMN sessions.user_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.sessions.user_id IS 'The id of the user';
+COMMENT ON COLUMN public.session.id IS 'Unique identifier for each session';
 
 
 --
--- Name: COLUMN sessions.token; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN session.user_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.sessions.token IS 'The unique session token';
-
-
---
--- Name: COLUMN sessions.expires_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.sessions.expires_at IS 'The time when the session expires';
+COMMENT ON COLUMN public.session.user_id IS 'The id of the user';
 
 
 --
--- Name: COLUMN sessions.ip_address; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN session.token; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.sessions.ip_address IS 'The IP address of the device';
-
-
---
--- Name: COLUMN sessions.user_agent; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.sessions.user_agent IS 'The user agent information of the device';
+COMMENT ON COLUMN public.session.token IS 'The unique session token';
 
 
 --
--- Name: COLUMN sessions.created_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN session.expires_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.sessions.created_at IS 'The time when the session was created';
+COMMENT ON COLUMN public.session.expires_at IS 'The time when the session expires';
 
 
 --
--- Name: COLUMN sessions.updated_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN session.ip_address; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.sessions.updated_at IS 'The time when the session was last updated';
+COMMENT ON COLUMN public.session.ip_address IS 'The IP address of the device';
+
+
+--
+-- Name: COLUMN session.user_agent; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.session.user_agent IS 'The user agent information of the device';
+
+
+--
+-- Name: COLUMN session.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.session.created_at IS 'The time when the session was created';
+
+
+--
+-- Name: COLUMN session.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.session.updated_at IS 'The time when the session was last updated';
 
 
 --
@@ -1137,11 +1123,11 @@ COMMENT ON COLUMN public.story_test_results.analysis_version IS 'Version number 
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+-- Name: user; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.users (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
+CREATE TABLE public."user" (
+    id text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     status public.user_status DEFAULT 'active'::public.user_status NOT NULL,
@@ -1155,81 +1141,81 @@ CREATE TABLE public.users (
 
 
 --
--- Name: COLUMN users.id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN "user".id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.users.id IS 'Unique identifier for each user';
-
-
---
--- Name: COLUMN users.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.users.created_at IS 'The time when the user was created';
+COMMENT ON COLUMN public."user".id IS 'Unique identifier for each user';
 
 
 --
--- Name: COLUMN users.updated_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN "user".created_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.users.updated_at IS 'The time when the user was last updated';
-
-
---
--- Name: COLUMN users.status; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.users.status IS 'The current status of the user account';
+COMMENT ON COLUMN public."user".created_at IS 'The time when the user was created';
 
 
 --
--- Name: COLUMN users.name; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN "user".updated_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.users.name IS 'The display name of the user';
-
-
---
--- Name: COLUMN users.email; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.users.email IS 'The email address of the user';
+COMMENT ON COLUMN public."user".updated_at IS 'The time when the user was last updated';
 
 
 --
--- Name: COLUMN users.email_verified; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN "user".status; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.users.email_verified IS 'Whether the user email is verified';
-
-
---
--- Name: COLUMN users.image; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.users.image IS 'The image URL of the user';
+COMMENT ON COLUMN public."user".status IS 'The current status of the user account';
 
 
 --
--- Name: COLUMN users.last_interaction_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN "user".name; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.users.last_interaction_at IS 'The time when the user last interacted with the system';
-
-
---
--- Name: COLUMN users.time_zone; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.users.time_zone IS 'The user preferred timezone';
+COMMENT ON COLUMN public."user".name IS 'The display name of the user';
 
 
 --
--- Name: verifications; Type: TABLE; Schema: public; Owner: -
+-- Name: COLUMN "user".email; Type: COMMENT; Schema: public; Owner: -
 --
 
-CREATE TABLE public.verifications (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
+COMMENT ON COLUMN public."user".email IS 'The email address of the user';
+
+
+--
+-- Name: COLUMN "user".email_verified; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public."user".email_verified IS 'Whether the user email is verified';
+
+
+--
+-- Name: COLUMN "user".image; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public."user".image IS 'The image URL of the user';
+
+
+--
+-- Name: COLUMN "user".last_interaction_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public."user".last_interaction_at IS 'The time when the user last interacted with the system';
+
+
+--
+-- Name: COLUMN "user".time_zone; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public."user".time_zone IS 'The user preferred timezone';
+
+
+--
+-- Name: verification; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.verification (
+    id text NOT NULL,
     identifier text NOT NULL,
     value text NOT NULL,
     expires_at timestamp with time zone NOT NULL,
@@ -1239,45 +1225,45 @@ CREATE TABLE public.verifications (
 
 
 --
--- Name: COLUMN verifications.id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN verification.id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.verifications.id IS 'Unique identifier for each verification';
-
-
---
--- Name: COLUMN verifications.identifier; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.verifications.identifier IS 'The identifier for the verification request';
+COMMENT ON COLUMN public.verification.id IS 'Unique identifier for each verification';
 
 
 --
--- Name: COLUMN verifications.value; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN verification.identifier; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.verifications.value IS 'The value to be verified';
-
-
---
--- Name: COLUMN verifications.expires_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.verifications.expires_at IS 'The time when the verification request expires';
+COMMENT ON COLUMN public.verification.identifier IS 'The identifier for the verification request';
 
 
 --
--- Name: COLUMN verifications.created_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN verification.value; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.verifications.created_at IS 'The time when the verification was created';
+COMMENT ON COLUMN public.verification.value IS 'The value to be verified';
 
 
 --
--- Name: COLUMN verifications.updated_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN verification.expires_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.verifications.updated_at IS 'The time when the verification was last updated';
+COMMENT ON COLUMN public.verification.expires_at IS 'The time when the verification request expires';
+
+
+--
+-- Name: COLUMN verification.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.verification.created_at IS 'The time when the verification was created';
+
+
+--
+-- Name: COLUMN verification.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.verification.updated_at IS 'The time when the verification was last updated';
 
 
 --
@@ -1288,18 +1274,18 @@ ALTER TABLE ONLY public.pgmigrations ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- Name: accounts accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: account accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.accounts
+ALTER TABLE ONLY public.account
     ADD CONSTRAINT accounts_pkey PRIMARY KEY (id);
 
 
 --
--- Name: credentials credentials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: credential credentials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.credentials
+ALTER TABLE ONLY public.credential
     ADD CONSTRAINT credentials_pkey PRIMARY KEY (id);
 
 
@@ -1400,18 +1386,18 @@ ALTER TABLE ONLY public.runs
 
 
 --
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: session sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.sessions
+ALTER TABLE ONLY public.session
     ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
 
 
 --
--- Name: sessions sessions_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: session sessions_token_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.sessions
+ALTER TABLE ONLY public.session
     ADD CONSTRAINT sessions_token_key UNIQUE (token);
 
 
@@ -1440,27 +1426,27 @@ ALTER TABLE ONLY public.story_test_results
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.users
+ALTER TABLE ONLY public."user"
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."user"
     ADD CONSTRAINT users_email_key UNIQUE (email);
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: verification verification_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: verifications verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.verifications
-    ADD CONSTRAINT verifications_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.verification
+    ADD CONSTRAINT verification_pkey PRIMARY KEY (id);
 
 
 --
@@ -1632,10 +1618,10 @@ CREATE TRIGGER set_run_number_trigger BEFORE INSERT ON public.runs FOR EACH ROW 
 
 
 --
--- Name: accounts set_timestamp_accounts; Type: TRIGGER; Schema: public; Owner: -
+-- Name: account set_timestamp_account; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER set_timestamp_accounts BEFORE UPDATE ON public.accounts FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+CREATE TRIGGER set_timestamp_account BEFORE UPDATE ON public.account FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
 
 
 --
@@ -1674,10 +1660,10 @@ CREATE TRIGGER set_timestamp_runs BEFORE UPDATE ON public.runs FOR EACH ROW EXEC
 
 
 --
--- Name: sessions set_timestamp_sessions; Type: TRIGGER; Schema: public; Owner: -
+-- Name: session set_timestamp_session; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER set_timestamp_sessions BEFORE UPDATE ON public.sessions FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+CREATE TRIGGER set_timestamp_session BEFORE UPDATE ON public.session FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
 
 
 --
@@ -1702,40 +1688,40 @@ CREATE TRIGGER set_timestamp_story_test_results BEFORE UPDATE ON public.story_te
 
 
 --
--- Name: users set_timestamp_users; Type: TRIGGER; Schema: public; Owner: -
+-- Name: user set_timestamp_user; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER set_timestamp_users BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
-
-
---
--- Name: verifications set_timestamp_verifications; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER set_timestamp_verifications BEFORE UPDATE ON public.verifications FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+CREATE TRIGGER set_timestamp_user BEFORE UPDATE ON public."user" FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
 
 
 --
--- Name: credentials update_credentials_timestamp; Type: TRIGGER; Schema: public; Owner: -
+-- Name: verification set_timestamp_verifications; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_credentials_timestamp BEFORE UPDATE ON public.credentials FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
-
-
---
--- Name: accounts accounts_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.accounts
-    ADD CONSTRAINT accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+CREATE TRIGGER set_timestamp_verifications BEFORE UPDATE ON public.verification FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
 
 
 --
--- Name: credentials credentials_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: credential update_credential_timestamp; Type: TRIGGER; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.credentials
-    ADD CONSTRAINT credentials_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+CREATE TRIGGER update_credential_timestamp BEFORE UPDATE ON public.credential FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+
+
+--
+-- Name: account account_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account
+    ADD CONSTRAINT account_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
+
+
+--
+-- Name: credential credential_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.credential
+    ADD CONSTRAINT credential_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 
 --
@@ -1751,7 +1737,7 @@ ALTER TABLE ONLY public.owner_memberships
 --
 
 ALTER TABLE ONLY public.owner_memberships
-    ADD CONSTRAINT owner_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT owner_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 
 --
@@ -1767,7 +1753,7 @@ ALTER TABLE ONLY public.repo_memberships
 --
 
 ALTER TABLE ONLY public.repo_memberships
-    ADD CONSTRAINT repo_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT repo_memberships_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 
 --
@@ -1787,11 +1773,11 @@ ALTER TABLE ONLY public.runs
 
 
 --
--- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: session session_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.session
+    ADD CONSTRAINT session_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id) ON DELETE CASCADE;
 
 
 --
@@ -1838,5 +1824,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zXGx4K5IOImFH2rH9ABZdzl6VcXNRs3JYRaraIdoywq0wonOnDmG6Ye8Epx9WYX
+\unrestrict 0sCUZnj7tDeMd7fPD1GxOxbS66N0ozlgHv17meas4d64LmXgQDhtYDyIdsvLc4w
 

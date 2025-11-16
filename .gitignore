@@ -26,3 +26,5 @@ playwright-report
 .eslintcacheapps
 apps/trigger/.trigger
 tmp/
+.next
+next-env.d.ts

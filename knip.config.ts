@@ -4,12 +4,11 @@ const config: KnipConfig = {
   workspaces: {
     '.': {
       entry: ['**/*.config.{js,ts}', 'turbo.json'],
-      project: ['**/*.{js,ts,tsx,astro}'],
+      project: ['**/*.{js,ts,tsx}'],
       ignore: [
         '**/node_modules/**',
         '**/dist/**',
         '**/.turbo/**',
-        '**/.astro/**',
         '**/coverage/**',
         '**/*.d.ts',
         '**/*.config.ts',
@@ -17,11 +16,12 @@ const config: KnipConfig = {
         '**/schema.sql',
         '**/migrations/**',
       ],
+      ignoreDependencies: ['tailwindcss'],
     },
     'apps/web': {
-      entry: ['src/pages/**/*.{astro,ts}', 'src/layouts/**/*.astro'],
-      ignore: ['**/node_modules/**', '**/.astro/**', '**/dist/**', '**/*.d.ts'],
-      ignoreDependencies: ['@radix-ui/react-label'],
+      entry: ['app/**/*.{ts,tsx}'],
+      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts', '**/.eslintrc.json'],
+      ignoreDependencies: ['@radix-ui/react-label', 'kysely'],
     },
     'apps/trigger': {
       entry: ['trigger.config.ts'],
@@ -59,11 +59,10 @@ const config: KnipConfig = {
     },
   },
   ignore: [
-    'apps/web/src/components/**',
+    'apps/web/components/**',
     '**/node_modules/**',
     '**/dist/**',
     '**/.turbo/**',
-    '**/.astro/**',
     '**/coverage/**',
     '**/*.d.ts',
     '**/types.gen.ts',
@@ -74,7 +73,6 @@ const config: KnipConfig = {
   ignoreDependencies: [
     'vitest',
     '@types/*',
-    '@vitejs/plugin-react',
     '@codemirror/lang-css',
     '@codemirror/lang-html',
     '@codemirror/lang-javascript',

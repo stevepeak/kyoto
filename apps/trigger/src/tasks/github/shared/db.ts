@@ -39,7 +39,7 @@ export async function findUserIdsByGithubAccountId(
   ])
 
   const accounts = await db
-    .selectFrom('accounts')
+    .selectFrom('account')
     .select('userId')
     .where('providerId', '=', 'github')
     .where('accountId', 'in', Array.from(candidateIds))

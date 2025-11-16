@@ -9,6 +9,7 @@ export type { Context, Env, Session, SessionUser } from './context'
 
 // TODO maybe move these into a @app/utils package?
 export { getUser } from './helpers/users'
+export { parseEnv } from './helpers/env'
 
 export const appRouter = router({
   user: userRouter,
