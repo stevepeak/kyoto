@@ -1,13 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import {
-  BookOpen,
-  Bug,
-  Gauge,
-  GitCommit,
-  Languages,
-  LifeBuoy,
-  ShieldCheck,
-} from 'lucide-react'
+import { Bug, GitCommit, Languages, ShieldCheck } from 'lucide-react'
 
 export type Feature = {
   katakana: string
@@ -165,12 +157,7 @@ export const faqs: Faq[] = [
   },
 ]
 
-export const supportChannels = [
-  { label: 'Docs', href: '/docs', icon: BookOpen },
-  { label: 'Status', href: 'https://status.kyoto.app', icon: Gauge },
-  { label: 'Community', href: 'https://discord.gg/kyoto', icon: LifeBuoy },
-  { label: 'Security', href: '/security', icon: ShieldCheck },
-]
+export const supportChannels = []
 
 export const companyLinks = [
   { label: 'About', href: '/about' },

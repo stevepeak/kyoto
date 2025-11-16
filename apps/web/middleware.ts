@@ -11,7 +11,7 @@ import type { NextRequest } from 'next/server'
  */
 
 // Public routes that don't require authentication
-const publicRoutes = ['/', '/auth']
+const publicRoutes = ['/', '/auth', '/about']
 
 export const config = {
   matcher: [

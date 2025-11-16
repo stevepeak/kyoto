@@ -44,7 +44,7 @@ export function LandingFooter() {
 
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
             <FooterColumn heading="Company" links={companyLinks} />
-            <FooterSupport />
+            {supportChannels.length > 0 && <FooterSupport />}
           </div>
         </div>
 
