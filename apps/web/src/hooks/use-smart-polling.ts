@@ -22,17 +22,22 @@ export const SmartPollingContext =
  * Hook to track user activity and determine polling state
  */
 function useActivityState() {
-  const [isVisible, setIsVisible] = useState(() =>
-    typeof window !== 'undefined' ? !document.hidden : true,
-  )
-  const [isFocused, setIsFocused] = useState(() =>
-    typeof window !== 'undefined' ? document.hasFocus() : true,
-  )
+  // Always start with safe defaults that match server-side rendering
+  // This prevents hydration mismatches
+  const [isVisible, setIsVisible] = useState(true)
+  const [isFocused, setIsFocused] = useState(true)
 
   useEffect(() => {
+    // Only update state after hydration on the client
     if (typeof window === 'undefined') {
       return
     }
+
+    // Set initial values after mount to match actual browser state
+    // This is necessary to fix hydration mismatches - state is updated after mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Required for hydration fix
+    setIsVisible(!document.hidden)
+    setIsFocused(document.hasFocus())
 
     const handleVisibilityChange = () => {
       setIsVisible(!document.hidden)

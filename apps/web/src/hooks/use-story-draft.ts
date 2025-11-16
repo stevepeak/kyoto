@@ -6,57 +6,31 @@ interface DraftData {
 }
 
 export function useStoryDraft(storageKey: string, isCreateMode: boolean) {
-  // Load draft from localStorage using lazy initialization (create mode only)
-  const [storyName, setStoryName] = useState(() => {
-    if (!isCreateMode) {
-      return ''
-    }
-    try {
-      const draft = localStorage.getItem(storageKey)
-      if (draft) {
-        const parsed = JSON.parse(draft) as DraftData
-        return parsed.storyName ?? ''
-      }
-    } catch (e) {
-      // Ignore localStorage errors
-      console.error('Failed to load draft from localStorage:', e)
-    }
-    return ''
-  })
+  // Start with empty strings to match server-side rendering
+  // Load from localStorage after hydration to prevent mismatches
+  const [storyName, setStoryName] = useState('')
+  const [storyContent, setStoryContent] = useState('')
+  const [originalStoryContent, setOriginalStoryContent] = useState('')
 
-  const [storyContent, setStoryContent] = useState(() => {
-    if (!isCreateMode) {
-      return ''
+  // Load draft from localStorage after hydration (create mode only)
+  useEffect(() => {
+    if (!isCreateMode || typeof window === 'undefined') {
+      return
     }
-    try {
-      const draft = localStorage.getItem(storageKey)
-      if (draft) {
-        const parsed = JSON.parse(draft) as DraftData
-        return parsed.storyContent ?? ''
-      }
-    } catch (e) {
-      // Ignore localStorage errors
-      console.error('Failed to load draft from localStorage:', e)
-    }
-    return ''
-  })
 
-  const [originalStoryContent, setOriginalStoryContent] = useState(() => {
-    if (!isCreateMode) {
-      return ''
-    }
     try {
       const draft = localStorage.getItem(storageKey)
       if (draft) {
         const parsed = JSON.parse(draft) as DraftData
-        return parsed.storyContent ?? ''
+        setStoryName(parsed.storyName ?? '')
+        setStoryContent(parsed.storyContent ?? '')
+        setOriginalStoryContent(parsed.storyContent ?? '')
       }
     } catch (e) {
       // Ignore localStorage errors
       console.error('Failed to load draft from localStorage:', e)
     }
-    return ''
-  })
+  }, [storageKey, isCreateMode])
 
   // Save draft to localStorage whenever content changes (create mode only)
   useEffect(() => {
