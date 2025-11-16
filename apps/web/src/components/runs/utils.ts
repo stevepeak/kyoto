@@ -82,7 +82,16 @@ export function getRunStatusDescriptor(status: Run['status']): string {
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  return date.toLocaleString()
+  // Use a consistent locale to prevent hydration mismatches
+  // en-US is a safe default that works on both server and client
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
 }
 
 export function formatRelativeTime(dateString: string): string {
@@ -109,7 +118,12 @@ export function formatRelativeTime(dateString: string): string {
   if (diffWeeks < 5) {
     return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
   }
-  return date.toLocaleDateString()
+  // Use a consistent locale to prevent hydration mismatches
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 export function formatDurationMs(
