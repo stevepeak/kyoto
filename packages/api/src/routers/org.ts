@@ -130,10 +130,21 @@ export const orgRouter = router({
       (result) => result.status === 'rejected',
     ).length
 
+    // Get the first successful trigger handle for tracking
+    const firstSuccess = results.find(
+      (result) => result.status === 'fulfilled',
+    )
+
     return {
       triggered: installations.length - failed,
       total: installations.length,
       failed,
+      triggerHandle: firstSuccess?.value
+        ? {
+            publicAccessToken: firstSuccess.value.publicAccessToken,
+            id: firstSuccess.value.id,
+          }
+        : undefined,
     }
   }),
 })

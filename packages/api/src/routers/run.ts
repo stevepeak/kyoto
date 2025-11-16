@@ -192,7 +192,7 @@ export const runRouter = router({
         userId,
       })
 
-      await tasks.trigger(
+      const handle = await tasks.trigger(
         'run-ci',
         {
           orgName: input.orgName,
@@ -204,6 +204,10 @@ export const runRouter = router({
 
       return {
         success: true,
+        triggerHandle: {
+          publicAccessToken: handle.publicAccessToken,
+          id: handle.id,
+        },
       }
     }),
 })
