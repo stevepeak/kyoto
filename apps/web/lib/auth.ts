@@ -19,9 +19,27 @@ function getDb() {
   return dbInstance
 }
 
+function getBaseUrl(): string {
+  // Server-side: use environment variable or default
+  if (process.env.SITE_BASE_URL) {
+    return process.env.SITE_BASE_URL
+  }
+  if (process.env.SITE_PRODUCTION_URL) {
+    return `https://${process.env.SITE_PRODUCTION_URL}`
+  }
+  if (process.env.SITE_PREVIEW_BRANCH_URL) {
+    return `https://${process.env.SITE_PREVIEW_BRANCH_URL}`
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  return 'http://localhost:3001'
+}
+
 export function getAuth() {
   if (!authInstance) {
     authInstance = betterAuth({
+      baseURL: getBaseUrl(),
       database: kyselyAdapter(getDb(), {
         type: 'postgres',
       }),
