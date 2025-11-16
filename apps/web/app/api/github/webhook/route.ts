@@ -105,11 +105,24 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(rawBody)
 
     // Trigger the webhook task
-    await tasks.trigger('handle-github-webhook', {
-      eventType,
-      deliveryId,
-      payload,
-    })
+    await tasks.trigger(
+      'handle-github-webhook',
+      {
+        eventType,
+        deliveryId,
+        payload,
+      },
+      {
+        tags: [
+          ...(payload?.repository?.name
+            ? [`repo_${payload.repository.name}`]
+            : []),
+          ...(payload?.repository?.owner?.login
+            ? [`owner_${payload.repository.owner.login}`]
+            : []),
+        ],
+      },
+    )
 
     return Response.json({
       success: true,
