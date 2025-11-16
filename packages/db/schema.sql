@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 0sCUZnj7tDeMd7fPD1GxOxbS66N0ozlgHv17meas4d64LmXgQDhtYDyIdsvLc4w
+\restrict CiF4kzfFKy6bWMrI450XKPY6HoaKN7KJ4hpxWDcGGjgIhhDChfPffLIQidSx6Ty
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -48,6 +48,19 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: story_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.story_state AS ENUM (
+    'active',
+    'generated',
+    'paused',
+    'archived',
+    'planned'
+);
 
 
 --
@@ -879,7 +892,8 @@ CREATE TABLE public.stories (
     name text NOT NULL,
     story text NOT NULL,
     decomposition jsonb,
-    archived boolean DEFAULT false NOT NULL
+    state public.story_state DEFAULT 'active'::public.story_state NOT NULL,
+    metadata jsonb
 );
 
 
@@ -933,10 +947,17 @@ COMMENT ON COLUMN public.stories.decomposition IS 'Structured decomposition resu
 
 
 --
--- Name: COLUMN stories.archived; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN stories.state; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.stories.archived IS 'Whether the story has been archived (soft delete)';
+COMMENT ON COLUMN public.stories.state IS 'The current state of the story: active (should be tested), generated (AI generated, needs approval), paused (dont test in CI), archived (dont test and hide from UI), planned (planned feature, dont test yet)';
+
+
+--
+-- Name: COLUMN stories.metadata; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.metadata IS 'Additional JSON metadata for the story';
 
 
 --
@@ -1527,17 +1548,17 @@ CREATE INDEX runs_status_idx ON public.runs USING btree (status);
 
 
 --
--- Name: stories_repo_id_archived_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX stories_repo_id_archived_idx ON public.stories USING btree (repo_id, archived) WHERE (archived = false);
-
-
---
 -- Name: stories_repo_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX stories_repo_id_idx ON public.stories USING btree (repo_id);
+
+
+--
+-- Name: stories_repo_id_state_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX stories_repo_id_state_idx ON public.stories USING btree (repo_id, state) WHERE (state = 'active'::public.story_state);
 
 
 --
@@ -1824,5 +1845,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 0sCUZnj7tDeMd7fPD1GxOxbS66N0ozlgHv17meas4d64LmXgQDhtYDyIdsvLc4w
+\unrestrict CiF4kzfFKy6bWMrI450XKPY6HoaKN7KJ4hpxWDcGGjgIhhDChfPffLIQidSx6Ty
 

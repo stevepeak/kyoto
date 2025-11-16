@@ -23,6 +23,8 @@ export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
+export type StoryState = "active" | "archived" | "generated" | "paused" | "planned";
+
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export type UserStatus = "active" | "disabled" | "invited";
@@ -356,10 +358,6 @@ export interface Session {
 
 export interface Story {
   /**
-   * Whether the story has been archived (soft delete)
-   */
-  archived: Generated<boolean>;
-  /**
    * The time when the story was created
    */
   createdAt: Generated<Timestamp | null>;
@@ -372,6 +370,10 @@ export interface Story {
    */
   id: Generated<string>;
   /**
+   * Additional JSON metadata for the story
+   */
+  metadata: Json | null;
+  /**
    * The title/name of the story
    */
   name: string;
@@ -379,6 +381,10 @@ export interface Story {
    * FK to repos.id of the repository this story belongs to
    */
   repoId: string;
+  /**
+   * The current state of the story: active (should be tested), generated (AI generated, needs approval), paused (dont test in CI), archived (dont test and hide from UI), planned (planned feature, dont test yet)
+   */
+  state: Generated<StoryState>;
   /**
    * The Gherkin story text
    */
