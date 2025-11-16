@@ -127,22 +127,8 @@ const config = defineConfig({
   },
 
   security: {
-    // Enable origin checking for all routes except webhook endpoints
-    // Webhook endpoints are protected by signature verification instead
-    checkOrigin: ((context: { url: URL }) => {
-      // Allow webhook endpoints without origin check
-      // GitHub webhooks send POST requests from their servers (not user's browser)
-      // They are protected by HMAC signature verification (GITHUB_WEBHOOK_SECRET)
-      if (context.url.pathname.startsWith('/api/github/webhook')) {
-        return false
-      }
-      // Enable origin check for all other routes
-      // Note: OAuth callbacks (Better Auth) are GET requests, so not affected by checkOrigin
-      // POST requests from user's browser (sign-in forms, tRPC, etc.) should have correct origin
-      return true
-      // Type assertion needed because Astro's types don't support function yet
-      // but the runtime may support it
-    }) as unknown as boolean,
+    // For GitHub webhooks, we don't need to check the origin
+    checkOrigin: false,
   },
 
   // https://docs.astro.build/en/guides/environment-variables/#type-safe-environment-variables
