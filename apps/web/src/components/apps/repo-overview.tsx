@@ -123,7 +123,7 @@ export function RepoOverview({
                   )}
                 </div>
                 {stories.length > 0 && (
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="default" size="sm">
                     <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
                       Craft new story
                       <span className="ml-2 text-xs opacity-60">
@@ -158,7 +158,7 @@ export function RepoOverview({
                 {defaultBranch && stories.length > 0 && (
                   <Button
                     disabled={isCreatingRun || hasRunningBuild}
-                    variant="default"
+                    variant="outline"
                     size="sm"
                     onClick={handleStartRun}
                   >
