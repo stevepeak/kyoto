@@ -296,7 +296,11 @@ async function RunDetailContent({
         { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
       ]}
     >
-      <RunDetailView run={transformedRun} orgName={orgName} repoName={repoName} />
+      <RunDetailView
+        run={transformedRun}
+        orgName={orgName}
+        repoName={repoName}
+      />
     </AppLayout>
   )
 }
@@ -311,16 +315,18 @@ export function RunDetailLoader({
   runId: string
 }) {
   return (
-    <Suspense fallback={
-      <AppLayout
-        breadcrumbs={[
-          { label: orgName, href: `/org/${orgName}` },
-          { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
-        ]}
-      >
-        <LoadingProgress label="Loading run..." />
-      </AppLayout>
-    }>
+    <Suspense
+      fallback={
+        <AppLayout
+          breadcrumbs={[
+            { label: orgName, href: `/org/${orgName}` },
+            { label: repoName, href: `/org/${orgName}/repo/${repoName}` },
+          ]}
+        >
+          <LoadingProgress label="Loading run..." />
+        </AppLayout>
+      }
+    >
       <RunDetailContent orgName={orgName} repoName={repoName} runId={runId} />
     </Suspense>
   )

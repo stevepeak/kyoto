@@ -22,11 +22,12 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder files
      */
+    // eslint-disable-next-line unicorn/prefer-string-raw -- Next.js requires a plain string, not String.raw
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow public routes
@@ -60,4 +61,3 @@ export async function middleware(request: NextRequest) {
   // Note: Full session validation happens in server components/API routes
   return NextResponse.next()
 }
-

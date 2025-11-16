@@ -7,4 +7,3 @@ export const revalidate = 3600 // Revalidate every hour
 export default function AuthPage() {
   return <SignIn />
 }
-

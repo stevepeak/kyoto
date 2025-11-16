@@ -1,10 +1,22 @@
 'use client'
 
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react'
 import type { ReactNode } from 'react'
 import { useRealtimeRun } from '@trigger.dev/react-hooks'
 
-import { Dialog, DialogContent, DialogTitle, VisuallyHidden } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  VisuallyHidden,
+} from '@/components/ui/dialog'
 
 interface TriggerDevTrackingContextValue {
   isLoading: boolean

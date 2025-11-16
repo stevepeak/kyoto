@@ -6,7 +6,7 @@ import { setupDb } from '@app/db'
 let dbInstance: ReturnType<typeof setupDb> | null = null
 let authInstance: ReturnType<typeof betterAuth> | null = null
 
-const getDb = () => {
+function getDb() {
   if (!dbInstance) {
     const databaseUrl = process.env.DATABASE_URL
     if (!databaseUrl) {
@@ -19,7 +19,7 @@ const getDb = () => {
   return dbInstance
 }
 
-export const getAuth = () => {
+export function getAuth() {
   if (!authInstance) {
     authInstance = betterAuth({
       database: kyselyAdapter(getDb(), {

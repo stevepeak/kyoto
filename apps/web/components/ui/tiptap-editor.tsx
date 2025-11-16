@@ -42,6 +42,7 @@ export function TiptapEditor({
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Client-side mounting pattern for Next.js
     setMounted(true)
   }, [])
 

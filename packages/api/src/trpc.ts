@@ -25,7 +25,7 @@ const triggerMiddleware = t.middleware(({ ctx, next }) => {
         secretKey: parsedEnv.TRIGGER_SECRET_KEY,
       })
       isTriggerConfigured = true
-    } catch (error) {
+    } catch (_error) {
       // Catch any errors from parseEnv and throw a generic server error
       // This prevents exposing sensitive environment variable names or validation details
       throw new TRPCError({

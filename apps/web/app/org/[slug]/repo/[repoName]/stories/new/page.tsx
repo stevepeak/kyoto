@@ -12,4 +12,3 @@ export default async function StoryNewPage({
   const { slug, repoName } = await params
   return <StoryCreatePage orgName={slug} repoName={repoName} />
 }
-

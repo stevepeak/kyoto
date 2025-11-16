@@ -12,4 +12,3 @@ export default async function RunDetailPage({
   const { slug, repoName, runId } = await params
   return <RunApp orgName={slug} repoName={repoName} runId={runId} />
 }
-

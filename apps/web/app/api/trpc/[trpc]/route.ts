@@ -32,7 +32,7 @@ async function createContext(req: NextRequest): Promise<Context> {
             : null,
         }
       : null
-  } catch (error) {
+  } catch (_error) {
     // Session might not exist, that's okay
     // Don't log errors for missing sessions as that's expected for unauthenticated requests
   }
@@ -69,7 +69,7 @@ async function createContext(req: NextRequest): Promise<Context> {
 }
 
 export async function GET(request: NextRequest) {
-  return fetchRequestHandler({
+  return await fetchRequestHandler({
     endpoint: '/api/trpc',
     req: request,
     router: appRouter,
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return fetchRequestHandler({
+  return await fetchRequestHandler({
     endpoint: '/api/trpc',
     req: request,
     router: appRouter,

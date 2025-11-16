@@ -27,7 +27,10 @@ export default function OrgError({
           <Button onClick={reset} variant="default">
             Try again
           </Button>
-          <Button onClick={() => (window.location.href = '/app')} variant="outline">
+          <Button
+            onClick={() => (window.location.href = '/app')}
+            variant="outline"
+          >
             Back to dashboard
           </Button>
         </div>
@@ -35,4 +38,3 @@ export default function OrgError({
     </div>
   )
 }
-

@@ -18,10 +18,10 @@ export function LandingNavbar() {
   return (
     <header className="relative z-20 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex flex-col items-center gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <a
-            href="/"
-            className="inline-flex items-center gap-2 text-lg font-semibold text-foreground"
-          >
+        <a
+          href="/"
+          className="inline-flex items-center gap-2 text-lg font-semibold text-foreground"
+        >
           <span aria-hidden="true" className="text-xl">
             ⛩️
           </span>

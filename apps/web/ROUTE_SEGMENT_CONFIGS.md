@@ -1,6 +1,7 @@
 # Route Segment Config Recommendations
 
 ## Landing/Marketing Pages (Static)
+
 **Files:** `app/page.tsx`, `app/auth/page.tsx`
 
 ```typescript
@@ -13,7 +14,9 @@ export const revalidate = 3600 // 1 hour
 ---
 
 ## App Pages (Always Dynamic)
-**Files:** 
+
+**Files:**
+
 - `app/app/page.tsx`
 - `app/org/[slug]/page.tsx`
 - `app/org/[slug]/repo/[repoName]/page.tsx`
@@ -26,7 +29,8 @@ export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 ```
 
-**Why:** 
+**Why:**
+
 - User-specific data (requires authentication)
 - Real-time data (runs, stories change frequently)
 - Cannot be statically generated
@@ -34,6 +38,7 @@ export const dynamicParams = true
 ---
 
 ## Story Create Page (Dynamic)
+
 **File:** `app/org/[slug]/repo/[repoName]/stories/new/page.tsx`
 
 ```typescript
@@ -46,6 +51,7 @@ export const dynamicParams = true
 ---
 
 ## API Routes
+
 **Files:** `app/api/**/*.ts`
 
 No route segment configs needed - API routes are always dynamic by default.
@@ -69,4 +75,3 @@ No route segment configs needed - API routes are always dynamic by default.
 - [ ] Test that pages still work correctly
 - [ ] Monitor performance improvements
 - [ ] Update documentation if needed
-

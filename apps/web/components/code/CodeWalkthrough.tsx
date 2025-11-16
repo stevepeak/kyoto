@@ -3,13 +3,7 @@ import { CodeMirrorViewer } from './CodeMirrorViewer'
 export interface WalkthroughFileItem {
   path: string
   summary?: string
-  language:
-    | 'typescript'
-    | 'javascript'
-    | 'tsx'
-    | 'jsx'
-    | 'html'
-    | 'css'
+  language: 'typescript' | 'javascript' | 'tsx' | 'jsx' | 'html' | 'css'
   content: string
   touchedLines?: number[]
 }

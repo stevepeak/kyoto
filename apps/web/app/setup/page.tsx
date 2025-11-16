@@ -15,8 +15,8 @@ export default async function SetupPage({
 
   // If installation_id is provided, use the install flow
   if (installationIdParam) {
-    const installationId = parseInt(installationIdParam, 10)
-    if (!isNaN(installationId)) {
+    const installationId = Number.parseInt(installationIdParam, 10)
+    if (!Number.isNaN(installationId)) {
       return <SetupInstallAppWrapper installationId={installationId} />
     }
   }

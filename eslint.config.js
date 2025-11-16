@@ -19,6 +19,12 @@ export default defineESLintConfig(
       '**/coverage/**',
       '**/.turbo/**',
       '**/.trigger/**',
+      '**/.next/**',
+      '**/.astro/**',
+      '**/*.config.js',
+      '**/postcss.config.js',
+      '**/tailwind.config.js',
+      '**/next.config.js',
     ],
   },
   {
@@ -46,6 +52,11 @@ export default defineESLintConfig(
       // These files legitimately need to import from @app/api
       'apps/web/components/providers/trpc-provider.tsx',
       'apps/web/client/trpc.ts',
+      // Server-side files that legitimately need to import from @app/api and @app/db
+      'apps/web/lib/trpc-server.ts',
+      'apps/web/lib/auth.ts',
+      'apps/web/app/api/**/*.ts',
+      'apps/web/middleware.ts',
     ],
     rules: {
       'no-restricted-imports': [

@@ -8,6 +8,7 @@ export function PageTransitionLoader() {
   const pathname = usePathname()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional state update for loading indicator
     setIsLoading(true)
     const timer = setTimeout(() => setIsLoading(false), 100)
     return () => clearTimeout(timer)

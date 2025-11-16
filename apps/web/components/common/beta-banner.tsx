@@ -20,6 +20,7 @@ export function BetaBanner({ className, ...props }: BetaBannerProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Client-side mounting pattern for Next.js
     setMounted(true)
   }, [])
 
@@ -33,7 +34,9 @@ export function BetaBanner({ className, ...props }: BetaBannerProps) {
         {...props}
       >
         <div className="mx-auto flex w-full max-w-5xl items-center justify-center gap-2 px-4 py-2.5 text-center">
-          <span className="font-semibold text-blue-600">Early Release Beta</span>
+          <span className="font-semibold text-blue-600">
+            Early Release Beta
+          </span>
           <span className="text-muted-foreground">
             - We&apos;re actively improving Kyoto with your help.
           </span>

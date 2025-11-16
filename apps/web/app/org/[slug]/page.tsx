@@ -12,4 +12,3 @@ export default async function OrgPage({
   const { slug } = await params
   return <OrgApp orgName={slug} />
 }
-

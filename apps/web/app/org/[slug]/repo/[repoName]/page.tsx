@@ -12,4 +12,3 @@ export default async function RepoPage({
   const { slug, repoName } = await params
   return <RepoApp orgName={slug} repoName={repoName} />
 }
-

@@ -27,7 +27,7 @@ const createContext = cache(async (): Promise<Context> => {
   for (const [key, value] of headersList.entries()) {
     headersForAuth.set(key, value)
   }
-  
+
   let session = null
   try {
     const sessionResponse = await auth.api.getSession({
@@ -43,7 +43,7 @@ const createContext = cache(async (): Promise<Context> => {
             : null,
         }
       : null
-  } catch (error) {
+  } catch (_error) {
     // Session might not exist, that's okay
   }
 
@@ -85,4 +85,3 @@ export async function getTRPCCaller() {
   const ctx = await createContext()
   return appRouter.createCaller(ctx)
 }
-

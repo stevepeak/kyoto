@@ -42,13 +42,7 @@ async function OrgRepoContent({ orgName }: { orgName: string }) {
       enabled: boolean
       isPrivate: boolean
       storyCount: number
-      lastRunStatus:
-        | 'pass'
-        | 'fail'
-        | 'skipped'
-        | 'running'
-        | 'error'
-        | null
+      lastRunStatus: 'pass' | 'fail' | 'skipped' | 'running' | 'error' | null
       lastRunAt: Date | null
     }>
   )

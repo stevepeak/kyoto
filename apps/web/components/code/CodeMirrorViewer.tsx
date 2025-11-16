@@ -10,13 +10,7 @@ import { RangeSetBuilder, StateField } from '@codemirror/state'
 
 export interface CodeMirrorViewerProps {
   value: string
-  language:
-    | 'typescript'
-    | 'javascript'
-    | 'tsx'
-    | 'jsx'
-    | 'html'
-    | 'css'
+  language: 'typescript' | 'javascript' | 'tsx' | 'jsx' | 'html' | 'css'
   touchedLines?: number[]
   readOnly?: boolean
 }

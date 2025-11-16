@@ -116,7 +116,7 @@ export function StoryLoaderClient({
         } = {
           orgName,
           repoName,
-          storyId: storyId!,
+          storyId: storyId,
         }
 
         // Only include fields that have changed
@@ -408,4 +408,3 @@ export function StoryLoaderClient({
     </AppLayout>
   )
 }
-
