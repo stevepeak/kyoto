@@ -1,8 +1,19 @@
 'use client'
 
+import { navigate } from 'astro:transitions/client'
+
+import { useSession } from '@/client/auth-client'
 import { GitHubSignInButton } from '@/components/github-sign-in-button'
+import { Button } from '@/components/ui/button'
 
 export function LandingNavbar() {
+  const session = useSession()
+  const isLoggedIn = session.data?.user && !session.isPending
+
+  const handleEnterKyoto = () => {
+    void navigate('/app')
+  }
+
   return (
     <header className="relative z-20 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex flex-col items-center gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -40,7 +51,17 @@ export function LandingNavbar() {
           </a>
         </nav>
         <div className="w-full sm:w-auto">
-          <GitHubSignInButton size="sm" className="w-full sm:w-auto gap-2" />
+          {isLoggedIn ? (
+            <Button
+              size="sm"
+              onClick={handleEnterKyoto}
+              className="w-full sm:w-auto gap-2"
+            >
+              Enter Kyoto
+            </Button>
+          ) : (
+            <GitHubSignInButton size="sm" className="w-full sm:w-auto gap-2" />
+          )}
         </div>
       </div>
     </header>
