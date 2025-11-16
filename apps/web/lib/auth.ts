@@ -11,7 +11,7 @@ const getDb = () => {
     const databaseUrl = process.env.DATABASE_URL
     if (!databaseUrl) {
       throw new Error(
-        'DATABASE_URL environment variable is required. Please set it in your .env.local file.'
+        'DATABASE_URL environment variable is required. Please set it in your .env.local file.',
       )
     }
     dbInstance = setupDb(databaseUrl)
@@ -28,7 +28,6 @@ export const getAuth = () => {
       verification: {
         fields: {
           // Map better-auth's expected field names to our database column names
-          token: 'value', // better-auth expects 'token', our table has 'value'
           expiresAt: 'expires_at', // better-auth expects 'expiresAt', our table has 'expires_at'
         },
       },
@@ -37,12 +36,11 @@ export const getAuth = () => {
       },
       socialProviders: {
         github: {
-          clientId: process.env.GITHUB_CLIENT_ID,
-          clientSecret: process.env.GITHUB_CLIENT_SECRET,
+          clientId: process.env.GITHUB_CLIENT_ID!,
+          clientSecret: process.env.GITHUB_CLIENT_SECRET!,
         },
       },
     })
   }
   return authInstance
 }
-
