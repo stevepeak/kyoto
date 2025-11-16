@@ -1,6 +1,0 @@
-packages:
-  - packages/*
-  - apps/*
-
-linkWorkspacePackages: deep
-ignoreWorkspaceRootCheck: true

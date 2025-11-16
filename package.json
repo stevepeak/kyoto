@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "bun@1.3.0",
   "description": "Kyoto - AI-powered QA",
   "scripts": {
     "dev": "turbo run dev",
@@ -16,8 +16,8 @@
     "test": "turbo run test",
     "knip": "knip",
     "knip:fix": "knip --fix",
-    "ci": "pnpm run typecheck && pnpm run lint && pnpm run knip && pnpm run build",
-    "fix": "pnpm run fix:tsconfig && pnpm run fix:eslint && pnpm run fix:prettier",
+    "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
+    "fix": "bun run fix:tsconfig && bun run fix:eslint && bun run fix:prettier",
     "fix:prettier": "prettier --write .",
     "fix:eslint": "turbo run lint:fix",
     "fix:tsconfig": "monorepo-typescript-references fix",
@@ -35,7 +35,8 @@
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
-  "pnpm": {
-    "overrides": {}
-  }
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
 }

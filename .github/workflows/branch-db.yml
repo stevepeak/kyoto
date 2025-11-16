@@ -56,7 +56,7 @@ jobs:
       # password for your database.
       # For example, you can uncomment the lines below to run a database migration command:
       - name: Run Migrations
-        run: pnpm --filter @app/db db:migrate
+        run: bun --filter @app/db db:migrate
         env:
           # to use pooled connection
           DATABASE_URL: '${{ steps.create_neon_branch.outputs.db_url_with_pooler }}'
