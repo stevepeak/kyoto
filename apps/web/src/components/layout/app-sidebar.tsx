@@ -1,6 +1,6 @@
 import { navigate } from 'astro:transitions/client'
 import { Home, LogOut } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MdTempleBuddhist } from 'react-icons/md'
 
 import { Button } from '@/components/ui/button'
@@ -92,7 +92,16 @@ function NavItem({
 }
 
 export function AppSidebar() {
-  const [currentPath] = useState(() => window.location.pathname)
+  // Start with empty string to match server-side rendering, update after hydration
+  const [currentPath, setCurrentPath] = useState('')
+
+  // Update path after hydration to avoid mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Required for hydration fix
+      setCurrentPath(window.location.pathname)
+    }
+  }, [])
 
   return (
     <div className="w-[56px] h-full bg-background border-r flex flex-col items-center py-4 gap-6 px-2">

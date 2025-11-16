@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
 import { Markdown } from '@tiptap/markdown'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Bold,
   Italic,
@@ -38,9 +38,19 @@ export function TiptapEditor({
   className,
   autoFocus = false,
 }: TiptapEditorProps) {
+  // Only render editor after hydration to prevent mismatches
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const extensions = useMemo<Extensions>(() => {
     const baseExtensions: Extensions = [
-      StarterKit,
+      // Exclude Link from StarterKit since we're configuring our own
+      StarterKit.configure({
+        link: false,
+      }),
       Markdown,
       Link.configure({
         openOnClick: false,
@@ -131,7 +141,8 @@ export function TiptapEditor({
     }
   }, [editor, autoFocus, readOnly])
 
-  if (!editor) {
+  // Show loading state until mounted and editor is ready
+  if (!mounted || !editor) {
     return (
       <div
         className={cn(
