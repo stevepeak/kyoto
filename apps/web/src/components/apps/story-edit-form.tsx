@@ -2,6 +2,7 @@ import { Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 
 interface StoryEditFormProps {
   storyName: string
@@ -87,11 +88,7 @@ export function StoryEditForm({
                 : !hasChanges
                   ? 'No changes made'
                   : 'Save Changes'}
-              {!isSaving && (
-                <span className="ml-2 text-xs opacity-60">
-                  {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
-                </span>
-              )}
+              {!isSaving && <KeyboardShortcutHint />}
             </Button>
           </div>
         </div>

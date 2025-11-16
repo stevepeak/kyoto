@@ -1,6 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
+import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 import { StoryCard } from './StoryCard'
 
 import type { TestStatus } from '@app/schemas'
@@ -51,9 +52,7 @@ export function StoryList({ stories, orgName, repoName }: StoryListProps) {
               <Button asChild size="lg">
                 <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
                   Craft new story
-                  <span className="ml-2 text-xs opacity-60">
-                    {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
-                  </span>
+                  <KeyboardShortcutHint />
                 </a>
               </Button>
               <span className="text-xs text-muted">— or —</span>

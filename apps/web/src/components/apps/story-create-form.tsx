@@ -1,6 +1,7 @@
 import { FileText, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 
 interface StoryCreateFormProps {
   storyContent: string
@@ -78,11 +79,7 @@ export function StoryCreateForm({
             </Button>
             <Button onClick={onSave} disabled={isSaving}>
               {isSaving ? 'Saving...' : 'Create'}
-              {!isSaving && (
-                <span className="ml-2 text-xs opacity-60">
-                  {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
-                </span>
-              )}
+              {!isSaving && <KeyboardShortcutHint />}
             </Button>
           </div>
         </div>

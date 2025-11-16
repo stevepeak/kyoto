@@ -14,6 +14,7 @@ import {
   useTriggerDevTracking,
 } from '@/components/common/workflow-tracking-dialog'
 import { EmptyState } from '@/components/common/EmptyState'
+import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]
@@ -210,10 +211,7 @@ export function RepoOverview({
                   <Button asChild variant="default" size="sm">
                     <a href={`/org/${orgName}/repo/${repoName}/stories/new`}>
                       Craft new story
-                      <span className="ml-2 text-xs opacity-60">
-                        {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
-                        +Enter
-                      </span>
+                      <KeyboardShortcutHint />
                     </a>
                   </Button>
                 )}
