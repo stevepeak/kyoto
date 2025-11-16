@@ -42,16 +42,28 @@ function getQueryClient() {
 }
 
 function getUrl() {
-  const base = (() => {
-    if (typeof window !== 'undefined') {
-      return ''
-    }
-    if (process.env.VERCEL_URL) {
-      return `https://${process.env.VERCEL_URL}`
-    }
-    return 'http://localhost:3001'
-  })()
-  return `${base}/api/trpc`
+  // Client-side: use relative URL (works for same-origin requests)
+  if (typeof window !== 'undefined') {
+    return '/api/trpc'
+  }
+
+  // Server-side: need absolute URL
+  // Check for explicit SITE_BASE_URL first (most reliable)
+  if (process.env.SITE_BASE_URL) {
+    return `${process.env.SITE_BASE_URL}/api/trpc`
+  }
+
+  // Fallback to Vercel-provided URLs
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/api/trpc`
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}/api/trpc`
+  }
+
+  // Development fallback
+  return 'http://localhost:3001/api/trpc'
 }
 
 /**
