@@ -26,3 +26,4 @@ playwright-report
 .eslintcacheapps
 apps/trigger/.trigger
 tmp/
+.next

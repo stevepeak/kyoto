@@ -6,6 +6,7 @@
       "dependsOn": ["^build"],
       "env": [
         "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
         "AUTH_SECRET",
         "GITHUB_CLIENT_ID",
         "GITHUB_CLIENT_SECRET",
@@ -14,6 +15,8 @@
         "GITHUB_APP_PRIVATE_KEY",
         "GITHUB_WEBHOOK_SECRET",
         "OPENAI_API_KEY",
+        "OPENROUTER_API_KEY",
+        "AI_GATEWAY_API_KEY",
         "SENTRY_AUTH_TOKEN",
         "TRIGGER_SECRET_KEY",
         "CONTEXT7_API_KEY",
