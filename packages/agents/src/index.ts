@@ -52,7 +52,7 @@ export const agents = {
     run: runDecompositionAgent,
     options: {
       maxSteps: 15, // typically ends in 3-5 steps
-      model: model('openai', 'gpt-5'),
+      model: 'openai/gpt-5-mini',
     },
   },
   evaluation: {
