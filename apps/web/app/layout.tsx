@@ -32,6 +32,7 @@ const manrope = localFont({
   ],
   variable: '--font-manrope',
   display: 'swap',
+  fallback: ['DM Sans', 'Inter', 'sans-serif'],
 })
 
 const cormorantGaramond = localFont({
@@ -54,6 +55,7 @@ const cormorantGaramond = localFont({
   ],
   variable: '--font-cormorant',
   display: 'swap',
+  fallback: ['Times New Roman', 'serif'],
 })
 
 export const metadata: Metadata = {

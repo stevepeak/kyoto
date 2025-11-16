@@ -54,8 +54,8 @@
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
   --font-mono: var(--font-mono);
-  --font-display: var(--display-family);
-  --font-text: var(--text-family);
+  --font-display: var(--font-cormorant);
+  --font-text: var(--font-manrope);
   --font-weight-display: var(--display-weight);
   --font-weight-text: var(--text-weight);
   --animate-accordion-down: accordion-down 0.2s ease-out;
@@ -136,8 +136,8 @@
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
-  --display-family: var(--font-cormorant), 'Times New Roman', serif;
-  --text-family: var(--font-manrope), 'DM Sans', 'Inter', sans-serif;
+  --font-display: var(--font-cormorant);
+  --font-text: var(--font-manrope);
   --display-weight: 600;
   --text-weight: 400;
 }

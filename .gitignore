@@ -27,3 +27,4 @@ playwright-report
 apps/trigger/.trigger
 tmp/
 .next
+next-env.d.ts
