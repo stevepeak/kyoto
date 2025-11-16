@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 description: Requires Zod validation for all JSON parsing operations
 ---
 
