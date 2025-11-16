@@ -35,11 +35,13 @@ export {
   // Test/Evaluation
   testStatusSchema,
   assertionEvidenceSchema,
+  stepMemorySchema,
   stepEvaluationSchema,
   evaluationOutputSchema,
   evaluationInputSchema,
   type TestStatus,
   type AssertionEvidence,
+  type StepMemory,
   type StepEvaluation,
   type EvaluationOutput,
   type EvaluationInput,

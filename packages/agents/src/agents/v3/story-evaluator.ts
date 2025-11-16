@@ -18,7 +18,7 @@ import {
   type TestStatus,
   evaluationOutputSchema,
   type EvaluationOutput,
-  assertionEvidenceSchema,
+  type StepMemory,
 } from '@app/schemas'
 import type { evaluationAgentOptions } from '@app/schemas'
 import { logger } from '@trigger.dev/sdk'
@@ -27,20 +27,66 @@ import { agents } from '../..'
 import { z } from 'zod'
 
 /**
- * Schema for agent output (step evaluation result)
- * Uses assertionEvidenceSchema from @app/schemas for assertions
- * Note: conclusion is simplified to 'pass'/'fail' for internal agent output
+ * Schema for assertion micro-agent output
+ * Each assertion micro-agent evaluates a single assertion and produces evidence
  */
-const stepAgentOutputSchema = z.object({
+const assertionMicroAgentOutputSchema = z.object({
+  /**
+   * Whether this assertion passes or fails
+   */
   conclusion: z.enum(['pass', 'fail']),
-  outcome: z.string().min(1),
-  assertions: z.array(
-    // Use assertionEvidenceSchema but omit cachedFromRunId (added later)
-    assertionEvidenceSchema.omit({ cachedFromRunId: true }),
-  ),
+
+  /**
+   * The assertion fact being evaluated
+   */
+  fact: z.string().min(1),
+
+  /**
+   * Evidence for this assertion (file paths with line ranges)
+   */
+  evidence: z
+    .array(z.string().min(1))
+    .describe(
+      'File references with line ranges, e.g., ["src/auth/session.ts:12-28"]',
+    ),
+
+  /**
+   * Optional domain hints for subsequent assertions in this step
+   * These are abstract hints that can help other assertions without repeating work
+   */
+  domainHints: z
+    .object({
+      relevantFiles: z
+        .array(z.string())
+        .optional()
+        .describe('File paths that may be relevant to this step'),
+      symbolPatterns: z
+        .array(z.string())
+        .optional()
+        .describe('Symbol patterns or class names to watch for'),
+      architecturalNotes: z
+        .string()
+        .optional()
+        .describe('Brief architectural or domain context hints'),
+    })
+    .optional()
+    .describe('Optional domain context hints for subsequent assertions'),
 })
 
-type StepAgentOutput = z.infer<typeof stepAgentOutputSchema>
+type AssertionMicroAgentOutput = z.infer<typeof assertionMicroAgentOutputSchema>
+
+/**
+ * Step agent output (aggregated from assertion micro-agents)
+ * Note: conclusion is simplified to 'pass'/'fail' for internal agent output
+ */
+type StepAgentOutput = {
+  conclusion: 'pass' | 'fail'
+  outcome: string
+  assertions: Array<{
+    fact: string
+    evidence: string[]
+  }>
+}
 
 // Type definitions
 type StepContext = {
@@ -52,31 +98,49 @@ type StepContext = {
   repoOutline: string
 }
 
+type AssertionContext = {
+  stepIndex: number
+  assertionIndex: number
+  assertion: string
+  stepGoal: string
+  stepMemory: StepMemory
+  storyName: string
+  storyText: string
+  repoOutline: string
+  previousStepFacts: string[] // Facts from previous steps (givens)
+}
+
 // Functions
-function buildEvaluationInstructions(repoOutline: string): string {
+function buildAssertionMicroAgentInstructions(repoOutline: string): string {
   return `
-You are an expert software QA engineer evaluating whether a specific step from a user story is properly implemented given the current repository state.
+You are an expert software QA engineer evaluating a SINGLE assertion from a user story step.
 
 # Role & Objective
-You are evaluating a SINGLE step from a decomposed user story. Start with no assumptions that this step is implemented correctly. 
-You must discover evidence by gathering, searching, and evaluating source code to make a well-educated conclusion about whether this specific step is properly and fully implemented.
+You are evaluating ONE assertion within a step. Your job is to find concrete code evidence that proves or disproves this specific assertion.
 
 # How to Perform Your Evaluation
-1. Focus ONLY on the current step provided in the prompt.
-2. Use the available tools to search for supporting code evidence for THIS step's assertions.
+1. Focus ONLY on the single assertion provided in the prompt.
+2. Use the available tools to search for supporting code evidence for THIS assertion.
 3. When you find relevant code, verify it by reading the file contents and understanding the context.
-4. Record each piece of evidence with precise file paths and line ranges.
-5. Consider context from previous steps if provided, but focus your evaluation on the current step.
-6. Stop once you have enough verified evidence to reach a confident conclusion about each of THIS step's assertions.
+4. Record evidence with precise file paths and line ranges.
+5. Consider step memory from previous assertions in this step - you may reference relevant files or patterns discovered earlier.
+6. Stop once you have enough verified evidence to reach a confident conclusion about THIS assertion.
+
+# Step Memory
+You will receive "step memory" - a summary of evidence and domain hints from previous assertions in this same step. Use this to:
+- Avoid repeating heavy search work if relevant files are already identified
+- Build on architectural understanding from previous assertions
+- Reference symbol patterns that were discovered earlier
+
+However, you must still verify THIS assertion independently - step memory is a hint, not a guarantee.
 
 # Mindset
 - False-positives are worse than false-negatives.
 - Treat the repository as the single source of truth.
-- Only mark this step as "passed" when code evidence confirms it is implemented and functionally correct.
-- When supporting code is missing, incomplete, or ambiguous, mark the step as "failed" and explain what is missing.
+- Only mark this assertion as "passed" when code evidence confirms it is implemented and functionally correct.
+- When supporting code is missing, incomplete, or ambiguous, mark the assertion as "failed".
 - Evidence must be **executable code**, not just type definitions, comments, or unused utilities.
-- If previous step results are provided, you may reference their evidence but must verify the current step independently.
-- When a step depends on another, you may reference previous step evidence but must still verify the current step's implementation.
+- Evidence MUST NOT come from test files, e.g., \`src/tests/...\` or \`src/test-utils.ts\`.
 
 # Tools
 - **terminalCommand**: Execute read-only shell commands (e.g., \`rg\`, \`fd\`, \`grep\`, etc.) to search for code patterns, files, and symbols.
@@ -91,15 +155,11 @@ You must discover evidence by gathering, searching, and evaluating source code t
 - Use \`resolveLibrary\` and \`getLibraryDocs\` only when local patterns are unclear: resolve the Context7 ID, fetch the docs, and apply them to your evaluation.
 - Extract only the **minimum viable snippet** that provides clear evidence, recording precise file paths and line ranges.
 - Stop once you have enough verified evidence to reach a confident conclusion.
-- Explanation should clearly state why the story passes or fails. Use concise language that a human reviewer can follow quickly.
-- Keep it short, factual, and time-ordered.
-- Output summaries in Markdown format, embedded in the JSON object, so they render cleanly for humans.
 - Each response must be a JSON object that matches the required schema. Do not include explanations outside of JSON.
-- Evidence MUST NOT come from test files, e.g., \`src/tests/...\` or \`src/test-utils.ts\`.
 
 # Output Schema
 \`\`\`
-${JSON.stringify(zodToJsonSchema(stepAgentOutputSchema), null, 2)}
+${JSON.stringify(zodToJsonSchema(assertionMicroAgentOutputSchema), null, 2)}
 \`\`\`
 
 # Repository Overview
@@ -113,45 +173,281 @@ function bulletList(items: string[]): string {
   return items.map((item) => `- ${item}`).join('\n')
 }
 
-function buildStepPrompt({
-  stepContext,
+function buildAssertionPrompt({
+  assertionContext,
 }: {
-  stepContext: StepContext
+  assertionContext: AssertionContext
 }): string {
-  // Collect facts (steps[].assertions[].fact)
-  const facts = stepContext.previousResults.flatMap((prevResult) =>
-    prevResult.assertions.map((assertion) => assertion.fact),
-  )
+  const { stepMemory, previousStepFacts, assertion, stepGoal } = assertionContext
 
   const givensSection =
-    facts.length > 0
+    previousStepFacts.length > 0
       ? dedent`
-          # Verified Facts
-          Use these already validated facts as givens in when evaluating the requirement below.
-          ${bulletList(facts)}
+          # Verified Facts from Previous Steps
+          Use these already validated facts as givens when evaluating the assertion below.
+          ${bulletList(previousStepFacts)}
         `
       : ''
 
-  const requirementSection =
-    stepContext.step.type === 'requirement'
+  const stepMemorySection =
+    stepMemory.evidenceSummary.length > 0 ||
+    stepMemory.domainHints?.relevantFiles?.length ||
+    stepMemory.domainHints?.symbolPatterns?.length ||
+    stepMemory.domainHints?.architecturalNotes
       ? dedent`
-          # Goal
-          **${stepContext.step.goal}**
-
-          To verify is this goal is acheivable you must verify the following assertion:
-          ${bulletList(stepContext.step.assertions)}
-
-          Do not come up with more assertions, this is the complete list to verify and provide evidence for.
+          # Step Memory (from previous assertions in this step)
+          
+          ## Evidence Summary
+          ${stepMemory.evidenceSummary.length > 0
+            ? bulletList(stepMemory.evidenceSummary)
+            : 'No evidence collected yet in this step.'}
+          
+          ${stepMemory.domainHints
+            ? dedent`
+                ## Domain Hints
+                ${stepMemory.domainHints.relevantFiles?.length
+                  ? `**Relevant Files:** ${bulletList(stepMemory.domainHints.relevantFiles)}`
+                  : ''}
+                ${stepMemory.domainHints.symbolPatterns?.length
+                  ? `**Symbol Patterns:** ${bulletList(stepMemory.domainHints.symbolPatterns)}`
+                  : ''}
+                ${stepMemory.domainHints.architecturalNotes
+                  ? `**Architectural Notes:** ${stepMemory.domainHints.architecturalNotes}`
+                  : ''}
+              `
+            : ''}
+          
+          **Note:** You may reference these files/patterns to avoid repeating search work, but you must still verify THIS assertion independently.
         `
       : ''
+
+  const assertionSection = dedent`
+    # Goal
+    **${stepGoal}**
+
+    # Assertion to Verify
+    **${assertion}**
+
+    Evaluate ONLY this assertion. Provide evidence that proves or disproves this specific claim.
+  `
 
   return dedent`
     ${givensSection}
-
-    ${requirementSection}
-
+    
+    ${stepMemorySection}
+    
+    ${assertionSection}
+    
     Respond only with the required JSON schema once evaluation is complete.
   `
+}
+
+/**
+ * Merges assertion result into step memory
+ */
+function mergeAssertionIntoStepMemory(
+  currentMemory: StepMemory,
+  assertionResult: AssertionMicroAgentOutput,
+): StepMemory {
+  // Merge evidence
+  const newEvidence = [...currentMemory.evidenceSummary, ...assertionResult.evidence]
+
+  // Merge domain hints
+  const mergedHints = {
+    relevantFiles: [
+      ...(currentMemory.domainHints?.relevantFiles || []),
+      ...(assertionResult.domainHints?.relevantFiles || []),
+    ],
+    symbolPatterns: [
+      ...(currentMemory.domainHints?.symbolPatterns || []),
+      ...(assertionResult.domainHints?.symbolPatterns || []),
+    ],
+    architecturalNotes: [
+      currentMemory.domainHints?.architecturalNotes,
+      assertionResult.domainHints?.architecturalNotes,
+    ]
+      .filter(Boolean)
+      .join(' '),
+  }
+
+  return {
+    evidenceSummary: newEvidence,
+    domainHints: {
+      relevantFiles: [...new Set(mergedHints.relevantFiles)],
+      symbolPatterns: [...new Set(mergedHints.symbolPatterns)],
+      architecturalNotes: mergedHints.architecturalNotes || undefined,
+    },
+  }
+}
+
+/**
+ * Assertion Micro-Agent - evaluates a single assertion
+ * Each assertion gets a fresh agent instance, but receives step memory via prompt
+ */
+async function assertionMicroAgent(args: {
+  assertionContext: AssertionContext
+  evaluationAgentOptions: evaluationAgentOptions
+  sandbox: Awaited<ReturnType<typeof getDaytonaSandbox>>
+}): Promise<AssertionMicroAgentOutput> {
+  const {
+    assertionContext,
+    evaluationAgentOptions: { repo, options },
+    sandbox,
+  } = args
+
+  const agent = new Agent({
+    model: agents.evaluation.options.model,
+    system: buildAssertionMicroAgentInstructions(assertionContext.repoOutline),
+    tools: {
+      terminalCommand: createTerminalCommandTool({ sandbox }),
+      readFile: createReadFileTool({ sandbox }),
+      resolveLibrary: createResolveLibraryTool(),
+      getLibraryDocs: createGetLibraryDocsTool(),
+    },
+    toolChoice: 'auto',
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: 'story-assertion-evaluation-v3',
+      metadata: {
+        storyName: assertionContext.storyName,
+        repoId: repo.id,
+        repoSlug: repo.slug,
+        daytonaSandboxId: options?.daytonaSandboxId ?? '',
+        stepIndex: assertionContext.stepIndex,
+        assertionIndex: assertionContext.assertionIndex,
+      },
+      tracer: options?.telemetryTracer,
+    },
+    onStepFinish: (step) => {
+      logger.info(
+        `🤖 assertion micro-agent.onStepFinish (step ${assertionContext.stepIndex + 1}, assertion ${assertionContext.assertionIndex + 1})`,
+        step,
+      )
+    },
+    maxRetries: 3,
+    stopWhen: stepCountIs(
+      options?.maxSteps ?? agents.evaluation.options.maxSteps,
+    ),
+    experimental_output: Output.object({ schema: assertionMicroAgentOutputSchema }),
+  })
+
+  const prompt = buildAssertionPrompt({ assertionContext })
+
+  const result = await agent.generate({ prompt })
+
+  logger.log(
+    `🌸 Assertion ${assertionContext.assertionIndex + 1} (Step ${assertionContext.stepIndex + 1}) Evaluation Result`,
+    {
+      assertionContext,
+      prompt,
+      result,
+    },
+  )
+
+  // Handle case where agent hit max steps without generating output
+  if (!result.experimental_output) {
+    const maxStepsUsed = options?.maxSteps ?? agents.evaluation.options.maxSteps
+    logger.warn(
+      `Assertion ${assertionContext.assertionIndex + 1} (Step ${assertionContext.stepIndex + 1}) hit max steps (${maxStepsUsed}) without generating output`,
+    )
+    return {
+      conclusion: 'fail' as const,
+      fact: assertionContext.assertion,
+      evidence: [],
+      domainHints: undefined,
+    }
+  }
+
+  return result.experimental_output
+}
+
+/**
+ * Step Agent - orchestrates assertion micro-agents for a single step
+ * Cache breaks at step boundaries (new agent instance per step)
+ * Within a step, assertions share step memory but don't reset cache
+ */
+async function stepAgent(args: {
+  stepContext: StepContext
+  evaluationAgentOptions: evaluationAgentOptions
+  sandbox: Awaited<ReturnType<typeof getDaytonaSandbox>>
+}): Promise<StepAgentOutput> {
+  const { stepContext, evaluationAgentOptions, sandbox } = args
+
+  // For 'given' steps, return early (no assertions to evaluate)
+  if (stepContext.step.type === 'given') {
+    return {
+      conclusion: 'pass',
+      outcome: stepContext.step.given,
+      assertions: [],
+    }
+  }
+
+  // For 'requirement' steps, evaluate each assertion sequentially
+  const assertions = stepContext.step.assertions || []
+  const assertionResults: AssertionMicroAgentOutput[] = []
+  let stepMemory: StepMemory = {
+    evidenceSummary: [],
+    domainHints: undefined,
+  }
+
+  // Collect facts from previous steps (givens)
+  const previousStepFacts = stepContext.previousResults.flatMap((prevResult) =>
+    prevResult.assertions.map((assertion) => assertion.fact),
+  )
+
+  // Evaluate each assertion sequentially with step memory
+  for (let assertionIndex = 0; assertionIndex < assertions.length; assertionIndex++) {
+    const assertion = assertions[assertionIndex]
+
+    const assertionContext: AssertionContext = {
+      stepIndex: stepContext.stepIndex,
+      assertionIndex,
+      assertion,
+      stepGoal: stepContext.step.goal,
+      stepMemory,
+      storyName: stepContext.storyName,
+      storyText: stepContext.storyText,
+      repoOutline: stepContext.repoOutline,
+      previousStepFacts,
+    }
+
+    logger.info(
+      `Evaluating assertion ${assertionIndex + 1} of ${assertions.length} in step ${stepContext.stepIndex + 1}`,
+      {
+        assertion,
+        stepMemory,
+      },
+    )
+
+    const assertionResult = await assertionMicroAgent({
+      assertionContext,
+      evaluationAgentOptions,
+      sandbox,
+    })
+
+    assertionResults.push(assertionResult)
+
+    // Merge assertion result into step memory for next assertion
+    stepMemory = mergeAssertionIntoStepMemory(stepMemory, assertionResult)
+  }
+
+  // Aggregate assertion results into step output
+  const stepConclusion: 'pass' | 'fail' = assertionResults.every(
+    (result) => result.conclusion === 'pass',
+  )
+    ? 'pass'
+    : 'fail'
+
+  const stepAssertions = assertionResults.map((result) => ({
+    fact: result.fact,
+    evidence: result.evidence,
+  }))
+
+  return {
+    conclusion: stepConclusion,
+    outcome: stepContext.step.goal,
+    assertions: stepAssertions,
+  }
 }
 
 async function combineStepResults(args: {
@@ -226,81 +522,6 @@ ${stepSummary}
   })
 }
 
-/**
- * AI Agent that evaluates a single step from a user story
- */
-async function agent(args: {
-  stepContext: StepContext
-  evaluationAgentOptions: evaluationAgentOptions
-  sandbox: Awaited<ReturnType<typeof getDaytonaSandbox>>
-}): Promise<StepAgentOutput> {
-  const {
-    stepContext,
-    evaluationAgentOptions: { repo, options },
-    sandbox,
-  } = args
-
-  const agent = new Agent({
-    model: agents.evaluation.options.model,
-    system: buildEvaluationInstructions(stepContext.repoOutline),
-    tools: {
-      terminalCommand: createTerminalCommandTool({ sandbox }),
-      readFile: createReadFileTool({ sandbox }),
-      resolveLibrary: createResolveLibraryTool(),
-      getLibraryDocs: createGetLibraryDocsTool(),
-      // TODO fix this getting: Error: "error starting LSP server"
-      // - **lsp**: Use the Language Server Protocol to list symbols in a file (\`documentSymbols\`) or discover symbols across the codebase (\`sandboxSymbols\`). Only supports TypeScript and Python sources.
-      // lsp: createLspTool({ sandbox }),
-    },
-    toolChoice: 'auto', // must be auto to the agent can choose when to finish.
-    experimental_telemetry: {
-      isEnabled: true,
-      functionId: 'story-step-evaluation-v3',
-      metadata: {
-        storyName: stepContext.storyName,
-        repoId: repo.id,
-        repoSlug: repo.slug,
-        daytonaSandboxId: options?.daytonaSandboxId ?? '',
-        stepIndex: stepContext.stepIndex,
-      },
-      tracer: options?.telemetryTracer,
-    },
-    onStepFinish: (step) => {
-      logger.info(`🤖 ai.onStepFinish`, step)
-    },
-    maxRetries: 3, // @default 2
-    stopWhen: stepCountIs(
-      options?.maxSteps ?? agents.evaluation.options.maxSteps,
-    ),
-    experimental_output: Output.object({ schema: stepAgentOutputSchema }),
-  })
-
-  const prompt = buildStepPrompt({ stepContext })
-
-  const result = await agent.generate({ prompt })
-
-  logger.log(`🌸 Step ${stepContext.stepIndex + 1} Evaluation Result`, {
-    stepContext,
-    prompt,
-    result,
-  })
-
-  // Handle case where agent hit max steps without generating output
-  if (!result.experimental_output) {
-    const maxStepsUsed = options?.maxSteps ?? agents.evaluation.options.maxSteps
-    logger.warn(
-      `Step ${stepContext.stepIndex + 1} hit max steps (${maxStepsUsed}) without generating output`,
-    )
-    return {
-      conclusion: 'fail' as const,
-      outcome: `Evaluation stopped after reaching maximum steps (${maxStepsUsed}). The step may require more investigation or a higher step limit.`,
-      assertions: [],
-    }
-  }
-
-  return result.experimental_output
-}
-
 export async function main(
   payload: evaluationAgentOptions,
 ): Promise<EvaluationOutput> {
@@ -337,28 +558,12 @@ export async function main(
   const outline = repoOutline.result ?? ''
 
   // Process each step sequentially
+  // CACHE BREAKS AT STEP LEVEL - each step gets a new agent instance
   const stepResults: StepAgentOutput[] = []
   const steps = (story.decomposition as DecompositionAgentResult).steps
 
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     const step = steps[stepIndex]
-
-    // Skip agent evaluation for 'given' steps - they are preconditions assumed to be true
-    if (step.type === 'given') {
-      const stepResult: StepAgentOutput = {
-        conclusion: 'pass',
-        outcome: step.given,
-        assertions: [],
-      }
-      stepResults.push(stepResult)
-      logger.info(
-        `Skipping agent evaluation for given step ${stepIndex + 1} of ${steps.length}`,
-        {
-          step: step.given,
-        },
-      )
-      continue
-    }
 
     // Check if this step can use cached results
     if (
@@ -449,7 +654,9 @@ export async function main(
       stepContext,
     })
 
-    const stepResult = await agent({
+    // CACHE BREAKS HERE - new step agent instance
+    // Within the step, assertions share step memory but don't reset cache
+    const stepResult = await stepAgent({
       stepContext,
       evaluationAgentOptions: payload,
       sandbox,

@@ -278,6 +278,48 @@ export const assertionEvidenceSchema = z.object({
 export type AssertionEvidence = z.infer<typeof assertionEvidenceSchema>
 
 /**
+ * Step memory - in-memory context passed between assertions within a step.
+ * This contains a summary of evidence and domain hints from previous assertions
+ * in the same step, allowing subsequent assertions to build on prior work.
+ */
+export const stepMemorySchema = z.object({
+  /**
+   * Summary of evidence collected so far in this step
+   * Format: Array of file references with line ranges
+   */
+  evidenceSummary: z
+    .array(z.string().min(1))
+    .describe(
+      'File references with line ranges discovered in previous assertions, e.g., ["src/auth/session.ts:12-28"]',
+    ),
+
+  /**
+   * Domain hints from previous assertions
+   * These are abstract hints like relevant file paths, symbol patterns, or architectural notes
+   * that can help subsequent assertions without repeating heavy search work
+   */
+  domainHints: z
+    .object({
+      relevantFiles: z
+        .array(z.string())
+        .optional()
+        .describe('File paths that may be relevant to this step'),
+      symbolPatterns: z
+        .array(z.string())
+        .optional()
+        .describe('Symbol patterns or class names to watch for'),
+      architecturalNotes: z
+        .string()
+        .optional()
+        .describe('Brief architectural or domain context hints'),
+    })
+    .optional()
+    .describe('Optional domain context hints from previous assertions'),
+})
+
+export type StepMemory = z.infer<typeof stepMemorySchema>
+
+/**
  * Evaluation result for a single step.
  * This represents whether a step (given or requirement) passed or failed.
  */
