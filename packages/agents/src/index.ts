@@ -6,6 +6,11 @@ import {
 } from '@app/schemas'
 import { runDecompositionAgent } from './agents/v3/story-decomposition'
 import { main } from './agents/v3/story-evaluator'
+import {
+  runStoryDiscoveryAgent,
+  storyDiscoveryOutputSchema,
+  type StoryDiscoveryOutput,
+} from './agents/v3/story-discovery'
 import { parseEnv } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
@@ -77,4 +82,17 @@ export const agents = {
       },
     },
   },
+  discovery: {
+    id: 'story-discovery-v3',
+    version: 'v3',
+    schema: storyDiscoveryOutputSchema,
+    run: runStoryDiscoveryAgent,
+    options: {
+      maxSteps: 30, // Allow more steps for discovery
+      model: 'openai/gpt-5-mini',
+    },
+  },
 } as const
+
+// Re-export discovery types
+export type { StoryDiscoveryOutput }
