@@ -1,6 +1,6 @@
 # ⛩️ Kyoto
 
-> ⛩️ Kyoto - AI-powered QA
+> ⛩️ Kyoto - Intent testing
 
 # Why Kyoto?
 
