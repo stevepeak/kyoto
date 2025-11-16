@@ -1,5 +1,6 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import type { NextRequest } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
 
 import { appRouter } from '@app/api'
 import type { Context, Env } from '@app/api'
@@ -68,20 +69,79 @@ async function createContext(req: NextRequest): Promise<Context> {
   }
 }
 
-export async function GET(request: NextRequest) {
-  return await fetchRequestHandler({
-    endpoint: '/api/trpc',
-    req: request,
-    router: appRouter,
-    createContext: () => createContext(request),
+function onError({ path, error }: { path?: string; error: unknown }) {
+  // Log detailed error information to Vercel logs
+  console.error(`[tRPC Error] ${path ?? 'unknown'}:`, {
+    message: error instanceof Error ? error.message : String(error),
+    code:
+      error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : undefined,
+    stack: error instanceof Error ? error.stack : undefined,
+    cause: error instanceof Error ? error.cause : undefined,
   })
+
+  // Send error to Sentry with full traceback
+  if (error instanceof Error) {
+    Sentry.captureException(error, {
+      tags: {
+        trpc: true,
+        trpcPath: path ?? 'unknown',
+        errorCode:
+          error && typeof error === 'object' && 'code' in error
+            ? String(error.code)
+            : undefined,
+      },
+    })
+  } else {
+    Sentry.captureException(new Error(String(error)), {
+      tags: {
+        trpc: true,
+        trpcPath: path ?? 'unknown',
+      },
+      extra: {
+        originalError: error,
+      },
+    })
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    return await fetchRequestHandler({
+      endpoint: '/api/trpc',
+      req: request,
+      router: appRouter,
+      createContext: () => createContext(request),
+      onError,
+    })
+  } catch (error) {
+    // Capture any unhandled errors
+    Sentry.captureException(
+      error instanceof Error ? error : new Error(String(error)),
+    )
+    // Ensure Sentry has time to send the error before the function exits
+    await Sentry.flush(2000)
+    throw error
+  }
 }
 
 export async function POST(request: NextRequest) {
-  return await fetchRequestHandler({
-    endpoint: '/api/trpc',
-    req: request,
-    router: appRouter,
-    createContext: () => createContext(request),
-  })
+  try {
+    return await fetchRequestHandler({
+      endpoint: '/api/trpc',
+      req: request,
+      router: appRouter,
+      createContext: () => createContext(request),
+      onError,
+    })
+  } catch (error) {
+    // Capture any unhandled errors
+    Sentry.captureException(
+      error instanceof Error ? error : new Error(String(error)),
+    )
+    // Ensure Sentry has time to send the error before the function exits
+    await Sentry.flush(2000)
+    throw error
+  }
 }

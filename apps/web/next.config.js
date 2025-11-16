@@ -1,3 +1,4 @@
+const { withSentryConfig } = require('@sentry/nextjs')
 const path = require('path')
 
 /** @type {import('next').NextConfig} */
@@ -12,7 +13,6 @@ const nextConfig = {
       },
     ],
   },
-  // Sentry configuration will be added via @sentry/nextjs
   webpack: (config) => {
     // Suppress webpack warnings from Sentry/OpenTelemetry instrumentation
     config.ignoreWarnings = [
@@ -35,4 +35,18 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+// Sentry configuration for source maps and error tracking
+const sentryWebpackPluginOptions = {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  // Suppresses source map uploading logs during build
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Only upload source maps in production builds
+  dryRun: process.env.NODE_ENV !== 'production',
+}
+
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions)

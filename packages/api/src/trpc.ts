@@ -1,6 +1,7 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import { configure } from '@trigger.dev/sdk'
 import superjson from 'superjson'
+import * as Sentry from '@sentry/nextjs'
 
 import type { Context } from './context'
 import { parseEnv } from './helpers/env'
@@ -25,7 +26,42 @@ const triggerMiddleware = t.middleware(({ ctx, next }) => {
         secretKey: parsedEnv.TRIGGER_SECRET_KEY,
       })
       isTriggerConfigured = true
-    } catch (_error) {
+    } catch (error) {
+      // Log the actual error for debugging in Vercel logs
+      console.error('Trigger.dev configuration error:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        // Log which env vars are missing without exposing values
+        envKeys: {
+          githubAppId: !!ctx.env.githubAppId,
+          githubAppPrivateKey: !!ctx.env.githubAppPrivateKey,
+          githubWebhookSecret: !!ctx.env.githubWebhookSecret,
+          openAiApiKey: !!ctx.env.openAiApiKey,
+          databaseUrl: !!ctx.env.databaseUrl,
+          triggerSecretKey: !!ctx.env.triggerSecretKey,
+        },
+      })
+
+      // Send configuration errors to Sentry
+      if (error instanceof Error) {
+        Sentry.captureException(error, {
+          tags: {
+            trpc: true,
+            triggerConfig: true,
+          },
+          extra: {
+            envKeys: {
+              githubAppId: !!ctx.env.githubAppId,
+              githubAppPrivateKey: !!ctx.env.githubAppPrivateKey,
+              githubWebhookSecret: !!ctx.env.githubWebhookSecret,
+              openAiApiKey: !!ctx.env.openAiApiKey,
+              databaseUrl: !!ctx.env.databaseUrl,
+              triggerSecretKey: !!ctx.env.triggerSecretKey,
+            },
+          },
+        })
+      }
+
       // Catch any errors from parseEnv and throw a generic server error
       // This prevents exposing sensitive environment variable names or validation details
       throw new TRPCError({
@@ -42,7 +78,27 @@ const loggingMiddleware = t.middleware(async ({ next, type, path }) => {
   const result = await next()
 
   if (!result.ok) {
-    console.error(`Error calling ${type} ${path}:`, result.error)
+    // Log detailed error information for Vercel logs
+    const error = result.error
+    console.error(`[tRPC Error] ${type.toUpperCase()} ${path}:`, {
+      code: error.code,
+      message: error.message,
+      cause: error.cause,
+      stack: error.stack,
+    })
+
+    // Send error to Sentry with full traceback
+    Sentry.captureException(error, {
+      tags: {
+        trpc: true,
+        trpcType: type,
+        trpcPath: path,
+        errorCode: error.code,
+      },
+      extra: {
+        cause: error.cause,
+      },
+    })
   }
 
   return result

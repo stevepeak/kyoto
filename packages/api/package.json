@@ -22,6 +22,7 @@
   "dependencies": {
     "@app/db": "workspace:*",
     "@app/schemas": "workspace:*",
+    "@sentry/nextjs": "^10.25.0",
     "@trigger.dev/sdk": "^4.0.6",
     "@trpc/server": "11.6.0",
     "kysely": "^0.28.8",

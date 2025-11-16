@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
@@ -11,7 +12,14 @@ export default function RepoError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('Repository page error:', error)
+    // Send error to Sentry with full traceback
+    Sentry.captureException(error, {
+      tags: {
+        errorBoundary: true,
+        page: 'repo',
+        digest: error.digest,
+      },
+    })
   }, [error])
 
   return (
