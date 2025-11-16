@@ -158,8 +158,15 @@ export async function validateCacheEntry(args: {
       // Check each file hash in the cached evidence
       let assertionIsValid = true
       for (const [filename, cachedHash] of Object.entries(evidenceHashMap)) {
-        const currentHash = await getFileHashFromSandbox(sandbox, filename)
-        if (currentHash !== cachedHash) {
+        try {
+          const currentHash = await getFileHashFromSandbox(sandbox, filename)
+          if (currentHash !== cachedHash) {
+            assertionIsValid = false
+            stepHasInvalidAssertion = true
+            break
+          }
+        } catch {
+          // File not found or error reading file - treat as invalid
           assertionIsValid = false
           stepHasInvalidAssertion = true
           break
