@@ -18,9 +18,9 @@ export async function getFileContentFromSandbox(
   sandbox: Sandbox,
   path: string,
 ): Promise<string> {
-  const workspacePath = resolveWorkspacePath(path)
+  const absFilePath = resolveWorkspacePath(path)
 
-  if (!workspacePath) {
+  if (!absFilePath) {
     const message = 'File path must be within the current repository workspace.'
     console.error(`📄 Failed to resolve file path`, {
       inputPath: path,
@@ -29,7 +29,7 @@ export async function getFileContentFromSandbox(
   }
 
   try {
-    const downloadedFile = await sandbox.fs.downloadFile(workspacePath)
+    const downloadedFile = await sandbox.fs.downloadFile(absFilePath)
     const content = downloadedFile.toString('utf-8')
     return content
   } catch (error) {
