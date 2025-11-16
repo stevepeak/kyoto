@@ -89,9 +89,6 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
         <DropdownMenuContent align="end">
           <div className="px-2 py-1.5">
             <p className="text-sm font-medium">{userName}</p>
-            {user?.email && (
-              <p className="text-xs text-muted-foreground">{user.email}</p>
-            )}
             {showGithubLogin ? (
               <p className="text-xs text-muted-foreground">
                 @{showGithubLogin}
