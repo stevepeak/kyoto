@@ -36,10 +36,43 @@ function getBaseUrl(): string {
   return 'http://localhost:3001'
 }
 
+function getTrustedOrigins(): string[] {
+  const origins: string[] = []
+
+  // Always include the base URL
+  const baseUrl = getBaseUrl()
+  if (baseUrl) {
+    origins.push(baseUrl)
+  }
+
+  // Include production domain
+  if (process.env.SITE_PRODUCTION_URL) {
+    origins.push(`https://${process.env.SITE_PRODUCTION_URL}`)
+  }
+
+  // Include usekyoto.com
+  origins.push('https://usekyoto.com')
+
+  // Include localhost for development
+  origins.push('http://localhost:3001')
+
+  // Include any additional trusted origins from environment variable
+  if (process.env.BETTER_AUTH_TRUSTED_ORIGINS) {
+    const additionalOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(
+      ',',
+    ).map((origin) => origin.trim())
+    origins.push(...additionalOrigins)
+  }
+
+  // Remove duplicates
+  return Array.from(new Set(origins))
+}
+
 export function getAuth() {
   if (!authInstance) {
     authInstance = betterAuth({
       baseURL: getBaseUrl(),
+      trustedOrigins: getTrustedOrigins(),
       database: kyselyAdapter(getDb(), {
         type: 'postgres',
       }),
