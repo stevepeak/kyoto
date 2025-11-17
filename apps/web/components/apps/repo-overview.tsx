@@ -11,7 +11,13 @@ import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { RunList } from '@/components/runs/RunList'
 import { StoryList } from '@/components/stories/StoryList'
-import { TriggerDevTrackingDialog } from '@/components/common/workflow-tracking-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  VisuallyHidden,
+} from '@/components/ui/dialog'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 import { RunTrackingContent } from './repo-overview/RunTrackingContent'
 import { useRepoKeyboardShortcuts } from './repo-overview/hooks/useRepoKeyboardShortcuts'
@@ -91,13 +97,6 @@ export function RepoOverview({
     }
   }
 
-  const handleDialogComplete = () => {
-    setDialogOpen(false)
-    // Refresh runs list when dialog completes
-    if (onRefreshRuns) {
-      onRefreshRuns()
-    }
-  }
 
   return (
     <AppLayout
@@ -195,15 +194,34 @@ export function RepoOverview({
           </div>
         </div>
       </div>
-      <TriggerDevTrackingDialog
+      <Dialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        runId={runId}
-        publicAccessToken={publicAccessToken}
-        onComplete={handleDialogComplete}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) {
+            setRunId(null)
+            setPublicAccessToken(null)
+          }
+        }}
       >
-        <RunTrackingContent />
-      </TriggerDevTrackingDialog>
+        <DialogContent className="max-w-lg !left-[50%] !top-[50%] !bottom-auto !translate-x-[-50%] !translate-y-[-50%] data-[state=closed]:!slide-out-to-bottom data-[state=open]:!slide-in-from-bottom data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 sm:rounded-lg">
+          <VisuallyHidden>
+            <DialogTitle>Run Tracking</DialogTitle>
+            <DialogDescription>
+              Track the progress of your CI run
+            </DialogDescription>
+          </VisuallyHidden>
+          <RunTrackingContent
+            runId={runId}
+            publicAccessToken={publicAccessToken}
+            onClose={() => {
+              setDialogOpen(false)
+              setRunId(null)
+              setPublicAccessToken(null)
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   )
 }

@@ -4,7 +4,13 @@ import { AppLayout } from '@/components/layout'
 import { StoryArchiveDialog } from '@/components/apps/story-archive-dialog'
 import { StoryTemplatesDialog } from '@/components/apps/story-templates-dialog'
 import { StoryCreateForm } from '@/components/apps/story-create-form'
-import { TriggerDevTrackingDialog } from '@/components/common/workflow-tracking-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  VisuallyHidden,
+} from '@/components/ui/dialog'
 import { useStoryLoaderState } from './hooks/useStoryLoaderState'
 import { useStoryActions } from './hooks/useStoryActions'
 import { useStoryKeyboardShortcuts } from './hooks/useStoryKeyboardShortcuts'
@@ -59,7 +65,7 @@ export function StoryLoaderClient({
   const generation = useStoryGeneration({
     generationRunId: state.generationRunId,
     generationAccessToken: state.generationAccessToken,
-    isGenerating: state.isGenerating,
+    showGenerationDialog: state.showGenerationDialog,
     setIsGenerating: state.setIsGenerating,
     setGenerationRunId: state.setGenerationRunId,
     setGenerationAccessToken: state.setGenerationAccessToken,
@@ -158,15 +164,25 @@ export function StoryLoaderClient({
         isArchiving={state.isArchiving}
         onArchive={actions.handleArchive}
       />
-      <TriggerDevTrackingDialog
+      <Dialog
         open={state.showGenerationDialog}
         onOpenChange={generation.handleGenerationDialogChange}
-        runId={state.generationRunId}
-        publicAccessToken={state.generationAccessToken}
-        onComplete={generation.handleGenerationComplete}
       >
-        <StoryGenerationTracking />
-      </TriggerDevTrackingDialog>
+        <DialogContent className="max-w-lg !left-[50%] !top-[50%] !bottom-auto !translate-x-[-50%] !translate-y-[-50%] data-[state=closed]:!slide-out-to-bottom data-[state=open]:!slide-in-from-bottom data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 sm:rounded-lg">
+          <VisuallyHidden>
+            <DialogTitle>Story Generation</DialogTitle>
+            <DialogDescription>
+              Track the progress of your story generation
+            </DialogDescription>
+          </VisuallyHidden>
+          <StoryGenerationTracking
+            runId={state.generationRunId}
+            publicAccessToken={state.generationAccessToken}
+            onComplete={generation.handleGenerationComplete}
+            onClose={() => generation.handleGenerationDialogChange(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   )
 }

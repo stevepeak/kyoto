@@ -11,7 +11,6 @@ import {
 interface StoryArchiveDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  storyName: string | null
   isArchiving: boolean
   onArchive: () => void
 }

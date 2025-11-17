@@ -17,9 +17,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  TriggerDevTrackingDialog,
-  useTriggerDevTracking,
-} from '@/components/common/workflow-tracking-dialog'
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  VisuallyHidden,
+} from '@/components/ui/dialog'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
 
 interface OrgItem {
   slug: string
@@ -28,8 +32,33 @@ interface OrgItem {
   repoCount: number
 }
 
-function OrgSyncTrackingContent() {
-  const { isLoading, error, closeDialog } = useTriggerDevTracking()
+interface OrgSyncTrackingContentProps {
+  runId: string | null
+  publicAccessToken: string | null
+  onClose: () => void
+}
+
+function OrgSyncTrackingContent({
+  runId,
+  publicAccessToken,
+  onClose,
+}: OrgSyncTrackingContentProps) {
+  const { isLoading, isFailed, error } = useTriggerRun({
+    runId,
+    publicAccessToken,
+    enabled: runId !== null && publicAccessToken !== null,
+    onComplete: () => {
+      // Dialog will be closed by parent after delay
+    },
+  })
+
+  const displayError = error
+    ? error instanceof Error
+      ? error.message
+      : String(error)
+    : isFailed
+      ? 'Workflow failed'
+      : null
 
   if (isLoading) {
     return (
@@ -50,13 +79,13 @@ function OrgSyncTrackingContent() {
     )
   }
 
-  if (error) {
+  if (displayError) {
     return (
       <EmptyState
         title="Sync failed"
-        description={error}
+        description={displayError}
         action={
-          <Button onClick={closeDialog} variant="outline">
+          <Button onClick={onClose} variant="outline">
             Close
           </Button>
         }
@@ -148,14 +177,6 @@ export function OrgListApp() {
     }
   }, [queryOrganizations, trpc])
 
-  const handleDialogComplete = () => {
-    setDialogOpen(false)
-    // Refresh orgs list when dialog completes
-    void queryOrganizations().then((refreshedOrgs) => {
-      setOrgs(refreshedOrgs)
-    })
-  }
-
   if (isLoading) {
     return (
       <AppLayout>
@@ -243,15 +264,42 @@ export function OrgListApp() {
           ))}
         </div>
       </div>
-      <TriggerDevTrackingDialog
+      <Dialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        runId={runId}
-        publicAccessToken={publicAccessToken}
-        onComplete={handleDialogComplete}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) {
+            setRunId(null)
+            setPublicAccessToken(null)
+            // Refresh orgs list when dialog closes
+            void queryOrganizations().then((refreshedOrgs) => {
+              setOrgs(refreshedOrgs)
+            })
+          }
+        }}
       >
-        <OrgSyncTrackingContent />
-      </TriggerDevTrackingDialog>
+        <DialogContent className="max-w-lg !left-[50%] !top-[50%] !bottom-auto !translate-x-[-50%] !translate-y-[-50%] data-[state=closed]:!slide-out-to-bottom data-[state=open]:!slide-in-from-bottom data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 sm:rounded-lg">
+          <VisuallyHidden>
+            <DialogTitle>Organization Sync</DialogTitle>
+            <DialogDescription>
+              Track the progress of your organization sync
+            </DialogDescription>
+          </VisuallyHidden>
+          <OrgSyncTrackingContent
+            runId={runId}
+            publicAccessToken={publicAccessToken}
+            onClose={() => {
+              setDialogOpen(false)
+              setRunId(null)
+              setPublicAccessToken(null)
+              // Refresh orgs list when dialog closes
+              void queryOrganizations().then((refreshedOrgs) => {
+                setOrgs(refreshedOrgs)
+              })
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   )
 }

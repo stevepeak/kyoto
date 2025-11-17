@@ -1,39 +1,75 @@
-import { Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
-import { useTriggerDevTracking } from '@/components/common/workflow-tracking-dialog'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
 
-export function StoryGenerationTracking() {
-  const { isLoading, isCompleted, error, runId, closeDialog } =
-    useTriggerDevTracking()
+interface StoryGenerationTrackingProps {
+  runId: string | null
+  publicAccessToken: string | null
+  onComplete?: () => void
+  onClose?: () => void
+}
 
-  // Show loading state if we have a runId (even if isLoading is false initially while run is loading)
-  const isActuallyLoading =
-    isLoading || (runId !== null && !isCompleted && error === null)
+export function StoryGenerationTracking({
+  runId,
+  publicAccessToken,
+  onComplete,
+  onClose,
+}: StoryGenerationTrackingProps) {
+  const [streamText, setStreamText] = useState('')
+  const currentRunIdRef = useRef<string | null>(null)
 
-  if (isActuallyLoading) {
-    return (
-      <EmptyState
-        kanji="そうぞう"
-        kanjiTitle="Sōzō - creation."
-        title="Generating story..."
-        description="Analyzing your codebase to discover a new user story. This may take a minute."
-        action={
-          <div className="flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </div>
-        }
-      />
-    )
-  }
+  // Reset stream text when runId changes
+  useEffect(() => {
+    if (runId !== currentRunIdRef.current) {
+      currentRunIdRef.current = runId
+      setStreamText('')
+    }
+  }, [runId])
 
-  if (error) {
+  const handleStreamText = useCallback(
+    (text: string) => {
+      setStreamText(text)
+    },
+    [runId],
+  )
+
+  const { isFailed, error } = useTriggerRun({
+    runId,
+    publicAccessToken,
+    enabled: runId !== null && publicAccessToken !== null,
+    onComplete: () => {
+      if (onComplete) {
+        onComplete()
+      }
+      // Close dialog after a brief delay to show success state
+      if (onClose) {
+        setTimeout(() => {
+          onClose()
+        }, 1000)
+      }
+    },
+    onError: () => {
+      // Error is handled via the error state
+    },
+    onStreamText: handleStreamText,
+  })
+
+  const displayError = error
+    ? error instanceof Error
+      ? error.message
+      : String(error)
+    : isFailed
+      ? 'Workflow failed'
+      : null
+
+  if (displayError) {
     return (
       <EmptyState
         title="Generation failed"
-        description={error}
+        description={displayError}
         action={
-          <Button onClick={closeDialog} variant="outline">
+          <Button onClick={onClose} variant="outline">
             Close
           </Button>
         }
@@ -41,18 +77,20 @@ export function StoryGenerationTracking() {
     )
   }
 
-  if (isCompleted) {
-    // Dialog will close automatically via onComplete callback in TriggerDevTrackingDialog
-    return (
-      <EmptyState
-        kanji="せいこう"
-        kanjiTitle="Seikō - success."
-        title="Story generated"
-        description="Your story has been generated and added to the editor."
-      />
-    )
-  }
-
-  // This should be unreachable - we should always have loading, error, or completed state
-  return null
+  return (
+    <EmptyState
+      kanji="そうぞう"
+      kanjiTitle="Sōzō - creation."
+      title="Curating a story"
+      description="Analyzing your codebase to discover a new user story."
+      action={
+        <span
+          className="text-gradient-ellipsis"
+          title={streamText || 'Getting started...'}
+        >
+          {streamText || 'Getting started...'}
+        </span>
+      }
+    />
+  )
 }

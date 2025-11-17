@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useRealtimeRun } from '@trigger.dev/react-hooks'
+import { useRealtimeRun, useRealtimeStream } from '@trigger.dev/react-hooks'
 
 export interface TriggerHandle {
   id: string
@@ -12,6 +12,7 @@ export interface UseTriggerRunOptions<T = unknown> {
   enabled?: boolean
   onComplete?: (output: T) => void
   onError?: (error: Error | string) => void
+  onStreamText?: (text: string) => void
 }
 
 export interface UseTriggerRunResult<T = unknown> {
@@ -37,6 +38,9 @@ export interface UseTriggerRunResult<T = unknown> {
  *   onError: (err) => {
  *     console.error('Run failed:', err)
  *   },
+ *   onStreamText: (text) => {
+ *     console.log('Stream text:', text)
+ *   },
  * })
  * ```
  */
@@ -46,16 +50,48 @@ export function useTriggerRun<T = unknown>({
   enabled = true,
   onComplete,
   onError,
+  onStreamText,
 }: UseTriggerRunOptions<T>): UseTriggerRunResult<T> {
+  const isEnabled =
+    enabled &&
+    runId !== null &&
+    publicAccessToken !== null &&
+    runId !== '' &&
+    publicAccessToken !== ''
+
   const { run, error: runError } = useRealtimeRun(runId ?? '', {
     accessToken: publicAccessToken ?? undefined,
-    enabled:
-      enabled &&
-      runId !== null &&
-      publicAccessToken !== null &&
-      runId !== '' &&
-      publicAccessToken !== '',
+    enabled: isEnabled,
   })
+
+  // Subscribe to stream if onStreamText is provided
+  const streamEnabled = isEnabled && onStreamText !== undefined
+  const { parts: streamParts } = useRealtimeStream<string>(
+    runId ?? '',
+    'progress',
+    {
+      accessToken: publicAccessToken ?? undefined,
+      enabled: streamEnabled,
+    },
+  )
+
+  // Track previously seen stream chunks
+  const previousStreamLengthRef = useRef<number>(0)
+
+  // Call onStreamText callback for new chunks
+  useEffect(() => {
+    if (
+      streamParts &&
+      onStreamText &&
+      streamParts.length > previousStreamLengthRef.current
+    ) {
+      const newParts = streamParts.slice(previousStreamLengthRef.current)
+      newParts.forEach((text) => {
+        onStreamText(text)
+      })
+      previousStreamLengthRef.current = streamParts.length
+    }
+  }, [streamParts, onStreamText, runId])
 
   const previousStatusRef = useRef<string | null>(null)
   const previousErrorRef = useRef<unknown>(null)
@@ -67,9 +103,9 @@ export function useTriggerRun<T = unknown>({
       hasCalledOnCompleteRef.current = false
       previousStatusRef.current = null
       previousErrorRef.current = null
-      console.debug('[useTriggerRun] Run reset - runId is null')
+      previousStreamLengthRef.current = 0
     } else if (runId !== '') {
-      console.debug('[useTriggerRun] Run started', { runId })
+      previousStreamLengthRef.current = 0
     }
   }, [runId])
 
@@ -88,27 +124,13 @@ export function useTriggerRun<T = unknown>({
             : 'Trigger run failed'
         errorMessage = new Error(message)
       }
-      console.debug('[useTriggerRun] Error occurred', {
-        runId,
-        error: errorMessage,
-        originalError: runError,
-      })
+
       onError?.(errorMessage)
     }
   }, [runError, onError, runId])
 
   // Handle completion
   useEffect(() => {
-    // Log status changes
-    if (run && run.status !== previousStatusRef.current) {
-      console.debug('[useTriggerRun] Status update', {
-        runId,
-        previousStatus: previousStatusRef.current,
-        newStatus: run.status,
-        output: run.output,
-      })
-    }
-
     if (
       run &&
       run.status === 'COMPLETED' &&
@@ -119,10 +141,7 @@ export function useTriggerRun<T = unknown>({
       hasCalledOnCompleteRef.current = true
 
       const output = run.output as T
-      console.debug('[useTriggerRun] Run completed', {
-        runId,
-        output,
-      })
+
       onComplete?.(output)
     }
 
@@ -136,11 +155,7 @@ export function useTriggerRun<T = unknown>({
       const errorMessage = new Error(
         run.status === 'FAILED' ? 'Trigger run failed' : 'Trigger run crashed',
       )
-      console.debug('[useTriggerRun] Run finished with error', {
-        runId,
-        status: run.status,
-        error: errorMessage,
-      })
+
       onError?.(errorMessage)
     }
 
@@ -150,15 +165,18 @@ export function useTriggerRun<T = unknown>({
     }
   }, [run, onComplete, onError, runId])
 
+  // isLoading should be true when:
+  // 1. We have runId and token (enabled)
+  // 2. Either run is null (still fetching) OR run exists but not in terminal state
+  // 3. No error occurred
   const isLoading =
-    runId !== null &&
-    publicAccessToken !== null &&
-    run !== null &&
-    run !== undefined &&
-    run.status !== 'COMPLETED' &&
-    run.status !== 'FAILED' &&
-    run.status !== 'CRASHED' &&
-    runError === null
+    isEnabled &&
+    runError === null &&
+    (run === null ||
+      run === undefined ||
+      (run.status !== 'COMPLETED' &&
+        run.status !== 'FAILED' &&
+        run.status !== 'CRASHED'))
 
   const isCompleted = run?.status === 'COMPLETED' || false
   const isFailed =

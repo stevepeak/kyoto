@@ -1,12 +1,35 @@
-'use client'
-
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Loader2 } from 'lucide-react'
-import { useTriggerDevTracking } from '@/components/common/workflow-tracking-dialog'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
 
-export function RunTrackingContent() {
-  const { isLoading, isCompleted, error, closeDialog } = useTriggerDevTracking()
+interface RunTrackingContentProps {
+  runId: string | null
+  publicAccessToken: string | null
+  onClose: () => void
+}
+
+export function RunTrackingContent({
+  runId,
+  publicAccessToken,
+  onClose,
+}: RunTrackingContentProps) {
+  const { isLoading, isCompleted, isFailed, error } = useTriggerRun({
+    runId,
+    publicAccessToken,
+    enabled: runId !== null && publicAccessToken !== null,
+    onComplete: () => {
+      // Dialog will be closed by parent after delay
+    },
+  })
+
+  const displayError = error
+    ? error instanceof Error
+      ? error.message
+      : String(error)
+    : isFailed
+      ? 'Workflow failed'
+      : null
 
   if (isLoading) {
     return (
@@ -24,13 +47,13 @@ export function RunTrackingContent() {
     )
   }
 
-  if (error) {
+  if (displayError) {
     return (
       <EmptyState
         title="Run failed"
-        description={error}
+        description={displayError}
         action={
-          <Button onClick={closeDialog} variant="outline">
+          <Button onClick={onClose} variant="outline">
             Close
           </Button>
         }
@@ -45,7 +68,7 @@ export function RunTrackingContent() {
         kanjiTitle="Seikō - success."
         title="Run completed"
         description="Your CI run has completed successfully."
-        action={<Button onClick={closeDialog}>Close</Button>}
+        action={<Button onClick={onClose}>Close</Button>}
       />
     )
   }

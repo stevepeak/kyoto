@@ -1,4 +1,11 @@
-/**
- * Stream key for user-facing progress messages
- */
-export const PROGRESS_STREAM_KEY = 'progress' as const
+import { streams, type InferStreamType } from '@trigger.dev/sdk'
+
+// Stream for progress updates
+export const progressStream = streams.define<{ step: string; percent: number }>(
+  {
+    id: 'progress',
+  },
+)
+
+// Export types
+export type ProgressStreamPart = InferStreamType<typeof progressStream>

@@ -6,7 +6,7 @@ import type { StoryDiscoveryOutput } from '../types'
 interface UseStoryGenerationProps {
   generationRunId: string | null
   generationAccessToken: string | null
-  isGenerating: boolean
+  showGenerationDialog: boolean
   setIsGenerating: (value: boolean) => void
   setGenerationRunId: (value: string | null) => void
   setGenerationAccessToken: (value: string | null) => void
@@ -17,8 +17,6 @@ interface UseStoryGenerationProps {
 }
 
 interface UseStoryGenerationReturn {
-  generationRun: ReturnType<typeof useTriggerRun<StoryDiscoveryOutput>>['run']
-  generationError: ReturnType<typeof useTriggerRun<StoryDiscoveryOutput>>['error']
   handleGenerationComplete: () => void
   handleGenerationDialogChange: (open: boolean) => void
 }
@@ -26,7 +24,7 @@ interface UseStoryGenerationReturn {
 export function useStoryGeneration({
   generationRunId,
   generationAccessToken,
-  isGenerating: _isGenerating,
+  showGenerationDialog,
   setIsGenerating,
   setGenerationRunId,
   setGenerationAccessToken,
@@ -53,30 +51,33 @@ export function useStoryGeneration({
     [setStoryContent, setStoryName, setError],
   )
 
-  // Use the reusable trigger run hook
-  const { run: generationRun, error: generationError, output } =
-    useTriggerRun<StoryDiscoveryOutput>({
-      runId: generationRunId,
-      publicAccessToken: generationAccessToken,
-      onComplete: (result) => {
-        handleStoryOutput(result)
-        // Clean up
-        setIsGenerating(false)
-        setGenerationRunId(null)
-        setGenerationAccessToken(null)
-        setShowGenerationDialog(false)
-      },
-      onError: (error) => {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to generate story'
-        setError(errorMessage)
-        toast.error('Failed to generate story')
-        setIsGenerating(false)
-        setGenerationRunId(null)
-        setGenerationAccessToken(null)
-        setShowGenerationDialog(false)
-      },
-    })
+  // Use trigger run hook to track the generation
+  const { output } = useTriggerRun<StoryDiscoveryOutput>({
+    runId: generationRunId,
+    publicAccessToken: generationAccessToken,
+    enabled:
+      showGenerationDialog &&
+      generationRunId !== null &&
+      generationAccessToken !== null,
+    onComplete: (output) => {
+      handleStoryOutput(output)
+      // Clean up
+      setIsGenerating(false)
+      setGenerationRunId(null)
+      setGenerationAccessToken(null)
+      setShowGenerationDialog(false)
+    },
+    onError: (err) => {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to generate story'
+      setError(errorMessage)
+      toast.error('Failed to generate story')
+      setIsGenerating(false)
+      setGenerationRunId(null)
+      setGenerationAccessToken(null)
+      setShowGenerationDialog(false)
+    },
+  })
 
   // Handle story generation completion (called from dialog)
   const handleGenerationComplete = useCallback(() => {
@@ -120,8 +121,6 @@ export function useStoryGeneration({
   )
 
   return {
-    generationRun,
-    generationError,
     handleGenerationComplete,
     handleGenerationDialogChange,
   }
