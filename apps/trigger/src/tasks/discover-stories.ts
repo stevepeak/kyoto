@@ -1,4 +1,4 @@
-import { task, logger } from '@trigger.dev/sdk'
+import { task, logger, streams } from '@trigger.dev/sdk'
 
 import { setupDb } from '@app/db'
 import { agents } from '@app/agents'
@@ -90,6 +90,9 @@ export const discoverStoriesTask = task({
     const sandbox = await createDaytonaSandbox({ repoId: repoRecord.repoId })
 
     try {
+      // Emit "starting agent" message
+      void streams.append('progress', 'Starting story discovery')
+
       // Run the story discovery agent
       const discoveryResult = await agents.discovery.run({
         repo: {
@@ -109,6 +112,8 @@ export const discoverStoriesTask = task({
         repoSlug,
         storiesFound: discoveryResult.stories.length,
       })
+
+      void streams.append('progress', 'Updating stories')
 
       // Update placeholder stories with discovered content
       const storiesToUpdate = discoveryResult.stories.slice(
