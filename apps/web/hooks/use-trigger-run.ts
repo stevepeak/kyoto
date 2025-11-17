@@ -67,6 +67,9 @@ export function useTriggerRun<T = unknown>({
       hasCalledOnCompleteRef.current = false
       previousStatusRef.current = null
       previousErrorRef.current = null
+      console.debug('[useTriggerRun] Run reset - runId is null')
+    } else if (runId !== '') {
+      console.debug('[useTriggerRun] Run started', { runId })
     }
   }, [runId])
 
@@ -85,12 +88,27 @@ export function useTriggerRun<T = unknown>({
             : 'Trigger run failed'
         errorMessage = new Error(message)
       }
+      console.debug('[useTriggerRun] Error occurred', {
+        runId,
+        error: errorMessage,
+        originalError: runError,
+      })
       onError?.(errorMessage)
     }
-  }, [runError, onError])
+  }, [runError, onError, runId])
 
   // Handle completion
   useEffect(() => {
+    // Log status changes
+    if (run && run.status !== previousStatusRef.current) {
+      console.debug('[useTriggerRun] Status update', {
+        runId,
+        previousStatus: previousStatusRef.current,
+        newStatus: run.status,
+        output: run.output,
+      })
+    }
+
     if (
       run &&
       run.status === 'COMPLETED' &&
@@ -101,6 +119,10 @@ export function useTriggerRun<T = unknown>({
       hasCalledOnCompleteRef.current = true
 
       const output = run.output as T
+      console.debug('[useTriggerRun] Run completed', {
+        runId,
+        output,
+      })
       onComplete?.(output)
     }
 
@@ -114,9 +136,19 @@ export function useTriggerRun<T = unknown>({
       const errorMessage = new Error(
         run.status === 'FAILED' ? 'Trigger run failed' : 'Trigger run crashed',
       )
+      console.debug('[useTriggerRun] Run finished with error', {
+        runId,
+        status: run.status,
+        error: errorMessage,
+      })
       onError?.(errorMessage)
     }
-  }, [run, onComplete, onError])
+
+    // Update previous status ref for any status change (after handling completion/failure)
+    if (run && run.status !== previousStatusRef.current) {
+      previousStatusRef.current = run.status
+    }
+  }, [run, onComplete, onError, runId])
 
   const isLoading =
     runId !== null &&
@@ -132,7 +164,8 @@ export function useTriggerRun<T = unknown>({
   const isFailed =
     run?.status === 'FAILED' || run?.status === 'CRASHED' || false
 
-  const output = (run?.status === 'COMPLETED' ? (run.output as T) : null) ?? null
+  const output =
+    (run?.status === 'COMPLETED' ? (run.output as T) : null) ?? null
 
   return {
     run,
@@ -143,4 +176,3 @@ export function useTriggerRun<T = unknown>({
     output,
   }
 }
-

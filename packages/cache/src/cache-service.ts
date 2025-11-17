@@ -8,6 +8,7 @@ import type { Sandbox } from '@daytonaio/sdk'
 export type CacheData = {
   steps: {
     [stepIndex: string]: {
+      conclusion: 'pass' | 'fail'
       assertions: {
         [assertionIndex: string]: Record<string, string> // filename -> hash
       }
@@ -230,7 +231,7 @@ export async function invalidateCacheForStory(args: {
 
 /**
  * Builds cache data from evaluation results
- * Only includes successful assertions (status: 'pass')
+ * Includes both passing and failing steps (but not errors)
  */
 export async function buildCacheDataFromEvaluation(args: {
   evaluation: {
@@ -252,12 +253,13 @@ export async function buildCacheDataFromEvaluation(args: {
   for (let stepIndex = 0; stepIndex < evaluation.steps.length; stepIndex++) {
     const step = evaluation.steps[stepIndex]
 
-    // Only cache steps that passed
-    if (step.conclusion !== 'pass') {
+    // Cache steps that passed or failed (but not errors)
+    if (step.conclusion !== 'pass' && step.conclusion !== 'fail') {
       continue
     }
 
     cacheData.steps[stepIndex.toString()] = {
+      conclusion: step.conclusion as 'pass' | 'fail',
       assertions: {},
     }
 

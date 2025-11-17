@@ -4,9 +4,14 @@ import { EmptyState } from '@/components/common/EmptyState'
 import { useTriggerDevTracking } from '@/components/common/workflow-tracking-dialog'
 
 export function StoryGenerationTracking() {
-  const { isLoading, isCompleted, error, closeDialog } = useTriggerDevTracking()
+  const { isLoading, isCompleted, error, runId, closeDialog } =
+    useTriggerDevTracking()
 
-  if (isLoading) {
+  // Show loading state if we have a runId (even if isLoading is false initially while run is loading)
+  const isActuallyLoading =
+    isLoading || (runId !== null && !isCompleted && error === null)
+
+  if (isActuallyLoading) {
     return (
       <EmptyState
         kanji="そうぞう"
@@ -37,21 +42,17 @@ export function StoryGenerationTracking() {
   }
 
   if (isCompleted) {
+    // Dialog will close automatically via onComplete callback in TriggerDevTrackingDialog
     return (
       <EmptyState
         kanji="せいこう"
         kanjiTitle="Seikō - success."
         title="Story generated"
         description="Your story has been generated and added to the editor."
-        action={<Button onClick={closeDialog}>Close</Button>}
       />
     )
   }
 
-  return (
-    <EmptyState
-      title="Preparing generation..."
-      description="Setting up story generation."
-    />
-  )
+  // This should be unreachable - we should always have loading, error, or completed state
+  return null
 }

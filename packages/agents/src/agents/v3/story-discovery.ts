@@ -17,9 +17,7 @@ import { agents } from '../..'
  * Returns an array of discovered stories
  */
 export const storyDiscoveryOutputSchema = z.object({
-  stories: z
-    .array(rawStoryInputSchema)
-    .describe('Array of discovered user stories from the codebase'),
+  stories: z.array(rawStoryInputSchema),
 })
 
 export type StoryDiscoveryOutput = z.infer<typeof storyDiscoveryOutputSchema>
@@ -48,52 +46,28 @@ Analyze the codebase to identify user-facing features and workflows. Focus on on
 # Story Format
 Each story must follow the classic agile format:
 
-**As a** [type of user],
-**I want** [some goal],
-**so that** [some reason].
-
-# Acceptance Criteria
-Each story must include acceptance criteria that describe the specific conditions that must be met for the story to be considered complete. List these as bullet points.
+**Given** [some initial context or state], (optional)
+**When** [an action is taken],
+**Then** [an expected outcome occurs].
+**And** [another action is taken], (optional)
 
 # Examples
 
 Example 1 - Password Reset:
 \`\`\`
-As a registered user,
-I want to reset my password,
-so that I can regain access to my account if I forget it.
-
-Acceptance Criteria:
-- User can request a password reset via email
-- Email contains a unique, one-time-use link
-- Link expires after 15 minutes
+**Given** I am a registered user who has forgotten my password  
+**When** I request a password reset  
+**Then** I receive an email with a unique, one-time-use link that expires after 15 minutes
 \`\`\`
 
 Example 2 - User Login:
 \`\`\`
-As a user,
-I want to log in with my email and password,
-so that I can access my account.
-
-Acceptance Criteria:
-- User can enter email and password on the login page
-- System validates credentials
-- User is redirected to dashboard upon successful login
-- Error message is displayed for invalid credentials
+**Given** I am a user with an existing account  
+**When** I enter my email and password on the login page  
+**Then** I click the "login" button
+**And** upon successful, login I am redirected to the dashboard
 \`\`\`
 
-Example 3 - Create Workspace:
-\`\`\`
-As a logged-in user,
-I want to create a new workspace,
-so that I can organize my projects.
-
-Acceptance Criteria:
-- User can click "create workspace" button from dashboard
-- Dialog opens with workspace creation form
-- User can enter workspace name and description
-- Workspace is created and appears in workspace list
-\`\`\`
 
 # Discovery Focus
 Look for:
@@ -116,6 +90,12 @@ You have read-only tools to:
 - Explore repository structure and contents
 - Inspect function/class/type names and symbol usage
 - Read file contents to understand features
+
+# Rules
+- Never include source code or symbol references in the stories.
+- Keep it simple, keep it short. But have the story have enough detail to be useful as a test.
+- Do not use temporal adverbs like "immediately", "instantly", "right away", etc. if necessary use the word "then" or "after" instead.
+- Aim for no ambiguous statements. Do not use "should" in the stories. Use "then" instead.
 
 Use these tools to understand the codebase structure and identify user-facing features.
 

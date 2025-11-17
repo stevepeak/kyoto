@@ -155,7 +155,6 @@ export function StoryLoaderClient({
       <StoryArchiveDialog
         open={state.showArchiveDialog}
         onOpenChange={state.setShowArchiveDialog}
-        storyName={state.story?.name ?? null}
         isArchiving={state.isArchiving}
         onArchive={actions.handleArchive}
       />

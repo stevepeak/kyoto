@@ -19,7 +19,6 @@ interface StoryArchiveDialogProps {
 export function StoryArchiveDialog({
   open,
   onOpenChange,
-  storyName,
   isArchiving,
   onArchive,
 }: StoryArchiveDialogProps) {
@@ -29,8 +28,8 @@ export function StoryArchiveDialog({
         <DialogHeader>
           <DialogTitle>Archive Story</DialogTitle>
           <DialogDescription>
-            Are you sure you want to archive &ldquo;{storyName}&rdquo;? The
-            story will be hidden from the list but can be restored later.
+            Are you sure you want to archive this story? The story will be
+            hidden from the list but can be restored later.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

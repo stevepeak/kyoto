@@ -475,6 +475,7 @@ export const cacheDataSchema = z.object({
   steps: z.record(
     z.string().regex(/^\d+$/), // Step index as string
     z.object({
+      conclusion: z.enum(['pass', 'fail']),
       assertions: z.record(
         z.string().regex(/^\d+$/), // Assertion index as string
         z.record(z.string(), z.string()), // filename -> hash

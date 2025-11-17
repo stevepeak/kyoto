@@ -421,16 +421,20 @@ export async function main(
           }
 
           if (allAssertionsCached && cachedAssertions.length > 0) {
+            // Use the cached conclusion (pass or fail) instead of always 'pass'
+            const cachedConclusion = stepCacheData.conclusion ?? 'pass'
+
             logger.info(
               `Using cached results for step ${stepIndex + 1} of ${steps.length}`,
               {
                 stepIndex,
                 runId: cacheEntry.runId,
+                conclusion: cachedConclusion,
               },
             )
 
             const stepResult: StepAgentOutput = {
-              conclusion: 'pass',
+              conclusion: cachedConclusion as 'pass' | 'fail',
               outcome: step.goal,
               assertions: cachedAssertions,
             }

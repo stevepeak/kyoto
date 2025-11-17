@@ -110,10 +110,10 @@ export async function runStoriesWithSandbox({
               .where('id', '=', resultId)
               .execute()
 
-            // Save cache for successful evaluations
+            // Save cache for successful and failed evaluations (but not errors)
             if (
               agents.evaluation.options.cacheOptions?.enabled &&
-              evaluation.status === 'pass'
+              (evaluation.status === 'pass' || evaluation.status === 'fail')
             ) {
               try {
                 const cacheData = await buildCacheDataFromEvaluation({

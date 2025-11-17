@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useRealtimeRun } from '@trigger.dev/react-hooks'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
 import { AppLayout } from '@/components/layout'
 import {
   Card,
@@ -29,38 +29,6 @@ const syncResponseSchema = z.object({
   error: z.string().optional(),
 })
 
-function RealtimeRunTracker({
-  runId,
-  publicAccessToken,
-  onStatusChange,
-  onError,
-}: {
-  runId: string
-  publicAccessToken: string
-  onStatusChange: (status: string) => void
-  onError: (error: string) => void
-}) {
-  const { run, error: runError } = useRealtimeRun(runId, {
-    accessToken: publicAccessToken,
-  })
-
-  useEffect(() => {
-    if (runError) {
-      onError(runError.message ?? 'Failed to sync installation')
-      return
-    }
-
-    if (run) {
-      onStatusChange(run.status)
-      if (run.status === 'FAILED' || run.status === 'CRASHED') {
-        onError('Installation sync failed')
-      }
-    }
-  }, [run, runError, onStatusChange, onError])
-
-  return null
-}
-
 export function SetupInstallApp({ installationId }: SetupInstallAppProps) {
   const router = useRouter()
   const [apiError, setApiError] = useState<string | null>(null)
@@ -69,8 +37,21 @@ export function SetupInstallApp({ installationId }: SetupInstallAppProps) {
   const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
     null,
   )
-  const [runError, setRunError] = useState<string | null>(null)
-  const [runStatus, setRunStatus] = useState<string | null>(null)
+
+  // Use the reusable trigger run hook
+  const { isLoading: isRunLoading, isFailed, error: runError } = useTriggerRun(
+    {
+      runId,
+      publicAccessToken,
+      enabled: runId !== null && publicAccessToken !== null,
+      onComplete: () => {
+        // Navigate when completed
+        router.push('/app')
+      },
+      onError: () => {
+        // Error handling is done via the error state
+      },
+    })
 
   useEffect(() => {
     async function syncInstallation() {
@@ -121,26 +102,16 @@ export function SetupInstallApp({ installationId }: SetupInstallAppProps) {
     void syncInstallation()
   }, [installationId])
 
-  // Handle run completion - navigate when completed
-  useEffect(() => {
-    if (runStatus === 'COMPLETED') {
-      router.push('/app')
-    }
-  }, [runStatus, router])
-
   // Derive display state from hook values and local state
   const error =
     apiError ??
-    runError ??
-    (runStatus === 'FAILED' || runStatus === 'CRASHED'
-      ? 'Installation sync failed'
-      : null)
-  const isLoading =
-    isTriggering ||
-    (runId !== null &&
-      runStatus !== 'COMPLETED' &&
-      runStatus !== 'FAILED' &&
-      runStatus !== 'CRASHED')
+    (runError instanceof Error
+      ? runError.message
+      : runError
+        ? String(runError)
+        : null) ??
+    (isFailed ? 'Installation sync failed' : null)
+  const isLoading = isTriggering || isRunLoading
 
   return (
     <AppLayout>
@@ -176,17 +147,6 @@ export function SetupInstallApp({ installationId }: SetupInstallAppProps) {
           </CardContent>
         </Card>
       </div>
-      {runId && publicAccessToken && (
-        <RealtimeRunTracker
-          runId={runId}
-          publicAccessToken={publicAccessToken}
-          onStatusChange={setRunStatus}
-          onError={(error) => {
-            setRunError(error)
-            setIsTriggering(false)
-          }}
-        />
-      )}
     </AppLayout>
   )
 }
