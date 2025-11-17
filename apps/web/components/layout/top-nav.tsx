@@ -2,6 +2,7 @@
 
 import { LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -24,12 +25,22 @@ interface TopNavProps {
 
 export function TopNav({ breadcrumbs, right }: TopNavProps) {
   const trpc = useTRPCClient()
+  const router = useRouter()
   const [githubLogin, setGithubLogin] = useState<string | null>(null)
   const session = useSession()
 
   const user = session.data?.user
   const userImage = user?.image
   const userName = user?.name || user?.email || 'User'
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('Failed to sign out', error)
+    }
+  }
 
   useEffect(() => {
     if (!session.data) {
@@ -96,7 +107,7 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
             ) : null}
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => void signOut()}>
+          <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sign out</span>
           </DropdownMenuItem>
