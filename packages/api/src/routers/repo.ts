@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server'
+import { tasks } from '@trigger.dev/sdk'
 import { z } from 'zod'
 
 import {
@@ -207,6 +208,32 @@ export const repoRouter = router({
         .set({ enabled: true })
         .where('id', '=', repo.id)
         .execute()
+
+      // Trigger story discovery for newly enabled repos that have no stories
+      const storyCount = await ctx.db
+        .selectFrom('stories')
+        .select(({ fn }) => [fn.countAll().as('count')])
+        .where('repoId', '=', repo.id)
+        .executeTakeFirst()
+
+      const hasStories = Number(storyCount?.count ?? 0) > 0
+
+      if (!hasStories) {
+        const owner = await ctx.db
+          .selectFrom('owners')
+          .select(['login'])
+          .where('id', '=', repo.ownerId)
+          .executeTakeFirst()
+
+        if (owner) {
+          const repoSlug = `${owner.login}/${repo.name}`
+
+          await tasks.trigger('discover-stories', {
+            repoSlug,
+            storyCount: 3,
+          })
+        }
+      }
 
       return { enabled: true, repoId: repo.id }
     }),
