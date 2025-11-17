@@ -269,12 +269,13 @@ export const storyRouter = router({
       }
     }),
 
-  archive: protectedProcedure
+  toggleState: protectedProcedure
     .input(
       z.object({
         orgName: z.string(),
         repoName: z.string(),
         storyId: z.string(),
+        state: z.enum(['active', 'paused', 'planned', 'archived']),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -305,14 +306,14 @@ export const storyRouter = router({
         })
       }
 
-      // Archive story (soft delete)
-      await ctx.db
+      const updatedStory = await ctx.db
         .updateTable('stories')
-        .set({ state: 'archived' })
+        .set({ state: input.state })
         .where('id', '=', input.storyId)
-        .execute()
+        .returningAll()
+        .executeTakeFirstOrThrow()
 
-      return { success: true }
+      return { story: updatedStory }
     }),
 
   test: protectedProcedure
