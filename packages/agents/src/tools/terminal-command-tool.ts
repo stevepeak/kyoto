@@ -1,4 +1,5 @@
 import type { Sandbox } from '@daytonaio/sdk'
+import { streams } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
 
@@ -19,6 +20,7 @@ export function createTerminalCommandTool(ctx: { sandbox: Sandbox }) {
       'Execute shell commands (e.g. rg, fd, tree, sed, grep, git, find, etc.) within the repository workspace.',
     inputSchema: terminalCommandInputSchema,
     execute: async (input) => {
+      void streams.append('progress', `Executing command ${input.command}`)
       const result = await ctx.sandbox.process.executeCommand(
         input.command,
         `workspace/repo`,

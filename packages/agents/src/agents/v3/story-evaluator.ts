@@ -21,7 +21,7 @@ import {
   assertionEvidenceSchema,
 } from '@app/schemas'
 import type { evaluationAgentOptions } from '@app/schemas'
-import { logger } from '@trigger.dev/sdk'
+import { logger, streams } from '@trigger.dev/sdk'
 import zodToJsonSchema from 'zod-to-json-schema'
 import { agents } from '../..'
 import { z } from 'zod'
@@ -270,8 +270,10 @@ async function agent(args: {
       },
       tracer: options?.telemetryTracer,
     },
-    onStepFinish: (step) => {
-      logger.info(`🤖 ai.onStepFinish`, step)
+    onStepFinish: async (step) => {
+      if (step.reasoningText) {
+        await streams.append('progress', step.reasoningText)
+      }
     },
     maxRetries: 3, // @default 2
     stopWhen: stepCountIs(

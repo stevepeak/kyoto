@@ -7,7 +7,7 @@ import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
 import { createReadFileTool } from '../../tools/read-file-tool'
 import { createResolveLibraryTool } from '../../tools/context7-tool'
-import { logger } from '@trigger.dev/sdk'
+import { logger, streams } from '@trigger.dev/sdk'
 import type { LanguageModel } from 'ai'
 import { rawStoryInputSchema } from '@app/schemas'
 import { agents } from '../..'
@@ -82,7 +82,7 @@ Look for:
 - Focus on one specific functionality per story
 - Focus on user-facing features, not implementation details
 - Each story should represent a complete, testable feature
-- Include acceptance criteria that are specific and measurable
+- Include 0 - 2 additional acceptance criteria to clarify anything that is ambiguous or requiring refinement
 - Keep stories focused on high-level behavior, not low-level code details
 
 # Resources Available
@@ -179,6 +179,11 @@ export async function runStoryDiscoveryAgent({
         storyCount: options.storyCount,
       },
       tracer: options.telemetryTracer,
+    },
+    onStepFinish: async (step) => {
+      if (step.reasoningText) {
+        await streams.append('progress', step.reasoningText)
+      }
     },
     stopWhen: stepCountIs(options.maxSteps ?? 30), // Allow more steps for discovery
     experimental_output: Output.object({ schema: storyDiscoveryOutputSchema }),

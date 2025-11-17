@@ -8,7 +8,7 @@ import { createResolveLibraryTool } from '../../tools/context7-tool'
 import { createLspTool } from '../../tools/lsp-tool'
 import { agents } from '../../index'
 import zodToJsonSchema from 'zod-to-json-schema'
-import { logger } from '@trigger.dev/sdk'
+import { logger, streams } from '@trigger.dev/sdk'
 import {
   decompositionOutputSchema,
   type DecompositionOutput,
@@ -133,6 +133,11 @@ export async function runDecompositionAgent({
     stopWhen: stepCountIs(
       options.maxSteps ?? agents.decomposition.options.maxSteps,
     ),
+    onStepFinish: async (step) => {
+      if (step.reasoningText) {
+        await streams.append('progress', step.reasoningText)
+      }
+    },
     experimental_output: Output.object({ schema: decompositionOutputSchema }),
   })
 

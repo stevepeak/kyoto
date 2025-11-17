@@ -3,6 +3,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 
 import { resolveWorkspacePath } from '../helpers/daytona'
+import { streams } from '@trigger.dev/sdk'
 
 const readFileInputSchema = z.object({
   path: z
@@ -45,6 +46,7 @@ export function createReadFileTool(ctx: { sandbox: Sandbox }) {
       'Download and return the entire contents of a file from the Daytona sandbox workspace.',
     inputSchema: readFileInputSchema,
     execute: async (input) => {
+      void streams.append('progress', `Reading file ${input.path}`)
       return await getFileContentFromSandbox(ctx.sandbox, input.path)
     },
   })

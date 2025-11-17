@@ -4,6 +4,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 
 import { resolveWorkspacePath } from '../helpers/daytona'
+import { streams } from '@trigger.dev/sdk'
 
 const lspLanguageSchema = z.enum(['typescript', 'python'])
 
@@ -54,7 +55,6 @@ export function createLspTool(ctx: { sandbox: Sandbox }) {
       'Use the LSP server to inspect code symbols within the workspace (documentSymbols or sandboxSymbols).',
     inputSchema: lspToolInputSchema,
     execute: async (input) => {
-      console.log('🌵 LSP used', { input })
       const projectRoot = `workspace/repo`
       const lspServer = await ctx.sandbox.createLspServer(
         languageMap[input.language],
@@ -67,6 +67,7 @@ export function createLspTool(ctx: { sandbox: Sandbox }) {
         if (input.command === 'documentSymbols') {
           const targetPath = resolveWorkspacePath(input.path!)
 
+          void streams.append('progress', `Listing symbols in ${targetPath}`)
           if (!targetPath) {
             return 'File path must be within the current repository workspace.'
           }
@@ -77,6 +78,7 @@ export function createLspTool(ctx: { sandbox: Sandbox }) {
           return JSON.stringify(symbols, null, 2)
         }
 
+        void streams.append('progress', `Searching codebase for ${input.query}`)
         const symbols = await lspServer.sandboxSymbols(input.query!)
         return JSON.stringify(symbols, null, 2)
       } finally {
