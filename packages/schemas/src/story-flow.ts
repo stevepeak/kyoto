@@ -84,7 +84,17 @@ export const rawStorySchema = rawStoryInputSchema.extend({
   repoId: z.string().uuid(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  state: z.enum(['active', 'generated', 'paused', 'archived', 'planned', 'processing']).default('active'),
+  state: z
+    .enum([
+      'active',
+      'generated',
+      'paused',
+      'archived',
+      'planned',
+      'processing',
+    ])
+    .default('processing')
+    .describe('We need to decomposition before it can be active'),
   metadata: z.record(z.unknown()).nullable().optional(),
 })
 

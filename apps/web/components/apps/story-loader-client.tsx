@@ -13,15 +13,24 @@ import { StoryEditForm } from '@/components/apps/story-edit-form'
 import { StoryCreateForm } from '@/components/apps/story-create-form'
 import { StoryDecompositionTab } from '@/components/apps/story-decomposition-tab'
 import { StoryRunsTab } from '@/components/apps/story-runs-tab'
+import type { DecompositionOutput } from '@app/schemas'
 
 interface Story {
   id: string
   name: string
   story: string
+  state:
+    | 'active'
+    | 'archived'
+    | 'generated'
+    | 'paused'
+    | 'planned'
+    | 'processing'
   createdAt: Date | string | null
   updatedAt: Date | string | null
-  // TODO we cannot import from agents :(
-  decomposition: any
+  decomposition: DecompositionOutput | null
+  repoId: string
+  metadata?: any
 }
 
 interface StoryLoaderClientProps {

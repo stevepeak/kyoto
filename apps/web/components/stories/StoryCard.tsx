@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { Pause, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { StoryState } from '@app/db/types'
 import { getStoryStatePillStyles } from './utils'
@@ -26,6 +26,7 @@ export function StoryCard({
 
   const statePill = getStoryStatePillStyles(state)
   const isGenerated = state === 'generated'
+  const isPaused = state === 'paused'
 
   return (
     <>
@@ -72,6 +73,7 @@ export function StoryCard({
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-effect" />
               )}
               {isGenerated && <Sparkles className="h-3 w-3 relative z-10" />}
+              {isPaused && <Pause className="h-3 w-3" />}
               <span className={cn(isGenerated && 'relative z-10')}>
                 {statePill.label}
               </span>

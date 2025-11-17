@@ -5,15 +5,22 @@ import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 
 import { StoryLoaderClient } from './story-loader-client'
+import type { DecompositionOutput } from '@app/schemas'
 
 interface Story {
   id: string
   name: string
   story: string
+  state:
+    | 'active'
+    | 'archived'
+    | 'generated'
+    | 'paused'
+    | 'planned'
+    | 'processing'
   createdAt: Date | string | null
   updatedAt: Date | string | null
-  // TODO we cannot import from agents :(
-  decomposition: any
+  decomposition: DecompositionOutput | null
 }
 
 interface StoryLoaderProps {

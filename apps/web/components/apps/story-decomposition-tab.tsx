@@ -1,9 +1,10 @@
 import { Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
+import type { DecompositionOutput } from '@app/schemas'
 
 interface StoryDecompositionTabProps {
-  decomposition: any
+  decomposition: DecompositionOutput | null
   isDecomposing: boolean
   onDecompose: () => void
 }

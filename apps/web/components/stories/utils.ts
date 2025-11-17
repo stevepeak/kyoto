@@ -17,7 +17,7 @@ export function getStoryStatePillStyles(state: StoryState): {
       }
     case 'paused':
       return {
-        className: 'border-orange-500/30 bg-orange-500/10 text-orange-600',
+        className: 'border-muted-foreground/30 bg-muted text-muted-foreground',
         label: 'Paused',
       }
     case 'archived':
