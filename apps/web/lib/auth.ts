@@ -21,6 +21,10 @@ function getDb() {
 
 function getBaseUrl(): string {
   // Server-side: use environment variable or default
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3001'
+  }
+  // TODO fix me for preview deploys
   return 'https://usekyoto.com'
 }
 

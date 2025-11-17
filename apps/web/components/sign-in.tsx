@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
 import { signIn, useSession } from '@/client/auth-client'
@@ -10,13 +11,15 @@ import { EmptyState } from '@/components/common/EmptyState'
 export function SignIn() {
   const [loading, setLoading] = useState(false)
   const session = useSession()
+  const searchParams = useSearchParams()
 
-  // Redirect to /app if user is already logged in
+  // Redirect if user is already logged in, respecting the redirect query parameter
   useEffect(() => {
     if (session.data?.user && !session.isPending) {
-      window.location.href = '/app'
+      const redirectTo = searchParams.get('redirect') || '/app'
+      window.location.href = redirectTo
     }
-  }, [session.data, session.isPending])
+  }, [session.data, session.isPending, searchParams])
 
   const handleGitHubSignIn = async () => {
     setLoading(true)

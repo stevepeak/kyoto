@@ -6,7 +6,8 @@ import type { NextRequest } from 'next/server'
  */
 
 // Public routes that don't require authentication
-const publicRoutes = ['/', '/auth', '/about']
+// /setup is included because it's the OAuth callback destination
+const publicRoutes = ['/', '/auth', '/about', '/setup']
 
 export const config = {
   matcher: [
@@ -35,14 +36,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for session cookie (better-auth typically uses cookies starting with 'better-auth')
+  // Check for session cookie (better-auth uses cookies with 'better-auth' prefix)
+  // Common cookie names: better-auth.session_token, better-auth.*
   // This is a lightweight check - actual session validation happens at page/API level
   const cookies = request.cookies.getAll()
-  const hasSessionCookie = cookies.some(
-    (cookie) =>
-      cookie.name.startsWith('better-auth') ||
-      cookie.name === 'better-auth.session_token',
-  )
+  const hasSessionCookie = cookies.some((cookie) => {
+    const name = cookie.name
+    // Check for better-auth session cookies
+    return (
+      name.startsWith('better-auth') ||
+      name === 'better-auth.session_token' ||
+      name.includes('session_token')
+    )
+  })
 
   // If no session cookie, redirect to auth page
   if (!hasSessionCookie) {
