@@ -13,6 +13,8 @@ interface DiscoverStoriesPayload {
   repoSlug: string
   /** Number of stories to discover */
   storyCount: number
+  /** Whether to save stories to the database. Defaults to false. */
+  save?: boolean
 }
 
 export const discoverStoriesTask = task({
@@ -20,6 +22,7 @@ export const discoverStoriesTask = task({
   run: async ({
     repoSlug,
     storyCount,
+    save = false,
   }: DiscoverStoriesPayload): Promise<StoryDiscoveryOutput> => {
     const env = parseEnv()
     const db = setupDb(env.DATABASE_URL)
@@ -67,24 +70,28 @@ export const discoverStoriesTask = task({
       },
     )
 
-    // Insert placeholder stories with 'generated' state before discovery
-    const placeholderStories = await db
-      .insertInto('stories')
-      .values(
-        Array.from({ length: storyCount }, (_, i) => ({
-          repoId: repoRecord.repoId,
-          name: `Story ${i + 1}`,
-          story: 'Generating story...',
-          state: 'generated',
-        })),
-      )
-      .returningAll()
-      .execute()
+    // Insert placeholder stories with 'generated' state before discovery (only if saving)
+    const placeholderStories = save
+      ? await db
+          .insertInto('stories')
+          .values(
+            Array.from({ length: storyCount }, (_, i) => ({
+              repoId: repoRecord.repoId,
+              name: `Story ${i + 1}`,
+              story: 'Generating story...',
+              state: 'generated',
+            })),
+          )
+          .returningAll()
+          .execute()
+      : []
 
-    logger.info(`Created ${placeholderStories.length} placeholder stories`, {
-      repoId: repoRecord.repoId,
-      storyIds: placeholderStories.map((s) => s.id),
-    })
+    if (save) {
+      logger.info(`Created ${placeholderStories.length} placeholder stories`, {
+        repoId: repoRecord.repoId,
+        storyIds: placeholderStories.map((s) => s.id),
+      })
+    }
 
     // Create the sandbox and clone the repository
     const sandbox = await createDaytonaSandbox({ repoId: repoRecord.repoId })
@@ -113,46 +120,48 @@ export const discoverStoriesTask = task({
         storiesFound: discoveryResult.stories.length,
       })
 
-      void streams.append('progress', 'Updating stories')
+      if (save) {
+        void streams.append('progress', 'Updating stories')
 
-      // Update placeholder stories with discovered content
-      const storiesToUpdate = discoveryResult.stories.slice(
-        0,
-        placeholderStories.length,
-      )
-
-      for (const [i, discoveredStory] of storiesToUpdate.entries()) {
-        const placeholder = placeholderStories[i]
-
-        await db
-          .updateTable('stories')
-          .set({
-            name: discoveredStory.title || `Story ${i + 1}`,
-            story: discoveredStory.text,
-            state: 'generated',
-          })
-          .where('id', '=', placeholder.id)
-          .execute()
-
-        logger.info('Updated placeholder story with discovered content', {
-          storyId: placeholder.id,
-          title: discoveredStory.title,
-        })
-      }
-
-      // Delete extra placeholder stories if fewer stories were discovered
-      if (discoveryResult.stories.length < placeholderStories.length) {
-        const extraPlaceholders = placeholderStories.slice(
-          discoveryResult.stories.length,
+        // Update placeholder stories with discovered content
+        const storiesToUpdate = discoveryResult.stories.slice(
+          0,
+          placeholderStories.length,
         )
-        const extraIds = extraPlaceholders.map((p) => p.id)
 
-        await db.deleteFrom('stories').where('id', 'in', extraIds).execute()
+        for (const [i, discoveredStory] of storiesToUpdate.entries()) {
+          const placeholder = placeholderStories[i]
 
-        logger.info('Deleted extra placeholder stories', {
-          deletedCount: extraPlaceholders.length,
-          deletedIds: extraIds,
-        })
+          await db
+            .updateTable('stories')
+            .set({
+              name: discoveredStory.title || `Story ${i + 1}`,
+              story: discoveredStory.text,
+              state: 'generated',
+            })
+            .where('id', '=', placeholder.id)
+            .execute()
+
+          logger.info('Updated placeholder story with discovered content', {
+            storyId: placeholder.id,
+            title: discoveredStory.title,
+          })
+        }
+
+        // Delete extra placeholder stories if fewer stories were discovered
+        if (discoveryResult.stories.length < placeholderStories.length) {
+          const extraPlaceholders = placeholderStories.slice(
+            discoveryResult.stories.length,
+          )
+          const extraIds = extraPlaceholders.map((p) => p.id)
+
+          await db.deleteFrom('stories').where('id', 'in', extraIds).execute()
+
+          logger.info('Deleted extra placeholder stories', {
+            deletedCount: extraPlaceholders.length,
+            deletedIds: extraIds,
+          })
+        }
       }
 
       // Return the discovered stories
@@ -164,18 +173,20 @@ export const discoverStoriesTask = task({
         error,
       })
 
-      // On error, delete placeholder stories to avoid leaving orphaned records
-      const placeholderIds = placeholderStories.map((s) => s.id)
-      await db
-        .deleteFrom('stories')
-        .where('id', 'in', placeholderIds)
-        .execute()
-        .catch((deleteError) => {
-          logger.error('Failed to clean up placeholder stories after error', {
-            error: deleteError,
-            placeholderIds,
+      // On error, delete placeholder stories to avoid leaving orphaned records (only if saving)
+      if (save) {
+        const placeholderIds = placeholderStories.map((s) => s.id)
+        await db
+          .deleteFrom('stories')
+          .where('id', 'in', placeholderIds)
+          .execute()
+          .catch((deleteError) => {
+            logger.error('Failed to clean up placeholder stories after error', {
+              error: deleteError,
+              placeholderIds,
+            })
           })
-        })
+      }
 
       throw error
     } finally {

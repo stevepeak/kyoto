@@ -231,6 +231,7 @@ export const repoRouter = router({
           await tasks.trigger('discover-stories', {
             repoSlug,
             storyCount: 3,
+            save: true,
           })
         }
       }
