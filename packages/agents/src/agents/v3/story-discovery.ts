@@ -41,86 +41,75 @@ type StoryDiscoveryAgentOptions = {
 }
 
 function buildDiscoveryInstructions(): string {
-  return `You are an expert software analyst tasked with discovering high-level user stories from a codebase.
+  return `You are an expert software analyst tasked with discovering user stories from a codebase.
 
 # 🎯 Objective
-Analyze the codebase to identify user-facing features and workflows. Focus on high-level user interactions and flows, such as:
-- Authentication flows (login, logout, sign up)
-- Navigation and routing
-- User actions (create, edit, delete operations)
-- Feature workflows (e.g., "given a user is logged in; given they have navigated to dashboard; when the user clicks 'create workspace' then a dialog...")
+Analyze the codebase to identify user-facing features and workflows. Focus on one specific functionality per story.
+
+# Story Format
+Each story must follow the classic agile format:
+
+**As a** [type of user],
+**I want** [some goal],
+**so that** [some reason].
+
+# Acceptance Criteria
+Each story must include acceptance criteria that describe the specific conditions that must be met for the story to be considered complete. List these as bullet points.
+
+# Examples
+
+Example 1 - Password Reset:
+\`\`\`
+As a registered user,
+I want to reset my password,
+so that I can regain access to my account if I forget it.
+
+Acceptance Criteria:
+- User can request a password reset via email
+- Email contains a unique, one-time-use link
+- Link expires after 15 minutes
+\`\`\`
+
+Example 2 - User Login:
+\`\`\`
+As a user,
+I want to log in with my email and password,
+so that I can access my account.
+
+Acceptance Criteria:
+- User can enter email and password on the login page
+- System validates credentials
+- User is redirected to dashboard upon successful login
+- Error message is displayed for invalid credentials
+\`\`\`
+
+Example 3 - Create Workspace:
+\`\`\`
+As a logged-in user,
+I want to create a new workspace,
+so that I can organize my projects.
+
+Acceptance Criteria:
+- User can click "create workspace" button from dashboard
+- Dialog opens with workspace creation form
+- User can enter workspace name and description
+- Workspace is created and appears in workspace list
+\`\`\`
 
 # Discovery Focus
 Look for:
-1. **Authentication & Authorization**: Login, logout, sign up, password reset flows
-2. **Navigation**: Page routing, menu navigation, breadcrumbs
-3. **User Actions**: CRUD operations, form submissions, button clicks that trigger workflows
-4. **Feature Flows**: Multi-step user journeys (e.g., create workspace → configure → save)
-5. **UI Interactions**: Dialog opens/closes, modal interactions, dropdown selections
-
-# Story Format
-Each discovered story should be written in Gherkin or natural language format, following this pattern:
-- Feature: [Feature name]
-- As a [user type]
-- I want to [action]
-- So that [benefit]
-
-- Scenario: [Scenario name]
-  - Given [precondition]
-  - When [action]
-  - Then [expected outcome]
-
-# Examples of Good Stories
-
-Example 1 - Login Flow:
-\`\`\`
-Feature: User Login
-  As a user
-  I want to log in with my email and password
-  So that I can access my account
-
-  Scenario: Successful login
-    Given I am on the login page
-    When I enter my email and password
-    Then I should be logged in
-\`\`\`
-
-Example 2 - Create Workspace:
-\`\`\`
-Feature: Create Workspace
-  As a logged-in user
-  I want to create a new workspace
-  So that I can organize my projects
-
-  Scenario: Create workspace from dashboard
-    Given I am logged in
-    And I have navigated to the dashboard
-    When I click "create workspace"
-    Then a dialog should open
-    And I can enter workspace details
-    And the workspace is created
-\`\`\`
-
-Example 3 - Logout:
-\`\`\`
-Feature: User Logout
-  As a logged-in user
-  I want to log out
-  So that I can secure my session
-
-  Scenario: Logout from menu
-    Given I am logged in
-    When I click the logout button
-    Then I should be logged out
-    And redirected to the login page
-\`\`\`
+- Authentication & Authorization flows (login, logout, sign up, password reset)
+- Navigation and routing features
+- CRUD operations (create, read, update, delete)
+- Feature workflows with multiple steps
+- UI interactions (dialogs, modals, forms, buttons)
 
 # Output Guidelines
 - Write stories in clear, natural language
+- Focus on one specific functionality per story
 - Focus on user-facing features, not implementation details
-- Each story should represent a complete user workflow
-- Include both the feature description and at least one scenario
-- Use Gherkin keywords (Given, When, Then, And, But) when appropriate
+- Each story should represent a complete, testable feature
+- Include acceptance criteria that are specific and measurable
 - Keep stories focused on high-level behavior, not low-level code details
 
 # Resources Available
@@ -165,18 +154,22 @@ If you find features that seem similar to existing stories, dig deeper to find u
 
   return `Repository: ${repoSlug}
 
-Analyze this codebase and discover ${storyCount} high-level user stories that represent the main features and workflows.
+Analyze this codebase and discover ${storyCount} user stories that represent the main features and workflows.
+
+Each story must follow the classic agile format:
+- **As a** [type of user],
+- **I want** [some goal],
+- **so that** [some reason].
+- Include acceptance criteria as bullet points
 
 Focus on:
-- Authentication flows (login, logout, sign up)
-- Navigation and routing
-- User actions (create, edit, delete operations)
+- Authentication flows (login, logout, sign up, password reset)
+- Navigation and routing features
+- CRUD operations (create, read, update, delete)
 - Feature workflows with multiple steps
-- UI interactions (dialogs, modals, forms)
+- UI interactions (dialogs, modals, forms, buttons)
 
-Each story should be written in Gherkin or natural language format with:
-- A feature description
-- At least one scenario with Given/When/Then steps${existingStoriesSection}
+Each story should focus on one specific functionality and include acceptance criteria that are specific and measurable.${existingStoriesSection}
 
 Explore the codebase using the available tools to understand the structure and identify user-facing features.
 

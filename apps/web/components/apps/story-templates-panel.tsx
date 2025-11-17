@@ -112,8 +112,8 @@ export function StoryTemplatesPanel({
         <h2 className="text-sm font-medium text-foreground">Story Templates</h2>
         <p className="text-xs text-muted-foreground mt-1">
           The templates below are suggested to help you get started, but you are
-          free to write your story in any format you like—none of these are
-          required.
+          <b>free to write your story in any format you like</b>. None of these
+          are required, but you can use them as a starting point.
         </p>
       </div>
       <div className="flex-1 overflow-y-auto">

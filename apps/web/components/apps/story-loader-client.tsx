@@ -15,6 +15,21 @@ import { StoryCreateForm } from '@/components/apps/story-create-form'
 import { StoryDecompositionTab } from '@/components/apps/story-decomposition-tab'
 import { StoryRunsTab } from '@/components/apps/story-runs-tab'
 import type { DecompositionOutput } from '@app/schemas'
+import {
+  TriggerDevTrackingDialog,
+  useTriggerDevTracking,
+} from '@/components/common/workflow-tracking-dialog'
+import { EmptyState } from '@/components/common/EmptyState'
+import { Loader2 } from 'lucide-react'
+import { useRealtimeRun } from '@trigger.dev/react-hooks'
+
+// Define StoryDiscoveryOutput type locally to avoid importing from @app/agents
+interface StoryDiscoveryOutput {
+  stories: Array<{
+    text: string
+    title?: string
+  }>
+}
 
 interface Story {
   id: string
@@ -70,6 +85,7 @@ export function StoryLoaderClient({
   // UI state (dialogs and flags)
   const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [showTemplatesDialog, setShowTemplatesDialog] = useState(false)
+  const [showGenerationDialog, setShowGenerationDialog] = useState(false)
   const [createMore, setCreateMore] = useState(false)
 
   // Action states
@@ -78,6 +94,11 @@ export function StoryLoaderClient({
   const [isTogglingState, setIsTogglingState] = useState(false)
   const [isDecomposing, setIsDecomposing] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationRunId, setGenerationRunId] = useState<string | null>(null)
+  const [generationAccessToken, setGenerationAccessToken] = useState<
+    string | null
+  >(null)
 
   // Derived values
   const hasContentChanges = storyContent !== originalStoryContent
@@ -170,6 +191,101 @@ export function StoryLoaderClient({
       setIsSaving(false)
     }
   }
+
+  const handleGenerate = async () => {
+    if (!isCreateMode) {
+      return // Only allow generation in create mode
+    }
+
+    setIsGenerating(true)
+    setError(null)
+
+    try {
+      const result = await trpc.story.generate.mutate({
+        orgName,
+        repoName,
+      })
+
+      if (result.triggerHandle?.publicAccessToken && result.triggerHandle?.id) {
+        // Set the run ID and token to enable the hook
+        setGenerationRunId(result.triggerHandle.id)
+        setGenerationAccessToken(result.triggerHandle.publicAccessToken)
+        // Open the dialog to show progress
+        setShowGenerationDialog(true)
+        // Keep isGenerating true while dialog is open - don't set to false here
+      } else {
+        throw new Error('Failed to get trigger handle')
+      }
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Failed to generate story. Please try again.',
+      )
+      toast.error('Failed to generate story')
+      setIsGenerating(false)
+    }
+  }
+
+  // Use the realtime run hook to track story generation
+  const { run: generationRun, error: generationError } = useRealtimeRun(
+    generationRunId ?? '',
+    {
+      accessToken: generationAccessToken ?? undefined,
+      enabled: generationRunId !== null && generationAccessToken !== null,
+    },
+  )
+
+  // Handle story generation completion
+  const handleGenerationComplete = () => {
+    if (generationRun) {
+      // Extract the story from the output
+      const output = generationRun.output as StoryDiscoveryOutput | undefined
+      if (output?.stories && output.stories.length > 0) {
+        const generatedStory = output.stories[0]
+        setStoryContent(generatedStory.text)
+        if (generatedStory.title) {
+          setStoryName(generatedStory.title)
+        }
+        toast.success('Story generated successfully')
+      } else {
+        setError('No story was generated')
+        toast.error('No story was generated')
+      }
+    }
+    // Clean up
+    setIsGenerating(false)
+    setGenerationRunId(null)
+    setGenerationAccessToken(null)
+    setShowGenerationDialog(false)
+  }
+
+  // Handle dialog close (manual or on completion)
+  const handleGenerationDialogChange = (open: boolean) => {
+    setShowGenerationDialog(open)
+    if (!open) {
+      // If dialog is closed manually, clean up
+      setIsGenerating(false)
+      setGenerationRunId(null)
+      setGenerationAccessToken(null)
+    }
+  }
+
+  // Handle generation errors
+  useEffect(() => {
+    if (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : 'Failed to generate story',
+      )
+      toast.error('Failed to generate story')
+      setIsGenerating(false)
+      setGenerationRunId(null)
+      setGenerationAccessToken(null)
+      setShowGenerationDialog(false)
+    }
+  }, [generationError])
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -486,11 +602,13 @@ export function StoryLoaderClient({
                 storyContent={storyContent}
                 createMore={createMore}
                 isSaving={isSaving}
+                isGenerating={isGenerating}
                 onContentChange={setStoryContent}
                 onCreateMoreChange={setCreateMore}
                 onSave={handleSave}
                 onCancel={handleCancel}
                 onTemplates={() => setShowTemplatesDialog(true)}
+                onGenerate={handleGenerate}
               />
             )}
           </div>
@@ -510,6 +628,68 @@ export function StoryLoaderClient({
         isArchiving={isArchiving}
         onArchive={handleArchive}
       />
+      <TriggerDevTrackingDialog
+        open={showGenerationDialog}
+        onOpenChange={handleGenerationDialogChange}
+        runId={generationRunId}
+        publicAccessToken={generationAccessToken}
+        onComplete={handleGenerationComplete}
+      >
+        <StoryGenerationTrackingContent />
+      </TriggerDevTrackingDialog>
     </AppLayout>
+  )
+}
+
+function StoryGenerationTrackingContent() {
+  const { isLoading, isCompleted, error, closeDialog } = useTriggerDevTracking()
+
+  if (isLoading) {
+    return (
+      <EmptyState
+        kanji="そうぞう"
+        kanjiTitle="Sōzō - creation."
+        title="Generating story..."
+        description="Analyzing your codebase to discover a new user story. This may take a minute."
+        action={
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        }
+      />
+    )
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        title="Generation failed"
+        description={error}
+        action={
+          <Button onClick={closeDialog} variant="outline">
+            Close
+          </Button>
+        }
+      />
+    )
+  }
+
+  if (isCompleted) {
+    return (
+      <EmptyState
+        kanji="せいこう"
+        kanjiTitle="Seikō - success."
+        title="Story generated"
+        description="Your story has been generated and added to the editor."
+        action={<Button onClick={closeDialog}>Close</Button>}
+      />
+    )
+  }
+
+  return (
+    <EmptyState
+      title="Preparing generation..."
+      description="Setting up story generation."
+    />
   )
 }

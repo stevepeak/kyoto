@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
-import { z } from 'zod'
 import type { Updateable } from 'kysely'
+import { z } from 'zod'
 
 import type { Story } from '@app/db/types'
 import {
@@ -406,6 +406,56 @@ export const storyRouter = router({
       return {
         queued: true,
         runId: runHandle.id,
+      }
+    }),
+
+  generate: protectedProcedure
+    .input(
+      z.object({
+        orgName: z.string(),
+        repoName: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const repo = await requireRepoForUser(ctx.db, {
+        orgName: input.orgName,
+        repoName: input.repoName,
+        userId,
+      })
+
+      // Get owner info for repo slug
+      const owner = await ctx.db
+        .selectFrom('owners')
+        .selectAll()
+        .where('id', '=', repo.ownerId)
+        .executeTakeFirst()
+
+      if (!owner) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Owner not found',
+        })
+      }
+
+      const repoSlug = `${owner.login}/${repo.name}`
+
+      // Trigger the discover-stories task
+      const handle = await tasks.trigger('discover-stories', {
+        repoSlug,
+        storyCount: 1,
+      })
+
+      return {
+        triggerHandle: {
+          publicAccessToken: handle.publicAccessToken,
+          id: handle.id,
+        },
       }
     }),
 })
