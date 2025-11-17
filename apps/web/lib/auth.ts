@@ -21,19 +21,7 @@ function getDb() {
 
 function getBaseUrl(): string {
   // Server-side: use environment variable or default
-  if (process.env.SITE_BASE_URL) {
-    return process.env.SITE_BASE_URL
-  }
-  if (process.env.SITE_PRODUCTION_URL) {
-    return `https://${process.env.SITE_PRODUCTION_URL}`
-  }
-  if (process.env.SITE_PREVIEW_BRANCH_URL) {
-    return `https://${process.env.SITE_PREVIEW_BRANCH_URL}`
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
-  }
-  return 'http://localhost:3001'
+  return 'https://usekyoto.com'
 }
 
 function getTrustedOrigins(): string[] {
