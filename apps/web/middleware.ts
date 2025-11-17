@@ -56,4 +56,3 @@ export function middleware(request: NextRequest) {
   // Note: Full session validation happens in server components/API routes
   return NextResponse.next()
 }
-

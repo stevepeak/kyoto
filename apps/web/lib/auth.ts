@@ -51,10 +51,7 @@ function getTrustedOrigins(): string[] {
   }
 
   // Include usekyoto.com
-  origins.push('https://usekyoto.com')
-
-  // Include localhost for development
-  origins.push('http://localhost:3001')
+  origins.push('https://usekyoto.com', 'http://localhost:3001')
 
   // Include any additional trusted origins from environment variable
   if (process.env.BETTER_AUTH_TRUSTED_ORIGINS) {
