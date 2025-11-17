@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Bug, GitCommit, Languages, ShieldCheck } from 'lucide-react'
 
-export type Feature = {
+type Feature = {
   katakana: string
   romaji: string
   name: string
@@ -9,13 +9,7 @@ export type Feature = {
   icon: LucideIcon
 }
 
-export type Metric = {
-  label: string
-  value: string
-  helper?: string
-}
-
-export type PricingTier = {
+type PricingTier = {
   name: string
   price: string
   description: string
@@ -24,16 +18,16 @@ export type PricingTier = {
   features: string[]
 }
 
-export type Faq = {
+type Faq = {
   question: string
   answer: string
 }
 
-export type Story = {
+type Story = {
   quote: string
 }
 
-export type SupportChannel = {
+type SupportChannel = {
   label: string
   icon: LucideIcon
   href: string
@@ -71,19 +65,6 @@ export const coreFeatures: Feature[] = [
     description:
       'Tests are written in natural language, without any required format.',
     icon: Languages,
-  },
-]
-
-export const platformMetrics: Metric[] = [
-  {
-    label: 'Regression caught',
-    value: '93%',
-    helper: 'Critical bugs surfaced before reaching production',
-  },
-  {
-    label: 'Developer hours saved',
-    value: '26h',
-    helper: 'Average engineering time reclaimed every sprint',
   },
 ]
 

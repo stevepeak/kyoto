@@ -34,7 +34,7 @@ export interface RunStory {
   testResult: StoryTestResult | null
 }
 
-export interface GitAuthor {
+type GitAuthor = {
   id: number
   login: string
   name: string

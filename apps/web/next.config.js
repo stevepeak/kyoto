@@ -13,6 +13,19 @@ const nextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Link',
+            value: '<https://api.github.com>; rel=preconnect; crossorigin=anonymous',
+          },
+        ],
+      },
+    ]
+  },
   webpack: (config) => {
     // Suppress webpack warnings from Sentry/OpenTelemetry instrumentation
     config.ignoreWarnings = [

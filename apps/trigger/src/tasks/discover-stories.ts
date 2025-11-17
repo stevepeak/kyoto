@@ -116,8 +116,7 @@ export const discoverStoriesTask = task({
         placeholderStories.length,
       )
 
-      for (let i = 0; i < storiesToUpdate.length; i++) {
-        const discoveredStory = storiesToUpdate[i]
+      for (const [i, discoveredStory] of storiesToUpdate.entries()) {
         const placeholder = placeholderStories[i]
 
         await db

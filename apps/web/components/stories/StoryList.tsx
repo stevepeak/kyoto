@@ -57,19 +57,6 @@ export function StoryList({ stories, orgName, repoName }: StoryListProps) {
                   <KeyboardShortcutHint />
                 </a>
               </Button>
-              <span className="text-xs text-muted">— or —</span>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  window.alert('Coming soon')
-                }}
-                className="gap-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 hover:from-primary/20 hover:via-primary/10 hover:to-primary/20 hover:border-primary/50 transition-all shadow-sm hover:shadow-md backdrop-blur-sm relative overflow-hidden group"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-effect"></span>
-                <Sparkles className="h-4 w-4 text-primary relative z-10" />
-                <span className="relative z-10">AI Generate Story</span>
-              </Button>
             </div>
           }
         />

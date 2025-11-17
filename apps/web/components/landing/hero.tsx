@@ -1,16 +1,24 @@
 'use client'
 
+import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
 import { GitHubSignInButton } from '@/components/github-sign-in-button'
 
 export function LandingHero() {
   return (
-    <section
-      className="relative min-h-[90vh] overflow-hidden bg-cover bg-left-bottom bg-no-repeat pt-8 pb-20 sm:pt-10 sm:pb-24 lg:pt-12 lg:pb-32"
-      style={{ backgroundImage: "url('/kyoto.png')" }}
-    >
-      <div className="container flex flex-col gap-12 px-6 pt-4 pb-12 lg:flex-row lg:items-center lg:justify-between lg:pb-16">
+    <section className="relative min-h-[90vh] overflow-hidden pt-8 pb-20 sm:pt-10 sm:pb-24 lg:pt-12 lg:pb-32">
+      <div className="absolute inset-0">
+        <Image
+          src="/kyoto.png"
+          alt=""
+          fill
+          className="object-cover object-left-bottom"
+          priority
+          sizes="100vw"
+        />
+      </div>
+      <div className="container relative z-10 flex flex-col gap-12 px-6 pt-4 pb-12 lg:flex-row lg:items-center lg:justify-between lg:pb-16">
         <div className="max-w-xl space-y-8">
           <span className="inline-flex items-center gap-2 rounded-full bg-background/70 px-4 py-1 text-sm font-medium text-muted-foreground">
             👋 Meet Kyoto, from the creators of Codecov

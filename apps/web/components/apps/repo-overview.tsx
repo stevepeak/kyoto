@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@app/api'
 import { SiGithub } from 'react-icons/si'
@@ -12,69 +11,14 @@ import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { RunList } from '@/components/runs/RunList'
 import { StoryList } from '@/components/stories/StoryList'
-import {
-  TriggerDevTrackingDialog,
-  useTriggerDevTracking,
-} from '@/components/common/workflow-tracking-dialog'
-import { EmptyState } from '@/components/common/EmptyState'
+import { TriggerDevTrackingDialog } from '@/components/common/workflow-tracking-dialog'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
+import { RunTrackingContent } from './repo-overview/RunTrackingContent'
+import { useRepoKeyboardShortcuts } from './repo-overview/hooks/useRepoKeyboardShortcuts'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]
 type StoryItem = RouterOutputs['story']['listByRepo']['stories'][number]
-
-function RunTrackingContent() {
-  const { isLoading, isCompleted, error, closeDialog } = useTriggerDevTracking()
-
-  if (isLoading) {
-    return (
-      <EmptyState
-        kanji="いとかんしょう"
-        kanjiTitle="Ito-kenshō - intent testing."
-        title="Running tests..."
-        description="Your CI run is in progress. This may take a few minutes."
-        action={
-          <div className="flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </div>
-        }
-      />
-    )
-  }
-
-  if (error) {
-    return (
-      <EmptyState
-        title="Run failed"
-        description={error}
-        action={
-          <Button onClick={closeDialog} variant="outline">
-            Close
-          </Button>
-        }
-      />
-    )
-  }
-
-  if (isCompleted) {
-    return (
-      <EmptyState
-        kanji="せいこう"
-        kanjiTitle="Seikō - success."
-        title="Run completed"
-        description="Your CI run has completed successfully."
-        action={<Button onClick={closeDialog}>Close</Button>}
-      />
-    )
-  }
-
-  return (
-    <EmptyState
-      title="Waiting for run..."
-      description="Preparing to track your CI run."
-    />
-  )
-}
 
 interface Props {
   orgName: string
@@ -94,7 +38,6 @@ export function RepoOverview({
   onRefreshRuns,
 }: Props) {
   const trpc = useTRPCClient()
-  const router = useRouter()
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   // Dialog state - local to this component
@@ -109,22 +52,8 @@ export function RepoOverview({
     (run) => run.status === 'queued' || run.status === 'running',
   )
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const isMac = navigator.platform.includes('Mac')
-      const modifierKey = isMac ? event.metaKey : event.ctrlKey
-
-      if (modifierKey && event.key === 'Enter') {
-        event.preventDefault()
-        router.push(`/org/${orgName}/repo/${repoName}/stories/new`)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [orgName, repoName, router])
+  // Handle keyboard shortcuts
+  useRepoKeyboardShortcuts({ orgName, repoName })
 
   const handleStartRun = async () => {
     if (!defaultBranch) {

@@ -51,7 +51,7 @@ export function StoryCreateForm({
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-effect"></span>
               <Sparkles className="h-4 w-4 text-primary relative z-10" />
               <span className="relative z-10">
-                {isGenerating ? 'Generating...' : 'Generate Story'}
+                {isGenerating ? 'Generating...' : 'Generate'}
               </span>
             </Button>
           </div>

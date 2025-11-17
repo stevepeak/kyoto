@@ -73,14 +73,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          rel="preconnect"
-          href="https://api.github.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://api.github.com" />
-      </head>
       <body
         className={`${inter.variable} ${manrope.variable} ${cormorantGaramond.variable}`}
       >

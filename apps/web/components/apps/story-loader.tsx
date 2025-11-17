@@ -4,7 +4,7 @@ import { getTRPCCaller } from '@/lib/trpc-server'
 import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 
-import { StoryLoaderClient } from './story-loader-client'
+import { StoryLoaderClient } from './story-loader/index'
 import type { DecompositionOutput } from '@app/schemas'
 
 interface Story {

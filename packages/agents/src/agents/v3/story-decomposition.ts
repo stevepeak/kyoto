@@ -50,6 +50,9 @@ Think like a QA engineer reasoning through both behavior and domain state.
 Stay within the bounds of the user story itself.
 DO NOT add additional requirements or assertions unless they are explicitly stated in the original user story.
 
+# Language Rules
+- Do not use temporal adverbs like "immediately", "instantly", "right away", etc. if necessary use the word "then" or "after" instead.
+
 # Resources Available
 You have read-only tools to:
 - Explore repository structure and contents.

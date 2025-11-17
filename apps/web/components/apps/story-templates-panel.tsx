@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
 import { cn } from '@/lib/utils'
 
-export interface StoryTemplate {
+interface StoryTemplate {
   id: string
   title: string
   content: string
 }
 
-export const STORY_TEMPLATES: StoryTemplate[] = [
+const STORY_TEMPLATES: StoryTemplate[] = [
   {
     id: 'classic',
     title: '🧩 Classic User Story Format (Agile Standard)',

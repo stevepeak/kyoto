@@ -25,8 +25,13 @@ const config: KnipConfig = {
         '**/dist/**',
         '**/*.d.ts',
         '**/.eslintrc.json',
+        'hooks/use-mobile.ts',
       ],
-      ignoreDependencies: ['@radix-ui/react-label', 'kysely'],
+      ignoreDependencies: [
+        '@radix-ui/react-label',
+        'kysely',
+        '@radix-ui/react-separator',
+      ],
     },
     'apps/trigger': {
       entry: ['trigger.config.ts'],
@@ -64,7 +69,7 @@ const config: KnipConfig = {
     },
   },
   ignore: [
-    'apps/web/components/**',
+    'apps/web/components/ui/**',
     '**/node_modules/**',
     '**/dist/**',
     '**/.turbo/**',

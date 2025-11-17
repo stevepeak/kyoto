@@ -102,7 +102,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse payload
-    const payload = JSON.parse(rawBody)
+    const payload = JSON.parse(rawBody) as unknown
+
+    // Extract repository info safely for tags
+    const tags: string[] = []
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'repository' in payload &&
+      payload.repository &&
+      typeof payload.repository === 'object'
+    ) {
+      const repo = payload.repository as Record<string, unknown>
+      if (typeof repo.name === 'string') {
+        tags.push(`repo_${repo.name}`)
+      }
+      if (
+        repo.owner &&
+        typeof repo.owner === 'object' &&
+        'login' in repo.owner &&
+        typeof repo.owner.login === 'string'
+      ) {
+        tags.push(`owner_${repo.owner.login}`)
+      }
+    }
 
     // Trigger the webhook task
     await tasks.trigger(
@@ -113,14 +136,7 @@ export async function POST(request: NextRequest) {
         payload,
       },
       {
-        tags: [
-          ...(payload?.repository?.name
-            ? [`repo_${payload.repository.name}`]
-            : []),
-          ...(payload?.repository?.owner?.login
-            ? [`owner_${payload.repository.owner.login}`]
-            : []),
-        ],
+        tags,
       },
     )
 
