@@ -7,7 +7,6 @@ import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
 import { createReadFileTool } from '../../tools/read-file-tool'
 import { createResolveLibraryTool } from '../../tools/context7-tool'
-import { createLspTool } from '../../tools/lsp-tool'
 import { logger } from '@trigger.dev/sdk'
 import type { LanguageModel } from 'ai'
 import { rawStoryInputSchema } from '@app/schemas'
@@ -189,7 +188,6 @@ export async function runStoryDiscoveryAgent({
       terminalCommand: createTerminalCommandTool({ sandbox }),
       readFile: createReadFileTool({ sandbox }),
       resolveLibrary: createResolveLibraryTool(),
-      lsp: createLspTool({ sandbox }),
     },
     experimental_telemetry: {
       isEnabled: true,
