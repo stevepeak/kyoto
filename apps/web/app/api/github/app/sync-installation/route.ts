@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       {
         idempotencyKey: `sync-${installation_id}`,
         idempotencyKeyTTL: '10m',
+        priority: 10,
       },
     )
 

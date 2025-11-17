@@ -173,18 +173,26 @@ export const storyRouter = router({
         .executeTakeFirstOrThrow()
 
       // Trigger story decomposition task
-      await tasks.trigger('story-decomposition', {
-        story: {
-          id: newStory.id,
-          text: newStory.story,
-          title: input.name?.trim() || '',
+      await tasks.trigger(
+        'story-decomposition',
+        {
+          story: {
+            id: newStory.id,
+            text: newStory.story,
+            title: input.name?.trim() || '',
+          },
+          repo: {
+            id: repo.id,
+            slug: `${input.orgName}/${input.repoName}`,
+            branchName: repo.defaultBranch ?? undefined,
+          },
         },
-        repo: {
-          id: repo.id,
-          slug: `${input.orgName}/${input.repoName}`,
-          branchName: repo.defaultBranch ?? undefined,
+        {
+          tags: [`owner_${input.orgName}`, `repo_${input.repoName}`],
+          priority: 10,
+          idempotencyKey: `story-decomposition-${newStory.id}`,
         },
-      })
+      )
 
       return {
         story: newStory,
@@ -250,18 +258,26 @@ export const storyRouter = router({
 
       // Trigger story decomposition task if story text was updated
       if (input.story !== undefined) {
-        await tasks.trigger('story-decomposition', {
-          story: {
-            id: updatedStory.id,
-            text: updatedStory.story,
-            title: input.name || updatedStory.name || '',
+        await tasks.trigger(
+          'story-decomposition',
+          {
+            story: {
+              id: updatedStory.id,
+              text: updatedStory.story,
+              title: input.name || updatedStory.name || '',
+            },
+            repo: {
+              id: repo.id,
+              slug: `${input.orgName}/${input.repoName}`,
+              branchName: repo.defaultBranch ?? undefined,
+            },
           },
-          repo: {
-            id: repo.id,
-            slug: `${input.orgName}/${input.repoName}`,
-            branchName: repo.defaultBranch ?? undefined,
+          {
+            tags: [`owner_${input.orgName}`, `repo_${input.repoName}`],
+            priority: 10,
+            idempotencyKey: `story-decomposition-${updatedStory.id}`,
           },
-        })
+        )
       }
 
       return {
@@ -391,17 +407,25 @@ export const storyRouter = router({
         })
       }
 
-      const runHandle = await tasks.trigger('story-decomposition', {
-        story: {
-          id: storyWithRepo.story.id,
-          text: storyWithRepo.story.story,
-          title: storyWithRepo.story.name || '',
+      const runHandle = await tasks.trigger(
+        'story-decomposition',
+        {
+          story: {
+            id: storyWithRepo.story.id,
+            text: storyWithRepo.story.story,
+            title: storyWithRepo.story.name || '',
+          },
+          repo: {
+            id: storyWithRepo.repo.id,
+            slug: `${owner.login}/${storyWithRepo.repo.name}`,
+          },
         },
-        repo: {
-          id: storyWithRepo.repo.id,
-          slug: `${owner.login}/${storyWithRepo.repo.name}`,
+        {
+          tags: [`owner_${owner.login}`, `repo_${storyWithRepo.repo.name}`],
+          priority: 10,
+          idempotencyKey: `story-decomposition-${storyWithRepo.story.id}`,
         },
-      })
+      )
 
       return {
         queued: true,
@@ -446,10 +470,19 @@ export const storyRouter = router({
       const repoSlug = `${owner.login}/${repo.name}`
 
       // Trigger the discover-stories task
-      const handle = await tasks.trigger('discover-stories', {
-        repoSlug,
-        storyCount: 1,
-      })
+      const handle = await tasks.trigger(
+        'discover-stories',
+        {
+          repoSlug,
+          storyCount: 1,
+        },
+        {
+          tags: [`owner_${owner.login}`, `repo_${repo.name}`],
+          priority: 10,
+          idempotencyKey: `discover-stories-${repo.id}`,
+          idempotencyKeyTTL: '1m',
+        },
+      )
 
       return {
         triggerHandle: {

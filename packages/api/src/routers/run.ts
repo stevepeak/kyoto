@@ -199,7 +199,10 @@ export const runRouter = router({
           repoName: input.repoName,
           branchName: input.branchName,
         },
-        { tags: [`org_${input.orgName}`, `repo_${input.repoName}`] },
+        {
+          tags: [`org_${input.orgName}`, `repo_${input.repoName}`],
+          priority: 10,
+        },
       )
 
       return {

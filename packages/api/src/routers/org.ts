@@ -120,9 +120,17 @@ export const orgRouter = router({
 
     const results = await Promise.allSettled(
       installations.map((installation) =>
-        tasks.trigger('sync-github-installation', {
-          installationId: installation.installationId,
-        }),
+        tasks.trigger(
+          'sync-github-installation',
+          {
+            installationId: installation.installationId,
+          },
+          {
+            idempotencyKey: `sync-${installation.installationId}`,
+            idempotencyKeyTTL: '10m',
+            priority: 10,
+          },
+        ),
       ),
     )
 

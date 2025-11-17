@@ -51,7 +51,7 @@ export function useStoryGeneration({
     [setStoryContent, setStoryName, setError],
   )
 
-  // Use trigger run hook to track the generation
+  // Use trigger run hook to track the generation (output only, completion handled by StoryGenerationTracking)
   const { output } = useTriggerRun<StoryDiscoveryOutput>({
     runId: generationRunId,
     publicAccessToken: generationAccessToken,
@@ -59,14 +59,8 @@ export function useStoryGeneration({
       showGenerationDialog &&
       generationRunId !== null &&
       generationAccessToken !== null,
-    onComplete: (output) => {
-      handleStoryOutput(output)
-      // Clean up
-      setIsGenerating(false)
-      setGenerationRunId(null)
-      setGenerationAccessToken(null)
-      setShowGenerationDialog(false)
-    },
+    // Don't handle completion here - let StoryGenerationTracking handle it
+    // to avoid race conditions and duplicate dialog closes
     onError: (err) => {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to generate story'
@@ -80,26 +74,31 @@ export function useStoryGeneration({
   })
 
   // Handle story generation completion (called from dialog)
-  const handleGenerationComplete = useCallback(() => {
-    if (output) {
-      handleStoryOutput(output)
-    } else {
-      setError('Story generation is still processing')
-    }
-    // Clean up
-    setIsGenerating(false)
-    setGenerationRunId(null)
-    setGenerationAccessToken(null)
-    setShowGenerationDialog(false)
-  }, [
-    output,
-    handleStoryOutput,
-    setIsGenerating,
-    setGenerationRunId,
-    setGenerationAccessToken,
-    setShowGenerationDialog,
-    setError,
-  ])
+  const handleGenerationComplete = useCallback(
+    (outputFromDialog?: StoryDiscoveryOutput) => {
+      // Use output from dialog if provided, otherwise fall back to hook output
+      const finalOutput = outputFromDialog ?? output
+      if (finalOutput) {
+        handleStoryOutput(finalOutput)
+      } else {
+        setError('Story generation is still processing')
+      }
+      // Clean up
+      setIsGenerating(false)
+      setGenerationRunId(null)
+      setGenerationAccessToken(null)
+      setShowGenerationDialog(false)
+    },
+    [
+      output,
+      handleStoryOutput,
+      setIsGenerating,
+      setGenerationRunId,
+      setGenerationAccessToken,
+      setShowGenerationDialog,
+      setError,
+    ],
+  )
 
   // Handle dialog close (manual or on completion)
   const handleGenerationDialogChange = useCallback(

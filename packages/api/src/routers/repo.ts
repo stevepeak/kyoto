@@ -228,11 +228,18 @@ export const repoRouter = router({
         if (owner) {
           const repoSlug = `${owner.login}/${repo.name}`
 
-          await tasks.trigger('discover-stories', {
-            repoSlug,
-            storyCount: 3,
-            save: true,
-          })
+          await tasks.trigger(
+            'discover-stories',
+            {
+              repoSlug,
+              storyCount: 3,
+              save: true,
+            },
+            {
+              tags: [`owner_${owner.login}`, `repo_${repo.name}`],
+              priority: 10,
+            },
+          )
         }
       }
 

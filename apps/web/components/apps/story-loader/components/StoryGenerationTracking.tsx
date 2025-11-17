@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
+import type { StoryDiscoveryOutput } from '../types'
 
 interface StoryGenerationTrackingProps {
   runId: string | null
   publicAccessToken: string | null
-  onComplete?: () => void
+  onComplete?: (output: StoryDiscoveryOutput) => void
   onClose?: () => void
 }
 
@@ -34,13 +35,13 @@ export function StoryGenerationTracking({
     setStreamText(text)
   }, [])
 
-  const { isFailed, error } = useTriggerRun({
+  const { isFailed, error } = useTriggerRun<StoryDiscoveryOutput>({
     runId,
     publicAccessToken,
     enabled: runId !== null && publicAccessToken !== null,
-    onComplete: () => {
-      if (onComplete) {
-        onComplete()
+    onComplete: (output) => {
+      if (onComplete && output) {
+        onComplete(output)
       }
       // Close dialog after a brief delay to show success state
       if (onClose) {
