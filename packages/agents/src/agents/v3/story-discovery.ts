@@ -36,6 +36,7 @@ type StoryDiscoveryAgentOptions = {
     telemetryTracer?: Tracer
     maxSteps?: number
     model?: LanguageModel
+    existingStoryTitles?: string[]
   }
 }
 
@@ -141,7 +142,27 @@ Focus on high-level user interactions, not implementation details.
 `
 }
 
-function buildDiscoveryPrompt(repoSlug: string, storyCount: number): string {
+function buildDiscoveryPrompt(
+  repoSlug: string,
+  storyCount: number,
+  existingStoryTitles: string[] = [],
+): string {
+  const existingStoriesSection =
+    existingStoryTitles.length > 0
+      ? `\n\n# ⚠️ IMPORTANT: Avoid Existing Stories
+The following stories have already been discovered for this repository. You MUST avoid discovering similar or duplicate stories. Focus on finding NEW and NOVEL features that are not already covered:
+
+${existingStoryTitles.map((title, index) => `${index + 1}. ${title}`).join('\n')}
+
+Your goal is to discover ${storyCount} NEW stories that are:
+- Different from the existing stories listed above
+- Cover features or workflows not already documented
+- Provide novel insights into the codebase
+- Focus on areas that haven't been explored yet
+
+If you find features that seem similar to existing stories, dig deeper to find unique aspects, edge cases, or alternative user flows that haven't been documented.`
+      : ''
+
   return `Repository: ${repoSlug}
 
 Analyze this codebase and discover ${storyCount} high-level user stories that represent the main features and workflows.
@@ -155,7 +176,7 @@ Focus on:
 
 Each story should be written in Gherkin or natural language format with:
 - A feature description
-- At least one scenario with Given/When/Then steps
+- At least one scenario with Given/When/Then steps${existingStoriesSection}
 
 Explore the codebase using the available tools to understand the structure and identify user-facing features.
 
@@ -192,7 +213,11 @@ export async function runStoryDiscoveryAgent({
     experimental_output: Output.object({ schema: storyDiscoveryOutputSchema }),
   })
 
-  const prompt = buildDiscoveryPrompt(repo.slug, options.storyCount)
+  const prompt = buildDiscoveryPrompt(
+    repo.slug,
+    options.storyCount,
+    options.existingStoryTitles,
+  )
 
   const result = await agent.generate({ prompt })
 
