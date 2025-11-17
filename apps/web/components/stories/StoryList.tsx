@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/common/EmptyState'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 import { StoryCard } from './StoryCard'
 
+import type { StoryState } from '@app/db/types'
 import type { TestStatus } from '@app/schemas'
 
 type StoryStatus = TestStatus | null
@@ -12,6 +13,7 @@ interface StoryItem {
   id: string
   name: string
   story: string
+  state: StoryState
   createdAt: string | null
   updatedAt: string | null
   groups: string[]
@@ -84,6 +86,7 @@ export function StoryList({ stories, orgName, repoName }: StoryListProps) {
             name={story.name}
             href={`/org/${orgName}/repo/${repoName}/stories/${story.id}`}
             groups={story.groups}
+            state={story.state}
           />
         </li>
       ))}

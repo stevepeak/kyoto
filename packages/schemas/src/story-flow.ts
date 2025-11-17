@@ -84,7 +84,8 @@ export const rawStorySchema = rawStoryInputSchema.extend({
   repoId: z.string().uuid(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  archived: z.boolean().default(false),
+  state: z.enum(['active', 'generated', 'paused', 'archived', 'planned', 'processing']).default('active'),
+  metadata: z.record(z.unknown()).nullable().optional(),
 })
 
 export type RawStory = z.infer<typeof rawStorySchema>

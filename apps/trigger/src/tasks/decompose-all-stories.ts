@@ -25,7 +25,7 @@ export const decomposeAllStoriesTask = task({
         'repos.name as repoName',
         'owners.login as ownerLogin',
       ])
-      .where('stories.archived', '=', false)
+      .where('stories.state', '!=', 'archived')
       .execute()
 
     logger.info(`Found ${stories.length} stories to decompose`)

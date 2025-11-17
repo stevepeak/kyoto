@@ -6,7 +6,8 @@ CREATE TYPE public.story_state AS ENUM (
     'generated',
     'paused',
     'archived',
-    'planned'
+    'planned',
+    'processing'
 );
 
 -- Add state column with default 'active'

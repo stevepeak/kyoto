@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict CiF4kzfFKy6bWMrI450XKPY6HoaKN7KJ4hpxWDcGGjgIhhDChfPffLIQidSx6Ty
+\restrict 74i1Q8lLeEWIPtfIlKafJDAsSXoJdxB1miMKmw8u4rFxKfGucxwcIbAs7rUfeVs
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -59,7 +59,8 @@ CREATE TYPE public.story_state AS ENUM (
     'generated',
     'paused',
     'archived',
-    'planned'
+    'planned',
+    'processing'
 );
 
 
@@ -1845,5 +1846,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CiF4kzfFKy6bWMrI450XKPY6HoaKN7KJ4hpxWDcGGjgIhhDChfPffLIQidSx6Ty
+\unrestrict 74i1Q8lLeEWIPtfIlKafJDAsSXoJdxB1miMKmw8u4rFxKfGucxwcIbAs7rUfeVs
 

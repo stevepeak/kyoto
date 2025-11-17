@@ -23,7 +23,7 @@ export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
-export type StoryState = "active" | "archived" | "generated" | "paused" | "planned";
+export type StoryState = "active" | "archived" | "generated" | "paused" | "planned" | "processing";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 

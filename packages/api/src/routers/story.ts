@@ -41,7 +41,7 @@ export const storyRouter = router({
         .selectFrom('stories')
         .selectAll()
         .where('repoId', '=', repo.id)
-        .where('archived', '=', false)
+        .where('state', '!=', 'archived')
         .orderBy('createdAt', 'desc')
         .execute()
 
@@ -83,6 +83,7 @@ export const storyRouter = router({
           id: story.id,
           name: story.name,
           story: story.story,
+          state: story.state,
           createdAt: story.createdAt?.toISOString() ?? null,
           updatedAt: story.updatedAt?.toISOString() ?? null,
           groups: [], // Files column removed - groups no longer derived from files
@@ -159,13 +160,14 @@ export const storyRouter = router({
         userId,
       })
 
-      // Create story
+      // Create story with processing state
       const newStory = await ctx.db
         .insertInto('stories')
         .values({
           repoId: repo.id,
           name: input.name,
           story: input.story,
+          state: 'processing',
         })
         .returningAll()
         .executeTakeFirstOrThrow()
@@ -235,6 +237,7 @@ export const storyRouter = router({
       if (input.story !== undefined) {
         updateData.story = input.story
         updateData.decomposition = null
+        updateData.state = 'processing'
       }
 
       // Update story
@@ -305,7 +308,7 @@ export const storyRouter = router({
       // Archive story (soft delete)
       await ctx.db
         .updateTable('stories')
-        .set({ archived: true })
+        .set({ state: 'archived' })
         .where('id', '=', input.storyId)
         .execute()
 

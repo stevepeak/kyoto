@@ -1,46 +1,96 @@
+import { Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { StoryState } from '@app/db/types'
+import { getStoryStatePillStyles } from './utils'
 
 interface StoryCardProps {
   id: string
   name: string
   href: string
   groups: string[]
+  state: StoryState
 }
 
-export function StoryCard({ id: _id, name, href, groups }: StoryCardProps) {
+export function StoryCard({
+  id: _id,
+  name,
+  href,
+  groups,
+  state,
+}: StoryCardProps) {
   // Check if story is being processed (title is missing or placeholder)
   const isProcessing = !name || name.trim() === '' || name.trim() === 'foobar'
   const displayName = isProcessing
     ? 'Newly crafted story is being processed...'
     : name
 
+  const statePill = getStoryStatePillStyles(state)
+  const isGenerated = state === 'generated'
+
   return (
-    <a
-      href={href}
-      className="block px-4 py-3 text-sm transition-colors hover:bg-muted"
-    >
-      <div className="flex flex-col gap-2">
-        <span
-          className={cn(
-            'font-medium line-clamp-1',
-            isProcessing ? 'text-muted-foreground italic' : 'text-foreground',
-          )}
-        >
-          {displayName}
-        </span>
-        {groups.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {groups.map((group) => (
-              <span
-                key={group}
-                className="inline-flex items-center rounded-full bg-primary/10 px-2 py-[3px] text-[10px] font-medium text-primary"
-              >
-                {group}
+    <>
+      {isGenerated && (
+        <style>{`
+          @keyframes shimmer {
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(100%);
+            }
+          }
+          .shimmer-effect {
+            animation: shimmer 3s infinite;
+          }
+        `}</style>
+      )}
+      <a
+        href={href}
+        className="block px-4 py-3 text-sm transition-colors hover:bg-muted"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                'font-medium line-clamp-1 flex-1',
+                isProcessing
+                  ? 'text-muted-foreground italic'
+                  : 'text-foreground',
+              )}
+            >
+              {displayName}
+            </span>
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full border px-2 py-[3px] text-[10px] font-medium shrink-0',
+                statePill.className,
+                isGenerated &&
+                  'border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 backdrop-blur-sm relative overflow-hidden',
+              )}
+            >
+              {isGenerated && (
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent shimmer-effect" />
+              )}
+              {isGenerated && <Sparkles className="h-3 w-3 relative z-10" />}
+              <span className={cn(isGenerated && 'relative z-10')}>
+                {statePill.label}
               </span>
-            ))}
+            </span>
           </div>
-        )}
-      </div>
-    </a>
+          {groups.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {groups.map((group) => (
+                <span
+                  key={group}
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-[3px] text-[10px] font-medium text-primary"
+                >
+                  {group}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </a>
+    </>
   )
 }

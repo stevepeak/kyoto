@@ -32,6 +32,19 @@ export const storyDecompositionTask = task({
     const env = parseEnv()
     const db = setupDb(env.DATABASE_URL)
 
+    // Set state to processing if story.id exists
+    if (story.id) {
+      await db
+        .updateTable('stories')
+        .set({ state: 'processing' })
+        .where('id', '=', story.id)
+        .execute()
+
+      logger.info('Set story state to processing', {
+        storyId: story.id,
+      })
+    }
+
     // Create the sandbox and clone the repository
     const sandbox = await createDaytonaSandbox({ repoId: repo.id })
 
@@ -89,6 +102,7 @@ The sentence should be clear, specific, and capture the essence of what the stor
           .updateTable('stories')
           .set({
             decomposition: newDecomposition,
+            state: 'active',
           })
           .where('id', '=', story.id)
           .execute()
@@ -115,6 +129,18 @@ The sentence should be clear, specific, and capture the essence of what the stor
         repo,
         error,
       })
+      // Set state to active even on error so story can be retried
+      if (story.id) {
+        await db
+          .updateTable('stories')
+          .set({ state: 'active' })
+          .where('id', '=', story.id)
+          .execute()
+
+        logger.info('Set story state to active after error', {
+          storyId: story.id,
+        })
+      }
       throw error
     } finally {
       await sandbox.delete()
