@@ -1,4 +1,4 @@
-import { Archive } from 'lucide-react'
+import { Archive, Pause } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
@@ -9,11 +9,19 @@ interface StoryEditFormProps {
   storyContent: string
   hasChanges: boolean
   isSaving: boolean
+  storyState?:
+    | 'active'
+    | 'archived'
+    | 'generated'
+    | 'paused'
+    | 'planned'
+    | 'processing'
   onNameChange: (name: string) => void
   onContentChange: (content: string) => void
   onSave: () => void
   onCancel: () => void
   onArchive: () => void
+  onPause: () => void
 }
 
 export function StoryEditForm({
@@ -21,11 +29,13 @@ export function StoryEditForm({
   storyContent,
   hasChanges,
   isSaving,
+  storyState,
   onNameChange,
   onContentChange,
   onSave,
   onCancel,
   onArchive,
+  onPause,
 }: StoryEditFormProps) {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onNameChange(e.target.value)
@@ -68,6 +78,11 @@ export function StoryEditForm({
         />
         <div className="mt-4 flex items-center justify-between pt-4">
           <div className="flex items-center gap-4">
+            {storyState === 'active' && (
+              <Button variant="ghost" onClick={onPause}>
+                <Pause className="h-4 w-4" />
+              </Button>
+            )}
             <Button variant="ghost" onClick={onArchive}>
               <Archive className="h-4 w-4" />
             </Button>
