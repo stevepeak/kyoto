@@ -21,6 +21,7 @@ interface Story {
   createdAt: Date | string | null
   updatedAt: Date | string | null
   decomposition: DecompositionOutput | null
+  repoId: string
 }
 
 interface StoryLoaderProps {

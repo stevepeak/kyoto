@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { FileText, Layers, History } from 'lucide-react'
+import { FileText, Layers, History, Pause, Play } from 'lucide-react'
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import { StoryArchiveDialog } from '@/components/apps/story-archive-dialog'
 import { StoryTemplatesDialog } from '@/components/apps/story-templates-dialog'
 import { StoryEditForm } from '@/components/apps/story-edit-form'
@@ -74,6 +75,7 @@ export function StoryLoaderClient({
   // Action states
   const [isSaving, setIsSaving] = useState(false)
   const [isArchiving, setIsArchiving] = useState(false)
+  const [isTogglingState, setIsTogglingState] = useState(false)
   const [isDecomposing, setIsDecomposing] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
 
@@ -137,7 +139,7 @@ export function StoryLoaderClient({
         }
 
         const result = await trpc.story.update.mutate(updatePayload)
-        setStory(result.story)
+        setStory(result.story as Story)
         setOriginalStoryContent(storyContent)
         setOriginalStoryName(storyName)
         setIsSaving(false)
@@ -231,19 +233,46 @@ export function StoryLoaderClient({
   }
 
   const handleArchive = async () => {
+    if (!storyId) {
+      return
+    }
     setIsArchiving(true)
     setError(null)
     try {
-      await trpc.story.archive.mutate({
+      await trpc.story.toggleState.mutate({
         orgName,
         repoName,
-        storyId: storyId!,
+        storyId: storyId,
+        state: 'archived',
       })
       router.push(`/org/${orgName}/repo/${repoName}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to archive story')
       setIsArchiving(false)
       setShowArchiveDialog(false)
+    }
+  }
+
+  const handleToggleState = async (newState: 'active' | 'paused') => {
+    if (!storyId) {
+      return
+    }
+    setIsTogglingState(true)
+    setError(null)
+    try {
+      const result = await trpc.story.toggleState.mutate({
+        orgName,
+        repoName,
+        storyId: storyId,
+        state: newState,
+      })
+      if (result.story) {
+        setStory(result.story as Story)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to toggle story state')
+    } finally {
+      setIsTogglingState(false)
     }
   }
 
@@ -264,7 +293,7 @@ export function StoryLoaderClient({
         storyId: storyId,
       })
       if (resp.story) {
-        setStory(resp.story)
+        setStory(resp.story as Story)
         setStoryName(resp.story.name)
         setOriginalStoryName(resp.story.name)
         setStoryContent(resp.story.story)
@@ -349,6 +378,28 @@ export function StoryLoaderClient({
                     </TabsTrigger>
                   </TabsList>
                 </div>
+                {story?.state === 'paused' && (
+                  <div className="px-6 pb-4 flex items-center justify-center">
+                    <div className="w-full max-w-2xl p-4 text-sm border-muted-foreground/30 bg-muted text-muted-foreground rounded-md flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Pause className="h-4 w-4" />
+                        <span>
+                          This story is paused and will not be tested in CI.
+                          Click Enable to activate it for testing.
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleState('active')}
+                        disabled={isTogglingState}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Enable
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <TabsContent
                   value="story"
                   className="flex-1 overflow-auto mt-0"
@@ -372,7 +423,7 @@ export function StoryLoaderClient({
                   tabIndex={-1}
                 >
                   <StoryDecompositionTab
-                    decomposition={story?.decomposition}
+                    decomposition={story?.decomposition ?? null}
                     isDecomposing={isDecomposing}
                     onDecompose={handleDecompose}
                   />
