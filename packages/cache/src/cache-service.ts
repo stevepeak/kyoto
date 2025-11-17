@@ -1,20 +1,9 @@
 import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 import type { DB } from '@app/db'
-import type { CacheEntry, ValidationResult } from '@app/schemas'
+import type { CacheEntry, CacheData, ValidationResult } from '@app/schemas'
 import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
 import type { Sandbox } from '@daytonaio/sdk'
-
-export type CacheData = {
-  steps: {
-    [stepIndex: string]: {
-      conclusion: 'pass' | 'fail'
-      assertions: {
-        [assertionIndex: string]: Record<string, string> // filename -> hash
-      }
-    }
-  }
-}
 
 /**
  * Retrieves cached evidence for a story at a specific commit SHA or from a list of commit SHAs.
@@ -158,8 +147,12 @@ export async function validateCacheEntry(args: {
 
       // Check each file hash in the cached evidence
       let assertionIsValid = true
-      for (const [filename, cachedHash] of Object.entries(evidenceHashMap)) {
+      for (const [filename, cacheEntry] of Object.entries(evidenceHashMap)) {
         try {
+          // Handle both old format (string hash) and new format (object with hash and lineRanges)
+          const cachedHash =
+            typeof cacheEntry === 'string' ? cacheEntry : cacheEntry.hash
+
           const currentHash = await getFileHashFromSandbox(sandbox, filename)
           if (currentHash !== cachedHash) {
             assertionIsValid = false

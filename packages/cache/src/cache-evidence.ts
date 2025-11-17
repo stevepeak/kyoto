@@ -73,26 +73,55 @@ export async function getFileHashFromSandbox(
 
 /**
  * Builds a hash map (Record) mapping each file referenced in the provided evidence array
- * to the SHA-256 hash of its contents as retrieved from the Daytona sandbox.
+ * to the SHA-256 hash of its contents and associated line ranges.
  *
  * @param evidence - An array of evidence strings (format: "file:line-range"),
  *                   from which all unique file paths will be extracted and hashed.
  * @param sandbox - The Daytona Sandbox instance used to read file contents.
  * @returns A Promise that resolves to a Record where each key is a file path and
- *          each value is the SHA-256 hash of the file's contents.
+ *          each value is an object containing the hash and line ranges.
  */
 export async function buildEvidenceHashMap(
   evidence: string[],
   sandbox: Sandbox,
-): Promise<Record<string, string>> {
-  const files = extractFilesFromEvidence(evidence)
-  const hashMap: Record<string, string> = {}
+): Promise<Record<string, { hash: string; lineRanges: string[] }>> {
+  // Group line ranges by file path
+  const fileLineRangesMap = new Map<string, Set<string>>()
+
+  for (const item of evidence) {
+    const colonIndex = item.indexOf(':')
+    if (colonIndex === -1) {
+      // No colon found, treat entire string as file path
+      const filePath = item
+      if (filePath) {
+        if (!fileLineRangesMap.has(filePath)) {
+          fileLineRangesMap.set(filePath, new Set())
+        }
+      }
+    } else {
+      const filePath = item.slice(0, colonIndex)
+      const lineRange = item.slice(colonIndex + 1)
+      if (filePath && lineRange) {
+        if (!fileLineRangesMap.has(filePath)) {
+          fileLineRangesMap.set(filePath, new Set())
+        }
+        fileLineRangesMap.get(filePath)!.add(lineRange)
+      }
+    }
+  }
+
+  const hashMap: Record<string, { hash: string; lineRanges: string[] }> = {}
 
   await Promise.all(
-    files.map(async (filePath) => {
-      const hash = await getFileHashFromSandbox(sandbox, filePath)
-      hashMap[filePath] = hash
-    }),
+    Array.from(fileLineRangesMap.entries()).map(
+      async ([filePath, lineRangesSet]) => {
+        const hash = await getFileHashFromSandbox(sandbox, filePath)
+        hashMap[filePath] = {
+          hash,
+          lineRanges: Array.from(lineRangesSet),
+        }
+      },
+    ),
   )
 
   return hashMap

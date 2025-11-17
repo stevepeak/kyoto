@@ -422,11 +422,11 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
 
 /**
  * Cache data structure.
- * Stores file hashes for evidence to avoid re-evaluating when files haven't changed.
+ * Stores file hashes and line ranges for evidence to avoid re-evaluating when files haven't changed.
  *
  * TRANSFORMATION: Evaluation → Cache
  * - Input: Evaluation results (only passing assertions)
- * - Output: File hashes organized by step and assertion
+ * - Output: File hashes and line ranges organized by step and assertion
  * - Stored in: story_evidence_cache.cache_data (JSONB)
  *
  * Structure:
@@ -436,8 +436,14 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
  *     "0": {                    // Step index
  *       assertions: {
  *         "0": {                // Assertion index
- *           "src/file.ts": "abc123hash",  // filename -> hash
- *           "src/other.ts": "def456hash"
+ *           "src/file.ts": {   // filename -> { hash, lineRanges }
+ *             hash: "abc123hash",
+ *             lineRanges: ["12-28", "45-67"]
+ *           },
+ *           "src/other.ts": {
+ *             hash: "def456hash",
+ *             lineRanges: ["10-20"]
+ *           }
  *         }
  *       }
  *     }
@@ -452,18 +458,24 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
  *     "0": {
  *       "assertions": {
  *         "0": {
- *           "src/auth/session.ts": "sha256:abc123...",
- *           "src/auth/middleware.ts": "sha256:def456..."
+ *           "src/auth/session.ts": {
+ *             "hash": "sha256:abc123...",
+ *             "lineRanges": ["12-28"]
+ *           },
+ *           "src/auth/middleware.ts": {
+ *             "hash": "sha256:def456...",
+ *             "lineRanges": ["5-15", "30-40"]
+ *           }
  *         }
  *       }
  *     },
  *     "1": {
  *       "assertions": {
  *         "0": {
- *           "src/teams/create.ts": "sha256:ghi789..."
- *         },
- *         "1": {
- *           "src/teams/api.ts": "sha256:jkl012..."
+ *           "src/teams/create.ts": {
+ *             "hash": "sha256:ghi789...",
+ *             "lineRanges": ["45-67"]
+ *           }
  *         }
  *       }
  *     }
@@ -478,7 +490,13 @@ export const cacheDataSchema = z.object({
       conclusion: z.enum(['pass', 'fail']),
       assertions: z.record(
         z.string().regex(/^\d+$/), // Assertion index as string
-        z.record(z.string(), z.string()), // filename -> hash
+        z.record(
+          z.string(), // filename
+          z.object({
+            hash: z.string(),
+            lineRanges: z.array(z.string()),
+          }),
+        ),
       ),
     }),
   ),

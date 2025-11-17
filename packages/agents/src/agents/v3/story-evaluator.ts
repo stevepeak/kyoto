@@ -319,20 +319,6 @@ export async function main(
   const validationResult = options?.validationResult ?? null
   const cachedRunIds = new Map<string, string>() // Map of "stepIndex:assertionIndex" -> runId
 
-  if (cacheEntry && validationResult) {
-    if (validationResult.isValid) {
-      logger.info('Cache entry is valid, using cached results', {
-        storyId: story.id,
-      })
-    } else {
-      logger.info('Cache entry is invalid, will re-evaluate', {
-        storyId: story.id,
-        invalidSteps: validationResult.invalidSteps,
-        invalidAssertions: validationResult.invalidAssertions,
-      })
-    }
-  }
-
   // Get repository outline once for all steps
   const repoOutline = await sandbox.process.executeCommand(
     'tree -L 3 -I "dist|build|.git|.next|*.lock|*.log"',
@@ -396,12 +382,28 @@ export async function main(
               stepCacheData.assertions[assertionIndex.toString()]
 
             if (assertionCacheData) {
-              // Reconstruct evidence from cached file paths
+              // Reconstruct evidence from cached file paths and line ranges
               const evidence: string[] = []
-              for (const filename of Object.keys(assertionCacheData)) {
-                // We don't have line ranges in cache, so we'll use just the filename
-                // This is acceptable since we're using cached results
-                evidence.push(filename)
+              for (const [filename, cacheEntry] of Object.entries(
+                assertionCacheData,
+              )) {
+                // Handle both old format (string hash) and new format (object with hash and lineRanges)
+                if (typeof cacheEntry === 'string') {
+                  // Legacy format: just filename (backward compatibility)
+                  evidence.push(filename)
+                } else {
+                  // New format: filename with line ranges
+                  const { lineRanges } = cacheEntry
+                  if (lineRanges && lineRanges.length > 0) {
+                    // Reconstruct evidence with line ranges
+                    for (const lineRange of lineRanges) {
+                      evidence.push(`${filename}:${lineRange}`)
+                    }
+                  } else {
+                    // Fallback: just filename if no line ranges
+                    evidence.push(filename)
+                  }
+                }
               }
 
               cachedAssertions.push({
