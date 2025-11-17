@@ -2,12 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * Note: Next.js 16 shows a deprecation warning about the "middleware" file convention
- * suggesting to use "proxy" instead. However, the standard middleware.ts file continues
- * to work and there's no clear migration path documented yet. This middleware handles
- * authentication redirects and should continue to function correctly.
- *
- * See: https://nextjs.org/docs/messages/middleware-to-proxy
+ * Next.js middleware handles authentication redirects
  */
 
 // Public routes that don't require authentication
@@ -27,7 +22,7 @@ export const config = {
   ],
 }
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow public routes
@@ -61,3 +56,4 @@ export function proxy(request: NextRequest) {
   // Note: Full session validation happens in server components/API routes
   return NextResponse.next()
 }
+
