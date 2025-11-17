@@ -1,4 +1,3 @@
-import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'

@@ -39,19 +39,22 @@ export function SetupInstallApp({ installationId }: SetupInstallAppProps) {
   )
 
   // Use the reusable trigger run hook
-  const { isLoading: isRunLoading, isFailed, error: runError } = useTriggerRun(
-    {
-      runId,
-      publicAccessToken,
-      enabled: runId !== null && publicAccessToken !== null,
-      onComplete: () => {
-        // Navigate when completed
-        router.push('/app')
-      },
-      onError: () => {
-        // Error handling is done via the error state
-      },
-    })
+  const {
+    isLoading: isRunLoading,
+    isFailed,
+    error: runError,
+  } = useTriggerRun({
+    runId,
+    publicAccessToken,
+    enabled: runId !== null && publicAccessToken !== null,
+    onComplete: () => {
+      // Navigate when completed
+      router.push('/app')
+    },
+    onError: () => {
+      // Error handling is done via the error state
+    },
+  })
 
   useEffect(() => {
     async function syncInstallation() {

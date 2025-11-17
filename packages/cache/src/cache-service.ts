@@ -259,7 +259,7 @@ export async function buildCacheDataFromEvaluation(args: {
     }
 
     cacheData.steps[stepIndex.toString()] = {
-      conclusion: step.conclusion as 'pass' | 'fail',
+      conclusion: step.conclusion,
       assertions: {},
     }
 

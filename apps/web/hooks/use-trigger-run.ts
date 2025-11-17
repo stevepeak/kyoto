@@ -1,12 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useRealtimeRun, useRealtimeStream } from '@trigger.dev/react-hooks'
 
-export interface TriggerHandle {
-  id: string
-  publicAccessToken: string
-}
-
-export interface UseTriggerRunOptions<T = unknown> {
+interface UseTriggerRunOptions<T = unknown> {
   runId: string | null
   publicAccessToken: string | null
   enabled?: boolean
@@ -15,7 +10,7 @@ export interface UseTriggerRunOptions<T = unknown> {
   onStreamText?: (text: string) => void
 }
 
-export interface UseTriggerRunResult<T = unknown> {
+interface UseTriggerRunResult<T = unknown> {
   run: ReturnType<typeof useRealtimeRun>['run']
   error: ReturnType<typeof useRealtimeRun>['error']
   isLoading: boolean

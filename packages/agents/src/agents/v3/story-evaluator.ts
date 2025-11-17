@@ -436,7 +436,7 @@ export async function main(
             )
 
             const stepResult: StepAgentOutput = {
-              conclusion: cachedConclusion as 'pass' | 'fail',
+              conclusion: cachedConclusion,
               outcome: step.goal,
               assertions: cachedAssertions,
             }

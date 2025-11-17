@@ -23,16 +23,16 @@ export function StoryGenerationTracking({
   useEffect(() => {
     if (runId !== currentRunIdRef.current) {
       currentRunIdRef.current = runId
-      setStreamText('')
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setStreamText('')
+      }, 0)
     }
   }, [runId])
 
-  const handleStreamText = useCallback(
-    (text: string) => {
-      setStreamText(text)
-    },
-    [runId],
-  )
+  const handleStreamText = useCallback((text: string) => {
+    setStreamText(text)
+  }, [])
 
   const { isFailed, error } = useTriggerRun({
     runId,

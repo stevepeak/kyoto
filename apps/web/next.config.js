@@ -20,7 +20,8 @@ const nextConfig = {
         headers: [
           {
             key: 'Link',
-            value: '<https://api.github.com>; rel=preconnect; crossorigin=anonymous',
+            value:
+              '<https://api.github.com>; rel=preconnect; crossorigin=anonymous',
           },
         ],
       },

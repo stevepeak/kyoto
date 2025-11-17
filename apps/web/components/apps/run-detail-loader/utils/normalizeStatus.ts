@@ -1,7 +1,11 @@
 import type { StoryTestResult, RunStory, Run } from '../types'
 
-const STORY_RESULT_STATUS_VALUES: readonly StoryTestResult['status'][] =
-  ['pass', 'fail', 'running', 'error'] as const
+const STORY_RESULT_STATUS_VALUES: readonly StoryTestResult['status'][] = [
+  'pass',
+  'fail',
+  'running',
+  'error',
+] as const
 
 const RUN_STORY_STATUS_VALUES: readonly RunStory['status'][] = [
   'pass',
