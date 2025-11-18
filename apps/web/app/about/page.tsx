@@ -37,7 +37,7 @@ export default function AboutPage() {
                       rel="noopener noreferrer"
                     >
                       Hacker Residency Group
-                    </a>
+                    </a>{' '}
                     in Da Nang, Vietnam. But the story began long before that.
                     In 2014 I made my first commit to what became one of the
                     largest developer tools in the world:{' '}
