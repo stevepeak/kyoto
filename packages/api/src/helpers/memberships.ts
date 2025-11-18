@@ -1,52 +1,69 @@
 import { TRPCError } from '@trpc/server'
 import type { DB, Owner, Repo, Story } from '@app/db/types'
-import type { Kysely, Selectable } from 'kysely'
+import { eq, and } from 'drizzle-orm'
+import {
+  owners,
+  ownerMemberships,
+  repos,
+  repoMemberships,
+  stories,
+} from '@app/db/schema'
 
 interface WithUserId {
   userId: string
 }
 
 export async function findOwnerForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { orgName: string },
-): Promise<Selectable<Owner> | null> {
-  const owner = await db
-    .selectFrom('owners')
-    .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
-    .selectAll('owners')
-    .where('owners.login', '=', params.orgName)
-    .where('ownerMemberships.userId', '=', params.userId)
-    .executeTakeFirst()
+): Promise<Owner | null> {
+  const result = await db
+    .select()
+    .from(owners)
+    .innerJoin(ownerMemberships, eq(ownerMemberships.ownerId, owners.id))
+    .where(
+      and(
+        eq(owners.login, params.orgName),
+        eq(ownerMemberships.userId, params.userId),
+      ),
+    )
+    .limit(1)
 
-  return owner ?? null
+  return result[0]?.owners ?? null
 }
 
 export async function findRepoForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { orgName: string; repoName: string },
-): Promise<Selectable<Repo> | null> {
-  const repo = await db
-    .selectFrom('repos')
-    .innerJoin('owners', 'owners.id', 'repos.ownerId')
-    .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
-    .innerJoin('ownerMemberships', (join) =>
-      join
-        .onRef('ownerMemberships.ownerId', '=', 'repos.ownerId')
-        .onRef('ownerMemberships.userId', '=', 'repoMemberships.userId'),
+): Promise<Repo | null> {
+  const result = await db
+    .select()
+    .from(repos)
+    .innerJoin(owners, eq(owners.id, repos.ownerId))
+    .innerJoin(repoMemberships, eq(repoMemberships.repoId, repos.id))
+    .innerJoin(
+      ownerMemberships,
+      and(
+        eq(ownerMemberships.ownerId, repos.ownerId),
+        eq(ownerMemberships.userId, repoMemberships.userId),
+      ),
     )
-    .selectAll('repos')
-    .where('owners.login', '=', params.orgName)
-    .where('repos.name', '=', params.repoName)
-    .where('repoMemberships.userId', '=', params.userId)
-    .executeTakeFirst()
+    .where(
+      and(
+        eq(owners.login, params.orgName),
+        eq(repos.name, params.repoName),
+        eq(repoMemberships.userId, params.userId),
+      ),
+    )
+    .limit(1)
 
-  return repo ?? null
+  return result[0]?.repos ?? null
 }
 
 export async function requireRepoForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { orgName: string; repoName: string },
-): Promise<Selectable<Repo>> {
+): Promise<Repo> {
   const repo = await findRepoForUser(db, params)
 
   if (!repo) {
@@ -60,35 +77,43 @@ export async function requireRepoForUser(
 }
 
 export async function findStoryForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { storyId: string },
-): Promise<{ story: Selectable<Story>; repo: Selectable<Repo> } | null> {
-  const story = await db
-    .selectFrom('stories')
-    .selectAll()
-    .where('stories.id', '=', params.storyId)
-    .executeTakeFirst()
+): Promise<{ story: Story; repo: Repo } | null> {
+  const storyResult = await db
+    .select()
+    .from(stories)
+    .where(eq(stories.id, params.storyId))
+    .limit(1)
 
-  if (!story) {
+  if (!storyResult[0]) {
     return null
   }
 
-  const repo = await db
-    .selectFrom('repos')
-    .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
-    .innerJoin('ownerMemberships', (join) =>
-      join
-        .onRef('ownerMemberships.ownerId', '=', 'repos.ownerId')
-        .onRef('ownerMemberships.userId', '=', 'repoMemberships.userId'),
+  const story = storyResult[0]
+
+  const repoResult = await db
+    .select()
+    .from(repos)
+    .innerJoin(repoMemberships, eq(repoMemberships.repoId, repos.id))
+    .innerJoin(
+      ownerMemberships,
+      and(
+        eq(ownerMemberships.ownerId, repos.ownerId),
+        eq(ownerMemberships.userId, repoMemberships.userId),
+      ),
     )
-    .selectAll('repos')
-    .where('repos.id', '=', story.repoId)
-    .where('repoMemberships.userId', '=', params.userId)
-    .executeTakeFirst()
+    .where(
+      and(
+        eq(repos.id, story.repoId),
+        eq(repoMemberships.userId, params.userId),
+      ),
+    )
+    .limit(1)
 
-  if (!repo) {
+  if (!repoResult[0]) {
     return null
   }
 
-  return { story, repo }
+  return { story, repo: repoResult[0].repos }
 }

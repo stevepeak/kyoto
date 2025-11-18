@@ -29,7 +29,6 @@ const config: KnipConfig = {
       ],
       ignoreDependencies: [
         '@radix-ui/react-label',
-        'kysely',
         '@radix-ui/react-separator',
       ],
     },
@@ -49,7 +48,6 @@ const config: KnipConfig = {
       ignore: [
         '**/node_modules/**',
         '**/dist/**',
-        '**/types.gen.ts',
         '**/*.d.ts',
         '**/migrations/**',
       ],
@@ -75,7 +73,6 @@ const config: KnipConfig = {
     '**/.turbo/**',
     '**/coverage/**',
     '**/*.d.ts',
-    '**/types.gen.ts',
     '**/migrations/**',
     '**/seed.sql',
     '**/schema.sql',

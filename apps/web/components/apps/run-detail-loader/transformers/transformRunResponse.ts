@@ -36,6 +36,7 @@ export function transformRunResponse(data: RunQueryOutput): Run | null {
 
   const stories: RunStory[] = (run.stories ?? []).map((runStory) => {
     const story = storyMap.get(runStory.storyId)
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     let rawResult: ApiStoryResult | null = null
 
     // First try to find by resultId if it exists
@@ -156,11 +157,7 @@ export function transformRunResponse(data: RunQueryOutput): Run | null {
         typeof run.extTriggerDev === 'string'
           ? (JSON.parse(run.extTriggerDev) as unknown)
           : run.extTriggerDev
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        'runId' in parsed
-      ) {
+      if (parsed && typeof parsed === 'object' && 'runId' in parsed) {
         const runId = parsed.runId
         if (runId !== null && runId !== undefined) {
           if (

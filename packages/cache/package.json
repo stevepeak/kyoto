@@ -18,7 +18,7 @@
     "@app/agents": "workspace:*",
     "@app/schemas": "workspace:*",
     "@daytonaio/sdk": "^0.113.1",
-    "kysely": "^0.28.8"
+    "drizzle-orm": "^0.36.4"
   },
   "devDependencies": {
     "@types/node": "^22.18.10",

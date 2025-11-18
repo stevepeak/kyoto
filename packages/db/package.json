@@ -6,20 +6,18 @@
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./schema": "./src/schema/index.ts"
   },
   "scripts": {
-    "db:codegen": "kysely-codegen --config-file .kysely-codegenrc.yaml",
-    "db:migrate:create": "node-pg-migrate -m ./migrations --migration-file-language sql --template-file-name ./templates/migration-template.sql create",
-    "db:migrate:up": "node-pg-migrate -m ./migrations --migration-file-language sql up",
-    "db:migrate:down": "node-pg-migrate -m ./migrations --migration-file-language sql down",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
     "db:schema:dump": "pg_dump -s -O -x -d \"$DATABASE_URL\" | sed '/^SET /d; /set_config/d' > schema.sql",
-    "db:migrate": "pnpm db:migrate:up && pnpm db:codegen && pnpm db:schema:dump",
     "db:seed": "psql \"$DATABASE_URL\" -f seed.sql",
     "db:load:schema": "psql \"$DATABASE_URL\" -f schema.sql",
-    "db:set-to-latest-migration": "node-pg-migrate -m ./migrations --migration-file-language sql up --fake",
-    "db:setup": "pnpm db:load:schema && pnpm db:set-to-latest-migration && pnpm db:seed",
-    "db:reset": "pnpm db:migrate",
+    "db:reset": "pnpm db:push",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -30,7 +28,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "bufferutil": "^4.0.9",
-    "kysely": "^0.28.8",
+    "drizzle-orm": "^0.36.4",
     "pg": "^8.16.3",
     "ws": "^8.18.3"
   },
@@ -38,8 +36,7 @@
     "@types/node": "^20.19.21",
     "@types/pg": "^8.15.5",
     "@types/ws": "^8.18.1",
-    "kysely-codegen": "^0.19.0",
-    "node-pg-migrate": "^8.0.3",
+    "drizzle-kit": "^0.30.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

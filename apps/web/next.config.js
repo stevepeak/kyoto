@@ -34,16 +34,7 @@ const nextConfig = {
       { module: /require-in-the-middle/ },
     ]
 
-    // Allow importing kysely-adapter from better-auth
-    // Use direct path to bypass package.json exports restriction
-    const kyselyAdapterPath = path.resolve(
-      __dirname,
-      'node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs',
-    )
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'better-auth/adapters/kysely-adapter': kyselyAdapterPath,
-    }
+    // Drizzle adapter is available directly from better-auth
 
     return config
   },

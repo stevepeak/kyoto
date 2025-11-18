@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
-import { kyselyAdapter } from 'better-auth/adapters/kysely-adapter'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { setupDb } from '@app/db'
+import * as schema from '@app/db/schema'
 
 // Lazy initialization of database to avoid errors at module load time
 let dbInstance: ReturnType<typeof setupDb> | null = null
@@ -62,8 +63,9 @@ export function getAuth() {
     authInstance = betterAuth({
       baseURL: getBaseUrl(),
       trustedOrigins: getTrustedOrigins(),
-      database: kyselyAdapter(getDb(), {
-        type: 'postgres',
+      database: drizzleAdapter(getDb(), {
+        provider: 'pg',
+        schema: schema,
       }),
       verification: {
         fields: {

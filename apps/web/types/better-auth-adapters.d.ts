@@ -1,24 +1,19 @@
-declare module 'better-auth/adapters/kysely-adapter' {
-  import { Kysely } from 'kysely'
-  import {
-    BetterAuthOptions,
-    DBAdapter,
-    DBAdapterDebugLogOption,
-  } from '@better-auth/core'
+declare module 'better-auth/adapters/drizzle' {
+  import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
+  import type { BetterAuthOptions, DBAdapter } from '@better-auth/core'
 
-  type KyselyDatabaseType = 'postgres' | 'mysql' | 'sqlite' | 'mssql'
+  type DrizzleProvider = 'pg' | 'sqlite' | 'mysql'
 
-  interface KyselyAdapterConfig {
-    type?: KyselyDatabaseType
-    debugLogs?: DBAdapterDebugLogOption
-    usePlural?: boolean
-    transaction?: boolean
+  interface DrizzleAdapterConfig {
+    provider: DrizzleProvider
+    schema: Record<string, any>
+    debugLogs?: boolean
   }
 
-  export function kyselyAdapter(
-    db: Kysely<any>,
-    config?: KyselyAdapterConfig,
+  export function drizzleAdapter(
+    db: NodePgDatabase<any>,
+    config: DrizzleAdapterConfig,
   ): (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>
 
-  export type { KyselyDatabaseType }
+  export type { DrizzleProvider }
 }

@@ -1,7 +1,14 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
+import { eq, and, isNotNull, count, asc } from 'drizzle-orm'
 
 import { router, protectedProcedure } from '../trpc'
+import {
+  owners,
+  ownerMemberships,
+  repoMemberships,
+  repos,
+} from '@app/db/schema'
 
 export const orgRouter = router({
   getDefault: protectedProcedure.query(() => {
@@ -20,45 +27,45 @@ export const orgRouter = router({
       throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
 
-    const owners = await ctx.db
-      .selectFrom('owners')
-      .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
-      .select([
-        'owners.id as ownerId',
-        'owners.login as slug',
-        'owners.name as accountName',
-      ])
-      .where('owners.installationId', 'is not', null)
-      .where('ownerMemberships.userId', '=', userId)
-      .orderBy('owners.login')
-      .execute()
+    const ownersList = await ctx.db
+      .select({
+        ownerId: owners.id,
+        slug: owners.login,
+        accountName: owners.name,
+      })
+      .from(owners)
+      .innerJoin(ownerMemberships, eq(ownerMemberships.ownerId, owners.id))
+      .where(
+        and(
+          isNotNull(owners.installationId),
+          eq(ownerMemberships.userId, userId),
+        ),
+      )
+      .orderBy(asc(owners.login))
 
-    const ownerIds = owners.map((owner) => owner.ownerId)
+    const ownerIds = ownersList.map((owner) => owner.ownerId)
 
     const repoCounts =
       ownerIds.length === 0
         ? []
         : await ctx.db
-            .selectFrom('repoMemberships')
-            .innerJoin('repos', 'repos.id', 'repoMemberships.repoId')
-            .select((eb) => [
-              'repos.ownerId as ownerId',
-              eb.fn
-                .count('repoMemberships.id')
-                .filterWhere('repos.enabled', '=', true)
-                .as('count'),
-            ])
-            .where('repoMemberships.userId', '=', userId)
-            .where('repos.ownerId', 'in', ownerIds)
-            .groupBy('repos.ownerId')
-            .execute()
+            .select({
+              ownerId: repos.ownerId,
+              count: count(repoMemberships.id),
+            })
+            .from(repoMemberships)
+            .innerJoin(repos, eq(repos.id, repoMemberships.repoId))
+            .where(
+              and(eq(repoMemberships.userId, userId), eq(repos.enabled, true)),
+            )
+            .groupBy(repos.ownerId)
 
     const repoCountByOwner = new Map(
       repoCounts.map((entry) => [entry.ownerId, Number(entry.count ?? 0)]),
     )
 
     return {
-      orgs: owners.map((owner) => ({
+      orgs: ownersList.map((owner) => ({
         slug: owner.slug,
         name: owner.accountName ?? owner.slug,
         accountName: owner.accountName ?? null,
@@ -75,15 +82,18 @@ export const orgRouter = router({
     }
 
     const installationRows = await ctx.db
-      .selectFrom('owners')
-      .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
-      .select([
-        'owners.installationId as installationId',
-        'owners.login as login',
-      ])
-      .where('owners.installationId', 'is not', null)
-      .where('ownerMemberships.userId', '=', userId)
-      .execute()
+      .select({
+        installationId: owners.installationId,
+        login: owners.login,
+      })
+      .from(owners)
+      .innerJoin(ownerMemberships, eq(ownerMemberships.ownerId, owners.id))
+      .where(
+        and(
+          isNotNull(owners.installationId),
+          eq(ownerMemberships.userId, userId),
+        ),
+      )
 
     const installations = installationRows
       .map((row) => {

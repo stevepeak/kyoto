@@ -1,49 +1,29 @@
-import { Pool as NeonPool, neonConfig } from '@neondatabase/serverless'
-import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely'
+import { neon, neonConfig } from '@neondatabase/serverless'
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http'
+import { drizzle as drizzlePostgres } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import ws from 'ws'
+import * as schema from './schema'
 
-import type { DB } from './types'
-
-type DatabasePool = NeonPool | Pool
-
-function attachPoolErrorHandler(pool: DatabasePool, poolType: string): void {
-  pool.on('error', (err: Error) => {
-    console.error(`Unexpected error on idle ${poolType} client`, err)
-  })
-}
-
-function createKyselyInstance(pool: DatabasePool): Kysely<DB> {
-  return new Kysely<DB>({
-    dialect: new PostgresDialect({
-      pool,
-    }),
-    // To debug queries, set to ['query', 'error']
-    log: ['error'],
-    // Maintain nested object keys to avoid converting JSONB keys from snake_case to camelCase.
-    plugins: [new CamelCasePlugin({ maintainNestedObjectKeys: true })],
-  })
-}
-
-function setupNeonDb(connectionString: string): Kysely<DB> {
+function setupNeonDb(connectionString: string) {
   neonConfig.webSocketConstructor = ws
-
-  const pool = new NeonPool({ connectionString })
-  attachPoolErrorHandler(pool, 'Neon')
-
-  return createKyselyInstance(pool)
+  const sql = neon(connectionString)
+  return drizzleNeon(sql, { schema })
 }
 
-function setupPostgresDb(connectionString: string): Kysely<DB> {
+function setupPostgresDb(connectionString: string) {
   const pool = new Pool({
     connectionString,
   })
-  attachPoolErrorHandler(pool, 'Postgres')
 
-  return createKyselyInstance(pool)
+  pool.on('error', (err: Error) => {
+    console.error('Unexpected error on idle Postgres client', err)
+  })
+
+  return drizzlePostgres(pool, { schema })
 }
 
-export function setupDb(connectionString: string): Kysely<DB> {
+export function setupDb(connectionString: string) {
   if (!connectionString) {
     throw new Error('connectionString cannot be empty')
   }
@@ -53,3 +33,5 @@ export function setupDb(connectionString: string): Kysely<DB> {
     ? setupNeonDb(connectionString)
     : setupPostgresDb(connectionString)
 }
+
+export type Db = ReturnType<typeof setupDb>

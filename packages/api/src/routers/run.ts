@@ -1,9 +1,11 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { tasks } from '@trigger.dev/sdk'
+import { eq, and, inArray, desc } from 'drizzle-orm'
 
 import { findRepoForUser, requireRepoForUser } from '../helpers/memberships'
 import { protectedProcedure, router } from '../trpc'
+import { runs, stories, storyTestResults } from '@app/db/schema'
 
 export const runRouter = router({
   listByRepo: protectedProcedure
@@ -26,13 +28,11 @@ export const runRouter = router({
       }
 
       // Query runs for this repo
-      // Note: runs table types will be generated after migration runs
       const dbRuns = await ctx.db
-        .selectFrom('runs')
-        .selectAll()
-        .where('repoId', '=', repo.id)
-        .orderBy('createdAt', 'desc')
-        .execute()
+        .select()
+        .from(runs)
+        .where(eq(runs.repoId, repo.id))
+        .orderBy(desc(runs.createdAt))
 
       // Map database runs to frontend format
       // Map status: 'pass' -> 'success', 'fail' -> 'failed', 'skipped' -> 'skipped', 'running' -> 'running'
@@ -47,7 +47,7 @@ export const runRouter = router({
         error: 'error',
       }
 
-      const runs = dbRuns.map((run: any) => {
+      const mappedRuns = dbRuns.map((run: any) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const createdAt = run.createdAt as Date
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -76,7 +76,7 @@ export const runRouter = router({
         }
       })
 
-      return { runs }
+      return { runs: mappedRuns }
     }),
 
   getByRunId: protectedProcedure
@@ -111,48 +111,48 @@ export const runRouter = router({
       }
 
       // Look up run by repo_id and number (not UUID)
-      // Note: runs table types will be generated after migration runs
-      const run = await ctx.db
-        .selectFrom('runs')
-        .selectAll()
-        .where('repoId', '=', repo.id)
-        .where('number', '=', runNumber)
-        .executeTakeFirst()
+      const runResult = await ctx.db
+        .select()
+        .from(runs)
+        .where(and(eq(runs.repoId, repo.id), eq(runs.number, runNumber)))
+        .limit(1)
 
-      if (!run) {
+      if (!runResult[0]) {
         return { run: null }
       }
 
+      const run = runResult[0]
+
       // Extract story IDs from the stories JSONB
-      const storyIds = run.stories.map((s) => s.storyId)
+      const storyIds = (run.stories as Array<{ storyId: string }>).map(
+        (s) => s.storyId,
+      )
 
       // Fetch stories if there are any
       const fetchedStories =
         storyIds.length > 0
           ? await ctx.db
-              .selectFrom('stories')
-              .selectAll()
-              .where('id', 'in', storyIds)
-              .execute()
+              .select()
+              .from(stories)
+              .where(inArray(stories.id, storyIds))
           : []
 
       const storyResults = await ctx.db
-        .selectFrom('storyTestResults')
-        .select([
-          'id',
-          'storyId',
-          'status',
-          'analysisVersion',
-          'analysis',
-          'startedAt',
-          'completedAt',
-          'durationMs',
-          'createdAt',
-          'updatedAt',
-          'extTriggerDev',
-        ])
-        .where('runId', '=', run.id)
-        .execute()
+        .select({
+          id: storyTestResults.id,
+          storyId: storyTestResults.storyId,
+          status: storyTestResults.status,
+          analysisVersion: storyTestResults.analysisVersion,
+          analysis: storyTestResults.analysis,
+          startedAt: storyTestResults.startedAt,
+          completedAt: storyTestResults.completedAt,
+          durationMs: storyTestResults.durationMs,
+          createdAt: storyTestResults.createdAt,
+          updatedAt: storyTestResults.updatedAt,
+          extTriggerDev: storyTestResults.extTriggerDev,
+        })
+        .from(storyTestResults)
+        .where(eq(storyTestResults.runId, run.id))
 
       return {
         run,

@@ -1,5 +1,5 @@
-import { type RawBuilder, sql } from 'kysely'
+import { sql } from 'drizzle-orm'
 
-export function json<T>(value: T): RawBuilder<T> {
-  return sql`CAST(${JSON.stringify(value)} AS JSONB)`
+export function json<T>(value: T) {
+  return sql<T>`CAST(${JSON.stringify(value)} AS JSONB)`
 }

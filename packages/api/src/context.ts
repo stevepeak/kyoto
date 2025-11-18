@@ -1,7 +1,4 @@
 import type { DB, User } from '@app/db/types'
-// Define a placeholder Session type based on better-auth structure
-// You might need to refine this based on the actual structure
-import type { Kysely, Selectable } from 'kysely'
 
 // Placeholder: Define structure based on docs (user object within session)
 export interface SessionUser {
@@ -27,8 +24,8 @@ export interface Env {
 }
 
 export interface Context {
-  db: Kysely<DB>
+  db: DB
   env: Env
   session: Session | null // Add session to the context
-  user: Selectable<User> | null
+  user: User | null
 }

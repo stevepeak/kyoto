@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
 import { z } from 'zod'
+import { eq, and, ne, inArray, count, sql, asc } from 'drizzle-orm'
 
 import {
   findOwnerForUser,
@@ -8,6 +9,7 @@ import {
   requireRepoForUser,
 } from '../helpers/memberships'
 import { protectedProcedure, router } from '../trpc'
+import { repos, repoMemberships, stories, owners } from '@app/db/schema'
 
 type RepoListItemStatus = 'pass' | 'fail' | 'skipped' | 'running' | 'error'
 
@@ -44,63 +46,56 @@ export const repoRouter = router({
         }
       }
 
-      const repos = await ctx.db
-        .selectFrom('repos')
-        .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
-        .select([
-          'repos.id as id',
-          'repos.name as name',
-          'repos.defaultBranch as defaultBranch',
-          'repos.enabled as enabled',
-          'repos.private as private',
-        ])
-        .where('repos.ownerId', '=', owner.id)
-        .where('repoMemberships.userId', '=', userId)
-        .orderBy('repos.name')
-        .execute()
+      const reposList = await ctx.db
+        .select({
+          id: repos.id,
+          name: repos.name,
+          defaultBranch: repos.defaultBranch,
+          enabled: repos.enabled,
+          private: repos.private,
+        })
+        .from(repos)
+        .innerJoin(repoMemberships, eq(repoMemberships.repoId, repos.id))
+        .where(
+          and(eq(repos.ownerId, owner.id), eq(repoMemberships.userId, userId)),
+        )
+        .orderBy(asc(repos.name))
 
-      const repoIds = repos.map((repo) => repo.id)
+      const repoIds = reposList.map((repo) => repo.id)
 
       const storyCounts =
         repoIds.length === 0
           ? []
           : await ctx.db
-              .selectFrom('stories')
-              .select(['repoId'])
-              .select((eb) => eb.fn.count('stories.id').as('count'))
-              .where('repoId', 'in', repoIds)
-              .where('state', '!=', 'archived')
-              .groupBy('repoId')
-              .execute()
+              .select({
+                repoId: stories.repoId,
+                count: count(stories.id),
+              })
+              .from(stories)
+              .where(
+                and(
+                  inArray(stories.repoId, repoIds),
+                  ne(stories.state, 'archived'),
+                ),
+              )
+              .groupBy(stories.repoId)
 
+      // For latest runs, use a window function approach with raw SQL
+      // Using inArray would be simpler but DISTINCT ON requires raw SQL
       const latestRuns =
         repoIds.length === 0
-          ? []
-          : await ctx.db
-              .with('latest_run_times', (db) =>
-                db
-                  .selectFrom('runs')
-                  .select(['repoId'])
-                  .select((eb) => eb.fn.max('createdAt').as('maxCreatedAt'))
-                  .where('repoId', 'in', repoIds)
-                  .groupBy('repoId'),
-              )
-              .selectFrom('runs')
-              .innerJoin('latest_run_times', (join) =>
-                join
-                  .onRef('runs.repoId', '=', 'latest_run_times.repoId')
-                  .onRef(
-                    'runs.createdAt',
-                    '=',
-                    'latest_run_times.maxCreatedAt',
-                  ),
-              )
-              .select([
-                'runs.repoId as repoId',
-                'runs.status as status',
-                'runs.createdAt as createdAt',
-              ])
-              .execute()
+          ? { rows: [] }
+          : await ctx.db.execute(
+              sql`
+                SELECT DISTINCT ON (runs.repo_id)
+                  runs.repo_id as "repoId",
+                  runs.status,
+                  runs.created_at as "createdAt"
+                FROM runs
+                WHERE runs.repo_id = ANY(${repoIds}::uuid[])
+                ORDER BY runs.repo_id, runs.created_at DESC
+              `,
+            )
 
       const storyCountByRepo = new Map(
         storyCounts.map((entry) => [entry.repoId, Number(entry.count)]),
@@ -110,7 +105,13 @@ export const repoRouter = router({
         string,
         { status: RepoListItemStatus; createdAt: Date }
       >(
-        latestRuns
+        (
+          latestRuns.rows as Array<{
+            repoId: string
+            status: string
+            createdAt: Date
+          }>
+        )
           .filter(
             (
               entry,
@@ -142,7 +143,7 @@ export const repoRouter = router({
           slug: owner.login,
           name: owner.name ?? owner.login,
         },
-        repos: repos.map((repo) => ({
+        repos: reposList.map((repo) => ({
           id: repo.id,
           name: repo.name,
           defaultBranch: repo.defaultBranch,
@@ -204,26 +205,26 @@ export const repoRouter = router({
       }
 
       await ctx.db
-        .updateTable('repos')
+        .update(repos)
         .set({ enabled: true })
-        .where('id', '=', repo.id)
-        .execute()
+        .where(eq(repos.id, repo.id))
 
       // Trigger story discovery for newly enabled repos that have no stories
-      const storyCount = await ctx.db
-        .selectFrom('stories')
-        .select(({ fn }) => [fn.countAll().as('count')])
-        .where('repoId', '=', repo.id)
-        .executeTakeFirst()
+      const storyCountResult = await ctx.db
+        .select({ count: count() })
+        .from(stories)
+        .where(eq(stories.repoId, repo.id))
 
-      const hasStories = Number(storyCount?.count ?? 0) > 0
+      const hasStories = Number(storyCountResult[0]?.count ?? 0) > 0
 
       if (!hasStories) {
-        const owner = await ctx.db
-          .selectFrom('owners')
-          .select(['login'])
-          .where('id', '=', repo.ownerId)
-          .executeTakeFirst()
+        const ownerResult = await ctx.db
+          .select({ login: owners.login })
+          .from(owners)
+          .where(eq(owners.id, repo.ownerId))
+          .limit(1)
+
+        const owner = ownerResult[0]
 
         if (owner) {
           const repoSlug = `${owner.login}/${repo.name}`
@@ -266,10 +267,9 @@ export const repoRouter = router({
       }
 
       await ctx.db
-        .updateTable('repos')
+        .update(repos)
         .set({ enabled: false })
-        .where('id', '=', repo.id)
-        .execute()
+        .where(eq(repos.id, repo.id))
 
       return { enabled: false, repoId: repo.id }
     }),

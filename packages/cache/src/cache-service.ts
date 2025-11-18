@@ -1,6 +1,6 @@
-import type { Kysely } from 'kysely'
-import { sql } from 'kysely'
+import { sql, eq, and, inArray } from 'drizzle-orm'
 import type { DB } from '@app/db'
+import { storyEvidenceCache } from '@app/db/schema'
 import type { CacheEntry, CacheData, ValidationResult } from '@app/schemas'
 import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
 import type { Sandbox } from '@daytonaio/sdk'
@@ -11,7 +11,7 @@ import type { Sandbox } from '@daytonaio/sdk'
  * (first in the array, as git log returns commits in chronological order latest-first).
  */
 export async function getCachedEvidence(args: {
-  db: Kysely<DB>
+  db: DB
   storyId: string
   commitSha: string | string[]
 }): Promise<CacheEntry | null> {
@@ -20,25 +20,30 @@ export async function getCachedEvidence(args: {
   // Handle single commit SHA (backward compatibility)
   if (typeof commitSha === 'string') {
     const result = await db
-      .selectFrom('storyEvidenceCache')
-      .selectAll()
-      .where('storyId', '=', storyId)
-      .where('commitSha', '=', commitSha)
-      .executeTakeFirst()
+      .select()
+      .from(storyEvidenceCache)
+      .where(
+        and(
+          eq(storyEvidenceCache.storyId, storyId),
+          eq(storyEvidenceCache.commitSha, commitSha),
+        ),
+      )
+      .limit(1)
 
-    if (!result) {
+    if (!result[0]) {
       return null
     }
 
+    const entry = result[0]
     return {
-      id: result.id,
-      branchName: result.branchName,
-      storyId: result.storyId,
-      commitSha: result.commitSha,
-      cacheData: result.cacheData as CacheData,
-      runId: result.runId,
-      createdAt: result.createdAt ?? new Date(),
-      updatedAt: result.updatedAt ?? new Date(),
+      id: entry.id,
+      branchName: entry.branchName,
+      storyId: entry.storyId,
+      commitSha: entry.commitSha,
+      cacheData: entry.cacheData as CacheData,
+      runId: entry.runId,
+      createdAt: entry.createdAt ?? new Date(),
+      updatedAt: entry.updatedAt ?? new Date(),
     }
   }
 
@@ -56,27 +61,33 @@ export async function getCachedEvidence(args: {
     .join(' ')
 
   const result = await db
-    .selectFrom('storyEvidenceCache')
-    .selectAll()
-    .where('storyId', '=', storyId)
-    .where('commitSha', 'in', commitSha)
-    .orderBy(sql`CASE commit_sha ${sql.raw(orderByCases)} END`)
+    .select()
+    .from(storyEvidenceCache)
+    .where(
+      and(
+        eq(storyEvidenceCache.storyId, storyId),
+        inArray(storyEvidenceCache.commitSha, commitSha),
+      ),
+    )
+    .orderBy(
+      sql`CASE ${storyEvidenceCache.commitSha} ${sql.raw(orderByCases)} END`,
+    )
     .limit(1)
-    .executeTakeFirst()
 
-  if (!result) {
+  if (!result[0]) {
     return null
   }
 
+  const entry = result[0]
   return {
-    id: result.id,
-    branchName: result.branchName,
-    storyId: result.storyId,
-    commitSha: result.commitSha,
-    cacheData: result.cacheData as CacheData,
-    runId: result.runId,
-    createdAt: result.createdAt ?? new Date(),
-    updatedAt: result.updatedAt ?? new Date(),
+    id: entry.id,
+    branchName: entry.branchName,
+    storyId: entry.storyId,
+    commitSha: entry.commitSha,
+    cacheData: entry.cacheData as CacheData,
+    runId: entry.runId,
+    createdAt: entry.createdAt ?? new Date(),
+    updatedAt: entry.updatedAt ?? new Date(),
   }
 }
 
@@ -84,7 +95,7 @@ export async function getCachedEvidence(args: {
  * Saves cached evidence for a story at a specific commit SHA
  */
 export async function saveCachedEvidence(args: {
-  db: Kysely<DB>
+  db: DB
   branchName: string
   storyId: string
   commitSha: string
@@ -94,16 +105,17 @@ export async function saveCachedEvidence(args: {
   const { db, branchName, storyId, commitSha, cacheData, runId } = args
 
   await db
-    .insertInto('storyEvidenceCache')
+    .insert(storyEvidenceCache)
     .values({
       branchName,
       storyId,
       commitSha,
-      cacheData: JSON.stringify(cacheData),
+      cacheData: cacheData as any,
       runId,
     })
-    .onConflict((oc) => oc.columns(['storyId', 'commitSha']).doNothing())
-    .execute()
+    .onConflictDoNothing({
+      target: [storyEvidenceCache.storyId, storyEvidenceCache.commitSha],
+    })
 }
 
 /**
@@ -193,17 +205,20 @@ export async function validateCacheEntry(args: {
  * Invalidates cache for a story at a specific commit SHA
  */
 export async function invalidateCache(args: {
-  db: Kysely<DB>
+  db: DB
   storyId: string
   commitSha: string
 }): Promise<void> {
   const { db, storyId, commitSha } = args
 
   await db
-    .deleteFrom('storyEvidenceCache')
-    .where('storyId', '=', storyId)
-    .where('commitSha', '=', commitSha)
-    .execute()
+    .delete(storyEvidenceCache)
+    .where(
+      and(
+        eq(storyEvidenceCache.storyId, storyId),
+        eq(storyEvidenceCache.commitSha, commitSha),
+      ),
+    )
 }
 
 /**
@@ -211,15 +226,14 @@ export async function invalidateCache(args: {
  * Used when decomposition changes
  */
 export async function invalidateCacheForStory(args: {
-  db: Kysely<DB>
+  db: DB
   storyId: string
 }): Promise<void> {
   const { db, storyId } = args
 
   await db
-    .deleteFrom('storyEvidenceCache')
-    .where('storyId', '=', storyId)
-    .execute()
+    .delete(storyEvidenceCache)
+    .where(eq(storyEvidenceCache.storyId, storyId))
 }
 
 /**

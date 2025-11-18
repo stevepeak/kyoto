@@ -1,9 +1,10 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
-import type { Updateable } from 'kysely'
+import { eq, and, ne, inArray, desc, asc } from 'drizzle-orm'
 import { z } from 'zod'
 
 import type { Story } from '@app/db/types'
+import { stories, storyTestResults, owners } from '@app/db/schema'
 import {
   findRepoForUser,
   findStoryForUser,
@@ -37,15 +38,13 @@ export const storyRouter = router({
         return { stories: [] }
       }
 
-      const stories = await ctx.db
-        .selectFrom('stories')
-        .selectAll()
-        .where('repoId', '=', repo.id)
-        .where('state', '!=', 'archived')
-        .orderBy('createdAt', 'desc')
-        .execute()
+      const storiesList = await ctx.db
+        .select()
+        .from(stories)
+        .where(and(eq(stories.repoId, repo.id), ne(stories.state, 'archived')))
+        .orderBy(desc(stories.createdAt))
 
-      const storyIds = stories.map((story) => story.id)
+      const storyIds = storiesList.map((story) => story.id)
 
       let latestStatuses = new Map<
         string,
@@ -54,18 +53,23 @@ export const storyRouter = router({
 
       if (storyIds.length > 0) {
         const statusRows = await ctx.db
-          .selectFrom('storyTestResults')
-          .select([
-            'storyTestResults.storyId as storyId',
-            'storyTestResults.status as status',
-            'storyTestResults.createdAt as createdAt',
-          ])
-          .where('storyTestResults.storyId', 'in', storyIds)
-          .where('storyTestResults.status', '!=', 'running')
-          .orderBy('storyTestResults.storyId', 'asc')
-          .orderBy('storyTestResults.createdAt', 'desc')
-          .orderBy('storyTestResults.id', 'desc')
-          .execute()
+          .select({
+            storyId: storyTestResults.storyId,
+            status: storyTestResults.status,
+            createdAt: storyTestResults.createdAt,
+          })
+          .from(storyTestResults)
+          .where(
+            and(
+              inArray(storyTestResults.storyId, storyIds),
+              ne(storyTestResults.status, 'running'),
+            ),
+          )
+          .orderBy(
+            asc(storyTestResults.storyId),
+            desc(storyTestResults.createdAt),
+            desc(storyTestResults.id),
+          )
 
         latestStatuses = statusRows.reduce((acc, row) => {
           if (!acc.has(row.storyId)) {
@@ -79,7 +83,7 @@ export const storyRouter = router({
       }
 
       return {
-        stories: stories.map((story) => ({
+        stories: storiesList.map((story) => ({
           id: story.id,
           name: story.name,
           story: story.story,
@@ -120,18 +124,17 @@ export const storyRouter = router({
       }
 
       // Query story
-      const story = await ctx.db
-        .selectFrom('stories')
-        .selectAll()
-        .where('id', '=', input.storyId)
-        .where('repoId', '=', repo.id)
-        .executeTakeFirst()
+      const storyResult = await ctx.db
+        .select()
+        .from(stories)
+        .where(and(eq(stories.id, input.storyId), eq(stories.repoId, repo.id)))
+        .limit(1)
 
-      if (!story) {
+      if (!storyResult[0]) {
         return { story: null }
       }
 
-      return { story }
+      return { story: storyResult[0] }
     }),
 
   create: protectedProcedure
@@ -161,16 +164,24 @@ export const storyRouter = router({
       })
 
       // Create story with processing state
-      const newStory = await ctx.db
-        .insertInto('stories')
+      const newStoryResult = await ctx.db
+        .insert(stories)
         .values({
           repoId: repo.id,
           name: input.name,
           story: input.story,
           state: 'processing',
         })
-        .returningAll()
-        .executeTakeFirstOrThrow()
+        .returning()
+
+      if (!newStoryResult[0]) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create story',
+        })
+      }
+
+      const newStory = newStoryResult[0]
 
       // Trigger story decomposition task
       await tasks.trigger(
@@ -223,14 +234,13 @@ export const storyRouter = router({
       })
 
       // Check if story exists and belongs to repo
-      const existingStory = await ctx.db
-        .selectFrom('stories')
-        .selectAll()
-        .where('id', '=', input.storyId)
-        .where('repoId', '=', repo.id)
-        .executeTakeFirst()
+      const existingStoryResult = await ctx.db
+        .select()
+        .from(stories)
+        .where(and(eq(stories.id, input.storyId), eq(stories.repoId, repo.id)))
+        .limit(1)
 
-      if (!existingStory) {
+      if (!existingStoryResult[0]) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: `Story ${input.storyId} not found`,
@@ -238,7 +248,7 @@ export const storyRouter = router({
       }
 
       // Build update object
-      const updateData: Updateable<Story> = {}
+      const updateData: Partial<Story> = {}
       if (input.name !== undefined) {
         updateData.name = input.name
       }
@@ -249,12 +259,20 @@ export const storyRouter = router({
       }
 
       // Update story
-      const updatedStory = await ctx.db
-        .updateTable('stories')
+      const updatedStoryResult = await ctx.db
+        .update(stories)
         .set(updateData)
-        .where('id', '=', input.storyId)
-        .returningAll()
-        .executeTakeFirstOrThrow()
+        .where(eq(stories.id, input.storyId))
+        .returning()
+
+      if (!updatedStoryResult[0]) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update story',
+        })
+      }
+
+      const updatedStory = updatedStoryResult[0]
 
       // Trigger story decomposition task if story text was updated
       if (input.story !== undefined) {
@@ -308,28 +326,33 @@ export const storyRouter = router({
       })
 
       // Check if story exists and belongs to repo
-      const existingStory = await ctx.db
-        .selectFrom('stories')
-        .selectAll()
-        .where('id', '=', input.storyId)
-        .where('repoId', '=', repo.id)
-        .executeTakeFirst()
+      const existingStoryResult = await ctx.db
+        .select()
+        .from(stories)
+        .where(and(eq(stories.id, input.storyId), eq(stories.repoId, repo.id)))
+        .limit(1)
 
-      if (!existingStory) {
+      if (!existingStoryResult[0]) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: `Story ${input.storyId} not found`,
         })
       }
 
-      const updatedStory = await ctx.db
-        .updateTable('stories')
+      const updatedStoryResult = await ctx.db
+        .update(stories)
         .set({ state: input.state })
-        .where('id', '=', input.storyId)
-        .returningAll()
-        .executeTakeFirstOrThrow()
+        .where(eq(stories.id, input.storyId))
+        .returning()
 
-      return { story: updatedStory }
+      if (!updatedStoryResult[0]) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update story',
+        })
+      }
+
+      return { story: updatedStoryResult[0] }
     }),
 
   test: protectedProcedure
@@ -394,18 +417,20 @@ export const storyRouter = router({
       }
 
       // Get owner info for repo slug
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('id', '=', storyWithRepo.repo.ownerId)
-        .executeTakeFirst()
+      const ownerResult = await ctx.db
+        .select()
+        .from(owners)
+        .where(eq(owners.id, storyWithRepo.repo.ownerId))
+        .limit(1)
 
-      if (!owner) {
+      if (!ownerResult[0]) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Owner not found',
         })
       }
+
+      const owner = ownerResult[0]
 
       const runHandle = await tasks.trigger(
         'story-decomposition',
@@ -454,18 +479,20 @@ export const storyRouter = router({
       })
 
       // Get owner info for repo slug
-      const owner = await ctx.db
-        .selectFrom('owners')
-        .selectAll()
-        .where('id', '=', repo.ownerId)
-        .executeTakeFirst()
+      const ownerResult = await ctx.db
+        .select()
+        .from(owners)
+        .where(eq(owners.id, repo.ownerId))
+        .limit(1)
 
-      if (!owner) {
+      if (!ownerResult[0]) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Owner not found',
         })
       }
+
+      const owner = ownerResult[0]
 
       const repoSlug = `${owner.login}/${repo.name}`
 

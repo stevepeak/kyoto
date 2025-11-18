@@ -1,5 +1,3 @@
-import type { ColumnType, RawBuilder } from 'kysely'
-
 export type JSONValue =
   | null
   | string
@@ -35,11 +33,8 @@ export interface RunStory {
 }
 
 // Column type for runs.stories JSONB array
-export type RunStoryColumnType = ColumnType<
-  RunStory[],
-  RunStory[] | RawBuilder<RunStory[]>,
-  RunStory[] | RawBuilder<RunStory[]>
->
+// Drizzle handles JSONB types automatically, this is kept for backward compatibility
+export type RunStoryColumnType = RunStory[]
 
 export interface StoryTestResultPayload {
   status: 'pass' | 'fail' | 'running' | 'error'

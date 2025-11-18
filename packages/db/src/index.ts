@@ -1,6 +1,6 @@
 export { setupDb } from './db'
 export { json } from './utils'
-export { sql } from 'kysely'
+export { sql } from 'drizzle-orm'
 export type {
   RunStory,
   RunStoryColumnType,
@@ -10,3 +10,4 @@ export type {
   JSONValue,
 } from './column-types'
 export type { DB } from './types'
+export * from './schema'
