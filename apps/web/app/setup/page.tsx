@@ -2,16 +2,35 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { SetupInstallAppWrapper } from '@/components/apps/setup-install-app-wrapper'
 import { getAuth } from '@/lib/auth'
+import { setupDb } from '@app/db/db'
+import { getUser } from '@app/api/helpers/users'
 
 // Setup page is user-specific and always dynamic
 export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
+function hasCompletedOnboarding(onboardingMetadata: unknown): boolean {
+  if (!onboardingMetadata || typeof onboardingMetadata !== 'object') {
+    return false
+  }
+
+  const metadata = onboardingMetadata as Record<string, unknown>
+  return (
+    typeof metadata.customerType === 'string' &&
+    typeof metadata.currentTesting === 'string' &&
+    typeof metadata.goals === 'string' &&
+    typeof metadata.brokenFeature === 'string' &&
+    typeof metadata.writtenUserStories === 'boolean'
+  )
+}
+
 /**
  * SetupPage handles the post-authentication setup or app installation redirect.
  *
  * - If `installation_id` is present in the query params, renders the installation flow for the app.
- * - Otherwise, validates session and redirects the user to the main app (`/app`).
+ * - Otherwise, validates session and checks onboarding status:
+ *   - If onboarding is incomplete, redirects to `/onboarding`
+ *   - If onboarding is complete, redirects to the main app (`/app`).
  *
  * @param searchParams - Promise resolving to an object with an optional `installation_id` field from the query string.
  * @returns JSX element for installation flow or a redirect; never undefined.
@@ -41,8 +60,9 @@ export default async function SetupPage({
     headersForAuth.set(key, value)
   }
 
+  let session
   try {
-    const session = await auth.api.getSession({
+    session = await auth.api.getSession({
       headers: headersForAuth,
     })
 
@@ -55,6 +75,24 @@ export default async function SetupPage({
     redirect('/auth?redirect=/setup')
   }
 
-  // Session is valid, redirect to /app
+  // Check onboarding status
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not set')
+  }
+
+  const db = setupDb(connectionString)
+  const user = await getUser({
+    db,
+    userId: session.user.id,
+  })
+
+  // Check if user has completed onboarding
+  const userWithMetadata = user as { onboardingMetadata?: unknown }
+  if (!hasCompletedOnboarding(userWithMetadata.onboardingMetadata)) {
+    redirect('/onboarding')
+  }
+
+  // Session is valid and onboarding is complete, redirect to /app
   redirect('/app')
 }

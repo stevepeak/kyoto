@@ -17,6 +17,14 @@ const timezoneSchema = z.string().refine(
   { message: 'Invalid timezone identifier' },
 )
 
+const onboardingMetadataSchema = z.object({
+  customerType: z.enum(['indie-hacker', 'vibe-coder', 'big-tech', 'startup']).optional(),
+  currentTesting: z.string().optional(),
+  goals: z.string().optional(),
+  brokenFeature: z.string().optional(),
+  writtenUserStories: z.boolean().optional(),
+})
+
 export const userRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id
@@ -53,6 +61,37 @@ export const userRouter = router({
           timeZone: input.timeZone,
         },
       })
+
+      return user
+    }),
+
+  updateOnboarding: protectedProcedure
+    .input(onboardingMetadataSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id
+
+      // Get current user to merge existing onboarding metadata
+      const currentUser = await getUser({
+        db: ctx.db,
+        userId,
+      })
+
+      const currentMetadata = ((currentUser as { onboardingMetadata?: unknown }).onboardingMetadata as Record<string, unknown>) || {}
+      const updatedMetadata = {
+        ...currentMetadata,
+        ...input,
+      }
+
+      const user = await updateUser({
+        db: ctx.db,
+        userId,
+        values: {
+          onboardingMetadata: updatedMetadata,
+        },
+      })
+
+      // Console log the answer for now
+      console.log('Onboarding answer:', input)
 
       return user
     }),
