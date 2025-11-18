@@ -32,6 +32,7 @@ export interface RunStory {
     decomposition: unknown
   } | null
   testResult: StoryTestResult | null
+  extTriggerDev: { runId: string } | null
 }
 
 type GitAuthor = {
@@ -52,6 +53,7 @@ export interface Run {
   updatedAt: string
   stories: RunStory[]
   gitAuthor: GitAuthor | null
+  extTriggerDev: { runId: string | null } | null
 }
 
 export interface RunDetailViewProps {

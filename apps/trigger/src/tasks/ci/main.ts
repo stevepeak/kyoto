@@ -28,7 +28,7 @@ import type { RunCiPayload } from './types'
 
 export const runCiTask = task({
   id: 'run-ci',
-  run: async (payload: RunCiPayload) => {
+  run: async (payload: RunCiPayload, { ctx }) => {
     const env = parseEnv()
     const db = setupDb(env.DATABASE_URL)
 
@@ -36,8 +36,8 @@ export const runCiTask = task({
     const repoRecord = await getRepoRecord(db, payload)
 
     logger.info(
-      `👉 ${repoRecord.ownerLogin}/${repoRecord.repoName}#${branchName}`,
-      { payload },
+      `${repoRecord.ownerLogin}/${repoRecord.repoName} on ${branchName} at ${(payload.commitSha ?? 'head').slice(0, 7)}`,
+      { payload, ctx },
     )
 
     const stories = await getStories(db, repoRecord.repoId)
@@ -79,6 +79,7 @@ export const runCiTask = task({
       runSummary,
       prNumber: payload.prNumber ?? null,
       gitAuthor,
+      extTriggerDev: { runId: ctx.run.id },
     })
 
     const runId = runInsert.id
@@ -141,6 +142,7 @@ export const runCiTask = task({
         initialRunStories,
         runId,
         agentVersion: payload.agentVersion,
+        extTriggerDev: { runId: ctx.run.id },
       })
 
       await updateRunResults({

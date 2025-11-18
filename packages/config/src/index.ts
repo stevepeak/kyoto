@@ -56,7 +56,9 @@ const envSchema = z.object({
     .transform((value) => value.replace(/\/+$/, ''))
     .optional(),
   BROWSERBASE_API_KEY: z.string().min(1, 'BROWSERBASE_API_KEY is required'),
-  BROWSERBASE_PROJECT_ID: z.string().min(1, 'BROWSERBASE_PROJECT_ID is required'),
+  BROWSERBASE_PROJECT_ID: z
+    .string()
+    .min(1, 'BROWSERBASE_PROJECT_ID is required'),
 })
 
 type ParsedEnv = z.infer<typeof envSchema>

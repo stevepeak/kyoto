@@ -287,6 +287,10 @@ export interface Run {
    */
   createdAt: Generated<Timestamp | null>;
   /**
+   * Trigger.dev run tracking data: {runId: string}
+   */
+  extTriggerDev: Json | null;
+  /**
    * Git commit author information stored as JSON: {id, login, name}
    */
   gitAuthor: Json | null;
@@ -451,6 +455,10 @@ export interface StoryTestResult {
    * Total evaluation duration in milliseconds
    */
   durationMs: number | null;
+  /**
+   * Trigger.dev run tracking data: {runId: string}
+   */
+  extTriggerDev: Json | null;
   /**
    * Unique identifier for each story test result
    */

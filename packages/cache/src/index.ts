@@ -13,5 +13,4 @@ export {
   invalidateCache,
   invalidateCacheForStory,
   buildCacheDataFromEvaluation,
-  type CacheData,
 } from './cache-service'

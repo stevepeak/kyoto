@@ -91,6 +91,7 @@ interface CreateRunRecordParams {
   runSummary: string | null
   prNumber?: string | null
   gitAuthor?: GitAuthor | null
+  extTriggerDev: { runId: string } | null
 }
 
 export async function createRunRecord({
@@ -104,6 +105,7 @@ export async function createRunRecord({
   runSummary,
   prNumber = null,
   gitAuthor = null,
+  extTriggerDev,
 }: CreateRunRecordParams): Promise<RunInsert> {
   const gitAuthorJson =
     gitAuthor && (gitAuthor.id || gitAuthor.login || gitAuthor.name)
@@ -124,7 +126,8 @@ export async function createRunRecord({
         commit_message,
         pr_number,
         summary,
-        git_author
+        git_author,
+        ext_trigger_dev
       ) VALUES (
         ${repoId},
         ${branchName},
@@ -134,7 +137,8 @@ export async function createRunRecord({
         ${commitMessage},
         ${prNumber},
         ${runSummary},
-        ${gitAuthorJson ? sql`${JSON.stringify(gitAuthorJson)}::jsonb` : sql`NULL`}
+        ${gitAuthorJson ? sql`${JSON.stringify(gitAuthorJson)}::jsonb` : sql`NULL`},
+        ${extTriggerDev ? sql`${JSON.stringify(extTriggerDev)}::jsonb` : sql`NULL`}
       )
       RETURNING id, number
     `.execute(db)

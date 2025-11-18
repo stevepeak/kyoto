@@ -22,6 +22,7 @@ interface RunStoriesWithSandboxParams {
   initialRunStories: RunStory[]
   runId: string
   agentVersion?: string
+  extTriggerDev: { runId: string | null }
 }
 
 export async function runStoriesWithSandbox({
@@ -33,6 +34,7 @@ export async function runStoriesWithSandbox({
   initialRunStories,
   runId,
   agentVersion = agents.decomposition.version,
+  extTriggerDev,
 }: RunStoriesWithSandboxParams): Promise<AggregatedRunOutcome> {
   const env = parseEnv()
   const db = setupDb(env.DATABASE_URL)
@@ -51,7 +53,6 @@ export async function runStoriesWithSandbox({
       async (story) => {
         const startedAt = new Date()
 
-        // Create an initial result row so downstream steps can stream updates
         const inserted = await db
           .insertInto('storyTestResults')
           .values({
@@ -61,6 +62,7 @@ export async function runStoriesWithSandbox({
             startedAt,
             analysisVersion: 1,
             analysis: null,
+            extTriggerDev,
           })
           .returning(['id'])
           .executeTakeFirst()

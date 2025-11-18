@@ -18,19 +18,49 @@ export type TestStoryTaskResult = {
 
 export const testStoryTask = task({
   id: 'test-story',
-  run: async (payload: {
-    storyId: string
-    /** The Daytona Sandbox ID */
-    daytonaSandboxId?: string
-    /** The branch name for cache lookup */
-    branchName?: string
-    /** The commit SHA for cache lookup */
-    commitSha?: string
-    /** The run ID for cache metadata */
-    runId?: string
-  }): Promise<TestStoryTaskResult> => {
+  run: async (
+    payload: {
+      storyId: string
+      /** The Daytona Sandbox ID */
+      daytonaSandboxId?: string
+      /** The branch name for cache lookup */
+      branchName?: string
+      /** The commit SHA for cache lookup */
+      commitSha?: string
+      /** The run ID for cache metadata */
+      runId?: string
+    },
+    params,
+  ): Promise<TestStoryTaskResult> => {
     const { DATABASE_URL } = parseEnv()
     const db = setupDb(DATABASE_URL)
+
+    // Get trigger runId from task ctx (provided by trigger.dev)
+    // Update story_test_results with trigger runId if available and if we have a runId
+    if (params.ctx?.run?.id && payload.runId) {
+      // Find the most recent running story_test_results for this story and runId
+      const runningResult = await db
+        .selectFrom('storyTestResults')
+        .select(['id'])
+        .where('storyId', '=', payload.storyId)
+        .where('runId', '=', payload.runId)
+        .where('status', '=', 'running')
+        .orderBy('startedAt', 'desc')
+        .limit(1)
+        .executeTakeFirst()
+
+      if (runningResult) {
+        await db
+          .updateTable('storyTestResults')
+          .set({
+            extTriggerDev: {
+              runId: params.ctx.run.id,
+            },
+          })
+          .where('id', '=', runningResult.id)
+          .execute()
+      }
+    }
 
     // Look up the story and associated repository metadata needed for testing
     const storyRecord = await db

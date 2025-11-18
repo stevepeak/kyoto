@@ -139,18 +139,19 @@ export const runRouter = router({
       const storyResults = await ctx.db
         .selectFrom('storyTestResults')
         .select([
-          'storyTestResults.id',
-          'storyTestResults.storyId',
-          'storyTestResults.status',
-          'storyTestResults.analysisVersion',
-          'storyTestResults.analysis',
-          'storyTestResults.startedAt',
-          'storyTestResults.completedAt',
-          'storyTestResults.durationMs',
-          'storyTestResults.createdAt',
-          'storyTestResults.updatedAt',
+          'id',
+          'storyId',
+          'status',
+          'analysisVersion',
+          'analysis',
+          'startedAt',
+          'completedAt',
+          'durationMs',
+          'createdAt',
+          'updatedAt',
+          'extTriggerDev',
         ])
-        .where('storyTestResults.runId', '=', run.id)
+        .where('runId', '=', run.id)
         .execute()
 
       return {

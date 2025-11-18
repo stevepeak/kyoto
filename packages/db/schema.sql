@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 74i1Q8lLeEWIPtfIlKafJDAsSXoJdxB1miMKmw8u4rFxKfGucxwcIbAs7rUfeVs
+\restrict 2UfAb9FrSgxGgEhyNQQsvFCrhCeTHRx428GiSJSYemuI4Dj3yTzIhUYbEzP4Lny
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -721,6 +721,7 @@ CREATE TABLE public.runs (
     stories jsonb DEFAULT '[]'::jsonb NOT NULL,
     number integer NOT NULL,
     git_author jsonb,
+    ext_trigger_dev jsonb,
     CONSTRAINT runs_status_check CHECK ((status = ANY (ARRAY['pass'::text, 'fail'::text, 'skipped'::text, 'running'::text, 'error'::text])))
 );
 
@@ -807,6 +808,13 @@ COMMENT ON COLUMN public.runs.stories IS 'Array of story execution details with 
 --
 
 COMMENT ON COLUMN public.runs.git_author IS 'Git commit author information stored as JSON: {id, login, name}';
+
+
+--
+-- Name: COLUMN runs.ext_trigger_dev; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.runs.ext_trigger_dev IS 'Trigger.dev run tracking data: {runId: string}';
 
 
 --
@@ -1056,6 +1064,7 @@ CREATE TABLE public.story_test_results (
     duration_ms integer,
     analysis jsonb,
     analysis_version integer NOT NULL,
+    ext_trigger_dev jsonb,
     CONSTRAINT story_test_results_status_check CHECK ((status = ANY (ARRAY['pass'::text, 'fail'::text, 'running'::text, 'error'::text])))
 );
 
@@ -1142,6 +1151,13 @@ COMMENT ON COLUMN public.story_test_results.analysis IS 'Versioned story analysi
 --
 
 COMMENT ON COLUMN public.story_test_results.analysis_version IS 'Version number of the stored analysis payload.';
+
+
+--
+-- Name: COLUMN story_test_results.ext_trigger_dev; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.story_test_results.ext_trigger_dev IS 'Trigger.dev run tracking data: {runId: string}';
 
 
 --
@@ -1846,5 +1862,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 74i1Q8lLeEWIPtfIlKafJDAsSXoJdxB1miMKmw8u4rFxKfGucxwcIbAs7rUfeVs
+\unrestrict 2UfAb9FrSgxGgEhyNQQsvFCrhCeTHRx428GiSJSYemuI4Dj3yTzIhUYbEzP4Lny
 

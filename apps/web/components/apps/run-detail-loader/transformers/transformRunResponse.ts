@@ -89,6 +89,36 @@ export function transformRunResponse(data: RunQueryOutput): Run | null {
           }
         : null,
       testResult,
+      extTriggerDev: (() => {
+        if (!rawResult?.extTriggerDev) {
+          return null
+        }
+        try {
+          const parsed =
+            typeof rawResult.extTriggerDev === 'string'
+              ? (JSON.parse(rawResult.extTriggerDev) as unknown)
+              : rawResult.extTriggerDev
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'runId' in parsed &&
+            parsed.runId !== null &&
+            parsed.runId !== undefined
+          ) {
+            const runId = parsed.runId
+            if (
+              typeof runId === 'string' ||
+              typeof runId === 'number' ||
+              typeof runId === 'boolean'
+            ) {
+              return { runId: String(runId) }
+            }
+          }
+        } catch {
+          // Invalid JSON, leave as null
+        }
+        return null
+      })(),
     }
   })
 
@@ -118,6 +148,39 @@ export function transformRunResponse(data: RunQueryOutput): Run | null {
     }
   }
 
+  // Parse extTriggerDev from JSONB
+  let extTriggerDev: { runId: string | null } | null = null
+  if (run.extTriggerDev) {
+    try {
+      const parsed =
+        typeof run.extTriggerDev === 'string'
+          ? (JSON.parse(run.extTriggerDev) as unknown)
+          : run.extTriggerDev
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'runId' in parsed
+      ) {
+        const runId = parsed.runId
+        if (runId !== null && runId !== undefined) {
+          if (
+            typeof runId === 'string' ||
+            typeof runId === 'number' ||
+            typeof runId === 'boolean'
+          ) {
+            extTriggerDev = {
+              runId: String(runId),
+            }
+          }
+        } else {
+          extTriggerDev = { runId: null }
+        }
+      }
+    } catch {
+      // Invalid JSON, leave as null
+    }
+  }
+
   return {
     id: run.id,
     commitSha: run.commitSha ?? null,
@@ -130,5 +193,6 @@ export function transformRunResponse(data: RunQueryOutput): Run | null {
     updatedAt,
     stories,
     gitAuthor,
+    extTriggerDev,
   }
 }
