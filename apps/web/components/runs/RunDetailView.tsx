@@ -23,6 +23,16 @@ import { RunStoryCard } from './RunStoryCard'
 
 export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
   const router = useRouter()
+
+  // Console log trigger runId and accessKey when opening a new run
+  useEffect(() => {
+    if (run.extTriggerDev) {
+      // TODO server side get the public token then monitor the build
+      // TODO get each story too.
+      console.log('Trigger.dev Run Info:', run.extTriggerDev)
+    }
+  }, [run.extTriggerDev])
+
   const statusDisplay = getStatusDisplay(run.status)
   const runStatusDescriptor = getRunStatusDescriptor(run.status)
   const commitTitle = getCommitTitle(run.commitMessage, 'Workflow run')
