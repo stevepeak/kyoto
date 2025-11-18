@@ -22,6 +22,7 @@
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
     "@app/schemas": "workspace:*",
+    "@browserbasehq/stagehand": "^3.0.3",
     "@daytonaio/sdk": "^0.113.1",
     "@octokit/auth-app": "^8.1.2",
     "@octokit/rest": "^22.0.1",
@@ -30,6 +31,7 @@
     "@sentry/node": "^10.23.0",
     "@sentry/opentelemetry": "^10.25.0",
     "@trigger.dev/sdk": "4.1.0",
+    "ai": "^5.0.93",
     "import-in-the-middle": "^2.0.0",
     "p-map": "^7.0.4",
     "zod": "^4.1.12"

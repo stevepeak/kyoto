@@ -55,6 +55,8 @@ const envSchema = z.object({
     .min(1)
     .transform((value) => value.replace(/\/+$/, ''))
     .optional(),
+  BROWSERBASE_API_KEY: z.string().min(1, 'BROWSERBASE_API_KEY is required'),
+  BROWSERBASE_PROJECT_ID: z.string().min(1, 'BROWSERBASE_PROJECT_ID is required'),
 })
 
 type ParsedEnv = z.infer<typeof envSchema>
@@ -71,6 +73,8 @@ export function parseEnv(): ParsedEnv {
     AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
     CONTEXT7_API_KEY: process.env.CONTEXT7_API_KEY,
     SITE_BASE_URL: process.env.SITE_BASE_URL,
+    BROWSERBASE_API_KEY: process.env.BROWSERBASE_API_KEY,
+    BROWSERBASE_PROJECT_ID: process.env.BROWSERBASE_PROJECT_ID,
   })
 }
 
