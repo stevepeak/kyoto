@@ -248,7 +248,7 @@ export type TestStatus = z.infer<typeof testStatusSchema>
  * Evidence for a single assertion.
  * Evidence is stored as file paths with line ranges.
  *
- * Example:
+ * Example (passing assertion):
  * ```json
  * {
  *   "fact": "The user can create a new team",
@@ -259,6 +259,16 @@ export type TestStatus = z.infer<typeof testStatusSchema>
  *   "cachedFromRunId": "run_abc123" // Optional: if evidence came from cache
  * }
  * ```
+ *
+ * Example (failing assertion):
+ * ```json
+ * {
+ *   "fact": "The user can create a new team",
+ *   "evidence": [],
+ *   "reason": "No evidence found for team creation functionality" // Optional: reason for failure
+ * }
+ * ```
+ * TODO - we need to actually use this assertionEvidenceSchema.parse() to validate the data.
  */
 export const assertionEvidenceSchema = z.object({
   /**
@@ -284,6 +294,17 @@ export const assertionEvidenceSchema = z.object({
     .uuid()
     .optional()
     .describe('Run ID if evidence came from cache'),
+
+  /**
+   * Optional reason/explanation for why an assertion failed.
+   * Only present when the assertion fails.
+   * TODO - remove optional at some point.
+   */
+  reason: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Explanation for why the assertion failed'),
 })
 
 export type AssertionEvidence = z.infer<typeof assertionEvidenceSchema>

@@ -94,25 +94,50 @@ export function ConclusionDisplay({
                     <div className="space-y-3 border-t px-3 py-3 text-sm text-foreground">
                       {step.assertions && step.assertions.length > 0 ? (
                         <div className="space-y-2">
-                          {step.assertions.map((assertion, assertionIndex) => (
-                            <div
-                              key={`${storyResultId}-assertion-${goal}-${stepIndex}-${assertionIndex}`}
-                              className="rounded-md border bg-background p-3"
-                            >
-                              <div className="text-sm font-medium text-foreground">
-                                {assertion.fact}
+                          {step.assertions.map((assertion, assertionIndex) => {
+                            const isPassed = step.conclusion === 'pass'
+                            const assertionStyles = isPassed
+                              ? 'border-chart-1/40 bg-chart-1/10'
+                              : 'border-destructive/40 bg-destructive/10'
+
+                            return (
+                              <div
+                                key={`${storyResultId}-assertion-${goal}-${stepIndex}-${assertionIndex}`}
+                                className={cn(
+                                  'rounded-md border p-3',
+                                  assertionStyles,
+                                )}
+                              >
+                                <div
+                                  className={cn(
+                                    'text-sm font-medium',
+                                    isPassed
+                                      ? 'text-chart-1'
+                                      : 'text-destructive',
+                                  )}
+                                >
+                                  {assertion.fact}
+                                </div>
+                                {!isPassed && (
+                                  <div className="mt-2 text-xs text-muted-foreground">
+                                    {assertion.reason ||
+                                      'Reason not available - to be added later'}
+                                  </div>
+                                )}
+                                {assertion.evidence &&
+                                assertion.evidence.length > 0 ? (
+                                  <div className="mt-2">
+                                    <EvidenceList
+                                      evidence={assertion.evidence}
+                                      orgName={orgName}
+                                      repoName={repoName}
+                                      commitSha={commitSha}
+                                    />
+                                  </div>
+                                ) : null}
                               </div>
-                              {assertion.evidence &&
-                              assertion.evidence.length > 0 ? (
-                                <EvidenceList
-                                  evidence={assertion.evidence}
-                                  orgName={orgName}
-                                  repoName={repoName}
-                                  commitSha={commitSha}
-                                />
-                              ) : null}
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       ) : null}
                     </div>
