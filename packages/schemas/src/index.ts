@@ -65,3 +65,25 @@ export type {
   ValidationResult,
   evaluationAgentOptions,
 } from './agent-types'
+
+// ============================================================================
+// STORY CHANGE DISCOVERY
+// ============================================================================
+
+export {
+  storyDiffFileSchema,
+  storyDiffSummarySchema,
+  storyChangeClueSchema,
+  storyChangeClueResultSchema,
+  changedStoryInsightSchema,
+  storyChangeDiscoveryResultSchema,
+} from './story-change-discovery'
+
+export type {
+  StoryDiffFile,
+  StoryDiffSummary,
+  StoryChangeClue,
+  StoryChangeClueResult,
+  ChangedStoryInsight,
+  StoryChangeDiscoveryResult,
+} from './story-change-discovery'

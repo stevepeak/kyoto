@@ -4,6 +4,7 @@ import { logger } from '@trigger.dev/sdk'
 
 import { createOctokit } from '../../../helpers/github'
 import { runCiTask } from '../../ci/main'
+import { discoverStoryChangesTask } from '../../discover-story-changes'
 import { findRepoByOwnerAndName, type RepoLookupResult } from '../shared/db'
 import { pushEventSchema } from '../shared/schemas'
 import {
@@ -126,6 +127,10 @@ export const pushHandler: WebhookHandler = async ({
     const commitSha = parsed.data.after ?? null
     const headCommit = parsed.data.head_commit
     const commitMessage = headCommit?.message ?? null
+    const beforeSha = parsed.data.before ?? null
+    const repoSlug = `${ownerLogin}/${repoName}`
+    const hasValidCommitRange =
+      Boolean(beforeSha && commitSha) && !/^0+$/.test(beforeSha ?? '')
 
     await runCiTask.trigger(
       {
@@ -152,6 +157,51 @@ export const pushHandler: WebhookHandler = async ({
       branchName,
       commitSha: parsed.data.after ?? null,
     })
+
+    if (hasValidCommitRange) {
+      try {
+        await discoverStoryChangesTask.trigger(
+          {
+            repoSlug,
+            before: beforeSha!,
+            after: commitSha!,
+          },
+          {
+            tags: [
+              `org_${ownerLogin}`,
+              `repo_${repoName}`,
+              `before_${beforeSha!.slice(0, 7)}`,
+              `after_${commitSha!.slice(0, 7)}`,
+            ],
+          },
+        )
+
+        logger.info('Queued story change discovery run', {
+          deliveryId,
+          ownerLogin,
+          repoName,
+          before: beforeSha,
+          after: commitSha,
+        })
+      } catch (error) {
+        logger.error('Failed to queue story change discovery run', {
+          deliveryId,
+          ownerLogin,
+          repoName,
+          before: beforeSha,
+          after: commitSha,
+          error,
+        })
+      }
+    } else {
+      logger.info('Skipping story change discovery due to missing commit range', {
+        deliveryId,
+        ownerLogin,
+        repoName,
+        before: beforeSha,
+        after: commitSha,
+      })
+    }
   } catch (error) {
     logger.error('Failed to queue CI run from push event', {
       deliveryId,

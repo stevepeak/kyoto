@@ -83,6 +83,9 @@ importers:
       ai:
         specifier: ^5.0.93
         version: 5.0.93(zod@4.1.12)
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
       import-in-the-middle:
         specifier: ^2.0.0
         version: 2.0.0
@@ -283,6 +286,9 @@ importers:
       '@app/config':
         specifier: workspace:*
         version: link:../config
+      '@app/db':
+        specifier: workspace:*
+        version: link:../db
       '@app/schemas':
         specifier: workspace:*
         version: link:../schemas
@@ -4811,6 +4817,10 @@ packages:
 
   diff@3.5.0:
     resolution: {integrity: sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==}
+    engines: {node: '>=0.3.1'}
+
+  diff@8.0.2:
+    resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
     engines: {node: '>=0.3.1'}
 
   doctrine@2.1.0:
@@ -13563,6 +13573,8 @@ snapshots:
   devtools-protocol@0.0.1464554: {}
 
   diff@3.5.0: {}
+
+  diff@8.0.2: {}
 
   doctrine@2.1.0:
     dependencies:
