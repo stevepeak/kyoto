@@ -5,11 +5,16 @@ import { parseEnv } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import type { StoryDiscoveryOutput } from '@app/agents'
+import {
+  findMostSimilarStory,
+  type StoryForMatching,
+} from '@app/agents'
 import { findRepoByOwnerAndName } from './github/shared/db'
 import { createOctokit, getOctokitClient } from '../helpers/github'
 import { Experimental_Agent as Agent, Output } from 'ai'
 import { z } from 'zod'
 import dedent from 'dedent'
+import type { DecompositionOutput } from '@app/schemas'
 
 interface DiscoverStoriesFromCommitsPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -344,20 +349,16 @@ async function generateStoryDiff(
 
 /**
  * Compare discovered stories with existing stories to find changes
- * Uses AI to generate story diffs for potentially changed stories
+ * Uses semantic similarity (embeddings) to match stories and AI to generate story diffs
  */
 async function compareStories(
   discoveredStories: StoryDiscoveryOutput,
-  existingStories: Array<{
-    id: string
-    name: string
-    story: string
-  }>,
+  existingStories: StoryForMatching[],
   codeDiff: string,
   commitMessages: string[],
   changedFiles: string[],
 ): Promise<StoryComparisonResult> {
-  logger.info('Comparing discovered stories with existing stories', {
+  logger.info('Comparing discovered stories with existing stories using semantic matching', {
     discoveredCount: discoveredStories.stories.length,
     existingCount: existingStories.length,
   })
@@ -367,37 +368,53 @@ async function compareStories(
   const potentiallyNewStories: StoryComparisonResult['potentiallyNewStories'] =
     []
 
-  // For each discovered story, check if it matches an existing story
+  // Build query text for each discovered story (same format as buildStoryText)
+  function buildQueryText(discovered: { title?: string; text: string }): string {
+    const parts: string[] = []
+    const title = discovered.title || discovered.text.split('\n')[0] || ''
+    parts.push(`Title: ${title}`)
+    parts.push(`Story: ${discovered.text}`)
+    return parts.join('\n\n')
+  }
+
+  // For each discovered story, find the most similar existing story using semantic search
   for (const discovered of discoveredStories.stories) {
     const title = discovered.title || discovered.text.split('\n')[0] || ''
+    const queryText = buildQueryText(discovered)
 
-    // Try to find a matching existing story by title similarity
-    const matchingStory = existingStories.find((existing) => {
-      const existingTitle = existing.name.toLowerCase()
-      const discoveredTitle = title.toLowerCase()
-      // Simple matching - could be improved with fuzzy matching
-      return (
-        existingTitle === discoveredTitle ||
-        existingTitle.includes(discoveredTitle) ||
-        discoveredTitle.includes(existingTitle)
-      )
+    logger.info('Finding semantic match for discovered story', {
+      discoveredTitle: title,
+      queryTextLength: queryText.length,
     })
 
-    if (matchingStory) {
+    void streams.append(
+      'progress',
+      `Finding semantic match for "${title}"`,
+    )
+
+    // Use semantic matching with a threshold of 0.7
+    const match = await findMostSimilarStory(existingStories, queryText, 0.7)
+
+    if (match) {
       // Generate story diff using AI
-      logger.info('Generating story diff for matched story', {
-        existingStoryId: matchingStory.id,
-        existingStoryName: matchingStory.name,
+      logger.info('Generating story diff for semantically matched story', {
+        existingStoryId: match.story.id,
+        existingStoryName: match.story.name,
         discoveredTitle: title,
+        similarity: match.similarity,
       })
 
       void streams.append(
         'progress',
-        `Generating story diff for "${matchingStory.name}"`,
+        `Generating story diff for "${match.story.name}" (similarity: ${(match.similarity * 100).toFixed(1)}%)`,
       )
 
       const storyDiff = await generateStoryDiff(
-        matchingStory,
+        {
+          id: match.story.id,
+          name: match.story.name,
+          story: match.story.story,
+        },
         discovered,
         codeDiff,
         commitMessages,
@@ -407,15 +424,18 @@ async function compareStories(
       // Potentially changed story
       potentiallyChangedStories.push({
         existingStory: {
-          id: matchingStory.id,
-          name: matchingStory.name,
-          story: matchingStory.story,
+          id: match.story.id,
+          name: match.story.name,
+          story: match.story.story,
         },
         storyDiff,
-        reason: `Story "${title}" matches existing story "${matchingStory.name}" and may have been modified`,
+        reason: `Story "${title}" semantically matches existing story "${match.story.name}" (similarity: ${(match.similarity * 100).toFixed(1)}%) and may have been modified`,
       })
     } else {
-      // Potentially new story
+      // Potentially new story - no semantic match found above threshold
+      logger.info('No semantic match found for discovered story', {
+        discoveredTitle: title,
+      })
       potentiallyNewStories.push({
         title,
         text: discovered.text,
@@ -580,13 +600,24 @@ export const discoverStoriesFromCommitsTask = task({
 
       void streams.append('progress', 'Fetching existing stories for comparison')
 
-      // Get existing stories
-      const existingStories = await db
+      // Get existing stories with decomposition (for semantic matching)
+      // Load stories that are active, paused, or generated (not archived)
+      const existingStoriesRaw = await db
         .selectFrom('stories')
-        .select(['id', 'name', 'story'])
+        .select(['id', 'name', 'story', 'decomposition'])
         .where('repoId', '=', repoRecord.repoId)
-        .where('state', '!=', 'archived')
+        .where('state', 'in', ['active', 'paused', 'generated'])
         .execute()
+
+      // Transform to StoryForMatching format
+      const existingStories: StoryForMatching[] = existingStoriesRaw.map(
+        (story) => ({
+          id: story.id,
+          name: story.name,
+          story: story.story,
+          decomposition: story.decomposition as DecompositionOutput | null,
+        }),
+      )
 
       logger.info('Step 8: Creating sandbox for story discovery', {
         repoId: repoRecord.repoId,
