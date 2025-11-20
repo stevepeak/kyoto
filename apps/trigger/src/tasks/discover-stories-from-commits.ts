@@ -33,7 +33,7 @@ interface StoryComparisonResult {
       name: string
       story: string
     }
-    diff: string
+    storyDiff: string
     reason: string
   }>
   potentiallyNewStories: Array<{
@@ -54,6 +54,8 @@ const clueAnalysisOutputSchema = z.object({
 
 /**
  * Agent to analyze commits and code diff for clues about potential feature changes
+ * Note: Code diff is filtered to TypeScript/TSX files only and may be truncated.
+ * The sandbox can be used for full context if needed.
  */
 async function analyzeClues(
   repoSlug: string,
@@ -105,13 +107,13 @@ async function analyzeClues(
     ## Repository
     ${repoSlug}
 
-    ## Changed Files
+    ## Changed Files (TypeScript/TSX only)
     ${changedFiles.map((f) => `- ${f}`).join('\n')}
 
     ## Commit Messages
     ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
 
-    ## Code Diff
+    ## Code Diff (TypeScript/TSX files only, may be truncated - sandbox available for full context)
     \`\`\`
     ${codeDiff}
     \`\`\`
@@ -132,6 +134,8 @@ async function analyzeClues(
 
 /**
  * Get code diff from GitHub between two commits
+ * Filters to only TypeScript/TSX files and truncates to avoid context overflow
+ * Note: The sandbox can be used for full context if needed
  */
 async function getGitHubDiff(
   octokit: ReturnType<typeof createOctokit>,
@@ -139,6 +143,7 @@ async function getGitHubDiff(
   repo: string,
   base: string,
   head: string,
+  maxDiffSize: number = 50000, // ~50KB max diff size
 ): Promise<{ diff: string; changedFiles: string[] }> {
   logger.info('Fetching diff from GitHub', {
     owner,
@@ -154,24 +159,60 @@ async function getGitHubDiff(
     head,
   })
 
-  const diff = comparison.data.files
-    ?.map((file) => {
-      const status = file.status
-      const filename = file.filename
-      const patch = file.patch || ''
-      return `diff --git a/${filename} b/${filename}\nindex ${file.sha}..${file.sha}\n--- a/${filename}\n+++ b/${filename}\n${patch}`
-    })
-    .join('\n\n')
-    || ''
+  // Filter to only TypeScript/TSX files
+  const tsFiles =
+    comparison.data.files?.filter(
+      (file) =>
+        file.filename.endsWith('.ts') || file.filename.endsWith('.tsx'),
+    ) || []
 
-  const changedFiles =
-    comparison.data.files?.map((file) => file.filename).filter(Boolean) || []
+  // Build diff string, truncating if necessary
+  let diff = ''
+  let totalSize = 0
+  const truncatedFiles: string[] = []
+
+  for (const file of tsFiles) {
+    const fileDiff = `diff --git a/${file.filename} b/${file.filename}\nindex ${file.sha}..${file.sha}\n--- a/${file.filename}\n+++ b/${file.filename}\n${file.patch || ''}`
+    const fileDiffSize = fileDiff.length
+
+    if (totalSize + fileDiffSize > maxDiffSize) {
+      // Truncate this file's diff if adding it would exceed the limit
+      const remainingSpace = maxDiffSize - totalSize
+      if (remainingSpace > 100) {
+        // Only add if we have meaningful space left
+        const truncatedPatch = file.patch
+          ? file.patch.substring(0, remainingSpace - 200) +
+            '\n... (diff truncated - use sandbox for full context)'
+          : ''
+        diff += `diff --git a/${file.filename} b/${file.filename}\nindex ${file.sha}..${file.sha}\n--- a/${file.filename}\n+++ b/${file.filename}\n${truncatedPatch}\n\n`
+        truncatedFiles.push(file.filename)
+      }
+      break
+    }
+
+    diff += fileDiff + '\n\n'
+    totalSize += fileDiffSize
+  }
+
+  const changedFiles = tsFiles.map((file) => file.filename)
+
+  if (truncatedFiles.length > 0) {
+    logger.info('Diff truncated due to size limit', {
+      owner,
+      repo,
+      truncatedFileCount: truncatedFiles.length,
+      totalSize,
+      maxDiffSize,
+      truncatedFiles,
+    })
+  }
 
   logger.info('Fetched diff from GitHub', {
     owner,
     repo,
     changedFileCount: changedFiles.length,
     diffLength: diff.length,
+    truncatedFileCount: truncatedFiles.length,
   })
 
   return { diff, changedFiles }
@@ -216,7 +257,94 @@ async function getCommitMessages(
 }
 
 /**
+ * Generate a story diff using AI to compare existing story with new findings
+ * Uses the existing story as the baseline and asks AI what needs to change
+ */
+async function generateStoryDiff(
+  existingStory: {
+    id: string
+    name: string
+    story: string
+  },
+  discoveredStory: {
+    title?: string
+    text: string
+  },
+  codeDiff: string,
+  commitMessages: string[],
+  changedFiles: string[],
+): Promise<string> {
+  const env = parseEnv()
+  const model = agents.discovery.options.model
+
+  const agent = new Agent({
+    model,
+    system: dedent`
+      You are an expert story analyst tasked with comparing an existing user story with new findings from code changes.
+
+      # Your Task
+      Compare the existing story (which is the baseline/truth) with the newly discovered story text and code changes.
+      Determine what changes need to be made to the existing story to align it with the new findings.
+
+      # Output Format
+      Provide a clear, structured diff showing:
+      1. What parts of the existing story should remain unchanged
+      2. What parts should be modified and how
+      3. What new elements should be added
+      4. What should be removed (if anything)
+
+      Format your response as a story diff, showing:
+      - Lines that remain the same (with context)
+      - Lines that need modification (show old → new)
+      - New lines to add
+      - Lines to remove
+
+      Focus on making the existing story accurately reflect the current state of the codebase based on the changes.
+    `,
+  })
+
+  const prompt = dedent`
+    Compare the existing story with new findings and generate a story diff.
+
+    ## Existing Story (Baseline)
+    **Title:** ${existingStory.name}
+    **Story Text:**
+    ${existingStory.story}
+
+    ## New Findings
+    **Discovered Title:** ${discoveredStory.title || 'N/A'}
+    **Discovered Story Text:**
+    ${discoveredStory.text}
+
+    ## Code Changes Context
+    **Changed Files:**
+    ${changedFiles.map((f) => `- ${f}`).join('\n')}
+
+    **Commit Messages:**
+    ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+
+    **Code Diff (truncated - sandbox available for full context):**
+    \`\`\`
+    ${codeDiff.substring(0, 5000)}${codeDiff.length > 5000 ? '\n... (diff truncated)' : ''}
+    \`\`\`
+
+    Generate a story diff showing what changes need to be made to the existing story to align with the new findings.
+    Use the existing story as the baseline and show what modifications are needed.
+  `
+
+  logger.info('Generating story diff', {
+    existingStoryId: existingStory.id,
+    existingStoryName: existingStory.name,
+  })
+
+  const result = await agent.generate({ prompt })
+
+  return result.text
+}
+
+/**
  * Compare discovered stories with existing stories to find changes
+ * Uses AI to generate story diffs for potentially changed stories
  */
 async function compareStories(
   discoveredStories: StoryDiscoveryOutput,
@@ -226,6 +354,8 @@ async function compareStories(
     story: string
   }>,
   codeDiff: string,
+  commitMessages: string[],
+  changedFiles: string[],
 ): Promise<StoryComparisonResult> {
   logger.info('Comparing discovered stories with existing stories', {
     discoveredCount: discoveredStories.stories.length,
@@ -254,6 +384,26 @@ async function compareStories(
     })
 
     if (matchingStory) {
+      // Generate story diff using AI
+      logger.info('Generating story diff for matched story', {
+        existingStoryId: matchingStory.id,
+        existingStoryName: matchingStory.name,
+        discoveredTitle: title,
+      })
+
+      void streams.append(
+        'progress',
+        `Generating story diff for "${matchingStory.name}"`,
+      )
+
+      const storyDiff = await generateStoryDiff(
+        matchingStory,
+        discovered,
+        codeDiff,
+        commitMessages,
+        changedFiles,
+      )
+
       // Potentially changed story
       potentiallyChangedStories.push({
         existingStory: {
@@ -261,7 +411,7 @@ async function compareStories(
           name: matchingStory.name,
           story: matchingStory.story,
         },
-        diff: codeDiff, // Include full diff for context
+        storyDiff,
         reason: `Story "${title}" matches existing story "${matchingStory.name}" and may have been modified`,
       })
     } else {
@@ -485,11 +635,13 @@ export const discoverStoriesFromCommitsTask = task({
 
         void streams.append('progress', 'Comparing discovered stories')
 
-        // Compare stories
+        // Compare stories - uses AI to generate story diffs
         const comparison = await compareStories(
           discoveryResult,
           existingStories,
           diff,
+          commitMessages,
+          changedFiles,
         )
 
         logger.info('Story discovery completed', {
