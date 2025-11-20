@@ -4,6 +4,7 @@ import { logger } from '@trigger.dev/sdk'
 
 import { createOctokit } from '../../../helpers/github'
 import { runCiTask } from '../../ci/main'
+import { discoverStoriesFromCommitsTask } from '../../discover-stories-from-commits'
 import { findRepoByOwnerAndName, type RepoLookupResult } from '../shared/db'
 import { pushEventSchema } from '../shared/schemas'
 import {
@@ -124,6 +125,7 @@ export const pushHandler: WebhookHandler = async ({
     }
 
     const commitSha = parsed.data.after ?? null
+    const beforeSha = parsed.data.before ?? null
     const headCommit = parsed.data.head_commit
     const commitMessage = headCommit?.message ?? null
 
@@ -152,6 +154,35 @@ export const pushHandler: WebhookHandler = async ({
       branchName,
       commitSha: parsed.data.after ?? null,
     })
+
+    // Trigger story discovery from commits if we have both before and after SHAs
+    if (beforeSha && commitSha && beforeSha !== '0000000000000000000000000000000000000000') {
+      await discoverStoriesFromCommitsTask.trigger(
+        {
+          repo: `${ownerLogin}/${repoName}`,
+          after: commitSha,
+          before: beforeSha,
+        },
+        {
+          tags: [
+            `org_${ownerLogin}`,
+            `repo_${repoName}`,
+            `branch_${branchName}`,
+            `commit_${commitSha?.slice(0, 7)}`,
+            'story-discovery',
+          ],
+        },
+      )
+
+      logger.info('Queued story discovery from commits', {
+        deliveryId,
+        ownerLogin,
+        repoName,
+        branchName,
+        before: beforeSha,
+        after: commitSha,
+      })
+    }
   } catch (error) {
     logger.error('Failed to queue CI run from push event', {
       deliveryId,

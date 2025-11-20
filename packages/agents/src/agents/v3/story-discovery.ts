@@ -7,6 +7,7 @@ import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
 import { createReadFileTool } from '../../tools/read-file-tool'
 import { createResolveLibraryTool } from '../../tools/context7-tool'
+import { createSearchStoriesTool } from '../../tools/search-stories-tool'
 import { logger, streams } from '@trigger.dev/sdk'
 import type { LanguageModel } from 'ai'
 import { rawStoryInputSchema } from '@app/schemas'
@@ -35,6 +36,12 @@ type StoryDiscoveryAgentOptions = {
     maxSteps?: number
     model?: LanguageModel
     existingStoryTitles?: string[]
+    commitContext?: {
+      commitMessages: string[]
+      codeDiff: string
+      changedFiles: string[]
+      clues: string[]
+    }
   }
 }
 
@@ -93,6 +100,7 @@ function buildDiscoveryInstructions(): string {
     - Explore repository structure and contents
     - Inspect function/class/type names and symbol usage
     - Read file contents to understand features
+    - Search for existing stories for the repository (use searchStories tool to avoid duplicates)
 
     # Rules
     - Never include source code or symbol references in the stories.
@@ -117,6 +125,12 @@ function buildDiscoveryPrompt(
   repoSlug: string,
   storyCount: number,
   existingStoryTitles: string[] = [],
+  commitContext?: {
+    commitMessages: string[]
+    codeDiff: string
+    changedFiles: string[]
+    clues: string[]
+  },
 ): string {
   const existingStoriesSection =
     existingStoryTitles.length > 0
@@ -135,10 +149,42 @@ function buildDiscoveryPrompt(
         `
       : ''
 
+  const commitContextSection = commitContext
+    ? dedent`
+    
+    # 📝 Commit Context
+    You are analyzing a specific set of commits that have been identified as potentially containing feature changes. Use this context to focus your discovery:
+
+    ## Clues Found
+    ${commitContext.clues.map((clue, i) => `${i + 1}. ${clue}`).join('\n')}
+
+    ## Changed Files
+    ${commitContext.changedFiles.map((f) => `- ${f}`).join('\n')}
+
+    ## Commit Messages
+    ${commitContext.commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+
+    ## Code Diff
+    \`\`\`
+    ${commitContext.codeDiff.substring(0, 10000)}${commitContext.codeDiff.length > 10000 ? '\n... (diff truncated)' : ''}
+    \`\`\`
+
+    Focus your discovery on the changes made in these commits. Look for:
+    - New features introduced
+    - Existing features modified
+    - User-facing changes
+    - Behavioral changes
+    - API or interface changes
+
+    Use the searchStories tool to check existing stories and compare against what you discover.
+  `
+    : ''
+
   return dedent`
     Analyze this codebase and discover ${storyCount} user stories that represent the main features and workflows.
 
     ${existingStoriesSection}
+    ${commitContextSection}
 
     Explore the codebase using the available tools to understand the structure and identify user-facing features.
     When you have discovered ${storyCount} stories, respond only with the JSON object that matches the schema.
@@ -158,6 +204,7 @@ export async function runStoryDiscoveryAgent({
       terminalCommand: createTerminalCommandTool({ sandbox }),
       readFile: createReadFileTool({ sandbox }),
       resolveLibrary: createResolveLibraryTool(),
+      searchStories: createSearchStoriesTool(),
     },
     experimental_telemetry: {
       isEnabled: true,
@@ -183,6 +230,7 @@ export async function runStoryDiscoveryAgent({
     repo.slug,
     options.storyCount,
     options.existingStoryTitles,
+    options.commitContext,
   )
 
   const result = await agent.generate({ prompt })
