@@ -104,8 +104,25 @@ export async function POST(request: NextRequest) {
     // Parse payload
     const payload = JSON.parse(rawBody) as unknown
 
+    // Skip events that are not in the allowed list
+    const allowedEvents = [
+      'push',
+      'pull_request',
+      'installation',
+      'installation_repositories',
+      'installation_targets',
+    ]
+    if (!allowedEvents.includes(eventType)) {
+      return Response.json({
+        success: true,
+        eventType,
+        deliveryId,
+        skipped: true,
+      })
+    }
+
     // Extract repository info safely for tags
-    const tags: string[] = []
+    const tags: string[] = [`type_${eventType}`]
     if (
       payload &&
       typeof payload === 'object' &&
