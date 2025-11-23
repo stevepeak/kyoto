@@ -37,6 +37,99 @@ function verifyGitHubSignature(
   return timingSafeEqual(signatureBuffer, digestBuffer)
 }
 
+interface VercelPreviewDetectionResult {
+  previewUrl: string
+  source: 'deployment_status' | 'repository_dispatch'
+}
+
+function detectVercelPreviewDeployment(
+  eventType: string,
+  payload: unknown,
+): VercelPreviewDetectionResult | null {
+  if (!payload || typeof payload !== 'object') {
+    return null
+  }
+
+  if (eventType === 'deployment_status') {
+    const root = payload as Record<string, unknown>
+    const deploymentStatusRaw = root.deployment_status
+    const deploymentRaw = root.deployment
+
+    if (
+      deploymentStatusRaw &&
+      typeof deploymentStatusRaw === 'object' &&
+      deploymentRaw &&
+      typeof deploymentRaw === 'object'
+    ) {
+      const deploymentStatus = deploymentStatusRaw as Record<string, unknown>
+      const deployment = deploymentRaw as Record<string, unknown>
+
+      const environmentUrl = deploymentStatus.environment_url
+      const environment = deployment.environment
+
+      if (
+        typeof environmentUrl === 'string' &&
+        typeof environment === 'string' &&
+        environment.toLowerCase() === 'preview'
+      ) {
+        return {
+          previewUrl: environmentUrl,
+          source: 'deployment_status',
+        }
+      }
+    }
+
+    return null
+  }
+
+  if (eventType === 'repository_dispatch') {
+    const root = payload as Record<string, unknown>
+    const action = typeof root.action === 'string' ? root.action : null
+    const clientPayloadRaw = root.client_payload
+
+    if (
+      !action ||
+      !action.startsWith('vercel.deployment.') ||
+      !clientPayloadRaw ||
+      typeof clientPayloadRaw !== 'object'
+    ) {
+      return null
+    }
+
+    const clientPayload = clientPayloadRaw as Record<string, unknown>
+    const deploymentRaw = clientPayload.deployment
+
+    const urlCandidate = clientPayload.url
+    const deployment =
+      deploymentRaw && typeof deploymentRaw === 'object'
+        ? (deploymentRaw as Record<string, unknown>)
+        : null
+
+    const url =
+      typeof urlCandidate === 'string'
+        ? urlCandidate
+        : deployment && typeof deployment.url === 'string'
+          ? deployment.url
+          : null
+
+    const environmentCandidate = deployment?.environment ?? clientPayload.environment
+
+    const environment =
+      typeof environmentCandidate === 'string' ? environmentCandidate : null
+
+    if (url && environment && environment.toLowerCase() === 'preview') {
+      return {
+        previewUrl: url,
+        source: 'repository_dispatch',
+      }
+    }
+
+    return null
+  }
+
+  return null
+}
+
 export async function POST(request: NextRequest) {
   try {
     ensureTriggerConfigured()
@@ -103,6 +196,17 @@ export async function POST(request: NextRequest) {
 
     // Parse payload
     const payload = JSON.parse(rawBody) as unknown
+
+    const vercelPreview = detectVercelPreviewDeployment(eventType, payload)
+
+    if (vercelPreview) {
+      console.info('Detected Vercel preview deployment from GitHub webhook', {
+        eventType,
+        deliveryId,
+        previewUrl: vercelPreview.previewUrl,
+        source: vercelPreview.source,
+      })
+    }
 
     // Skip events that are not in the allowed list
     const allowedEvents = [
