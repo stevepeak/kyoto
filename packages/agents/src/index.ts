@@ -23,8 +23,10 @@ export type { DecompositionOutput as DecompositionAgentResult }
 export { getDaytonaSandbox } from './helpers/daytona'
 
 export { getFileContentFromSandbox } from './tools/read-file-tool'
-
-const env = getConfig()
+export { createTerminalCommandTool } from './tools/terminal-command-tool'
+export { createReadFileTool } from './tools/read-file-tool'
+export { createResolveLibraryTool } from './tools/context7-tool'
+export { createSearchStoriesTool } from './tools/search-stories-tool'
 
 // @ts-expect-error - model is not used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -32,6 +34,7 @@ function model(
   gateway: 'openai' | 'openrouter' | 'ai-gateway',
   modelId: string,
 ): any {
+  const env = getConfig()
   if (gateway === 'openai') {
     return createOpenAI({ apiKey: env.OPENAI_API_KEY })(modelId)
   }
@@ -95,8 +98,9 @@ export const agents = {
   },
 } as const
 
-// Re-export discovery types
+// Re-export discovery types and schema
 export type { StoryDiscoveryOutput }
+export { storyDiscoveryOutputSchema }
 
 // Export semantic story matcher
 export {
