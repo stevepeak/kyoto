@@ -12,7 +12,7 @@
     "lint": "turbo run lint",
     "lint:profile": "TIMING=1 turbo run lint",
     "lint:ci": "turbo run lint:ci --cache-dir=.turbo",
-    "typecheck": "tsc -b",
+    "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "knip": "knip",
     "knip:fix": "knip --fix",

@@ -12,7 +12,7 @@
     "build": "pnpm run build:clean && pnpm run build:compile",
     "build:clean": "rm -rf dist",
     "build:compile": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --max-warnings=0 --cache --concurrency=2",

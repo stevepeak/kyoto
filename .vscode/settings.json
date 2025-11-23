@@ -12,7 +12,12 @@
     "watchDirectory": "useFsEvents",
     "fallbackPolling": "dynamicPriority",
     "synchronousWatchDirectory": true,
-    "excludeDirectories": ["**/node_modules", "**/dist", "**/.next", "**/.turbo"]
+    "excludeDirectories": [
+      "**/node_modules",
+      "**/dist",
+      "**/.next",
+      "**/.turbo"
+    ]
   },
   "typescript.preferences.includePackageJsonAutoImports": "off"
 }

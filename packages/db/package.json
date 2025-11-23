@@ -20,7 +20,7 @@
     "db:set-to-latest-migration": "node-pg-migrate -m ./migrations --migration-file-language sql up --fake",
     "db:setup": "pnpm db:load:schema && pnpm db:set-to-latest-migration && pnpm db:seed",
     "db:reset": "pnpm db:migrate",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --max-warnings=0 --cache --concurrency=2",

@@ -13,7 +13,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
@@ -27,12 +26,18 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "app/**/*",
+    "components/**/*",
+    "client/**/*",
+    "hooks/**/*",
+    "lib/**/*",
+    "middleware.ts",
+    "instrumentation.ts",
+    "instrumentation-client.ts",
     ".next/types/**/*.ts",
     "types/**/*.d.ts"
   ],
-  "exclude": [".next", "node_modules", "dist", ".turbo"],
+  "exclude": [".next", "node_modules", "dist", ".turbo", ".next/cache"],
   "references": [
     {
       "path": "../../packages/api/tsconfig.json"
