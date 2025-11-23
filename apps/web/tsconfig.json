@@ -38,6 +38,9 @@
       "path": "../../packages/api/tsconfig.json"
     },
     {
+      "path": "../../packages/config/tsconfig.json"
+    },
+    {
       "path": "../../packages/db/tsconfig.json"
     },
     {

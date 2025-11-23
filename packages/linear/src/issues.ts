@@ -1,16 +1,5 @@
 import type { CreateLinearIssueInput, CreateLinearIssueResult } from './types'
-
-const LINEAR_API_URL = 'https://api.linear.app/graphql'
-
-interface LinearGraphQLResponse<T> {
-  data?: T
-  errors?: Array<{
-    message: string
-    extensions?: {
-      code?: string
-    }
-  }>
-}
+import { LINEAR_API_URL, type LinearGraphQLResponse } from './common'
 
 interface CreateIssueResponse {
   issueCreate: {
@@ -59,8 +48,9 @@ export async function createLinearIssue(
       input: {
         title: input.title,
         ...(input.description && { description: input.description }),
-        ...(input.teamId && { teamId: input.teamId }),
-        ...(input.labelIds && input.labelIds.length > 0 && { labelIds: input.labelIds }),
+        teamId: input.teamId,
+        ...(input.labelIds &&
+          input.labelIds.length > 0 && { labelIds: input.labelIds }),
         ...(input.assigneeId && { assigneeId: input.assigneeId }),
       },
     }
@@ -85,7 +75,8 @@ export async function createLinearIssue(
       }
     }
 
-    const result: LinearGraphQLResponse<CreateIssueResponse> = await response.json()
+    const result: LinearGraphQLResponse<CreateIssueResponse> =
+      await response.json()
 
     if (result.errors && result.errors.length > 0) {
       const errorMessages = result.errors.map((e) => e.message).join(', ')
@@ -119,7 +110,9 @@ export async function createLinearIssue(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : 'Unknown error occurred while creating issue',
+        error instanceof Error
+          ? error.message
+          : 'Unknown error occurred while creating issue',
     }
   }
 }

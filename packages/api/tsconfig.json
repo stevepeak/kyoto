@@ -5,7 +5,13 @@
   },
   "references": [
     {
+      "path": "../config/tsconfig.json"
+    },
+    {
       "path": "../db/tsconfig.json"
+    },
+    {
+      "path": "../linear/tsconfig.json"
     },
     {
       "path": "../schemas/tsconfig.json"

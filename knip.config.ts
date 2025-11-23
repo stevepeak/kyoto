@@ -28,7 +28,6 @@ const config: KnipConfig = {
         'hooks/use-mobile.ts',
       ],
       ignoreDependencies: [
-        '@radix-ui/react-label',
         'kysely',
         '@radix-ui/react-separator',
       ],

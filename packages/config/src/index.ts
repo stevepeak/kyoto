@@ -14,13 +14,7 @@ const envSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required'),
   GITHUB_APP_SLUG: z.string().min(1, 'GITHUB_APP_SLUG is required'),
   GITHUB_WEBHOOK_SECRET: z.string().min(1, 'GITHUB_WEBHOOK_SECRET is required'),
-  GITHUB_APP_ID: z.string().transform((val) => {
-    const parsed = Number.parseInt(val, 10)
-    if (Number.isNaN(parsed)) {
-      throw new TypeError(`Invalid GITHUB_APP_ID: ${val} is not a number`)
-    }
-    return parsed
-  }),
+  GITHUB_APP_ID: z.string().min(1),
   GITHUB_APP_PRIVATE_KEY: z
     .string()
     .min(1)

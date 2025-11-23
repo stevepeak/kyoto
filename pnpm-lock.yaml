@@ -328,6 +328,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@app/config':
+        specifier: workspace:*
+        version: link:../config
       '@app/db':
         specifier: workspace:*
         version: link:../db
