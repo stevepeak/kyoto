@@ -30,6 +30,7 @@ const config: KnipConfig = {
       ignoreDependencies: [
         'kysely',
         '@radix-ui/react-separator',
+        'posthog-node',
       ],
     },
     'apps/trigger': {

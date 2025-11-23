@@ -49,6 +49,7 @@
     "next": "^16.0.3",
     "postcss": "^8.4.49",
     "posthog-js": "^1.297.2",
+    "posthog-node": "^5.13.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
