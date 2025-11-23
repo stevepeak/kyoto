@@ -157,7 +157,8 @@ export const pushHandler: WebhookHandler = async ({
     // Only trigger story discovery for specific repositories
     const isAllowedRepo =
       (ownerLogin === 'gwizinc' && repoName === 'gwiz') ||
-      (ownerLogin === 'stevepeak' && repoName === 'kyoto')
+      (ownerLogin === 'stevepeak' && repoName === 'kyoto') ||
+      (ownerLogin === 'trysetter' && repoName === 'AI-Chatbot-App')
 
     if (isAllowedRepo) {
       await discoverStoriesFromCommitsTask.trigger(
