@@ -4,5 +4,6 @@
     "types": ["vitest/globals", "node"],
     "skipLibCheck": true,
     "incremental": true
-  }
+  },
+  "exclude": ["node_modules", "dist", ".turbo"]
 }

@@ -32,7 +32,7 @@
     ".next/types/**/*.ts",
     "types/**/*.d.ts"
   ],
-  "exclude": [".next", "node_modules"],
+  "exclude": [".next", "node_modules", "dist", ".turbo"],
   "references": [
     {
       "path": "../../packages/api/tsconfig.json"

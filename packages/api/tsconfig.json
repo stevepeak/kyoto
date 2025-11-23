@@ -5,18 +5,22 @@
     "skipLibCheck": true,
     "incremental": true
   },
+  "exclude": ["node_modules", "dist", ".turbo"],
   "references": [
     {
-      "path": "../config/tsconfig.json"
+        "path": "../config/tsconfig.json"
     },
     {
-      "path": "../db/tsconfig.json"
+        "path": "../db/tsconfig.json"
     },
     {
-      "path": "../linear/tsconfig.json"
+        "path": "../linear/tsconfig.json"
     },
     {
-      "path": "../schemas/tsconfig.json"
+        "path": "../posthog/tsconfig.json"
+    },
+    {
+        "path": "../schemas/tsconfig.json"
     }
-  ]
+]
 }

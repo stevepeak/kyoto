@@ -20,6 +20,12 @@
       "path": "./packages/db/tsconfig.json"
     },
     {
+      "path": "./packages/linear/tsconfig.json"
+    },
+    {
+      "path": "./packages/posthog/tsconfig.json"
+    },
+    {
       "path": "./packages/schemas/tsconfig.json"
     },
     {

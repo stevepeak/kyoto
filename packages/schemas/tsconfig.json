@@ -9,6 +9,6 @@
     "incremental": true
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["node_modules", "dist", ".turbo"],
   "references": []
 }
