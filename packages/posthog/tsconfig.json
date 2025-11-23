@@ -5,7 +5,9 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
-    "types": ["node"]
+    "types": ["node"],
+    "skipLibCheck": true,
+    "incremental": true
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

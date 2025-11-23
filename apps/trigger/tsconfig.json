@@ -6,6 +6,8 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "baseUrl": ".",
+    "skipLibCheck": true,
+    "incremental": true,
     "paths": {
       "@/*": ["./src/*"]
     }
