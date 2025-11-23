@@ -4,6 +4,7 @@ import { logger } from '@trigger.dev/sdk'
 
 import { createOctokit } from '../../../helpers/github'
 import { runCiTask } from '../../ci/main'
+import { discoverStoriesFromCommitsTask } from '../../discover-stories-from-commits'
 import { findRepoByOwnerAndName, type RepoLookupResult } from '../shared/db'
 import { pushEventSchema } from '../shared/schemas'
 import {
@@ -123,9 +124,9 @@ export const pushHandler: WebhookHandler = async ({
       }
     }
 
-    const commitSha = parsed.data.after ?? null
-    const headCommit = parsed.data.head_commit
-    const commitMessage = headCommit?.message ?? null
+    const beforeSha = parsed.data.before
+    const commitSha = parsed.data.after
+    const commitMessage = parsed.data.head_commit.message
 
     await runCiTask.trigger(
       {
@@ -152,6 +153,32 @@ export const pushHandler: WebhookHandler = async ({
       branchName,
       commitSha: parsed.data.after ?? null,
     })
+
+    // Only trigger story discovery for specific repositories
+    const isAllowedRepo =
+      (ownerLogin === 'gwizinc' && repoName === 'gwiz') ||
+      (ownerLogin === 'stevepeak' && repoName === 'kyoto')
+
+    if (isAllowedRepo) {
+      await discoverStoriesFromCommitsTask.trigger(
+        {
+          repo: {
+            owner: ownerLogin,
+            name: repoName,
+          },
+          after: commitSha,
+          before: beforeSha,
+        },
+        {
+          tags: [
+            `org_${ownerLogin}`,
+            `repo_${repoName}`,
+            `branch_${branchName}`,
+            `commit_${commitSha?.slice(0, 7)}`,
+          ],
+        },
+      )
+    }
   } catch (error) {
     logger.error('Failed to queue CI run from push event', {
       deliveryId,

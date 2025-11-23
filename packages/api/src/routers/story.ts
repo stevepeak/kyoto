@@ -160,14 +160,14 @@ export const storyRouter = router({
         userId,
       })
 
-      // Create story with processing state
+      // Create story
       const newStory = await ctx.db
         .insertInto('stories')
         .values({
           repoId: repo.id,
           name: input.name,
           story: input.story,
-          state: 'processing',
+          state: 'active',
         })
         .returningAll()
         .executeTakeFirstOrThrow()
@@ -245,7 +245,6 @@ export const storyRouter = router({
       if (input.story !== undefined) {
         updateData.story = input.story
         updateData.decomposition = null
-        updateData.state = 'processing'
       }
 
       // Update story

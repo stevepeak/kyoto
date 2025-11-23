@@ -97,3 +97,12 @@ export const agents = {
 
 // Re-export discovery types
 export type { StoryDiscoveryOutput }
+
+// Export semantic story matcher
+export {
+  SemanticStoryMatcher,
+  findSimilarStories,
+  findMostSimilarStory,
+  type StoryForMatching,
+  type SemanticMatchResult,
+} from './helpers/semantic-story-matcher'

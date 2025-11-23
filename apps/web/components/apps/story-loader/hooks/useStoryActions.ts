@@ -288,7 +288,7 @@ export function useStoryActions({
     setIsDecomposing(true)
     setError(null)
     try {
-      // Trigger decomposition workflow (task will set state to processing)
+      // Trigger decomposition workflow
       await trpc.story.decompose.mutate({
         storyId: storyId,
       })

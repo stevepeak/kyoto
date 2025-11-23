@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.64",
     "@app/config": "workspace:*",
+    "@app/db": "workspace:*",
     "@app/schemas": "workspace:*",
     "@daytonaio/sdk": "^0.113.1",
     "@openrouter/ai-sdk-provider": "^1.2.3",
@@ -23,6 +24,7 @@
     "ai": "5.0.93",
     "openai": "^6.9.1",
     "ts-dedent": "^2.2.0",
+    "kysely": "^0.28.8",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.24.6"
   }

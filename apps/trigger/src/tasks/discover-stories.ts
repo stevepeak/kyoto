@@ -52,24 +52,6 @@ export const discoverStoriesTask = task({
       storyCount,
     })
 
-    // Retrieve existing story titles for this repo to avoid duplicates
-    const existingStories = await db
-      .selectFrom('stories')
-      .select(['name'])
-      .where('repoId', '=', repoRecord.repoId)
-      .where('state', '!=', 'archived')
-      .execute()
-
-    const existingStoryTitles = existingStories.map((story) => story.name)
-
-    logger.info(
-      `Found ${existingStoryTitles.length} existing stories to avoid`,
-      {
-        repoId: repoRecord.repoId,
-        existingTitles: existingStoryTitles,
-      },
-    )
-
     // Insert placeholder stories with 'generated' state before discovery (only if saving)
     const placeholderStories = save
       ? await db
@@ -102,6 +84,7 @@ export const discoverStoriesTask = task({
 
       // Run the story discovery agent
       const discoveryResult = await agents.discovery.run({
+        db,
         repo: {
           id: repoRecord.repoId,
           slug: repoSlug,
@@ -111,7 +94,6 @@ export const discoverStoriesTask = task({
           storyCount,
           telemetryTracer: getTelemetryTracer(),
           model: agents.discovery.options.model,
-          existingStoryTitles,
         },
       })
 

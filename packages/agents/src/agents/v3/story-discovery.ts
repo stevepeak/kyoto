@@ -7,11 +7,15 @@ import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
 import { createReadFileTool } from '../../tools/read-file-tool'
 import { createResolveLibraryTool } from '../../tools/context7-tool'
+import { createSearchStoriesTool } from '../../tools/search-stories-tool'
 import { logger, streams } from '@trigger.dev/sdk'
 import type { LanguageModel } from 'ai'
 import { rawStoryInputSchema } from '@app/schemas'
 import { agents } from '../..'
 import { dedent } from 'ts-dedent'
+import type { setupDb } from '@app/db'
+
+type DbClient = ReturnType<typeof setupDb>
 
 /**
  * Schema for the story discovery output
@@ -24,6 +28,7 @@ export const storyDiscoveryOutputSchema = z.object({
 export type StoryDiscoveryOutput = z.infer<typeof storyDiscoveryOutputSchema>
 
 type StoryDiscoveryAgentOptions = {
+  db: DbClient
   repo: {
     id: string
     slug: string
@@ -34,7 +39,12 @@ type StoryDiscoveryAgentOptions = {
     telemetryTracer?: Tracer
     maxSteps?: number
     model?: LanguageModel
-    existingStoryTitles?: string[]
+    commitContext?: {
+      commitMessages: string[]
+      codeDiff: string
+      changedFiles: string[]
+      clues: string[]
+    }
   }
 }
 
@@ -93,6 +103,7 @@ function buildDiscoveryInstructions(): string {
     - Explore repository structure and contents
     - Inspect function/class/type names and symbol usage
     - Read file contents to understand features
+    - Search for existing stories for the repository (use searchStories tool to avoid duplicates)
 
     # Rules
     - Never include source code or symbol references in the stories.
@@ -116,29 +127,73 @@ function buildDiscoveryInstructions(): string {
 function buildDiscoveryPrompt(
   repoSlug: string,
   storyCount: number,
-  existingStoryTitles: string[] = [],
+  commitContext?: {
+    commitMessages: string[]
+    codeDiff: string
+    changedFiles: string[]
+    clues: string[]
+  },
 ): string {
-  const existingStoriesSection =
-    existingStoryTitles.length > 0
-      ? dedent`\n\n# ⚠️ IMPORTANT: Avoid Existing Stories
-          The following stories have already been discovered for this repository. You MUST avoid discovering similar or duplicate stories. Focus on finding NEW and NOVEL features that are not already covered:
+  const existingStoriesSection = dedent`
+    
+    # 🔍 Using searchStories Tool to Avoid Duplicates
+    
+    Before finalizing your discovered stories, you MUST use the searchStories tool to check for semantically similar existing stories. This will help you:
+    
+    - Identify gaps between existing stories (what's missing)
+    - Avoid writing duplicate stories that are too similar to existing ones
+    - Find opportunities to discover novel features in areas not yet covered
+    - Understand the semantic landscape of already-discovered stories
+    
+    **Workflow:**
+    1. As you explore the codebase and identify potential stories, use searchStories to check if similar stories already exist
+    2. If you find semantically similar stories (high similarity scores), dig deeper to find unique aspects, edge cases, or alternative user flows that haven't been documented
+    3. Focus on discovering stories that fill gaps between existing stories - look for features or workflows that exist in the code but aren't covered by current stories
+    4. Use the search results to guide your discovery toward novel, non-duplicate features
+    
+    Your goal is to discover ${storyCount} NEW stories that:
+    - Are semantically distinct from existing stories (use searchStories to verify)
+    - Cover features or workflows not already documented
+    - Fill gaps between existing stories
+    - Provide novel insights into areas of the codebase that haven't been explored yet
+  `
 
-          ${existingStoryTitles.map((title, index) => `${index + 1}. ${title}`).join('\n')}
+  const commitContextSection = commitContext
+    ? dedent`
+    
+    # 📝 Commit Context
+    You are analyzing a specific set of commits that have been identified as potentially containing feature changes. Use this context to focus your discovery:
 
-          Your goal is to discover ${storyCount} NEW stories that are:
-          - Different from the existing stories listed above
-          - Cover features or workflows not already documented
-          - Provide novel insights into the codebase
-          - Focus on areas that haven't been explored yet
+    ## Clues Found
+    ${commitContext.clues.map((clue, i) => `${i + 1}. ${clue}`).join('\n')}
 
-          If you find features that seem similar to existing stories, dig deeper to find unique aspects, edge cases, or alternative user flows that haven't been documented.
-        `
-      : ''
+    ## Changed Files
+    ${commitContext.changedFiles.map((f) => `- ${f}`).join('\n')}
+
+    ## Commit Messages
+    ${commitContext.commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+
+    ## Code Diff
+    \`\`\`
+    ${commitContext.codeDiff.substring(0, 10000)}${commitContext.codeDiff.length > 10000 ? '\n... (diff truncated)' : ''}
+    \`\`\`
+
+    Focus your discovery on the changes made in these commits. Look for:
+    - New features introduced
+    - Existing features modified
+    - User-facing changes
+    - Behavioral changes
+    - API or interface changes
+
+    Use the searchStories tool to check existing stories and compare against what you discover.
+  `
+    : ''
 
   return dedent`
     Analyze this codebase and discover ${storyCount} user stories that represent the main features and workflows.
 
     ${existingStoriesSection}
+    ${commitContextSection}
 
     Explore the codebase using the available tools to understand the structure and identify user-facing features.
     When you have discovered ${storyCount} stories, respond only with the JSON object that matches the schema.
@@ -146,6 +201,7 @@ function buildDiscoveryPrompt(
 }
 
 export async function runStoryDiscoveryAgent({
+  db,
   repo,
   options,
 }: StoryDiscoveryAgentOptions): Promise<StoryDiscoveryOutput> {
@@ -158,6 +214,7 @@ export async function runStoryDiscoveryAgent({
       terminalCommand: createTerminalCommandTool({ sandbox }),
       readFile: createReadFileTool({ sandbox }),
       resolveLibrary: createResolveLibraryTool(),
+      searchStories: createSearchStoriesTool({ db, repoId: repo.id }),
     },
     experimental_telemetry: {
       isEnabled: true,
@@ -182,7 +239,7 @@ export async function runStoryDiscoveryAgent({
   const prompt = buildDiscoveryPrompt(
     repo.slug,
     options.storyCount,
-    options.existingStoryTitles,
+    options.commitContext,
   )
 
   const result = await agent.generate({ prompt })
