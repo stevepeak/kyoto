@@ -17,6 +17,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 export { type TestStatus as Status }
 export { generateText } from './helpers/generate-text'
+export { generateEmbedding } from './helpers/generate-embedding'
 // Re-export for backward compatibility
 export type { DecompositionOutput as DecompositionAgentResult }
 export { getDaytonaSandbox } from './helpers/daytona'

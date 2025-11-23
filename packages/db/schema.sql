@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2UfAb9FrSgxGgEhyNQQsvFCrhCeTHRx428GiSJSYemuI4Dj3yTzIhUYbEzP4Lny
+\restrict m078FmiqVf5BNoyU4weEBIpENAP0Bgxz4Sp8eJZKHAfpSKWJ89sBrdSJnfqvtJe
 
 -- Dumped from database version 16.10 (Postgres.app)
 -- Dumped by pg_dump version 16.10 (Postgres.app)
@@ -48,6 +48,20 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: vector; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access methods';
 
 
 --
@@ -902,7 +916,8 @@ CREATE TABLE public.stories (
     story text NOT NULL,
     decomposition jsonb,
     state public.story_state DEFAULT 'active'::public.story_state NOT NULL,
-    metadata jsonb
+    metadata jsonb,
+    embedding public.vector(1536)
 );
 
 
@@ -967,6 +982,13 @@ COMMENT ON COLUMN public.stories.state IS 'The current state of the story: activ
 --
 
 COMMENT ON COLUMN public.stories.metadata IS 'Additional JSON metadata for the story';
+
+
+--
+-- Name: COLUMN stories.embedding; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.stories.embedding IS 'OpenAI embedding vector (1536 dimensions) for the story and decomposition, enables similarity search';
 
 
 --
@@ -1862,5 +1884,5 @@ ALTER TABLE ONLY public.story_test_results
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2UfAb9FrSgxGgEhyNQQsvFCrhCeTHRx428GiSJSYemuI4Dj3yTzIhUYbEzP4Lny
+\unrestrict m078FmiqVf5BNoyU4weEBIpENAP0Bgxz4Sp8eJZKHAfpSKWJ89sBrdSJnfqvtJe
 

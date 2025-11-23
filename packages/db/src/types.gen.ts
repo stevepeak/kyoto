@@ -370,6 +370,10 @@ export interface Story {
    */
   decomposition: Json | null;
   /**
+   * OpenAI embedding vector (1536 dimensions) for the story and decomposition, enables similarity search
+   */
+  embedding: string | null;
+  /**
    * Unique identifier for each story
    */
   id: Generated<string>;

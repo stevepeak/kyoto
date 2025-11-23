@@ -1,7 +1,7 @@
 import { task, logger } from '@trigger.dev/sdk'
 
-import { setupDb } from '@app/db'
-import { agents, generateText } from '@app/agents'
+import { setupDb, sql } from '@app/db'
+import { agents, generateText, generateEmbedding } from '@app/agents'
 import { parseEnv } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
@@ -98,10 +98,23 @@ The sentence should be clear, specific, and capture the essence of what the stor
           existingStory.decomposition === null ||
           JSON.stringify(existingStory.decomposition) !== newDecomposition
 
+        // Create embedding from story and decomposition
+        const embeddingText = JSON.stringify({
+          story: story.text,
+          decomposition: decompositionResult,
+        })
+        const embedding = await generateEmbedding({
+          text: embeddingText,
+        })
+
+        // Format embedding array as pgvector string format: '[1,2,3]'
+        const embeddingVector = `[${embedding.join(',')}]`
+
         await db
           .updateTable('stories')
           .set({
             decomposition: newDecomposition,
+            embedding: sql`${embeddingVector}::vector`,
             state: 'active',
           })
           .where('id', '=', story.id)
