@@ -30,7 +30,7 @@
     "@opentelemetry/sdk-node": "^0.208.0",
     "@sentry/node": "^10.23.0",
     "@sentry/opentelemetry": "^10.25.0",
-    "@trigger.dev/sdk": "4.1.0",
+    "@trigger.dev/sdk": "4.1.1",
     "ai": "^5.0.93",
     "import-in-the-middle": "^2.0.0",
     "p-map": "^7.0.4",
@@ -39,7 +39,7 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
     "@sentry/esbuild-plugin": "^4.6.0",
-    "@trigger.dev/build": "4.1.0",
+    "@trigger.dev/build": "4.1.1",
     "@types/node": "^22.18.10",
     "typescript": "^5.9.3"
   }
