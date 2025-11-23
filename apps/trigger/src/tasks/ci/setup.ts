@@ -161,5 +161,5 @@ export function buildRunDetailsUrl(
     return null
   }
 
-  return `${baseUrl}/org/${repoRecord.ownerLogin}/${repoRecord.repoName}/runs/${runNumber}`
+  return `${baseUrl}/org/${repoRecord.ownerLogin}/repo/${repoRecord.repoName}/runs/${runNumber}`
 }
