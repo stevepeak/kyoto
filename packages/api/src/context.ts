@@ -23,7 +23,8 @@ export interface Env {
   openAiApiKey: string
   databaseUrl: string
   triggerSecretKey: string
-  context7ApiKey: string | undefined
+  context7ApiKey: string
+  linearApiKey: string
 }
 
 export interface Context {

@@ -16,6 +16,7 @@ import { useTRPCClient } from '@/client/trpc'
 import { useSession, signOut } from '@/client/auth-client'
 import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
+import { FeedbackDialog } from '@/components/common/feedback-dialog'
 import type { ReactNode } from 'react'
 
 interface TopNavProps {
@@ -76,6 +77,8 @@ export function TopNav({ breadcrumbs, right }: TopNavProps) {
   const rightActions = (
     <div className="flex items-center gap-2">
       {right ? <div>{right}</div> : null}
+
+      {session.data?.user ? <FeedbackDialog /> : null}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

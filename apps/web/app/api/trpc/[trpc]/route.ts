@@ -59,6 +59,7 @@ async function createContext(req: NextRequest): Promise<Context> {
     databaseUrl: process.env.DATABASE_URL || '',
     triggerSecretKey: process.env.TRIGGER_SECRET_KEY || '',
     context7ApiKey: process.env.CONTEXT7_API_KEY,
+    linearApiKey: process.env.LINEAR_API_KEY,
   }
 
   return {

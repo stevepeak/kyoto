@@ -50,6 +50,7 @@ const envSchema = z.object({
     .string()
     .min(1, 'TRIGGER_SECRET_KEY is required')
     .startsWith('tr_'),
+  LINEAR_API_KEY: z.string().startsWith('lin_'),
 })
 
 type ParsedEnv = z.infer<typeof envSchema>
@@ -62,5 +63,6 @@ export function parseEnv(env: Env): ParsedEnv {
     OPENAI_API_KEY: env.openAiApiKey,
     DATABASE_URL: env.databaseUrl,
     TRIGGER_SECRET_KEY: env.triggerSecretKey,
+    LINEAR_API_KEY: env.linearApiKey,
   })
 }
