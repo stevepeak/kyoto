@@ -11,7 +11,7 @@ import {
   storyDiscoveryOutputSchema,
   type StoryDiscoveryOutput,
 } from './agents/v3/story-discovery'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
@@ -24,7 +24,7 @@ export { getDaytonaSandbox } from './helpers/daytona'
 
 export { getFileContentFromSandbox } from './tools/read-file-tool'
 
-const env = parseEnv()
+const env = getConfig()
 
 // @ts-expect-error - model is not used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,4 +1,4 @@
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
@@ -34,7 +34,7 @@ export const installationTargetsHandler: WebhookHandler = async ({
     return
   }
 
-  const env = parseEnv()
+  const env = getConfig()
   const db = setupDb(env.DATABASE_URL)
 
   try {

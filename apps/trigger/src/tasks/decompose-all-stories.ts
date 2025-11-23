@@ -1,13 +1,13 @@
 import { task, logger } from '@trigger.dev/sdk'
 
 import { setupDb } from '@app/db'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { storyDecompositionTask } from './story-decomposition'
 
 export const decomposeAllStoriesTask = task({
   id: 'decompose-all-stories',
   run: async () => {
-    const env = parseEnv()
+    const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 
     logger.info('Starting decomposition of all stories')

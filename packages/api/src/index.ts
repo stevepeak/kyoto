@@ -6,11 +6,10 @@ import { storyRouter } from './routers/story'
 import { runRouter } from './routers/run'
 import { feedbackRouter } from './routers/feedback'
 
-export type { Context, Env, Session, SessionUser } from './context'
+export type { Context, Session, SessionUser } from './context'
 
 // TODO maybe move these into a @app/utils package?
 export { getUser } from './helpers/users'
-export { parseEnv } from './helpers/env'
 export {
   findOwnerForUser,
   findRepoForUser,

@@ -1,4 +1,4 @@
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import type { DecompositionOutput } from '@app/schemas'
 import { logger } from '@trigger.dev/sdk'
 import OpenAI from 'openai'
@@ -109,7 +109,7 @@ function parseEmbedding(
  * Create embeddings for stories using OpenAI
  */
 async function createEmbeddings(texts: string[]): Promise<number[][]> {
-  const env = parseEnv()
+  const env = getConfig()
   const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
 
   const response = await client.embeddings.create({

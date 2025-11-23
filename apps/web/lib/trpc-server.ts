@@ -2,8 +2,9 @@ import { headers } from 'next/headers'
 import { cache } from 'react'
 
 import { appRouter } from '@app/api'
-import type { Context, Env } from '@app/api'
+import type { Context } from '@app/api'
 import { getUser } from '@app/api'
+import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
@@ -12,11 +13,10 @@ import { getAuth } from '@/lib/auth'
  * Uses React cache to deduplicate requests
  */
 const createContext = cache(async (): Promise<Context> => {
-  const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is required')
-  }
-  const db = setupDb(databaseUrl)
+  // Set up environment variables (validated with Zod)
+  const env = getConfig()
+
+  const db = setupDb(env.DATABASE_URL)
   const auth = getAuth()
 
   // Get session from better-auth
@@ -58,19 +58,6 @@ const createContext = cache(async (): Promise<Context> => {
     }
   }
 
-  // Set up environment variables
-  const env: Env = {
-    siteBaseUrl: process.env.SITE_BASE_URL || 'http://localhost:3001',
-    githubAppId: process.env.GITHUB_APP_ID || '',
-    githubAppPrivateKey: process.env.GITHUB_APP_PRIVATE_KEY || '',
-    githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
-    openAiApiKey: process.env.OPENAI_API_KEY || '',
-    databaseUrl: process.env.DATABASE_URL || '',
-    triggerSecretKey: process.env.TRIGGER_SECRET_KEY || '',
-    context7ApiKey: process.env.CONTEXT7_API_KEY,
-    linearApiKey: process.env.LINEAR_API_KEY,
-  }
-
   return {
     db,
     env,
@@ -84,5 +71,6 @@ const createContext = cache(async (): Promise<Context> => {
  */
 export async function getTRPCCaller() {
   const ctx = await createContext()
-  return appRouter.createCaller(ctx)
+  const caller = appRouter.createCaller(ctx)
+  return caller
 }

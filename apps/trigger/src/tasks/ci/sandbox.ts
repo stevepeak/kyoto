@@ -2,7 +2,7 @@ import pMap from 'p-map'
 import type { RunStory } from '@app/db'
 import { agents } from '@app/agents'
 import { setupDb } from '@app/db'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import type { RepoRecord, StoryRow } from './types'
 import { aggregateBatchResults, type AggregatedRunOutcome } from './results'
 import { testStoryTask } from '../test-story'
@@ -36,7 +36,7 @@ export async function runStoriesWithSandbox({
   agentVersion = agents.decomposition.version,
   extTriggerDev,
 }: RunStoriesWithSandboxParams): Promise<AggregatedRunOutcome> {
-  const env = parseEnv()
+  const env = getConfig()
   const db = setupDb(env.DATABASE_URL)
 
   const sandbox = await createDaytonaSandbox({

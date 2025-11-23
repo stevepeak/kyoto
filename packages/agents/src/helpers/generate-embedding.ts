@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 
 interface GenerateEmbeddingOptions {
   /** The text to generate an embedding for */
@@ -16,7 +16,7 @@ export async function generateEmbedding({
   text,
   modelId = 'text-embedding-3-small',
 }: GenerateEmbeddingOptions): Promise<number[]> {
-  const { OPENAI_API_KEY } = parseEnv()
+  const { OPENAI_API_KEY } = getConfig()
   const openai = new OpenAI({ apiKey: OPENAI_API_KEY })
 
   const response = await openai.embeddings.create({

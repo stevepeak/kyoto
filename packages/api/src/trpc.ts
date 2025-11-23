@@ -4,7 +4,7 @@ import superjson from 'superjson'
 import * as Sentry from '@sentry/nextjs'
 
 import type { Context } from './context'
-import { parseEnv } from './helpers/env'
+import { getConfig } from '@app/config'
 
 /**
  * Initialization of tRPC backend
@@ -21,7 +21,7 @@ let isTriggerConfigured = false
 const triggerMiddleware = t.middleware(({ ctx, next }) => {
   if (!isTriggerConfigured) {
     try {
-      const parsedEnv = parseEnv(ctx.env)
+      const parsedEnv = getConfig(ctx.env)
       configure({
         secretKey: parsedEnv.TRIGGER_SECRET_KEY,
       })
@@ -31,15 +31,6 @@ const triggerMiddleware = t.middleware(({ ctx, next }) => {
       console.error('Trigger.dev configuration error:', {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        // Log which env vars are missing without exposing values
-        envKeys: {
-          githubAppId: !!ctx.env.githubAppId,
-          githubAppPrivateKey: !!ctx.env.githubAppPrivateKey,
-          githubWebhookSecret: !!ctx.env.githubWebhookSecret,
-          openAiApiKey: !!ctx.env.openAiApiKey,
-          databaseUrl: !!ctx.env.databaseUrl,
-          triggerSecretKey: !!ctx.env.triggerSecretKey,
-        },
       })
 
       // Send configuration errors to Sentry
@@ -48,16 +39,6 @@ const triggerMiddleware = t.middleware(({ ctx, next }) => {
           tags: {
             trpc: true,
             triggerConfig: true,
-          },
-          extra: {
-            envKeys: {
-              githubAppId: !!ctx.env.githubAppId,
-              githubAppPrivateKey: !!ctx.env.githubAppPrivateKey,
-              githubWebhookSecret: !!ctx.env.githubWebhookSecret,
-              openAiApiKey: !!ctx.env.openAiApiKey,
-              databaseUrl: !!ctx.env.databaseUrl,
-              triggerSecretKey: !!ctx.env.triggerSecretKey,
-            },
           },
         })
       }

@@ -1,6 +1,19 @@
 import { z } from 'zod'
 
 const envSchema = z.object({
+  SITE_BASE_URL: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((value) => value.replace(/\/+$/, ''))
+    .default('https://usekyoto.com'),
+  AUTH_SECRET: z.string().min(1),
+
+  // GitHub
+  GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
+  GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required'),
+  GITHUB_APP_SLUG: z.string().min(1, 'GITHUB_APP_SLUG is required'),
+  GITHUB_WEBHOOK_SECRET: z.string().min(1, 'GITHUB_WEBHOOK_SECRET is required'),
   GITHUB_APP_ID: z.string().transform((val) => {
     const parsed = Number.parseInt(val, 10)
     if (Number.isNaN(parsed)) {
@@ -10,7 +23,7 @@ const envSchema = z.object({
   }),
   GITHUB_APP_PRIVATE_KEY: z
     .string()
-    .min(1, 'GITHUB_APP_PRIVATE_KEY is required')
+    .min(1)
     // Trigger.dev use: `openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in key-rsa.pem | base64 | pbcopy`
     .describe('Provide the GitHub App private key in PKCS#8 PEM format.')
     .transform((val, ctx) => {
@@ -42,42 +55,43 @@ const envSchema = z.object({
       })
       return z.NEVER
     }),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+
+  // Neon Database
+  DATABASE_URL: z.string().min(1),
+
+  // Trigger.dev
   TRIGGER_PROJECT_ID: z.string().optional(),
-  OPENAI_API_KEY: z.string().min(1, 'OPENAI_API_KEY is required'),
-  DAYTONA_API_KEY: z.string().min(1, 'DAYTONA_API_KEY is required'),
-  CONTEXT7_API_KEY: z.string().optional(),
-  OPENROUTER_API_KEY: z.string().min(1, 'OPENROUTER_API_KEY is required'),
-  AI_GATEWAY_API_KEY: z.string().min(1, 'AI_GATEWAY_API_KEY is required'),
-  SITE_BASE_URL: z
-    .string()
-    .trim()
-    .min(1)
-    .transform((value) => value.replace(/\/+$/, ''))
-    .optional(),
-  BROWSERBASE_API_KEY: z.string().min(1, 'BROWSERBASE_API_KEY is required'),
-  BROWSERBASE_PROJECT_ID: z
-    .string()
-    .min(1, 'BROWSERBASE_PROJECT_ID is required'),
+  TRIGGER_SECRET_KEY: z.string().min(1),
+
+  // AI
+  OPENAI_API_KEY: z.string().min(1),
+  OPENROUTER_API_KEY: z.string().min(1),
+  AI_GATEWAY_API_KEY: z.string().min(1),
+
+  // Daytona
+  DAYTONA_API_KEY: z.string().min(1),
+
+  // Sentry
+  SENTRY_DSN: z.string().min(1),
+
+  // Context7
+  CONTEXT7_API_KEY: z.string().min(1),
+
+  // Linear
+  LINEAR_API_KEY: z.string().min(1),
+  LINEAR_TEAM_ID: z.string().min(1),
+
+  // Browserbase
+  BROWSERBASE_API_KEY: z.string().min(1),
+  BROWSERBASE_PROJECT_ID: z.string().min(1),
 })
 
 type ParsedEnv = z.infer<typeof envSchema>
 
-export function parseEnv(): ParsedEnv {
-  return envSchema.parse({
-    GITHUB_APP_ID: process.env.GITHUB_APP_ID,
-    GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
-    DATABASE_URL: process.env.DATABASE_URL,
-    TRIGGER_PROJECT_ID: process.env.TRIGGER_PROJECT_ID,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    DAYTONA_API_KEY: process.env.DAYTONA_API_KEY,
-    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
-    AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
-    CONTEXT7_API_KEY: process.env.CONTEXT7_API_KEY,
-    SITE_BASE_URL: process.env.SITE_BASE_URL,
-    BROWSERBASE_API_KEY: process.env.BROWSERBASE_API_KEY,
-    BROWSERBASE_PROJECT_ID: process.env.BROWSERBASE_PROJECT_ID,
-  })
+export function getConfig(
+  environmentVariables?: Record<string, string>,
+): ParsedEnv {
+  return envSchema.parse(environmentVariables ?? process.env)
 }
 
 export type { ParsedEnv }

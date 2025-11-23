@@ -2,6 +2,7 @@ import type { DB, User } from '@app/db/types'
 // Define a placeholder Session type based on better-auth structure
 // You might need to refine this based on the actual structure
 import type { Kysely, Selectable } from 'kysely'
+import type { ParsedEnv } from '@app/config'
 
 // Placeholder: Define structure based on docs (user object within session)
 export interface SessionUser {
@@ -14,22 +15,9 @@ export interface Session {
   // Add other relevant session properties if known
 }
 
-// Env, used by TRPC to pass env variables along
-export interface Env {
-  siteBaseUrl: string
-  githubAppId: string
-  githubAppPrivateKey: string
-  githubWebhookSecret: string
-  openAiApiKey: string
-  databaseUrl: string
-  triggerSecretKey: string
-  context7ApiKey: string
-  linearApiKey: string
-}
-
 export interface Context {
   db: Kysely<DB>
-  env: Env
+  env: ParsedEnv
   session: Session | null // Add session to the context
   user: Selectable<User> | null
 }

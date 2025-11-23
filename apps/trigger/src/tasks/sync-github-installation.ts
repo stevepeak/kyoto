@@ -1,5 +1,5 @@
 import { logger, task } from '@trigger.dev/sdk'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 
 import { createOctokit } from '../helpers/github'
@@ -191,7 +191,7 @@ export const syncGithubInstallationTask = task({
     const { numeric: installationId, bigint: installationIdBigInt } =
       parseInstallationId(payload.installationId)
 
-    const env = parseEnv()
+    const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
     const octokit = createOctokit(installationId)
 

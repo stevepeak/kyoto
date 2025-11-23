@@ -3,17 +3,17 @@ import type { NextRequest } from 'next/server'
 import * as Sentry from '@sentry/nextjs'
 
 import { appRouter } from '@app/api'
-import type { Context, Env } from '@app/api'
+import type { Context } from '@app/api'
 import { getUser } from '@app/api'
+import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
 async function createContext(req: NextRequest): Promise<Context> {
-  const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is required')
-  }
-  const db = setupDb(databaseUrl)
+  // Set up environment variables (validated with Zod)
+  const env = getConfig()
+
+  const db = setupDb(env.DATABASE_URL)
   const auth = getAuth()
 
   // Get session from better-auth
@@ -47,19 +47,6 @@ async function createContext(req: NextRequest): Promise<Context> {
       // User might not exist in database yet, that's okay
       console.error('Failed to get user from database:', error)
     }
-  }
-
-  // Set up environment variables
-  const env: Env = {
-    siteBaseUrl: process.env.SITE_BASE_URL || 'http://localhost:3001',
-    githubAppId: process.env.GITHUB_APP_ID || '',
-    githubAppPrivateKey: process.env.GITHUB_APP_PRIVATE_KEY || '',
-    githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
-    openAiApiKey: process.env.OPENAI_API_KEY || '',
-    databaseUrl: process.env.DATABASE_URL || '',
-    triggerSecretKey: process.env.TRIGGER_SECRET_KEY || '',
-    context7ApiKey: process.env.CONTEXT7_API_KEY,
-    linearApiKey: process.env.LINEAR_API_KEY,
   }
 
   return {

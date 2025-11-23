@@ -1,11 +1,11 @@
 import { task, logger } from '@trigger.dev/sdk'
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { syncGithubInstallationTask } from './sync-github-installation'
 
 function createAppLevelOctokit(): Octokit {
-  const env = parseEnv()
+  const env = getConfig()
   return new Octokit({
     authStrategy: createAppAuth,
     auth: {

@@ -1,6 +1,6 @@
 import { task, logger, streams } from '@trigger.dev/sdk'
 import { Stagehand } from '@browserbasehq/stagehand'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { Experimental_Agent as Agent, stepCountIs, tool } from 'ai'
 import { z } from 'zod'
 
@@ -136,7 +136,7 @@ function createGotoTool(ctx: {
 export const browserbaseTestTask = task({
   id: 'browserbase-test',
   run: async (args: { prompt: string }): Promise<{ output: string }> => {
-    const env = parseEnv()
+    const env = getConfig()
 
     logger.log('Creating Stagehand')
     const stagehand = new Stagehand({

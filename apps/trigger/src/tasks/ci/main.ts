@@ -1,6 +1,6 @@
 import { logger, task } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import {
   getGithubBranchDetails,
   getGithubCommitAuthor,
@@ -29,7 +29,7 @@ import type { RunCiPayload } from './types'
 export const runCiTask = task({
   id: 'run-ci',
   run: async (payload: RunCiPayload, { ctx }) => {
-    const env = parseEnv()
+    const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 
     const branchName = getBranchName(payload)

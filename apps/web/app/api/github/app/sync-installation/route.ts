@@ -2,29 +2,15 @@ import { configure, tasks } from '@trigger.dev/sdk'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
-import type { Env } from '@app/api'
-import { parseEnv } from '@app/api'
+import { getConfig } from '@app/config'
 
 // Ensure Trigger.dev is configured once per process
 let isTriggerConfigured = false
 
 function ensureTriggerConfigured() {
   if (!isTriggerConfigured) {
-    const env: Env = {
-      siteBaseUrl: process.env.SITE_BASE_URL || 'http://localhost:3001',
-      githubAppId: process.env.GITHUB_APP_ID || '',
-      githubAppPrivateKey: process.env.GITHUB_APP_PRIVATE_KEY || '',
-      githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
-      openAiApiKey: process.env.OPENAI_API_KEY || '',
-      databaseUrl: process.env.DATABASE_URL || '',
-      triggerSecretKey: process.env.TRIGGER_SECRET_KEY || '',
-      context7ApiKey: process.env.CONTEXT7_API_KEY,
-    }
-
-    const parsedEnv = parseEnv(env)
-    configure({
-      secretKey: parsedEnv.TRIGGER_SECRET_KEY,
-    })
+    const { TRIGGER_SECRET_KEY: secretKey } = getConfig()
+    configure({ secretKey })
     isTriggerConfigured = true
   }
 }

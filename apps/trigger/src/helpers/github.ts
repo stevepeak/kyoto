@@ -1,10 +1,10 @@
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
 import { setupDb } from '@app/db'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 
 export function createOctokit(installationId: number): Octokit {
-  const env = parseEnv()
+  const env = getConfig()
   return new Octokit({
     authStrategy: createAppAuth,
     auth: {
@@ -25,7 +25,7 @@ interface RepoWithOctokit {
 }
 
 async function getRepoWithOctokit(repoId: string): Promise<RepoWithOctokit> {
-  const env = parseEnv()
+  const env = getConfig()
   const db = setupDb(env.DATABASE_URL)
 
   const repo = await db

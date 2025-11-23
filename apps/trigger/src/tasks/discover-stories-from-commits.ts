@@ -1,7 +1,7 @@
 import { task, logger, streams } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
 import { agents } from '@app/agents'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import type { StoryDiscoveryOutput } from '@app/agents'
@@ -487,7 +487,7 @@ export const discoverStoriesFromCommitsTask = task({
     { repo, after, before }: DiscoverStoriesFromCommitsPayload,
     { ctx },
   ) => {
-    const env = parseEnv()
+    const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 
     const { owner: ownerLogin, name: repoName } = repo

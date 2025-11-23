@@ -3,7 +3,7 @@ import { task, logger } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
 
 import { agents, getDaytonaSandbox } from '@app/agents'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { getTelemetryTracer } from '@/telemetry'
 import type { EvaluationOutput } from '@app/schemas'
 import {
@@ -32,7 +32,7 @@ export const testStoryTask = task({
     },
     params,
   ): Promise<TestStoryTaskResult> => {
-    const { DATABASE_URL } = parseEnv()
+    const { DATABASE_URL } = getConfig()
     const db = setupDb(DATABASE_URL)
 
     // Get trigger runId from task ctx (provided by trigger.dev)

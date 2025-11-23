@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@app/db": "workspace:*",
+    "@app/config": "workspace:*",
     "@app/linear": "workspace:*",
     "@app/schemas": "workspace:*",
     "@sentry/nextjs": "^10.25.0",

@@ -2,7 +2,7 @@ import { task, logger } from '@trigger.dev/sdk'
 
 import { setupDb, sql } from '@app/db'
 import { agents, generateText, generateEmbedding } from '@app/agents'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import type { DecompositionAgentResult } from '@app/agents'
@@ -29,7 +29,7 @@ export const storyDecompositionTask = task({
     story,
     repo,
   }: DecompositionPayload): Promise<DecompositionAgentResult> => {
-    const env = parseEnv()
+    const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 
     // Create the sandbox and clone the repository

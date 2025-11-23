@@ -1,6 +1,6 @@
 import { generateText as aiGenerateText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 
 interface GenerateTextOptions {
   /** The prompt to generate text from */
@@ -16,7 +16,7 @@ export async function generateText({
   prompt,
   modelId = 'gpt-4o-mini',
 }: GenerateTextOptions): Promise<string> {
-  const { OPENAI_API_KEY } = parseEnv()
+  const { OPENAI_API_KEY } = getConfig()
   const openAiProvider = createOpenAI({ apiKey: OPENAI_API_KEY })
 
   const { text } = await aiGenerateText({

@@ -2,7 +2,7 @@ import { task, logger, streams } from '@trigger.dev/sdk'
 
 import { setupDb } from '@app/db'
 import { agents } from '@app/agents'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import type { StoryDiscoveryOutput } from '@app/agents'
@@ -24,7 +24,7 @@ export const discoverStoriesTask = task({
     storyCount,
     save = false,
   }: DiscoverStoriesPayload): Promise<StoryDiscoveryOutput> => {
-    const env = parseEnv()
+    const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 
     // Parse repo slug to get owner and repo name

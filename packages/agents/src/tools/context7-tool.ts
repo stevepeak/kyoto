@@ -1,7 +1,7 @@
 import { logger } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 
 const resolveLibraryInputSchema = z.object({
   libraryName: z
@@ -49,7 +49,7 @@ export function createResolveLibraryTool() {
     inputSchema: resolveLibraryInputSchema,
     execute: async (input) => {
       try {
-        const env = parseEnv()
+        const env = getConfig()
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         }
@@ -107,7 +107,7 @@ export function createGetLibraryDocsTool() {
     inputSchema: getLibraryDocsInputSchema,
     execute: async (input) => {
       try {
-        const env = parseEnv()
+        const env = getConfig()
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         }

@@ -1,6 +1,6 @@
 import { Daytona } from '@daytonaio/sdk'
 import type { Sandbox } from '@daytonaio/sdk'
-import { parseEnv } from '@app/config'
+import { getConfig } from '@app/config'
 import { getOctokitClient } from './github'
 
 type DaytonaClient = InstanceType<typeof Daytona>
@@ -17,7 +17,7 @@ interface CreateSandboxParams {
 export async function createDaytonaSandbox(
   params: CreateSandboxParams,
 ): Promise<DaytonaSandbox> {
-  const { DAYTONA_API_KEY: apiKey } = parseEnv()
+  const { DAYTONA_API_KEY: apiKey } = getConfig()
   const daytona = new Daytona({ apiKey })
 
   // Get GitHub token for cloning
