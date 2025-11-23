@@ -79,12 +79,13 @@ const commitSchema = z
 
 export const pushEventSchema = z.object({
   ref: z.string(),
-  after: z.string().optional(),
+  before: z.string().describe('The SHA of the commit before the push'),
+  after: z.string().describe('The SHA of the commit after the push'),
   repository: repositorySchema.extend({
     owner: pushRepositoryOwnerSchema.optional(),
   }),
   commits: z.array(commitSchema).optional(),
-  head_commit: commitSchema.optional(),
+  head_commit: commitSchema,
 })
 
 const pullRequestUserSchema = z
