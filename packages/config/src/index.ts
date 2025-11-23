@@ -68,6 +68,10 @@ const envSchema = z.object({
   // Sentry
   SENTRY_DSN: z.string().min(1),
 
+  // PostHog
+  POSTHOG_API_KEY: z.string().min(1),
+  POSTHOG_HOST: z.string().url().default('https://us.i.posthog.com'),
+
   // Context7
   CONTEXT7_API_KEY: z.string().min(1),
 
@@ -85,7 +89,18 @@ type ParsedEnv = z.infer<typeof envSchema>
 export function getConfig(
   environmentVariables?: Record<string, string>,
 ): ParsedEnv {
-  return envSchema.parse(environmentVariables ?? process.env)
+  const env = environmentVariables ?? process.env
+
+  // Normalize public env vars to secret env vars
+  const normalizedEnv = {
+    ...env,
+    POSTHOG_API_KEY: env.POSTHOG_API_KEY ?? env.NEXT_PUBLIC_POSTHOG_API_KEY,
+    POSTHOG_HOST: env.POSTHOG_HOST ?? env.NEXT_PUBLIC_POSTHOG_HOST,
+    SENTRY_DSN: env.SENTRY_DSN ?? env.NEXT_PUBLIC_SENTRY_DSN,
+    GITHUB_APP_SLUG: env.GITHUB_APP_SLUG ?? env.NEXT_PUBLIC_GITHUB_APP_SLUG,
+  }
+
+  return envSchema.parse(normalizedEnv)
 }
 
 export type { ParsedEnv }

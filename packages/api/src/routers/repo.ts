@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
 import { z } from 'zod'
+import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 
 import {
   findOwnerForUser,
@@ -208,6 +209,19 @@ export const repoRouter = router({
         .set({ enabled: true })
         .where('id', '=', repo.id)
         .execute()
+
+      // Track repo added event
+      capturePostHogEvent(
+        POSTHOG_EVENTS.REPO_ADDED,
+        {
+          repo_id: repo.id,
+          repo_name: repo.name,
+          repo_full_name: repo.fullName ?? null,
+          owner_id: repo.ownerId,
+          org_name: input.orgName,
+        },
+        userId,
+      )
 
       // Trigger story discovery for newly enabled repos that have no stories
       const storyCount = await ctx.db

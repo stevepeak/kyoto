@@ -1,6 +1,7 @@
 import { logger, task } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
 import { getConfig } from '@app/config'
+import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import {
   getGithubBranchDetails,
   getGithubCommitAuthor,
@@ -169,6 +170,27 @@ export const runCiTask = task({
         counts: aggregated,
       })
 
+      // Track CI run passed/failed event
+      const isPass = finalStatus === 'pass'
+      capturePostHogEvent(
+        isPass ? POSTHOG_EVENTS.CI_RUN_PASSED : POSTHOG_EVENTS.CI_RUN_FAILED,
+        {
+          run_id: runId,
+          run_number: runInsert.number,
+          repo_id: repoRecord.repoId,
+          repo_name: repoRecord.repoName,
+          owner_login: repoRecord.ownerLogin,
+          branch_name: branchName,
+          status: finalStatus,
+          story_count: stories.length,
+          pass_count: aggregated.pass,
+          fail_count: aggregated.fail,
+          error_count: aggregated.error,
+          commit_sha: commitSha,
+          pr_number: payload.prNumber ?? null,
+        },
+      )
+
       return {
         success: true,
         runId,
@@ -200,6 +222,21 @@ export const runCiTask = task({
         branchName,
         summary: errorMessage,
         status: 'error',
+      })
+
+      // Track CI run failed event
+      capturePostHogEvent(POSTHOG_EVENTS.CI_RUN_FAILED, {
+        run_id: runId,
+        run_number: runInsert.number,
+        repo_id: repoRecord.repoId,
+        repo_name: repoRecord.repoName,
+        owner_login: repoRecord.ownerLogin,
+        branch_name: branchName,
+        status: 'error',
+        error_message: errorMessage,
+        story_count: stories.length,
+        commit_sha: commitSha,
+        pr_number: payload.prNumber ?? null,
       })
 
       throw error

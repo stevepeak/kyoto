@@ -21,6 +21,7 @@
     "@app/cache": "workspace:*",
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/posthog": "workspace:^",
     "@app/schemas": "workspace:*",
     "@browserbasehq/stagehand": "^3.0.3",
     "@daytonaio/sdk": "^0.113.1",

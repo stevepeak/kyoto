@@ -1,6 +1,7 @@
 import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
+import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 
 import {
   disableRepositories,
@@ -83,6 +84,25 @@ export const installationRepositoriesHandler: WebhookHandler = async ({
           repoIds,
           userIds: memberUserIds,
         })
+      }
+
+      // Track repo added event for each repository
+      const firstUserId = memberUserIds[0] ?? senderUserIds[0]
+      if (firstUserId) {
+        for (const repo of repositoriesAdded) {
+          capturePostHogEvent(
+            POSTHOG_EVENTS.REPO_ADDED,
+            {
+              owner_id: owner.id,
+              owner_login: owner.login,
+              repo_name: repo.name,
+              repo_full_name: repo.full_name ?? null,
+              repo_private: repo.private ?? false,
+              installation_id: installationIdValue,
+            },
+            firstUserId,
+          )
+        }
       }
     }
 

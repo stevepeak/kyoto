@@ -1,6 +1,7 @@
 import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
+import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 
 import {
   disableAllReposAndClearInstallation,
@@ -123,6 +124,24 @@ export const installationHandler: WebhookHandler = async ({
             repoIds,
             userIds: memberUserIds,
           })
+        }
+
+        // Track organization installation event (for created action or new installations)
+        if (action === 'created' || action === 'unsuspend' || action === 'unsuspended') {
+          const firstUserId = memberUserIds[0] ?? senderUserIds[0]
+          if (firstUserId) {
+            capturePostHogEvent(
+              POSTHOG_EVENTS.ORGANIZATION_INSTALLED,
+              {
+                owner_id: owner.id,
+                owner_login: owner.login,
+                installation_id: String(installationId),
+                repository_count: repositories.length,
+                member_count: memberUserIds.length,
+              },
+              firstUserId,
+            )
+          }
         }
 
         logger.info('Processed installation event', {

@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
 import type { Updateable } from 'kysely'
 import { z } from 'zod'
+import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 
 import type { Story } from '@app/db/types'
 import {
@@ -172,6 +173,20 @@ export const storyRouter = router({
         .returningAll()
         .executeTakeFirstOrThrow()
 
+      // Track story written event
+      capturePostHogEvent(
+        POSTHOG_EVENTS.STORY_WRITTEN,
+        {
+          story_id: newStory.id,
+          repo_id: repo.id,
+          org_name: input.orgName,
+          repo_name: input.repoName,
+          story_name: newStory.name ?? null,
+          story_state: newStory.state,
+        },
+        userId,
+      )
+
       // Trigger story decomposition task
       await tasks.trigger(
         'story-decomposition',
@@ -255,6 +270,22 @@ export const storyRouter = router({
         .returningAll()
         .executeTakeFirstOrThrow()
 
+      // Track story edited event
+      capturePostHogEvent(
+        POSTHOG_EVENTS.STORY_EDITED,
+        {
+          story_id: updatedStory.id,
+          repo_id: repo.id,
+          org_name: input.orgName,
+          repo_name: input.repoName,
+          story_name: updatedStory.name ?? null,
+          story_state: updatedStory.state,
+          name_changed: input.name !== undefined,
+          content_changed: input.story !== undefined,
+        },
+        userId,
+      )
+
       // Trigger story decomposition task if story text was updated
       if (input.story !== undefined) {
         await tasks.trigger(
@@ -327,6 +358,21 @@ export const storyRouter = router({
         .where('id', '=', input.storyId)
         .returningAll()
         .executeTakeFirstOrThrow()
+
+      // Track story generated to accepted event
+      if (existingStory.state === 'generated' && input.state === 'active') {
+        capturePostHogEvent(
+          POSTHOG_EVENTS.STORY_GENERATED_TO_ACCEPTED,
+          {
+            story_id: updatedStory.id,
+            repo_id: repo.id,
+            org_name: input.orgName,
+            repo_name: input.repoName,
+            story_name: updatedStory.name ?? null,
+          },
+          userId,
+        )
+      }
 
       return { story: updatedStory }
     }),
