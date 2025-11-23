@@ -11,7 +11,7 @@ import { logger, streams } from '@trigger.dev/sdk'
 import type { LanguageModel } from 'ai'
 import { rawStoryInputSchema } from '@app/schemas'
 import { agents } from '../..'
-import dedent from 'dedent'
+import { dedent } from 'ts-dedent'
 
 /**
  * Schema for the story discovery output

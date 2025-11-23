@@ -5,7 +5,7 @@ import {
   generateText,
 } from 'ai'
 import type { DecompositionAgentResult } from './story-decomposition'
-import dedent from 'dedent'
+import { dedent } from 'ts-dedent'
 
 import { getDaytonaSandbox } from '../../helpers/daytona'
 import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
