@@ -10,15 +10,10 @@
     "incremental": true
   },
   "include": ["src/**/*"],
-"exclude": [
-    "node_modules",
-    "dist",
-    ".turbo"
-],
-"references": [
+  "exclude": ["node_modules", "dist", ".turbo"],
+  "references": [
     {
-        "path": "../config/tsconfig.json"
+      "path": "../config/tsconfig.json"
     }
-]
+  ]
 }
-

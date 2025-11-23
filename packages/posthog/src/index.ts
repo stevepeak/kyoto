@@ -84,4 +84,3 @@ export async function shutdownPostHog(): Promise<void> {
     posthogClient = null
   }
 }
-

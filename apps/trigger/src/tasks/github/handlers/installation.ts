@@ -127,7 +127,11 @@ export const installationHandler: WebhookHandler = async ({
         }
 
         // Track organization installation event (for created action or new installations)
-        if (action === 'created' || action === 'unsuspend' || action === 'unsuspended') {
+        if (
+          action === 'created' ||
+          action === 'unsuspend' ||
+          action === 'unsuspended'
+        ) {
           const firstUserId = memberUserIds[0] ?? senderUserIds[0]
           if (firstUserId) {
             capturePostHogEvent(

@@ -87,5 +87,3 @@ export async function getLinearTeams(
     }
   }
 }
-
-

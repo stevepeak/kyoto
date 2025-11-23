@@ -116,5 +116,3 @@ export async function createLinearIssue(
     }
   }
 }
-
-

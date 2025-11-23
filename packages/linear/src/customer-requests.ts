@@ -97,5 +97,3 @@ export async function createLinearCustomerRequest(
     }
   }
 }
-
-
