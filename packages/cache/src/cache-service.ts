@@ -2,6 +2,7 @@ import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 import type { DB } from '@app/db'
 import type { CacheEntry, CacheData, ValidationResult } from '@app/schemas'
+import { assertionCacheEntrySchema } from '@app/schemas'
 import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
 import type { Sandbox } from '@daytonaio/sdk'
 
@@ -140,19 +141,42 @@ export async function validateCacheEntry(args: {
     }
 
     // Iterate through cached assertions for this step
-    for (const [assertionIndexStr, evidenceHashMap] of Object.entries(
+    for (const [assertionIndexStr, assertionCacheData] of Object.entries(
       stepData.assertions,
     )) {
       const assertionIndex = Number.parseInt(assertionIndexStr, 10)
 
+      // Parse cache entry using Zod
+      const parseResult =
+        assertionCacheEntrySchema.safeParse(assertionCacheData)
+
+      if (!parseResult.success) {
+        // Invalid cache entry - treat as invalid
+        invalidAssertions.push({ stepIndex, assertionIndex })
+        if (invalidationStrategy === 'step') {
+          stepHasInvalidAssertion = true
+        }
+        continue
+      }
+
+      const cacheEntry = parseResult.data
+
+      // If assertion only has a reason (no evidence), skip validation
+      // since there's no file to validate
+      if (
+        !cacheEntry.evidence ||
+        Object.keys(cacheEntry.evidence).length === 0
+      ) {
+        continue
+      }
+
       // Check each file hash in the cached evidence
       let assertionIsValid = true
-      for (const [filename, cacheEntry] of Object.entries(evidenceHashMap)) {
+      for (const [filename, fileCacheEntry] of Object.entries(
+        cacheEntry.evidence,
+      ) as Array<[string, { hash: string; lineRanges: string[] }]>) {
         try {
-          // Handle both old format (string hash) and new format (object with hash and lineRanges)
-          const cachedHash =
-            typeof cacheEntry === 'string' ? cacheEntry : cacheEntry.hash
-
+          const cachedHash = fileCacheEntry.hash
           const currentHash = await getFileHashFromSandbox(sandbox, filename)
           if (currentHash !== cachedHash) {
             assertionIsValid = false
@@ -232,6 +256,7 @@ export async function buildCacheDataFromEvaluation(args: {
       conclusion: string
       assertions: Array<{
         evidence: string[]
+        reason?: string
       }>
     }>
   }
@@ -251,10 +276,11 @@ export async function buildCacheDataFromEvaluation(args: {
       continue
     }
 
-    cacheData.steps[stepIndex.toString()] = {
+    const stepData: CacheData['steps'][string] = {
       conclusion: step.conclusion,
       assertions: {},
     }
+    cacheData.steps[stepIndex.toString()] = stepData
 
     for (
       let assertionIndex = 0;
@@ -263,17 +289,22 @@ export async function buildCacheDataFromEvaluation(args: {
     ) {
       const assertion = step.assertions[assertionIndex]
 
-      // Build hash map for this assertion's evidence
+      // Build hash map for this assertion's evidence (even if empty)
       const evidenceHashMap = await buildEvidenceHashMap(
-        assertion.evidence,
+        assertion.evidence || [],
         sandbox,
       )
 
-      // Only cache if we have evidence
-      if (Object.keys(evidenceHashMap).length > 0) {
-        cacheData.steps[stepIndex.toString()].assertions[
-          assertionIndex.toString()
-        ] = evidenceHashMap
+      // Cache the assertion if it has evidence OR a reason
+      // This ensures we cache failed assertions with reasons even if they have no evidence
+      if (Object.keys(evidenceHashMap).length > 0 || assertion.reason) {
+        const assertionData = {
+          ...(Object.keys(evidenceHashMap).length > 0
+            ? { evidence: evidenceHashMap }
+            : {}),
+          ...(assertion.reason ? { reason: assertion.reason } : {}),
+        } as CacheData['steps'][string]['assertions'][string]
+        stepData.assertions[assertionIndex.toString()] = assertionData
       }
     }
   }

@@ -19,12 +19,15 @@ import {
   evaluationOutputSchema,
   type EvaluationOutput,
   assertionEvidenceSchema,
+  assertionCacheEntrySchema,
 } from '@app/schemas'
 import type { evaluationAgentOptions } from '@app/schemas'
 import { logger, streams } from '@trigger.dev/sdk'
 import zodToJsonSchema from 'zod-to-json-schema'
 import { agents } from '../..'
 import { z } from 'zod'
+import { setupDb } from '@app/db'
+import { getConfig } from '@app/config'
 
 /**
  * Schema for agent output (step evaluation result)
@@ -159,8 +162,14 @@ async function combineStepResults(args: {
   analysisStepResults: StepAgentOutput[]
   modelId?: string // TODO implement this later
   cachedRunIds?: Map<string, string> // Map of "stepIndex:assertionIndex" -> runId
+  previousExplanation?: string | null // Previous explanation if everything was cached
 }): Promise<EvaluationOutput> {
-  const { decompositionSteps, analysisStepResults, cachedRunIds } = args
+  const {
+    decompositionSteps,
+    analysisStepResults,
+    cachedRunIds,
+    previousExplanation,
+  } = args
 
   // Map decomposition steps with their corresponding analysis results
   const steps = decompositionSteps.steps.map((decompStep, index) => {
@@ -196,32 +205,42 @@ async function combineStepResults(args: {
     ? 'pass'
     : 'fail'
 
-  const stepSummary = steps
-    .map((step, idx) => {
-      const icon = step.conclusion === 'pass' ? '✅' : '❌'
-      return `${icon} Step ${idx + 1} (${step.conclusion}): ${step.outcome}`
+  // If everything was cached, use the previous explanation instead of generating a new one
+  let explanation: string
+  if (previousExplanation) {
+    explanation = previousExplanation
+    logger.info('Using cached explanation from previous run', {
+      explanationLength: explanation.length,
     })
-    .join('\n')
+  } else {
+    const stepSummary = steps
+      .map((step, idx) => {
+        const icon = step.conclusion === 'pass' ? '✅' : '❌'
+        return `${icon} Step ${idx + 1} (${step.conclusion}): ${step.outcome}`
+      })
+      .join('\n')
 
-  // Generate concise explanation using OpenAI
-  const { text: explanation } = await generateText({
-    model: agents.evaluation.options.model,
-    prompt: dedent`
-      You are summarizing the results of a story evaluation. Provide a very concise (2-3 sentences max) summary of the evaluation state.
+    // Generate concise explanation using OpenAI
+    const { text: generatedExplanation } = await generateText({
+      model: agents.evaluation.options.model,
+      prompt: dedent`
+        You are summarizing the results of a story evaluation. Provide a very concise (2-3 sentences max) summary of the evaluation state.
 
 Overall Status: ${status}
 
 Step Results:
 ${stepSummary}
 
-      Provide a brief, user-friendly explanation of what this evaluation found. Focus on the key outcomes and any issues.
-    `,
-    experimental_telemetry: {
-      isEnabled: true,
-      recordInputs: true,
-      recordOutputs: true,
-    },
-  })
+        Provide a brief, user-friendly explanation of what this evaluation found. Focus on the key outcomes and any issues.
+      `,
+      experimental_telemetry: {
+        isEnabled: true,
+        recordInputs: true,
+        recordOutputs: true,
+      },
+    })
+    explanation = generatedExplanation
+  }
 
   return evaluationOutputSchema.parse({
     version: 3,
@@ -332,6 +351,7 @@ export async function main(
   // Process each step sequentially
   const stepResults: StepAgentOutput[] = []
   const steps = (story.decomposition as DecompositionAgentResult).steps
+  let allStepsCached = true // Track if all steps were cached
 
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     const step = steps[stepIndex]
@@ -382,37 +402,49 @@ export async function main(
               stepCacheData.assertions[assertionIndex.toString()]
 
             if (assertionCacheData) {
+              // Parse cache entry using Zod
+              const parseResult =
+                assertionCacheEntrySchema.safeParse(assertionCacheData)
+
+              if (!parseResult.success) {
+                logger.warn(
+                  `Failed to parse cache entry for assertion ${assertionIndex}`,
+                  { error: parseResult.error },
+                )
+                allAssertionsCached = false
+                break
+              }
+
+              const assertionCacheEntry = parseResult.data
+
               // Reconstruct evidence from cached file paths and line ranges
               const evidence: string[] = []
-              for (const [filename, cacheEntry] of Object.entries(
-                assertionCacheData,
-              )) {
-                // Handle both old format (string hash) and new format (object with hash and lineRanges)
-                if (typeof cacheEntry === 'string') {
-                  // Legacy format: just filename (backward compatibility)
-                  evidence.push(filename)
-                } else {
-                  // New format: filename with line ranges
-                  const { lineRanges } = cacheEntry
+              if (assertionCacheEntry.evidence) {
+                for (const [filename, fileCacheEntry] of Object.entries(
+                  assertionCacheEntry.evidence,
+                )) {
+                  const { lineRanges } = fileCacheEntry
                   if (lineRanges && lineRanges.length > 0) {
                     // Reconstruct evidence with line ranges
                     for (const lineRange of lineRanges) {
                       evidence.push(`${filename}:${lineRange}`)
                     }
-                  } else {
-                    // Fallback: just filename if no line ranges
-                    evidence.push(filename)
                   }
                 }
               }
 
-              cachedAssertions.push({
+              const assertion = {
                 fact: stepAssertion || '',
                 evidence,
-              })
+                ...(assertionCacheEntry.reason
+                  ? { reason: assertionCacheEntry.reason }
+                  : {}),
+              } as StepAgentOutput['assertions'][number]
+              cachedAssertions.push(assertion)
 
               // Track which run this came from
-              if (cacheEntry.runId) {
+              // runId is on the top-level cacheEntry (the outer variable), not on the assertion cache entry
+              if (cacheEntry?.runId) {
                 cachedRunIds.set(
                   `${stepIndex}:${assertionIndex}`,
                   cacheEntry.runId,
@@ -443,10 +475,18 @@ export async function main(
               assertions: cachedAssertions,
             }
             stepResults.push(stepResult)
-            continue
+            continue // This step was cached, continue to next step
           }
         }
+        // If we reach here, the step was not fully cached
+        allStepsCached = false
+      } else {
+        // Step is not valid in cache
+        allStepsCached = false
       }
+    } else {
+      // Cache is disabled or not available for this step
+      allStepsCached = false
     }
 
     const stepContext: StepContext = {
@@ -477,12 +517,54 @@ export async function main(
     // }
   }
 
+  // If everything was cached, retrieve the previous explanation from the database
+  let previousExplanation: string | null = null
+  if (
+    allStepsCached &&
+    cacheEntry?.runId &&
+    story.id &&
+    agents.evaluation.options.cacheOptions?.enabled
+  ) {
+    try {
+      const { DATABASE_URL } = getConfig()
+      const db = setupDb(DATABASE_URL)
+
+      const previousResult = await db
+        .selectFrom('storyTestResults')
+        .select(['analysis'])
+        .where('storyId', '=', story.id)
+        .where('runId', '=', cacheEntry.runId)
+        .orderBy('completedAt', 'desc')
+        .limit(1)
+        .executeTakeFirst()
+
+      if (previousResult?.analysis) {
+        const analysis = previousResult.analysis as EvaluationOutput | null
+        if (analysis?.explanation) {
+          previousExplanation = analysis.explanation
+          logger.info('Retrieved previous explanation from cached run', {
+            runId: cacheEntry.runId,
+            explanationLength: previousExplanation.length,
+          })
+        }
+      }
+    } catch (error) {
+      logger.warn(
+        'Failed to retrieve previous explanation, will generate new one',
+        {
+          error,
+        },
+      )
+    }
+  }
+
   // Combine all step results into final evaluation
   const finalResult = await combineStepResults({
     decompositionSteps: story.decomposition as DecompositionAgentResult,
     analysisStepResults: stepResults,
     modelId: options?.modelId,
     cachedRunIds,
+    previousExplanation,
   })
 
   logger.debug('🤖 Evaluation Agent Final Result', {

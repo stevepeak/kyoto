@@ -45,9 +45,11 @@ export {
   type EvaluationInput,
 
   // Cache
+  assertionCacheEntrySchema,
   cacheDataSchema,
   cacheEntrySchema,
   cacheValidationResultSchema,
+  type AssertionCacheEntry,
   type CacheData,
   type CacheEntry,
   type CacheValidationResult,

@@ -271,10 +271,10 @@ export const assertionEvidenceSchema = z.object({
   /**
    * Array of file references with line ranges.
    * Format: "path/to/file.ts:startLine-endLine"
+   * Can be empty if the assertion failed and has a reason.
    */
   evidence: z
     .array(z.string().min(1))
-    .min(1)
     .describe(
       'File references with line ranges, e.g., ["src/auth/session.ts:12-28"]',
     ),
@@ -433,12 +433,34 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
 // ============================================================================
 
 /**
+ * Schema for a single assertion cache entry.
+ * Stores evidence (file hashes with line ranges) and/or reason for failure.
+ */
+export const assertionCacheEntrySchema = z.object({
+  // Evidence hash map (file paths -> hash and line ranges)
+  // Present when assertion has evidence
+  evidence: z
+    .record(
+      z.string(), // filename
+      z.object({
+        hash: z.string(),
+        lineRanges: z.array(z.string()),
+      }),
+    )
+    .optional(),
+  // Reason for failure (present when assertion failed)
+  reason: z.string().min(1).optional(),
+})
+
+export type AssertionCacheEntry = z.infer<typeof assertionCacheEntrySchema>
+
+/**
  * Cache data structure.
- * Stores file hashes and line ranges for evidence to avoid re-evaluating when files haven't changed.
+ * Stores file hashes, line ranges, and failure reasons for evidence to avoid re-evaluating when files haven't changed.
  *
  * TRANSFORMATION: Evaluation → Cache
- * - Input: Evaluation results (only passing assertions)
- * - Output: File hashes and line ranges organized by step and assertion
+ * - Input: Evaluation results (passing and failing assertions)
+ * - Output: File hashes, line ranges, and reasons organized by step and assertion
  * - Stored in: story_evidence_cache.cache_data (JSONB)
  *
  * Structure:
@@ -446,15 +468,36 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
  * {
  *   steps: {
  *     "0": {                    // Step index
+ *       conclusion: "pass" | "fail",
  *       assertions: {
  *         "0": {                // Assertion index
- *           "src/file.ts": {   // filename -> { hash, lineRanges }
- *             hash: "abc123hash",
- *             lineRanges: ["12-28", "45-67"]
+ *           evidence: {        // Optional: present when assertion has evidence
+ *             "src/file.ts": {
+ *               hash: "abc123hash",
+ *               lineRanges: ["12-28", "45-67"]
+ *             }
  *           },
- *           "src/other.ts": {
- *             hash: "def456hash",
- *             lineRanges: ["10-20"]
+ *           reason: "..."      // Optional: present when assertion failed
+ *         }
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * Example (passing assertion with evidence):
+ * ```json
+ * {
+ *   "steps": {
+ *     "0": {
+ *       "conclusion": "pass",
+ *       "assertions": {
+ *         "0": {
+ *           "evidence": {
+ *             "src/auth/session.ts": {
+ *               "hash": "sha256:abc123...",
+ *               "lineRanges": ["12-28"]
+ *             }
  *           }
  *         }
  *       }
@@ -463,31 +506,15 @@ export type EvaluationInput = z.infer<typeof evaluationInputSchema>
  * }
  * ```
  *
- * Example:
+ * Example (failing assertion with reason but no evidence):
  * ```json
  * {
  *   "steps": {
- *     "0": {
- *       "assertions": {
- *         "0": {
- *           "src/auth/session.ts": {
- *             "hash": "sha256:abc123...",
- *             "lineRanges": ["12-28"]
- *           },
- *           "src/auth/middleware.ts": {
- *             "hash": "sha256:def456...",
- *             "lineRanges": ["5-15", "30-40"]
- *           }
- *         }
- *       }
- *     },
  *     "1": {
+ *       "conclusion": "fail",
  *       "assertions": {
  *         "0": {
- *           "src/teams/create.ts": {
- *             "hash": "sha256:ghi789...",
- *             "lineRanges": ["45-67"]
- *           }
+ *           "reason": "No evidence found for team creation functionality"
  *         }
  *       }
  *     }
@@ -502,13 +529,7 @@ export const cacheDataSchema = z.object({
       conclusion: z.enum(['pass', 'fail']),
       assertions: z.record(
         z.string().regex(/^\d+$/), // Assertion index as string
-        z.record(
-          z.string(), // filename
-          z.object({
-            hash: z.string(),
-            lineRanges: z.array(z.string()),
-          }),
-        ),
+        assertionCacheEntrySchema,
       ),
     }),
   ),
