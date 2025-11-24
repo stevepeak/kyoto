@@ -5,9 +5,9 @@ import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import {
   agents,
-  generateEmbedding,
   type StoryDiscoveryOutput,
-  type ClueAnalysisResult,
+  type StoryImpactOutput,
+  extractScope,
 } from '@app/agents'
 import type { Commit } from '@app/schemas'
 import { findRepoByOwnerAndName } from './github/shared/db'
@@ -19,7 +19,6 @@ import {
 import { dedent } from 'ts-dedent'
 import { storyDecompositionTask } from './story-decomposition'
 import pMap from 'p-map'
-import { sql } from '@app/db'
 
 interface DiscoverStoriesFromCommitsPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -31,6 +30,11 @@ interface DiscoverStoriesFromCommitsPayload {
   after: string
   /** Commit SHA before the push */
   before: string
+  options: {
+    maxScopeCount?: number
+    runDecomposition?: boolean
+    writeNewStories?: boolean
+  }
 }
 
 interface ChangedStory {
@@ -40,57 +44,13 @@ interface ChangedStory {
     story: string
   }
   rewrittenStory: string
-  clue: string
+  scope: string
 }
 
 interface NewStory {
   title: string
   text: string
-  clue: string
-}
-
-/**
- * Create a new story from a clue when no impacted stories are found
- * Uses the discovery agent to write a new story based on the clue and code changes
- */
-async function createStoryFromClue(
-  clue: string,
-  commit: Commit,
-  db: ReturnType<typeof setupDb>,
-  repo: {
-    id: string
-    slug: string
-  },
-  sandboxId: string,
-): Promise<StoryDiscoveryOutput> {
-  logger.info('Creating new story from clue', {
-    clue,
-    repoId: repo.id,
-  })
-
-  void streams.append('progress', `Creating new story from clue: "${clue}"`)
-
-  const result: StoryDiscoveryOutput = await agents.discovery.run({
-    db,
-    repo,
-    options: {
-      daytonaSandboxId: sandboxId,
-      storyCount: 1,
-      telemetryTracer: getTelemetryTracer(),
-      context: {
-        scope: [clue],
-        commit,
-      },
-    },
-  })
-
-  logger.info('Created new story from clue', {
-    clue,
-    shouldBeOne: result.stories.length,
-    story: result.stories[0],
-  })
-
-  return result
+  scope: string
 }
 
 /*
@@ -114,27 +74,41 @@ Analyzes Git commits between two SHAs to discover new user stories or update exi
 
 ### 3. **Early Exit Checks**
 - If no TypeScript/TSX files changed → exit
-- If no feature change clues found → exit
+- If no feature change scope found → exit
 
-### 4. **Clue Analysis**
-- Uses an AI agent to analyze commits and diff for feature change indicators
-- Returns a list of clues (e.g., "Added user authentication", "Modified payment flow")
+### 4. **Changelog Summary & Scope Extraction**
+- Generates a changelog summary from commits and diff
+- Extracts scope items (user-facing changes) from the changelog
+- Returns a list of scope items (e.g., "Added user authentication", "Modified payment flow")
 
 ### 5. **Sandbox Creation**
 - Creates a Daytona sandbox for code analysis context
 
-### 6. **Story Discovery per Clue** (parallel processing)
-For each clue:
-- Searches for existing stories that might be impacted (semantic similarity)
-- If no matches found → creates a new story from the clue
-- If matches found → collects them for rewriting
+### 6. **Impact Analysis & Story Discovery** (parallel processing)
+For each scope (processed in parallel):
+- Runs the impact agent to find existing stories that might be impacted
+  - Uses both semantic search and keyword search tools
+  - Returns story IDs with scope overlap assessment (significant/moderate/low)
+- Collects all impacted stories per scope
+
+After all scopes are processed:
+- **Deduplicates stories**: Groups stories by ID since multiple scopes may find the same story
+- **Maps story IDs to scopes**: Tracks which scopes found each story
+- **Identifies scopes needing new stories**: Scopes with no impacted stories are marked for new story creation
+- **Fetches story records**: Loads full story data from database for stories to rewrite
+
+For scopes needing new stories (processed in parallel):
+- Runs the discovery agent to create new stories from the scope
+- Uses the scope, commit context, and code diff to generate stories
+- Each new story is associated with its originating scope
 
 ### 7. **Story Rewriting** (parallel processing)
 - For each impacted existing story, rewrites it based on:
-  - The clue
+  - All scopes that found it (joined together for context)
   - Code diff
   - Commit context
 - Preserves original structure (Given/When/Then) for easier diffing
+- Each rewritten story includes all scopes that identified it
 
 ### 8. **Save & Decompose**
 - Saves only NEW stories to the database (state: `'generated'`)
@@ -143,18 +117,21 @@ For each clue:
 
 ## Key Design Decisions
 - Filters to TypeScript/TSX files only
-- Two-stage analysis: clues first, then story discovery
+- Three-stage analysis: changelog summary, scope extraction, then story discovery
+- Uses dual search strategy (semantic + keyword) to find impacted stories comprehensively
+- Deduplicates stories across scopes to avoid redundant rewrites
+- Groups multiple scopes per story to provide richer context during rewriting
 - Preserves story structure when rewriting for easier diffs
 - Only saves new stories; rewritten stories are returned but not auto-saved
-- Uses semantic search to find impacted existing stories
+- Parallel processing for both impact analysis and story creation to improve performance
 
-The task returns early if there are no TypeScript changes or no feature clues, avoiding unnecessary work.
+The task returns early if there are no TypeScript changes or no feature scope, avoiding unnecessary work.
 
 */
 export const discoverStoriesFromCommitsTask = task({
   id: 'discover-stories-from-commits',
   run: async (
-    { repo, after, before }: DiscoverStoriesFromCommitsPayload,
+    { repo, after, before, options }: DiscoverStoriesFromCommitsPayload,
     { ctx },
   ) => {
     const env = getConfig()
@@ -162,12 +139,6 @@ export const discoverStoriesFromCommitsTask = task({
 
     const { owner: ownerLogin, name: repoName } = repo
     const repoSlug = `${ownerLogin}/${repoName}`
-
-    logger.info('Starting story discovery from commits', {
-      repoSlug,
-      after,
-      before,
-    })
 
     void streams.append('progress', `Starting story discovery for ${repoSlug}`)
 
@@ -186,6 +157,11 @@ export const discoverStoriesFromCommitsTask = task({
 
       // Get GitHub client
       const { octokit } = await getOctokitClient(repoRecord.repoId)
+
+      void streams.append(
+        'progress',
+        `Getting commit details for ${repoSlug} ${before.slice(0, 7)}...${after.slice(0, 7)}`,
+      )
 
       // Get commit messages
       const commitMessages = await getCommitMessages(
@@ -229,33 +205,50 @@ export const discoverStoriesFromCommitsTask = task({
         `Analyzing ${commitMessages.length} commits with ${changedFiles.length} changed files`,
       )
 
-      // Analyze clues
-      const commit: Commit = {
-        message: commitMessages.join('\n\n'),
-        diff,
-        changedFiles,
-      }
-      const clueAnalysis: ClueAnalysisResult = await agents.clueAnalysis.run({
+      // Generate changelog summary
+      const changelog: string = await (
+        agents.changelogSummary as {
+          run: (options: {
+            repoSlug: string
+            commit: Commit
+          }) => Promise<string>
+        }
+      ).run({
         repoSlug,
-        commit,
-        options: { maxClueCount: options.maxClueCount ?? 10 },
+        commit: {
+          message: commitMessages.join('\n\n'),
+          diff,
+          changedFiles,
+        },
+      })
+      logger.info(changelog)
+
+      // Extract scope from changelog
+      const scopeItems: string[] = await extractScope({
+        changelog,
+        options: { maxScopeCount: options.maxScopeCount ?? 10 },
       })
 
-      if (!clueAnalysis.hasClues) {
-        logger.warn('No clues found, exiting', {
-          explanation: clueAnalysis.explanation,
+      if (scopeItems.length === 0) {
+        logger.warn('No scope items found, exiting', {
+          changelog,
         })
         void streams.append(
           'progress',
-          'No clues found for feature changes, skipping story discovery',
+          'No scope items found for feature changes, skipping story discovery',
         )
         return {
           skipped: true,
-          reason: 'No clues found for feature changes',
-          clueAnalysis,
+          reason: 'No scope items found for feature changes',
+          scopeItems: [],
           changedFiles,
         }
       }
+
+      logger.info('Extracted scope items', {
+        scopeCount: scopeItems.length,
+        scopeItems,
+      })
 
       void streams.append('progress', 'Creating sandbox for code analysis')
 
@@ -264,60 +257,161 @@ export const discoverStoriesFromCommitsTask = task({
         repoId: repoRecord.repoId,
       })
 
+      // Use the change log as the commit messages
+      const commit: Commit = {
+        message: changelog,
+        diff,
+        changedFiles,
+      }
+
       try {
         void streams.append(
           'progress',
-          `Found ${clueAnalysis.clues.length} potential feature changes in analysis`,
+          `Found ${scopeItems.length} potential feature changes in scope`,
         )
 
-        // Process each clue individually to find impacted stories
-        const newStories: NewStory[] = []
+        // Step 1: Collect all impacted stories per scope (parallel)
+        const scopeToImpactedStories: Array<{
+          scope: string
+          impactedStories: StoryImpactOutput
+        }> = await pMap(
+          scopeItems,
+          async (
+            scope: string,
+          ): Promise<{
+            scope: string
+            impactedStories: StoryImpactOutput
+          }> => {
+            const impactResult: StoryImpactOutput = await agents.impact.run({
+              db,
+              repo: {
+                id: repoRecord.repoId,
+                slug: repoSlug,
+              },
+              commit,
+              options: {
+                scope: [scope],
+                telemetryTracer: getTelemetryTracer(),
+              },
+            })
+            // Type guard: ensure we have a valid StoryImpactOutput
+            return { scope, impactedStories: impactResult }
+          },
+          { concurrency: 1 },
+        )
+
+        console.log(`Found ${scopeToImpactedStories.length} impacted stories`, {
+          stories: scopeToImpactedStories,
+        })
+
+        // Step 2: Dedupe and group: storyId -> scopes[]
+        // Also identify scopes that need new stories
+        const scopesNeedingNewStories: string[] = []
+        const storyIdToScopes = new Map<string, string[]>()
+        const allStoryIds = new Set<string>()
+
+        for (const { scope, impactedStories } of scopeToImpactedStories) {
+          if (impactedStories.stories.length === 0) {
+            scopesNeedingNewStories.push(scope)
+          } else {
+            for (const { id: storyId } of impactedStories.stories) {
+              allStoryIds.add(storyId)
+              const existing = storyIdToScopes.get(storyId)
+              if (existing) {
+                if (!existing.includes(scope)) {
+                  existing.push(scope)
+                }
+              } else {
+                storyIdToScopes.set(storyId, [scope])
+              }
+            }
+          }
+        }
+
+        // Step 3: Fetch story records from database for deduped stories
         const storiesToRewrite: Array<{
-          clue: string
           story: {
             id: string
             name: string
             story: string
           }
+          scopes: string[]
         }> = []
 
-        await pMap(
-          clueAnalysis.clues,
-          async (clue: string) => {
-            const impactedStories: StoryDiscoveryOutput =
-              await agents.impact.run({
-                clue,
-                db,
-                repo: {
-                  id: repoRecord.repoId,
-                  slug: repoSlug,
+        if (allStoryIds.size > 0) {
+          const storyRecords = await db
+            .selectFrom('stories')
+            .select(['id', 'name', 'story'])
+            .where('id', 'in', Array.from(allStoryIds))
+            .where('repoId', '=', repoRecord.repoId)
+            .execute()
+
+          const storyRecordsMap = new Map(storyRecords.map((r) => [r.id, r]))
+
+          for (const [storyId, scopes] of storyIdToScopes.entries()) {
+            const storyRecord = storyRecordsMap.get(storyId)
+            if (storyRecord) {
+              storiesToRewrite.push({
+                story: {
+                  id: storyRecord.id,
+                  name: storyRecord.name,
+                  story: storyRecord.story,
                 },
-                sandboxId: sandbox.id,
-                commit,
-                telemetryTracer: getTelemetryTracer(),
+                scopes,
+              })
+            } else {
+              logger.warn(
+                'Could not find story record for ID returned by impact agent',
+                { storyId, scopes },
+              )
+            }
+          }
+        }
+
+        // Step 4: Create new stories for scopes that need them
+        const newStories: NewStory[] = []
+        if (
+          scopesNeedingNewStories.length > 0 &&
+          // ? DEBUG to disable this functionality
+          options.writeNewStories !== false
+        ) {
+          await pMap(
+            scopesNeedingNewStories,
+            async (scope: string) => {
+              logger.info(
+                'No impacted stories found for scope, creating new story',
+                { scope },
+              )
+
+              void streams.append(
+                'progress',
+                `Creating new story for "${scope.substring(0, 30)}..."`,
+              )
+
+              const newStoryResult: StoryDiscoveryOutput =
+                await agents.discovery.run({
+                  db,
+                  repo: {
+                    id: repoRecord.repoId,
+                    slug: repoSlug,
+                  },
+                  options: {
+                    daytonaSandboxId: sandbox.id,
+                    storyCount: 1,
+                    telemetryTracer: getTelemetryTracer(),
+                    context: {
+                      scope: [scope],
+                      commit,
+                    },
+                  },
+                })
+
+              logger.info('Created new story from scope', {
+                scope,
+                shouldBeOne: newStoryResult.stories.length,
+                story: newStoryResult.stories[0],
               })
 
-            if (impactedStories.stories.length === 0) {
-              // No impacted stories found - create a new story from the clue
-              logger.info(
-                'No impacted stories found for clue, creating new story',
-                {
-                  clue,
-                },
-              )
-
-              const newStoryResult = await createStoryFromClue(
-                clue,
-                commit,
-                db,
-                {
-                  id: repoRecord.repoId,
-                  slug: repoSlug,
-                },
-                sandbox.id,
-              )
-
-              // Add new stories from this clue
               for (const story of newStoryResult.stories) {
                 newStories.push({
                   title:
@@ -325,77 +419,27 @@ export const discoverStoriesFromCommitsTask = task({
                     story.text.split('\n')[0] ||
                     'Untitled Story',
                   text: story.text,
-                  clue,
+                  scope,
                 })
               }
-            } else {
-              // Found impacted stories - collect them for rewriting
-              logger.info('Found impacted stories for clue', {
-                clue,
-                storyCount: impactedStories.stories.length,
-              })
+            },
+            { concurrency: 1 },
+          )
+        }
 
-              // The findImpactedStories function returns stories that match existing ones
-              // We need to fetch the actual existing story records to rewrite them
-              for (const discoveredStory of impactedStories.stories) {
-                // Build a query from the discovered story to find the matching existing story
-                const storyText = discoveredStory.text
-                const title =
-                  discoveredStory.title || storyText.split('\n')[0] || ''
-
-                // Use semantic search to find the matching existing story
-                const queryEmbedding = await generateEmbedding({
-                  text: `${title}\n\n${storyText}`,
-                })
-                const embeddingVector = `[${queryEmbedding.join(',')}]`
-
-                // Search for the story using semantic similarity
-                const matchingStories = await db
-                  .selectFrom('stories')
-                  .select(['id', 'name', 'story'])
-                  .where('repoId', '=', repoRecord.repoId)
-                  .where('state', 'in', ['active', 'paused', 'generated'])
-                  .where('embedding', 'is not', null)
-                  .orderBy(
-                    sql`embedding <=> ${sql.raw(`'${embeddingVector}'`)}::vector`,
-                    'asc',
-                  )
-                  .limit(1)
-                  .execute()
-
-                // If we found a match with high similarity, add it to rewrite list
-                if (matchingStories.length > 0) {
-                  const match = matchingStories[0]
-                  // Calculate similarity to verify it's a good match
-                  // We'll use a threshold - if it's in the top result, it's likely a match
-                  storiesToRewrite.push({
-                    clue,
-                    story: {
-                      id: match.id,
-                      name: match.name,
-                      story: match.story,
-                    },
-                  })
-                } else {
-                  logger.warn(
-                    'Could not find matching existing story for discovered story',
-                    {
-                      clue,
-                      discoveredTitle: title,
-                    },
-                  )
-                }
-              }
-            }
-          },
-          { concurrency: 1 },
-        )
-
-        logger.info('Clue processing completed', {
+        logger.info('Scope processing completed', {
           repoId: repoRecord.repoId,
-          clueCount: clueAnalysis.clues.length,
+          scopeCount: scopeItems.length,
+          scopesNeedingNewStories: scopesNeedingNewStories.length,
           newStoriesCount: newStories.length,
-          storiesToRewriteCount: storiesToRewrite.length,
+          uniqueImpactedStoriesCount: storiesToRewrite.length,
+          storiesToRewrite: storiesToRewrite.map((s) => ({
+            storyName: s.story.name,
+            scopes: s.scopes,
+          })),
+          totalImpactedStoryMatches: Array.from(
+            storyIdToScopes.values(),
+          ).reduce((sum, scopes) => sum + scopes.length, 0),
         })
 
         void streams.append(
@@ -405,45 +449,55 @@ export const discoverStoriesFromCommitsTask = task({
             and ${storiesToRewrite.length} stories to rewrite.`,
         )
 
-        logger.info('Step 9: Rewriting stories based on changes', {
-          storiesToRewriteCount: storiesToRewrite.length,
-        })
-
-        // Rewrite each story found per clue
-        const changedStories: ChangedStory[] = await pMap(
-          storiesToRewrite,
-          async ({ clue, story }) => {
-            const rewrittenStory = await agents.rewrite.run({
-              clue,
-              commit,
-              existingStory: story,
-              sandboxId: sandbox.id,
-              telemetryTracer: getTelemetryTracer(),
-            })
-
-            return {
-              existingStory: story,
-              rewrittenStory,
-              clue,
-            }
+        logger.info(
+          `Rewriting ${storiesToRewrite.length} stories based on changes`,
+          {
+            storiesToRewrite,
           },
-          { concurrency: 3 },
         )
 
-        logger.info('Story rewriting completed', {
-          changedStoriesCount: changedStories.length,
-        })
+        const shouldWriteStories = options.writeNewStories !== false
+
+        // Rewrite each story with all scopes that found it
+        const changedStories: ChangedStory[] = shouldWriteStories
+          ? await pMap(
+              storiesToRewrite,
+              async ({ story, scopes }) => {
+                // Join all scopes that found this story to provide more context
+                const allScopesClue = scopes
+                  .map((s, i) => `${i + 1}. ${s}`)
+                  .join('\n')
+
+                const rewrittenStory = await agents.rewrite.run({
+                  clue: allScopesClue,
+                  commit,
+                  existingStory: story,
+                  sandboxId: sandbox.id,
+                  telemetryTracer: getTelemetryTracer(),
+                })
+
+                return {
+                  existingStory: story,
+                  rewrittenStory,
+                  scope: scopes.join('; '), // Keep for backward compatibility in return value
+                }
+              },
+              { concurrency: 3 },
+            )
+          : []
 
         // Log the changes
         logger.info('Story changes summary', {
-          repoSlug,
           newStoriesCount: newStories.length,
           changedStoriesCount: changedStories.length,
-          newStories: newStories.map((s) => ({ title: s.title, clue: s.clue })),
+          newStories: newStories.map((s) => ({
+            title: s.title,
+            scope: s.scope,
+          })),
           changedStories: changedStories.map((s) => ({
             storyId: s.existingStory.id,
             storyName: s.existingStory.name,
-            clue: s.clue,
+            scope: s.scope,
           })),
         })
 
@@ -461,7 +515,7 @@ export const discoverStoriesFromCommitsTask = task({
               commitRange: { before, after },
               changedFiles,
               commitMessages,
-              clue: newStory.clue,
+              scope: newStory.scope,
               triggerRunId: ctx.run.id,
             },
           }))
@@ -486,39 +540,35 @@ export const discoverStoriesFromCommitsTask = task({
           )
 
           // Fire and forget: trigger decomposition tasks for each saved story
-          void streams.append(
-            'progress',
-            'Triggering story decomposition tasks',
-          )
-          for (const savedStory of insertedStories) {
-            await storyDecompositionTask.trigger(
-              {
-                story: {
-                  id: savedStory.id,
-                  text: savedStory.story,
-                  title: savedStory.name,
-                },
-                repo: {
-                  id: repoRecord.repoId,
-                  slug: repoSlug,
-                },
-              },
-              {
-                tags: [
-                  `org_${ownerLogin}`,
-                  `repo_${repoName}`,
-                  `story_${savedStory.id}`,
-                ],
-                idempotencyKey: `story-decomposition-${savedStory.id}`,
-              },
+          if (options.runDecomposition !== false) {
+            void streams.append(
+              'progress',
+              'Triggering story decomposition tasks',
             )
+            for (const savedStory of insertedStories) {
+              await storyDecompositionTask.trigger(
+                {
+                  story: {
+                    id: savedStory.id,
+                    text: savedStory.story,
+                    title: savedStory.name,
+                  },
+                  repo: {
+                    id: repoRecord.repoId,
+                    slug: repoSlug,
+                  },
+                },
+                {
+                  tags: [
+                    `org_${ownerLogin}`,
+                    `repo_${repoName}`,
+                    `story_${savedStory.id}`,
+                  ],
+                  idempotencyKey: `story-decomposition-${savedStory.id}`,
+                },
+              )
+            }
           }
-
-          logger.info('Triggered decomposition tasks for saved stories', {
-            repoSlug,
-            storyCount: insertedStories.length,
-            storyIds: insertedStories.map((s) => s.id),
-          })
         } else {
           logger.info('No new stories to save', { repoSlug })
         }
@@ -529,16 +579,16 @@ export const discoverStoriesFromCommitsTask = task({
           codeDiff: diff,
           changedFiles,
           commitMessages,
-          clueAnalysis,
+          scopeItems,
           newStories: newStories.map((s) => ({
             title: s.title,
             text: s.text,
-            clue: s.clue,
+            scope: s.scope,
           })),
           changedStories: changedStories.map((s) => ({
             existingStory: s.existingStory,
             rewrittenStory: s.rewrittenStory,
-            clue: s.clue,
+            scope: s.scope,
           })),
           savedStories: savedStories.map((s) => ({
             id: s.id,

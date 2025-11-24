@@ -1,6 +1,5 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { streams } from '@trigger.dev/sdk'
 import { sql } from 'kysely'
 import type { setupDb } from '@app/db'
 import { generateEmbedding } from '../helpers/generate-embedding'
@@ -75,9 +74,13 @@ export function createSearchStoriesTool({
       'Search for existing stories for a repository. Returns stories that are not archived. Supports two modes: 1) Regular search: returns all non-archived stories (when no query provided). 2) Semantic search: returns stories similar to the query using vector embeddings (when query provided). Use this to avoid discovering duplicate stories and to compare new discoveries against existing ones.',
     inputSchema: searchStoriesInputSchema,
     execute: async ({ query, limit }) => {
-      void streams.append('progress', `Searching for stories "${query}"`)
-
       const stories = await searchStoriesForRepo(db, repoId, { query, limit })
+
+      console.log(`Semantic search for stories`, {
+        query,
+        found: `${stories.length}, with limit ${limit ?? 20} found`,
+        stories: stories.map((s) => s.name),
+      })
 
       return {
         stories,

@@ -169,6 +169,7 @@ export const pushHandler: WebhookHandler = async ({
           },
           after: commitSha,
           before: beforeSha,
+          options: {},
         },
         {
           tags: [

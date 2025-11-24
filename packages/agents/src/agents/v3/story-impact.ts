@@ -5,51 +5,66 @@ import { dedent } from 'ts-dedent'
 import { logger, streams } from '@trigger.dev/sdk'
 import zodToJsonSchema from 'zod-to-json-schema'
 
-import { getDaytonaSandbox } from '../../helpers/daytona'
-import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
-import { createReadFileTool } from '../../tools/read-file-tool'
-import { createResolveLibraryTool } from '../../tools/context7-tool'
+import { z } from 'zod'
 import { createSearchStoriesTool } from '../../tools/search-stories-tool'
-import {
-  agents,
-  storyDiscoveryOutputSchema,
-  type StoryDiscoveryOutput,
-} from '../..'
+import { createKeywordSearchStoriesTool } from '../../tools/keyword-search-stories-tool'
+import { agents } from '../..'
 import type { setupDb } from '@app/db'
 import type { Commit } from '@app/schemas'
 
 type DbClient = ReturnType<typeof setupDb>
 
+/**
+ * Schema for the story impact output
+ * Returns an array of impacted stories with their IDs and scope overlap assessment
+ */
+export const storyImpactOutputSchema = z.object({
+  stories: z.array(
+    z.object({
+      id: z.string(),
+      scopeOverlap: z.enum(['significant', 'moderate', 'low']),
+    }),
+  ),
+})
+
+export type StoryImpactOutput = z.infer<typeof storyImpactOutputSchema>
+
 interface FindImpactedStoriesOptions {
-  clue: string
   db: DbClient
   repo: {
     id: string
     slug: string
   }
-  sandboxId: string
   commit: Commit
-  model?: LanguageModel
-  telemetryTracer?: Tracer
-  maxSteps?: number
+  options: {
+    scope: string[]
+    model?: LanguageModel
+    telemetryTracer?: Tracer
+    maxSteps?: number
+    storyCount?: number
+  }
 }
 
 /**
- * Find existing stories that may be impacted by a specific clue
- * Uses the discovery agent to search for and identify related stories
+ * Find existing stories that may be impacted by a specific scope(s) change
+ * Returns an array of impacted stories with their IDs and scope overlap assessment
  */
 export async function findImpactedStories({
-  clue,
   db,
   repo,
-  sandboxId,
   commit,
-  model: providedModel,
-  telemetryTracer,
-  maxSteps = 30,
-}: FindImpactedStoriesOptions): Promise<StoryDiscoveryOutput> {
+  options: {
+    scope,
+    model: providedModel,
+    telemetryTracer,
+    maxSteps = 30,
+    storyCount = 10,
+  },
+}: FindImpactedStoriesOptions): Promise<StoryImpactOutput> {
   const model = providedModel ?? agents.discovery.options.model
-  const sandbox = await getDaytonaSandbox(sandboxId)
+
+  const scopeText = scope.map((s, i) => `${i + 1}. ${s}`).join('\n')
+  const scopeSummary = scope.length === 1 ? scope[0] : `${scope.length} scopes`
 
   const agent = new Agent({
     model,
@@ -57,60 +72,46 @@ export async function findImpactedStories({
       You are an expert software analyst tasked with finding existing user stories that are impacted by a specific code change.
 
       # 🎯 Objective
-      Analyze the specific clue and code changes to:
-      1. Use the searchStories tool to find existing stories that are impacted by this change
+      Analyze the specific scope and code changes to:
+      1. Use the searchStories tool (semantic search) and keywordSearchStories tool (keyword search) to find existing stories that are impacted by this change
       2. Document how they are affected by the code changes
-      3. Return only stories that are related to this clue - do NOT create new stories
-
-      # Story Format
-      Each story must follow the classic agile format:
-
-      **Given** [some initial context or state], (optional)
-      **When** [an action is taken],
-      **Then** [an expected outcome occurs].
-      **And** [another action is taken], (optional)
+      3. Return only stories that are related to this scope - do NOT create new stories
 
       # Your Task
-      Focus on this specific clue: "${clue}"
+      Find up to ${storyCount} stories that concern the following scope:
+      ${scopeText}
 
-      Use the searchStories tool to search for existing stories that might be impacted by this change.
-      - Look for semantically similar stories (similarity > 0.7) that are likely impacted
-      - Return only existing stories that are related to this clue
-      - If you find NO similar stories, return an empty array - do NOT create new stories
-
-      # Output Guidelines
-      - Write stories in clear, natural language
-      - Focus on one specific functionality per story
-      - Focus on user-facing features, not implementation details
-      - Each story should represent a complete, testable feature
-      - Include 0 - 2 additional acceptance criteria to clarify anything that is ambiguous
-      - Keep stories focused on high-level behavior, not low-level code details
-      - Never include source code or symbol references in the stories
-      - Keep it simple, keep it short. But have the story have enough detail to be useful as a test
-      - Do not use temporal adverbs like "immediately", "instantly", "right away", etc. if necessary use the word "then" or "after" instead
-      - Aim for no ambiguous statements. Do not use "should" in the stories. Use "then" instead
-
-      # Resources Available
-      You have read-only tools to:
-      - Explore repository structure and contents
-      - Inspect function/class/type names and symbol usage
-      - Read file contents to understand features
-      - Search for existing stories for the repository (use searchStories tool to find impacted stories)
+      Use both search tools to comprehensively find existing stories that might be impacted:
+      - Use searchStories to find stories with similar meaning
+      - Use keywordSearchStories to find stories with specific terms
+      - If you find NO similar stories, return an empty array
 
       # Output Schema
       \`\`\`json
-      ${JSON.stringify(zodToJsonSchema(storyDiscoveryOutputSchema), null, 2)}
+      ${JSON.stringify(zodToJsonSchema(storyImpactOutputSchema), null, 2)}
       \`\`\`
 
+      # Important
+      - Extract the 'id' field from each story found by the search tools
+      - For each story, evaluate the body of the story (found in the {story: string} field) and assess the scope overlap
+      - Rank the scope overlap as:
+        * 'significant': The story directly addresses or heavily overlaps with the scope
+        * 'moderate': The story has some relevance to the scope but isn't central
+        * 'low': The story has minimal or tangential relevance to the scope
+      - Return an array of objects with 'id' and 'scopeOverlap' fields
+      - If you find NO similar stories, return an empty array
+      - Sort stories by scope overlap (significant first, then moderate, then low)
+
       # Goal
-      Find existing stories impacted by this specific change. Do NOT create new stories.
-      Focus on the clue: "${clue}"
+      Find existing stories impacted by this specific change, assess their scope overlap, and return their IDs with overlap rankings. Do NOT create new stories.
+      Focus on the scope: ${scopeText}
     `,
     tools: {
-      terminalCommand: createTerminalCommandTool({ sandbox }),
-      readFile: createReadFileTool({ sandbox }),
-      resolveLibrary: createResolveLibraryTool(),
       searchStories: createSearchStoriesTool({ db, repoId: repo.id }),
+      keywordSearchStories: createKeywordSearchStoriesTool({
+        db,
+        repoId: repo.id,
+      }),
     } as any,
     experimental_telemetry: {
       isEnabled: true,
@@ -118,8 +119,7 @@ export async function findImpactedStories({
       metadata: {
         repoId: repo.id,
         repoSlug: repo.slug,
-        daytonaSandboxId: sandboxId,
-        clue,
+        scope,
       },
       tracer: telemetryTracer,
     },
@@ -130,15 +130,15 @@ export async function findImpactedStories({
     },
     stopWhen: stepCountIs(maxSteps),
     experimental_output: Output.object({
-      schema: storyDiscoveryOutputSchema,
+      schema: storyImpactOutputSchema,
     }),
   })
 
   const prompt = dedent`
-    Analyze this specific clue and code changes to find existing stories that may be impacted.
+    Analyze this specific scope and code changes to find existing stories that may be impacted.
 
-    # Specific Clue to Analyze
-    ${clue}
+    # Specific Scope to Analyze
+    ${scopeText}
 
     # Changed Files
     ${commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
@@ -152,25 +152,34 @@ export async function findImpactedStories({
     \`\`\`
 
     # Instructions
-    1. Use the searchStories tool to search for existing stories that might be impacted by this specific clue
-    2. If you find impacted stories (similarity > 0.7), return them in the output
-    3. If NO impacted stories are found, return an empty array - do NOT create new stories
-    4. Focus your analysis on this specific clue: "${clue}"
+    1. Use both searchStories (semantic) and keywordSearchStories (keyword) tools to comprehensively search for existing stories that might be impacted by this specific scope
+    2. Extract relevant keywords from the scope and code changes to use in keyword search
+    3. Use tools to find stories (up to ${storyCount} stories)
+    4. For each story found:
+       - Extract the 'id' field
+       - Read the story body text (found in the 'story' field from search results)
+       - Evaluate how well the story overlaps with the scope:
+         * 'significant': Story directly addresses or heavily overlaps with the scope
+         * 'moderate': Story has some relevance but isn't central to the scope
+         * 'low': Story has minimal or tangential relevance to the scope
+    5. Return an array of objects with 'id' and 'scopeOverlap' fields (e.g., [{"id": "story-id-1", "scopeOverlap": "significant"}, {"id": "story-id-2", "scopeOverlap": "moderate"}])
+    6. Sort results by scope overlap: significant first, then moderate, then low
+    7. If NO impacted stories are found, return an empty array
 
-    When you have completed your analysis, respond with the JSON object that matches the schema.
+    Respond with the JSON object that matches the schema.
   `
 
   void streams.append(
     'progress',
-    `Search for stories related to "${clue.substring(0, 30)}..."`,
+    `Search for stories related to "${scopeSummary.substring(0, 30)}..."`,
   )
 
   const result = await agent.generate({ prompt })
 
   const output = result.experimental_output
 
-  logger.debug('Clue processing result', {
-    clue,
+  logger.debug('Scope processing result', {
+    scope,
     storiesFound: output.stories.length,
   })
 

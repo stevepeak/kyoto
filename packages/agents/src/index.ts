@@ -12,12 +12,13 @@ import {
   type StoryDiscoveryOutput,
 } from './agents/v3/story-discovery'
 import { rewriteStoryForChanges } from './agents/v3/story-rewrite'
-import { findImpactedStories } from './agents/v3/story-impact'
 import {
-  analyzeClues,
-  clueAnalysisOutputSchema,
-  type ClueAnalysisResult,
-} from './agents/v3/clue-analysis'
+  findImpactedStories,
+  storyImpactOutputSchema,
+  type StoryImpactOutput,
+} from './agents/v3/story-impact'
+import { generateChangelogSummary } from './agents/v3/changelog-summary'
+import { extractScope } from './agents/v3/scope-extraction'
 import { getConfig } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
@@ -84,7 +85,7 @@ type AgentsConfig = {
   discovery: Agent
   rewrite: Agent
   impact: Agent
-  clueAnalysis: Agent
+  changelogSummary: Agent
 }
 
 export const agents: AgentsConfig = {
@@ -141,20 +142,20 @@ export const agents: AgentsConfig = {
   impact: {
     id: 'story-impact-v3',
     version: 'v3',
-    schema: storyDiscoveryOutputSchema,
+    schema: storyImpactOutputSchema,
     run: findImpactedStories,
     options: {
       maxSteps: 30,
       model: 'openai/gpt-5-mini',
     },
   },
-  clueAnalysis: {
-    id: 'clue-analysis-v3',
+  changelogSummary: {
+    id: 'changelog-summary-v3',
     version: 'v3',
-    schema: clueAnalysisOutputSchema,
-    run: analyzeClues,
+    schema: z.string(),
+    run: generateChangelogSummary,
     options: {
-      maxSteps: 10,
+      maxSteps: 15,
       model: 'openai/gpt-5-mini',
     },
   },
@@ -163,6 +164,8 @@ export const agents: AgentsConfig = {
 // Re-export discovery types and schema
 export type { StoryDiscoveryOutput }
 export { storyDiscoveryOutputSchema }
-// Re-export clue analysis types and schema
-export type { ClueAnalysisResult }
-export { clueAnalysisOutputSchema }
+// Re-export impact types and schema
+export type { StoryImpactOutput }
+export { storyImpactOutputSchema }
+// Re-export scope extraction function
+export { extractScope }
