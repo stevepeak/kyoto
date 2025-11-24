@@ -15,45 +15,28 @@ interface StoryStatusCheckProps {
 }
 
 export function StoryStatusCheck({ status, className }: StoryStatusCheckProps) {
-  const iconProps = {
-    className: cn('size-10', className),
-  }
-
   switch (status) {
     case 'pass':
       return (
-        <CheckCircle2
-          {...iconProps}
-          className={cn('text-green-600', iconProps.className)}
-        />
+        <CheckCircle2 className={cn('size-10 text-green-600', className)} />
       )
     case 'fail':
-      return (
-        <XCircle
-          {...iconProps}
-          className={cn('text-red-600', iconProps.className)}
-        />
-      )
+      return <XCircle className={cn('size-10 text-red-600', className)} />
     case 'running':
       return (
         <Loader2
-          {...iconProps}
-          className={cn('text-yellow-600 animate-spin', iconProps.className)}
+          className={cn('size-10 text-yellow-600 animate-spin', className)}
         />
       )
     case 'skipped':
       return (
         <MinusCircle
-          {...iconProps}
-          className={cn('text-muted-foreground', iconProps.className)}
+          className={cn('size-10 text-muted-foreground', className)}
         />
       )
     case 'error':
       return (
-        <AlertTriangle
-          {...iconProps}
-          className={cn('text-orange-600', iconProps.className)}
-        />
+        <AlertTriangle className={cn('size-10 text-orange-600', className)} />
       )
     default:
       return null
