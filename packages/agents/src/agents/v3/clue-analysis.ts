@@ -22,7 +22,7 @@ export const clueAnalysisOutputSchema = z.object({
 
 export type ClueAnalysisResult = z.infer<typeof clueAnalysisOutputSchema>
 
-export interface AnalyzeCluesOptions {
+interface AnalyzeCluesOptions {
   repoSlug: string
   commitMessages: string[]
   codeDiff: string
@@ -109,4 +109,3 @@ export async function analyzeClues({
 
   return result.experimental_output
 }
-

@@ -19,7 +19,7 @@ import type { setupDb } from '@app/db'
 
 type DbClient = ReturnType<typeof setupDb>
 
-export interface FindImpactedStoriesOptions {
+interface FindImpactedStoriesOptions {
   clue: string
   db: DbClient
   repo: {
@@ -102,7 +102,7 @@ export async function findImpactedStories({
 
       # Output Schema
       \`\`\`json
-      ${JSON.stringify(zodToJsonSchema(storyDiscoveryOutputSchema as any), null, 2)}
+      ${JSON.stringify(zodToJsonSchema(storyDiscoveryOutputSchema), null, 2)}
       \`\`\`
 
       # Goal
@@ -133,7 +133,7 @@ export async function findImpactedStories({
     },
     stopWhen: stepCountIs(maxSteps),
     experimental_output: Output.object({
-      schema: storyDiscoveryOutputSchema as any,
+      schema: storyDiscoveryOutputSchema,
     }),
   })
 
@@ -175,7 +175,7 @@ export async function findImpactedStories({
 
   const result = await agent.generate({ prompt })
 
-  const output = result.experimental_output as StoryDiscoveryOutput
+  const output = result.experimental_output
 
   logger.debug('Clue processing result', {
     clue,

@@ -16,6 +16,7 @@ import { findImpactedStories } from './agents/v3/story-impact'
 import {
   analyzeClues,
   clueAnalysisOutputSchema,
+  type ClueAnalysisResult,
 } from './agents/v3/clue-analysis'
 import { getConfig } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
@@ -162,3 +163,6 @@ export const agents: AgentsConfig = {
 // Re-export discovery types and schema
 export type { StoryDiscoveryOutput }
 export { storyDiscoveryOutputSchema }
+// Re-export clue analysis types and schema
+export type { ClueAnalysisResult }
+export { clueAnalysisOutputSchema }

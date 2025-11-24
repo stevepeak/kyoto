@@ -10,7 +10,7 @@ import { createReadFileTool } from '../../tools/read-file-tool'
 import { createResolveLibraryTool } from '../../tools/context7-tool'
 import { agents } from '../..'
 
-export interface RewriteStoryForChangesOptions {
+interface RewriteStoryForChangesOptions {
   clue: string
   codeDiff: string
   commitMessages: string[]
@@ -141,4 +141,3 @@ export async function rewriteStoryForChanges({
 
   return result.text
 }
-
