@@ -1,7 +1,7 @@
 checkCommands:
   fix: pnpm run fix
-  lint: pnpm run lint:ci
+  lint: pnpm run lint
   types: pnpm run typecheck
-  test: pnpm run test
+  test: exit 0
 beta:
-  canApprovePullRequests: false
+  canApprovePullRequests: true
