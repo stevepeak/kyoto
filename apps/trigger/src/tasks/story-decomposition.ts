@@ -1,6 +1,6 @@
 import { task, logger } from '@trigger.dev/sdk'
 
-import { setupDb, sql } from '@app/db'
+import { setupDb, sql, json } from '@app/db'
 import { agents, generateText, generateEmbedding } from '@app/agents'
 import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
@@ -61,14 +61,15 @@ The sentence should be clear, specific, and capture the essence of what the stor
       }
 
       // Run the story decomposition agent
-      const decompositionResult = await agents.decomposition.run({
-        story,
-        repo,
-        options: {
-          daytonaSandboxId: sandbox.id,
-          telemetryTracer: getTelemetryTracer(),
-        },
-      })
+      const decompositionResult: DecompositionAgentResult =
+        await agents.decomposition.run({
+          story,
+          repo,
+          options: {
+            daytonaSandboxId: sandbox.id,
+            telemetryTracer: getTelemetryTracer(),
+          },
+        })
 
       // Save decomposition results to the story record if story.id exists
       if (story.id) {
@@ -79,11 +80,17 @@ The sentence should be clear, specific, and capture the essence of what the stor
           .where('id', '=', story.id)
           .executeTakeFirst()
 
-        const newDecomposition = JSON.stringify(decompositionResult)
+        const existingDecomposition =
+          existingStory && existingStory.decomposition !== null
+            ? typeof existingStory.decomposition === 'string'
+              ? JSON.parse(existingStory.decomposition)
+              : existingStory.decomposition
+            : null
+
         const decompositionChanged =
-          !existingStory ||
-          existingStory.decomposition === null ||
-          JSON.stringify(existingStory.decomposition) !== newDecomposition
+          !existingDecomposition ||
+          JSON.stringify(existingDecomposition) !==
+            JSON.stringify(decompositionResult)
 
         // Create embedding from story and decomposition
         const embeddingText = JSON.stringify({
@@ -100,7 +107,7 @@ The sentence should be clear, specific, and capture the essence of what the stor
         await db
           .updateTable('stories')
           .set({
-            decomposition: newDecomposition,
+            decomposition: json(decompositionResult),
             embedding: sql`${embeddingVector}::vector`,
           })
           .where('id', '=', story.id)
