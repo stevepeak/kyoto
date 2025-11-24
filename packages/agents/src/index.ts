@@ -63,11 +63,11 @@ function model(
   throw new Error(`Unsupported provider: ${gateway}`)
 }
 
-type Agent = {
+type Agent<TSchema extends z.ZodSchema = z.ZodSchema> = {
   id: string
   version: string
-  schema: z.ZodSchema
-  run: (options: any) => Promise<any>
+  schema: TSchema
+  run: (options: any) => Promise<z.infer<TSchema>>
   options: {
     maxSteps: number
     model: string

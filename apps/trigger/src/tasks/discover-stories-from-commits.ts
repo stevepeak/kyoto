@@ -71,7 +71,7 @@ async function createStoryFromClue(
 
   void streams.append('progress', `Creating new story from clue: "${clue}"`)
 
-  const result = (await agents.discovery.run({
+  const result: StoryDiscoveryOutput = await agents.discovery.run({
     db,
     repo,
     options: {
@@ -85,11 +85,12 @@ async function createStoryFromClue(
         clues: [clue],
       },
     },
-  })) as StoryDiscoveryOutput
+  })
 
   logger.info('Created new story from clue', {
     clue,
-    storiesCreated: result.stories.length,
+    shouldBeOne: result.stories.length,
+    story: result.stories[0],
   })
 
   return result
@@ -262,12 +263,12 @@ export const discoverStoriesFromCommitsTask = task({
       )
 
       // Analyze clues
-      const clueAnalysis = (await agents.clueAnalysis.run({
+      const clueAnalysis: ClueAnalysisResult = await agents.clueAnalysis.run({
         repoSlug,
         commitMessages,
         codeDiff: diff,
         changedFiles,
-      })) as ClueAnalysisResult
+      })
 
       logger.info('Clue analysis completed', {
         hasClues: clueAnalysis.hasClues,
@@ -331,19 +332,20 @@ export const discoverStoriesFromCommitsTask = task({
               repoId: repoRecord.repoId,
             })
 
-            const impactedStories = (await agents.impact.run({
-              clue,
-              db,
-              repo: {
-                id: repoRecord.repoId,
-                slug: repoSlug,
-              },
-              sandboxId: sandbox.id,
-              commitMessages,
-              codeDiff: diff,
-              changedFiles,
-              telemetryTracer: getTelemetryTracer(),
-            })) as StoryDiscoveryOutput
+            const impactedStories: StoryDiscoveryOutput =
+              await agents.impact.run({
+                clue,
+                db,
+                repo: {
+                  id: repoRecord.repoId,
+                  slug: repoSlug,
+                },
+                sandboxId: sandbox.id,
+                commitMessages,
+                codeDiff: diff,
+                changedFiles,
+                telemetryTracer: getTelemetryTracer(),
+              })
 
             if (impactedStories.stories.length === 0) {
               // No impacted stories found - create a new story from the clue
