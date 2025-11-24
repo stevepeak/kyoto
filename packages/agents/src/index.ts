@@ -18,7 +18,7 @@ import {
   type StoryImpactOutput,
 } from './agents/v3/story-impact'
 import { generateChangelogSummary } from './agents/v3/changelog-summary'
-import { extractScope } from './agents/v3/scope-extraction'
+
 import { getConfig } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
@@ -168,4 +168,5 @@ export { storyDiscoveryOutputSchema }
 export type { StoryImpactOutput }
 export { storyImpactOutputSchema }
 // Re-export scope extraction function
-export { extractScope }
+
+export { extractScope } from './agents/v3/scope-extraction'

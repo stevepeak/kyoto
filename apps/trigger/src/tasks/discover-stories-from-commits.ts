@@ -19,6 +19,7 @@ import {
 import { dedent } from 'ts-dedent'
 import { storyDecompositionTask } from './story-decomposition'
 import pMap from 'p-map'
+import { diffLines } from 'diff'
 
 interface DiscoverStoriesFromCommitsPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -34,6 +35,7 @@ interface DiscoverStoriesFromCommitsPayload {
     maxScopeCount?: number
     runDecomposition?: boolean
     writeNewStories?: boolean
+    rewriteStories?: boolean
   }
 }
 
@@ -44,7 +46,7 @@ interface ChangedStory {
     story: string
   }
   rewrittenStory: string
-  scope: string
+  scope: string[]
 }
 
 interface NewStory {
@@ -456,35 +458,52 @@ export const discoverStoriesFromCommitsTask = task({
           },
         )
 
-        const shouldWriteStories = options.writeNewStories !== false
+        const shouldRewriteStories = options.rewriteStories !== false
 
         // Rewrite each story with all scopes that found it
-        const changedStories: ChangedStory[] = shouldWriteStories
+        const changedStories: ChangedStory[] = shouldRewriteStories
           ? await pMap(
               storiesToRewrite,
               async ({ story, scopes }) => {
-                // Join all scopes that found this story to provide more context
-                const allScopesClue = scopes
-                  .map((s, i) => `${i + 1}. ${s}`)
-                  .join('\n')
-
                 const rewrittenStory = await agents.rewrite.run({
-                  clue: allScopesClue,
                   commit,
-                  existingStory: story,
-                  sandboxId: sandbox.id,
-                  telemetryTracer: getTelemetryTracer(),
+                  story: {
+                    id: story.id,
+                    name: story.name,
+                    story: story.story,
+                  },
+                  options: {
+                    scope: scopes,
+                    sandboxId: sandbox.id,
+                    telemetryTracer: getTelemetryTracer(),
+                  },
                 })
 
                 return {
                   existingStory: story,
                   rewrittenStory,
-                  scope: scopes.join('; '), // Keep for backward compatibility in return value
+                  scope: scopes,
                 }
               },
               { concurrency: 3 },
             )
           : []
+
+        // Log the changes for each story
+        for (const changedStory of changedStories) {
+          const patch = diffLines(
+            changedStory.existingStory.story,
+            changedStory.rewrittenStory,
+          )
+
+          let diffOutput = ''
+          patch.forEach((part) => {
+            const sign = part.added ? '+' : part.removed ? '-' : ' '
+            diffOutput += sign + part.value
+          })
+
+          logger.log(diffOutput)
+        }
 
         // Log the changes
         logger.info('Story changes summary', {

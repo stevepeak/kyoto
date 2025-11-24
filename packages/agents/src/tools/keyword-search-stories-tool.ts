@@ -1,6 +1,5 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { streams } from '@trigger.dev/sdk'
 import { sql } from 'kysely'
 import type { setupDb } from '@app/db'
 

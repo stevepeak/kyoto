@@ -1,6 +1,5 @@
 import { dedent } from 'ts-dedent'
 import { generateText } from '../../helpers/generate-text'
-import { agents } from '../..'
 
 interface ExtractScopeOptions {
   changelog: string
@@ -82,20 +81,24 @@ export async function extractScope({
     .map((line) => line.trim())
     .filter((line) => {
       // Remove empty lines
-      if (!line) return false
+      if (!line) {
+        return false
+      }
       // Remove markdown list markers (-, *, •)
-      const cleaned = line.replace(/^[-*•]\s+/, '').trim()
+      const cleaned = line.replace(/^[*•-]\s+/, '').trim()
       // Remove numbered list markers (1., 2., etc.)
       const cleaned2 = cleaned.replace(/^\d+\.\s+/, '').trim()
       return cleaned2.length > 0
     })
     .map((line) => {
       // Clean up any remaining list markers
-      return line.replace(/^[-*•]\s+/, '').replace(/^\d+\.\s+/, '').trim()
+      return line
+        .replace(/^[*•-]\s+/, '')
+        .replace(/^\d+\.\s+/, '')
+        .trim()
     })
     .filter((line) => line.length > 0)
     .slice(0, maxScopeCount) // Enforce maxScopeCount limit
 
   return scopeItems
 }
-

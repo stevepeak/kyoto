@@ -86,6 +86,9 @@ importers:
       ai:
         specifier: ^5.0.93
         version: 5.0.93(zod@4.1.12)
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
       import-in-the-middle:
         specifier: ^2.0.0
         version: 2.0.0
@@ -98,9 +101,6 @@ importers:
       zod:
         specifier: ^4.1.12
         version: 4.1.12
-      zod-to-json-schema:
-        specifier: ^3.25.0
-        version: 3.25.0(zod@4.1.12)
     devDependencies:
       '@babel/preset-typescript':
         specifier: ^7.28.5
@@ -336,7 +336,7 @@ importers:
         version: 3.25.76
       zod-to-json-schema:
         specifier: ^3.24.6
-        version: 3.24.6(zod@3.25.76)
+        version: 3.25.0(zod@3.25.76)
 
   packages/api:
     dependencies:
@@ -4915,6 +4915,10 @@ packages:
     resolution: {integrity: sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==}
     engines: {node: '>=0.3.1'}
 
+  diff@8.0.2:
+    resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
+    engines: {node: '>=0.3.1'}
+
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
@@ -8389,11 +8393,6 @@ packages:
 
   zod-error@1.5.0:
     resolution: {integrity: sha512-zzopKZ/skI9iXpqCEPj+iLCKl9b88E43ehcU+sbRoHuwGd9F1IDVGQ70TyO6kmfiRL1g4IXkjsXK+g1gLYl4WQ==}
-
-  zod-to-json-schema@3.24.6:
-    resolution: {integrity: sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==}
-    peerDependencies:
-      zod: ^3.24.1
 
   zod-to-json-schema@3.25.0:
     resolution: {integrity: sha512-HvWtU2UG41LALjajJrML6uQejQhNJx+JBO9IflpSja4R03iNWfKXrj6W2h7ljuLyc1nKS+9yDyL/9tD1U/yBnQ==}
@@ -13841,6 +13840,8 @@ snapshots:
 
   diff@3.5.0: {}
 
+  diff@8.0.2: {}
+
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
@@ -18302,10 +18303,6 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zod-error@1.5.0:
-    dependencies:
-      zod: 3.25.76
-
-  zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
       zod: 3.25.76
 

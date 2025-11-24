@@ -1,7 +1,6 @@
 import { Experimental_Agent as Agent, Output } from 'ai'
 import type { LanguageModel } from 'ai'
 import { dedent } from 'ts-dedent'
-import { z } from 'zod'
 
 import { agents } from '../..'
 import type { Commit } from '@app/schemas'
@@ -96,4 +95,3 @@ export async function generateChangelogSummary({
 
   return result.text
 }
-

@@ -12,17 +12,19 @@ import { agents } from '../..'
 import type { Commit } from '@app/schemas'
 
 interface RewriteStoryForChangesOptions {
-  clue: string
   commit: Commit
-  existingStory: {
+  story: {
     id: string
     name: string
     story: string
   }
-  sandboxId: string
-  model?: LanguageModel
-  telemetryTracer?: Tracer
-  maxSteps?: number
+  options: {
+    scope: string[]
+    sandboxId: string
+    model?: LanguageModel
+    telemetryTracer?: Tracer
+    maxSteps?: number
+  }
 }
 
 /**
@@ -30,14 +32,17 @@ interface RewriteStoryForChangesOptions {
  * Preserves original structure (Given/When/Then/And) for easy diffing
  */
 export async function rewriteStoryForChanges({
-  clue,
   commit,
-  existingStory,
-  sandboxId,
-  model: providedModel,
-  telemetryTracer,
-  maxSteps = 20,
+  story,
+  options,
 }: RewriteStoryForChangesOptions): Promise<string> {
+  const {
+    scope,
+    sandboxId,
+    model: providedModel,
+    telemetryTracer,
+    maxSteps = 20,
+  } = options
   const model = providedModel ?? agents.discovery.options.model
   const sandbox = await getDaytonaSandbox(sandboxId)
 
@@ -47,25 +52,22 @@ export async function rewriteStoryForChanges({
       You are an expert story analyst tasked with rewriting an existing user story based on code changes.
 
       # Your Task
-      Rewrite the existing story to reflect the changes indicated by the clue and code diff.
+      Rewrite the existing story to reflect the changes indicated by the changelog and code diff.
       The rewritten story should accurately represent the current state of the feature after the code changes.
+      We will present your changes to a human in a git-diff format so minor changes in grammar or formatting is not desired.
+      Avoid adding additional constraints to the story unless the changelog warrants.
+      Do not include a title in your response, we will adjust that at a later time.
 
       # Critical Requirements
       1. **Preserve Structure**: Keep the original story structure intact (Given/When/Then/And format)
       2. **Maintain Format**: Use the same formatting and structure as the original so diffs are easy to read
       3. **Update Content**: Modify the story text to reflect what changed in the code
       4. **Keep Context**: Preserve any context that hasn't changed
-      5. **Be Precise**: Only change what needs to change based on the code diff and clue
-
-      # Story Format
-      Stories follow the classic agile format:
-      **Given** [some initial context or state], (optional)
-      **When** [an action is taken],
-      **Then** [an expected outcome occurs].
-      **And** [another action is taken], (optional)
+      5. **Be Precise**: Only change what needs to change based on the code diff and changelog
 
       # Output
-      Return the complete rewritten story text, maintaining the original structure and format.
+      Return the complete rewritten story content doing your best to maintain the original structure and format.
+
     `,
     tools: {
       terminalCommand: createTerminalCommandTool({ sandbox }),
@@ -76,8 +78,8 @@ export async function rewriteStoryForChanges({
       isEnabled: true,
       functionId: 'rewrite-story-for-changes',
       metadata: {
-        storyId: existingStory.id,
-        clue,
+        storyId: story.id,
+        scope: scope.join('; '),
         daytonaSandboxId: sandboxId,
       },
       tracer: telemetryTracer,
@@ -91,47 +93,44 @@ export async function rewriteStoryForChanges({
   })
 
   const prompt = dedent`
-    Rewrite the existing story to reflect the code changes indicated by the clue.
+    Rewrite the existing story to reflect the code changes indicated in the changelog and code diff.
 
-    # Clue
-    ${clue}
+    <changelog> 
+      ${commit.message}
+    </changelog>
 
-    # Existing Story
-    **Title:** ${existingStory.name}
-    **Story Text:**
-    ${existingStory.story}
+    <scope>
+      ${scope.join('\n')}
+    </scope>
 
-    # Code Changes Context
-    **Changed Files:**
-    ${commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
+    <code-diff>
+      ${commit.diff}
+    </code-diff>
 
-    **Commit Message:**
-    ${commit.message}
-
-    **Code Diff (truncated - sandbox available for full context):**
-    \`\`\`
-    ${commit.diff.substring(0, 10000)}${commit.diff.length > 10000 ? '\n... (diff truncated)' : ''}
-    \`\`\`
+    <existingStory>
+      <title>${story.name}</title>
+      <content>${story.story}</content>
+    </existingStory>
 
     # Instructions
-    1. Analyze the clue and code changes to understand what changed
-    2. Rewrite the story to reflect these changes
-    3. Keep the original structure (Given/When/Then/And) intact
+    1. Analyze the changelog and code diff to understand what changed
+    2. Rewrite the story to reflect these changes within the provided scope (MUST STAY IN SCOPE)
+    3. Keep the original structure intact
     4. Maintain the same formatting style
-    5. Only modify what needs to change based on the code diff
+    5. Only modify what needs to change based on the changelog and code diff
 
-    Return the complete rewritten story text.
+    Return the complete rewritten story content.
   `
 
   logger.info('Rewriting story for changes', {
-    existingStoryId: existingStory.id,
-    existingStoryName: existingStory.name,
-    clue,
+    storyId: story.id,
+    storyName: story.name,
+    scope: scope.join('; '),
   })
 
   void streams.append(
     'progress',
-    `Rewriting story "${existingStory.name}" based on clue: "${clue}"`,
+    `Rewriting story "${story.name.substring(0, 30)}..."`,
   )
 
   const result = await agent.generate({ prompt })
