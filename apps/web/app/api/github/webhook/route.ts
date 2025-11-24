@@ -37,15 +37,23 @@ function verifyGitHubSignature(
   return timingSafeEqual(signatureBuffer, digestBuffer)
 }
 
-interface VercelPreviewDetectionResult {
+type PreviewDeploymentProvider = 'vercel'
+
+interface PreviewDeploymentDetectionResult {
   previewUrl: string
+  provider: PreviewDeploymentProvider
   source: 'deployment_status' | 'repository_dispatch'
 }
+
+type PreviewDetector = (
+  eventType: string,
+  payload: unknown,
+) => PreviewDeploymentDetectionResult | null
 
 function detectVercelPreviewDeployment(
   eventType: string,
   payload: unknown,
-): VercelPreviewDetectionResult | null {
+): PreviewDeploymentDetectionResult | null {
   if (!payload || typeof payload !== 'object') {
     return null
   }
@@ -74,6 +82,7 @@ function detectVercelPreviewDeployment(
       ) {
         return {
           previewUrl: environmentUrl,
+          provider: 'vercel',
           source: 'deployment_status',
         }
       }
@@ -120,6 +129,7 @@ function detectVercelPreviewDeployment(
     if (url && environment && environment.toLowerCase() === 'preview') {
       return {
         previewUrl: url,
+        provider: 'vercel',
         source: 'repository_dispatch',
       }
     }
@@ -128,6 +138,30 @@ function detectVercelPreviewDeployment(
   }
 
   return null
+}
+
+const PREVIEW_DEPLOYMENT_DETECTORS: Record<
+  PreviewDeploymentProvider,
+  PreviewDetector
+> = {
+  vercel: detectVercelPreviewDeployment,
+}
+
+// Currently only Vercel is supported; update this when adding new providers.
+const DEFAULT_PREVIEW_PROVIDER: PreviewDeploymentProvider = 'vercel'
+
+function detectPreviewDeployment(
+  provider: PreviewDeploymentProvider,
+  eventType: string,
+  payload: unknown,
+): PreviewDeploymentDetectionResult | null {
+  const detector = PREVIEW_DEPLOYMENT_DETECTORS[provider]
+
+  if (!detector) {
+    return null
+  }
+
+  return detector(eventType, payload)
 }
 
 export async function POST(request: NextRequest) {
@@ -197,14 +231,19 @@ export async function POST(request: NextRequest) {
     // Parse payload
     const payload = JSON.parse(rawBody) as unknown
 
-    const vercelPreview = detectVercelPreviewDeployment(eventType, payload)
+    const previewDeployment = detectPreviewDeployment(
+      DEFAULT_PREVIEW_PROVIDER,
+      eventType,
+      payload,
+    )
 
-    if (vercelPreview) {
-      console.info('Detected Vercel preview deployment from GitHub webhook', {
+    if (previewDeployment) {
+      console.info('Detected preview deployment from GitHub webhook', {
         eventType,
         deliveryId,
-        previewUrl: vercelPreview.previewUrl,
-        source: vercelPreview.source,
+        previewUrl: previewDeployment.previewUrl,
+        provider: previewDeployment.provider,
+        source: previewDeployment.source,
       })
     }
 
