@@ -11,9 +11,16 @@ import {
   storyDiscoveryOutputSchema,
   type StoryDiscoveryOutput,
 } from './agents/v3/story-discovery'
+import { rewriteStoryForChanges } from './agents/v3/story-rewrite'
+import { findImpactedStories } from './agents/v3/story-impact'
+import {
+  analyzeClues,
+  clueAnalysisOutputSchema,
+} from './agents/v3/clue-analysis'
 import { getConfig } from '@app/config'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import z from 'zod'
 
 export { type TestStatus as Status }
 export { generateText } from './helpers/generate-text'
@@ -55,7 +62,31 @@ function model(
   throw new Error(`Unsupported provider: ${gateway}`)
 }
 
-export const agents = {
+type Agent = {
+  id: string
+  version: string
+  schema: z.ZodSchema
+  run: (options: any) => Promise<any>
+  options: {
+    maxSteps: number
+    model: string
+    cacheOptions?: {
+      enabled: boolean
+      invalidationStrategy: 'step' | 'assertion'
+    }
+  }
+}
+
+type AgentsConfig = {
+  decomposition: Agent
+  evaluation: Agent
+  discovery: Agent
+  rewrite: Agent
+  impact: Agent
+  clueAnalysis: Agent
+}
+
+export const agents: AgentsConfig = {
   decomposition: {
     id: 'story-decomposition-v3',
     version: 'v3',
@@ -96,17 +127,38 @@ export const agents = {
       model: 'openai/gpt-5-mini',
     },
   },
-} as const
+  rewrite: {
+    id: 'story-rewrite-v3',
+    version: 'v3',
+    schema: z.string(),
+    run: rewriteStoryForChanges,
+    options: {
+      maxSteps: 20,
+      model: 'openai/gpt-5-mini',
+    },
+  },
+  impact: {
+    id: 'story-impact-v3',
+    version: 'v3',
+    schema: storyDiscoveryOutputSchema,
+    run: findImpactedStories,
+    options: {
+      maxSteps: 30,
+      model: 'openai/gpt-5-mini',
+    },
+  },
+  clueAnalysis: {
+    id: 'clue-analysis-v3',
+    version: 'v3',
+    schema: clueAnalysisOutputSchema,
+    run: analyzeClues,
+    options: {
+      maxSteps: 10,
+      model: 'openai/gpt-5-mini',
+    },
+  },
+}
 
 // Re-export discovery types and schema
 export type { StoryDiscoveryOutput }
 export { storyDiscoveryOutputSchema }
-
-// Export semantic story matcher
-export {
-  SemanticStoryMatcher,
-  findSimilarStories,
-  findMostSimilarStory,
-  type StoryForMatching,
-  type SemanticMatchResult,
-} from './helpers/semantic-story-matcher'

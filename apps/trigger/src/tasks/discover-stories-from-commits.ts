@@ -1,18 +1,23 @@
 import { task, logger, streams } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
-import { agents } from '@app/agents'
 import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
-import type { StoryDiscoveryOutput } from '@app/agents'
-import { findMostSimilarStory, type StoryForMatching } from '@app/agents'
+import {
+  agents,
+  generateEmbedding,
+  type StoryDiscoveryOutput,
+} from '@app/agents'
 import { findRepoByOwnerAndName } from './github/shared/db'
-import { type createOctokit, getOctokitClient } from '../helpers/github'
-import { Experimental_Agent as Agent, Output } from 'ai'
-import { z } from 'zod'
+import {
+  getOctokitClient,
+  getGitHubDiff,
+  getCommitMessages,
+} from '../helpers/github'
 import { dedent } from 'ts-dedent'
-import type { DecompositionOutput } from '@app/schemas'
 import { storyDecompositionTask } from './story-decomposition'
+import pMap from 'p-map'
+import { sql } from '@app/db'
 
 interface DiscoverStoriesFromCommitsPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -26,461 +31,127 @@ interface DiscoverStoriesFromCommitsPayload {
   before: string
 }
 
-interface ClueAnalysisResult {
-  hasClues: boolean
-  clues: string[]
-  explanation: string
-}
-
-interface StoryComparisonResult {
-  potentiallyChangedStories: Array<{
-    existingStory: {
-      id: string
-      name: string
-      story: string
-    }
-    storyDiff: string
-    reason: string
-  }>
-  potentiallyNewStories: Array<{
-    title: string
-    text: string
-  }>
-}
-
-const clueAnalysisOutputSchema = z.object({
-  hasClues: z
-    .boolean()
-    .describe('Whether there are clues suggesting feature changes'),
-  clues: z
-    .array(z.string())
-    .describe(
-      'List of specific clues or indicators of potential feature changes',
-    ),
-  explanation: z
-    .string()
-    .describe('Explanation of why clues were or were not found'),
-})
-
-/**
- * Agent to analyze commits and code diff for clues about potential feature changes
- * Note: Code diff is filtered to TypeScript/TSX files only and may be truncated.
- * The sandbox can be used for full context if needed.
- */
-async function analyzeClues(
-  repoSlug: string,
-  commitMessages: string[],
-  codeDiff: string,
-  changedFiles: string[],
-): Promise<ClueAnalysisResult> {
-  const model = agents.discovery.options.model
-
-  const agent = new Agent({
-    model,
-    system: dedent`
-      You are an expert code analyst tasked with determining if a set of commits and code changes contain clues about potential feature changes or new functionality.
-
-      # Your Task
-      Analyze the provided commit messages and code diff to determine if there are any clues suggesting:
-      - New features being added
-      - Existing features being modified
-      - User-facing changes
-      - API changes
-      - UI/UX changes
-      - Behavioral changes
-
-      # What to Look For
-      - Commit messages mentioning features, fixes, additions, changes
-      - Code changes in user-facing components (UI, API endpoints, routes)
-      - New files being added
-      - Significant modifications to existing functionality
-      - Changes that affect user workflows
-
-      # What to Ignore
-      - Pure refactoring (renaming, code style changes)
-      - Dependency updates
-      - Configuration changes
-      - Test-only changes
-      - Documentation-only changes
-      - Build/deployment changes
-
-      # Output
-      Return whether clues exist, list specific clues found, and explain your reasoning.
-    `,
-    experimental_output: Output.object({ schema: clueAnalysisOutputSchema }),
-  })
-
-  const prompt = dedent`
-    Analyze these commits and code changes for clues about potential feature changes:
-
-    ## Repository
-    ${repoSlug}
-
-    ## Changed Files (TypeScript/TSX only)
-    ${changedFiles.map((f) => `- ${f}`).join('\n')}
-
-    ## Commit Messages
-    ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
-
-    ## Code Diff (TypeScript/TSX files only, may be truncated - sandbox available for full context)
-    \`\`\`
-    ${codeDiff}
-    \`\`\`
-
-    Determine if there are clues suggesting feature changes and list them.
-  `
-
-  logger.info('Analyzing clues from commits', {
-    repoSlug,
-    commitCount: commitMessages.length,
-    changedFileCount: changedFiles.length,
-  })
-
-  const result = await agent.generate({ prompt })
-
-  return result.experimental_output
-}
-
-/**
- * Get code diff from GitHub between two commits
- * Filters to only TypeScript/TSX files and truncates to avoid context overflow
- * Note: The sandbox can be used for full context if needed
- */
-async function getGitHubDiff(
-  octokit: ReturnType<typeof createOctokit>,
-  owner: string,
-  repo: string,
-  base: string,
-  head: string,
-  maxDiffSize: number = 50000, // ~50KB max diff size
-): Promise<{ diff: string; changedFiles: string[] }> {
-  logger.info('Fetching diff from GitHub', {
-    owner,
-    repo,
-    base,
-    head,
-  })
-
-  const comparison = await octokit.rest.repos.compareCommits({
-    owner,
-    repo,
-    base,
-    head,
-  })
-
-  // Filter to only TypeScript/TSX files
-  const tsFiles =
-    comparison.data.files?.filter(
-      (file) => file.filename.endsWith('.ts') || file.filename.endsWith('.tsx'),
-    ) || []
-
-  // Build diff string, truncating if necessary
-  let diff = ''
-  let totalSize = 0
-  const truncatedFiles: string[] = []
-
-  for (const file of tsFiles) {
-    const fileDiff = `diff --git a/${file.filename} b/${file.filename}\nindex ${file.sha}..${file.sha}\n--- a/${file.filename}\n+++ b/${file.filename}\n${file.patch || ''}`
-    const fileDiffSize = fileDiff.length
-
-    if (totalSize + fileDiffSize > maxDiffSize) {
-      // Truncate this file's diff if adding it would exceed the limit
-      const remainingSpace = maxDiffSize - totalSize
-      if (remainingSpace > 100) {
-        // Only add if we have meaningful space left
-        const truncatedPatch = file.patch
-          ? file.patch.substring(0, remainingSpace - 200) +
-            '\n... (diff truncated - use sandbox for full context)'
-          : ''
-        diff += `diff --git a/${file.filename} b/${file.filename}\nindex ${file.sha}..${file.sha}\n--- a/${file.filename}\n+++ b/${file.filename}\n${truncatedPatch}\n\n`
-        truncatedFiles.push(file.filename)
-      }
-      break
-    }
-
-    diff += fileDiff + '\n\n'
-    totalSize += fileDiffSize
-  }
-
-  const changedFiles = tsFiles.map((file) => file.filename)
-
-  if (truncatedFiles.length > 0) {
-    logger.info('Diff truncated due to size limit', {
-      owner,
-      repo,
-      truncatedFileCount: truncatedFiles.length,
-      totalSize,
-      maxDiffSize,
-      truncatedFiles,
-    })
-  }
-
-  logger.info('Fetched diff from GitHub', {
-    owner,
-    repo,
-    changedFileCount: changedFiles.length,
-    diffLength: diff.length,
-    truncatedFileCount: truncatedFiles.length,
-  })
-
-  return { diff, changedFiles }
-}
-
-/**
- * Get commit messages for a range of commits
- */
-async function getCommitMessages(
-  octokit: ReturnType<typeof createOctokit>,
-  owner: string,
-  repo: string,
-  base: string,
-  head: string,
-): Promise<string[]> {
-  logger.info('Fetching commit messages', {
-    owner,
-    repo,
-    base,
-    head,
-  })
-
-  const commits = await octokit.rest.repos.compareCommits({
-    owner,
-    repo,
-    base,
-    head,
-  })
-
-  const messages =
-    commits.data.commits
-      ?.map((commit) => commit.commit.message)
-      .filter(Boolean) || []
-
-  logger.info('Fetched commit messages', {
-    owner,
-    repo,
-    commitCount: messages.length,
-  })
-
-  return messages
-}
-
-/**
- * Generate a story diff using AI to compare existing story with new findings
- * Uses the existing story as the baseline and asks AI what needs to change
- */
-async function generateStoryDiff(
+interface ChangedStory {
   existingStory: {
     id: string
     name: string
     story: string
-  },
-  discoveredStory: {
-    title?: string
-    text: string
-  },
-  codeDiff: string,
-  commitMessages: string[],
-  changedFiles: string[],
-): Promise<string> {
-  const model = agents.discovery.options.model
+  }
+  rewrittenStory: string
+  clue: string
+}
 
-  const agent = new Agent({
-    model,
-    system: dedent`
-      You are an expert story analyst tasked with comparing an existing user story with new findings from code changes.
-
-      # Your Task
-      Compare the existing story (which is the baseline/truth) with the newly discovered story text and code changes.
-      Determine what changes need to be made to the existing story to align it with the new findings.
-
-      # Output Format
-      Provide a clear, structured diff showing:
-      1. What parts of the existing story should remain unchanged
-      2. What parts should be modified and how
-      3. What new elements should be added
-      4. What should be removed (if anything)
-
-      Format your response as a story diff, showing:
-      - Lines that remain the same (with context)
-      - Lines that need modification (show old → new)
-      - New lines to add
-      - Lines to remove
-
-      Focus on making the existing story accurately reflect the current state of the codebase based on the changes.
-    `,
-  })
-
-  const prompt = dedent`
-    Compare the existing story with new findings and generate a story diff.
-
-    ## Existing Story (Baseline)
-    **Title:** ${existingStory.name}
-    **Story Text:**
-    ${existingStory.story}
-
-    ## New Findings
-    **Discovered Title:** ${discoveredStory.title || 'N/A'}
-    **Discovered Story Text:**
-    ${discoveredStory.text}
-
-    ## Code Changes Context
-    **Changed Files:**
-    ${changedFiles.map((f) => `- ${f}`).join('\n')}
-
-    **Commit Messages:**
-    ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
-
-    **Code Diff (truncated - sandbox available for full context):**
-    \`\`\`
-    ${codeDiff.substring(0, 5000)}${codeDiff.length > 5000 ? '\n... (diff truncated)' : ''}
-    \`\`\`
-
-    Generate a story diff showing what changes need to be made to the existing story to align with the new findings.
-    Use the existing story as the baseline and show what modifications are needed.
-  `
-
-  logger.info('Generating story diff', {
-    existingStoryId: existingStory.id,
-    existingStoryName: existingStory.name,
-  })
-
-  const result = await agent.generate({ prompt })
-
-  return result.text
+interface NewStory {
+  title: string
+  text: string
+  clue: string
 }
 
 /**
- * Compare discovered stories with existing stories to find changes
- * Uses semantic similarity (embeddings) to match stories and AI to generate story diffs
+ * Create a new story from a clue when no impacted stories are found
+ * Uses the discovery agent to write a new story based on the clue and code changes
  */
-async function compareStories(
-  discoveredStories: StoryDiscoveryOutput,
-  existingStories: StoryForMatching[],
+async function createStoryFromClue(
+  clue: string,
   codeDiff: string,
   commitMessages: string[],
   changedFiles: string[],
-): Promise<StoryComparisonResult> {
-  logger.info(
-    'Comparing discovered stories with existing stories using semantic matching',
-    {
-      discoveredCount: discoveredStories.stories.length,
-      existingCount: existingStories.length,
-    },
-  )
+  db: ReturnType<typeof setupDb>,
+  repo: {
+    id: string
+    slug: string
+  },
+  sandboxId: string,
+): Promise<StoryDiscoveryOutput> {
+  logger.info('Creating new story from clue', {
+    clue,
+    repoId: repo.id,
+  })
 
-  const potentiallyChangedStories: StoryComparisonResult['potentiallyChangedStories'] =
-    []
-  const potentiallyNewStories: StoryComparisonResult['potentiallyNewStories'] =
-    []
+  void streams.append('progress', `Creating new story from clue: "${clue}"`)
 
-  // Build query text for each discovered story (same format as buildStoryText)
-  function buildQueryText(discovered: {
-    title?: string
-    text: string
-  }): string {
-    const parts: string[] = []
-    const title = discovered.title || discovered.text.split('\n')[0] || ''
-    parts.push(`Title: ${title}`, `Story: ${discovered.text}`)
-    return parts.join('\n\n')
-  }
-
-  // For each discovered story, find the most similar existing story using semantic search
-  for (const discovered of discoveredStories.stories) {
-    const title = discovered.title || discovered.text.split('\n')[0] || ''
-    const queryText = buildQueryText(discovered)
-
-    logger.info('Finding semantic match for discovered story', {
-      discoveredTitle: title,
-      queryTextLength: queryText.length,
-    })
-
-    void streams.append('progress', `Finding semantic match for "${title}"`)
-
-    // Use semantic matching with a threshold of 0.7
-    const match = await findMostSimilarStory(existingStories, queryText, 0.7)
-
-    if (match) {
-      // Generate story diff using AI
-      logger.info('Generating story diff for semantically matched story', {
-        existingStoryId: match.story.id,
-        existingStoryName: match.story.name,
-        discoveredTitle: title,
-        similarity: match.similarity,
-      })
-
-      void streams.append(
-        'progress',
-        `Generating story diff for "${match.story.name}" (similarity: ${(match.similarity * 100).toFixed(1)}%)`,
-      )
-
-      const storyDiff = await generateStoryDiff(
-        {
-          id: match.story.id,
-          name: match.story.name,
-          story: match.story.story,
-        },
-        discovered,
-        codeDiff,
+  const result = await agents.discovery.run({
+    db,
+    repo,
+    options: {
+      daytonaSandboxId: sandboxId,
+      storyCount: 1,
+      telemetryTracer: getTelemetryTracer(),
+      commitContext: {
         commitMessages,
+        codeDiff,
         changedFiles,
-      )
-
-      // Potentially changed story
-      potentiallyChangedStories.push({
-        existingStory: {
-          id: match.story.id,
-          name: match.story.name,
-          story: match.story.story,
-        },
-        storyDiff,
-        reason: `Story "${title}" semantically matches existing story "${match.story.name}" (similarity: ${(match.similarity * 100).toFixed(1)}%) and may have been modified`,
-      })
-    } else {
-      // Potentially new story - no semantic match found above threshold
-      logger.info('No semantic match found for discovered story', {
-        discoveredTitle: title,
-      })
-      potentiallyNewStories.push({
-        title,
-        text: discovered.text,
-      })
-    }
-  }
-
-  logger.info('Story comparison completed', {
-    changedCount: potentiallyChangedStories.length,
-    newCount: potentiallyNewStories.length,
+        clues: [clue],
+      },
+    },
   })
 
-  return {
-    potentiallyChangedStories,
-    potentiallyNewStories,
-  }
+  logger.info('Created new story from clue', {
+    clue,
+    storiesCreated: result.stories.length,
+  })
+
+  return result
 }
 
-/**
- * Discovers user stories from Git commits by analyzing code changes and commit messages.
- *
- * This task analyzes commits between two SHAs to identify potential feature changes,
- * then uses AI agents to discover new stories or detect changes to existing stories.
- * It filters to TypeScript/TSX files only and uses semantic matching to compare
- * discovered stories with existing ones.
- *
- * ## Stages
- *
- * 1. **Repository Setup**: Extracts owner and name from repo object and finds repository in database
- * 2. **GitHub Data Collection**: Fetches commit messages and code diff between SHAs
- * 3. **TypeScript Filter**: Checks for TypeScript/TSX file changes (early exit if none)
- * 4. **Clue Analysis**: Uses AI to analyze commits and diff for feature change indicators (early exit if none)
- * 5. **Existing Stories Load**: Fetches active/paused/generated stories for comparison
- * 6. **Sandbox Creation**: Creates Daytona sandbox for code analysis context
- * 7. **Story Discovery**: Runs AI agent to discover stories from code changes
- * 8. **Story Comparison**: Uses semantic matching to compare discovered stories with existing ones,
- *    generating diffs for potentially changed stories
- *
- * @returns Object containing discovered stories, potentially changed stories, and analysis metadata.
- *          Returns early with `skipped: true` if no TypeScript files changed or no feature clues found.
- */
+/*
+
+High-level flow of `discover-stories-from-commits.ts`:
+
+## Overview
+Analyzes Git commits between two SHAs to discover new user stories or update existing ones based on code changes.
+
+## Main Flow (8 stages)
+
+### 1. **Repository Setup**
+- Extracts owner/name from the payload
+- Looks up the repository in the database
+- Exits if not found
+
+### 2. **GitHub Data Collection**
+- Fetches commit messages between `before` and `after` SHAs
+- Gets code diff for the same range
+- Filters to TypeScript/TSX files only
+
+### 3. **Early Exit Checks**
+- If no TypeScript/TSX files changed → exit
+- If no feature change clues found → exit
+
+### 4. **Clue Analysis**
+- Uses an AI agent to analyze commits and diff for feature change indicators
+- Returns a list of clues (e.g., "Added user authentication", "Modified payment flow")
+
+### 5. **Sandbox Creation**
+- Creates a Daytona sandbox for code analysis context
+
+### 6. **Story Discovery per Clue** (parallel processing)
+For each clue:
+- Searches for existing stories that might be impacted (semantic similarity)
+- If no matches found → creates a new story from the clue
+- If matches found → collects them for rewriting
+
+### 7. **Story Rewriting** (parallel processing)
+- For each impacted existing story, rewrites it based on:
+  - The clue
+  - Code diff
+  - Commit context
+- Preserves original structure (Given/When/Then) for easier diffing
+
+### 8. **Save & Decompose**
+- Saves only NEW stories to the database (state: `'generated'`)
+- Triggers decomposition tasks for each new story
+- Returns summary of new stories, rewritten stories, and metadata
+
+## Key Design Decisions
+- Filters to TypeScript/TSX files only
+- Two-stage analysis: clues first, then story discovery
+- Preserves story structure when rewriting for easier diffs
+- Only saves new stories; rewritten stories are returned but not auto-saved
+- Uses semantic search to find impacted existing stories
+
+The task returns early if there are no TypeScript changes or no feature clues, avoiding unnecessary work.
+
+*/
 export const discoverStoriesFromCommitsTask = task({
   id: 'discover-stories-from-commits',
   run: async (
@@ -590,12 +261,12 @@ export const discoverStoriesFromCommitsTask = task({
       )
 
       // Analyze clues
-      const clueAnalysis = await analyzeClues(
+      const clueAnalysis = await agents.clueAnalysis.run({
         repoSlug,
         commitMessages,
-        diff,
+        codeDiff: diff,
         changedFiles,
-      )
+      })
 
       logger.info('Clue analysis completed', {
         hasClues: clueAnalysis.hasClues,
@@ -618,36 +289,7 @@ export const discoverStoriesFromCommitsTask = task({
         }
       }
 
-      logger.info('Step 7: Getting existing stories for comparison', {
-        repoId: repoRecord.repoId,
-      })
-
-      void streams.append(
-        'progress',
-        'Fetching existing stories for comparison',
-      )
-
-      // Get existing stories with decomposition and embeddings (for semantic matching)
-      // Load stories that are active, paused, or generated (not archived)
-      const existingStoriesRaw = await db
-        .selectFrom('stories')
-        .select(['id', 'name', 'story', 'decomposition', 'embedding'])
-        .where('repoId', '=', repoRecord.repoId)
-        .where('state', 'in', ['active', 'paused', 'generated'])
-        .execute()
-
-      // Transform to StoryForMatching format
-      const existingStories: StoryForMatching[] = existingStoriesRaw.map(
-        (story) => ({
-          id: story.id,
-          name: story.name,
-          story: story.story,
-          decomposition: story.decomposition as DecompositionOutput | null,
-          embedding: story.embedding,
-        }),
-      )
-
-      logger.info('Step 8: Creating sandbox for story discovery', {
+      logger.info('Step 7: Creating sandbox for story discovery', {
         repoId: repoRecord.repoId,
       })
 
@@ -659,99 +301,221 @@ export const discoverStoriesFromCommitsTask = task({
       })
 
       try {
-        logger.info('Step 9: Running story discovery agent', {
+        logger.info('Step 8: Finding impacted stories for clues', {
           repoId: repoRecord.repoId,
           clueCount: clueAnalysis.clues.length,
         })
 
-        void streams.append('progress', 'Discovering stories from code changes')
+        void streams.append(
+          'progress',
+          `Finding impacted stories for ${clueAnalysis.clues.length} clue(s)`,
+        )
 
-        // TODO we must make sure that the discovered stories are 100% related to the commit's changes.
-        // ---- Often, I think the AI is going to be ambitious to write stories.
-        // ---- So we should probably look at the story it wrote to ensure that it aligns with the code changes.
+        // Process each clue individually to find impacted stories
+        const newStories: NewStory[] = []
+        const storiesToRewrite: Array<{
+          clue: string
+          story: {
+            id: string
+            name: string
+            story: string
+          }
+        }> = []
 
-        // Run story discovery agent with context
-        const discoveryResult = await agents.discovery.run({
-          db,
-          repo: {
-            id: repoRecord.repoId,
-            slug: repoSlug,
-          },
-          options: {
-            daytonaSandboxId: sandbox.id,
-            storyCount: 10, // Discover up to 10 stories
-            telemetryTracer: getTelemetryTracer(),
-            model: agents.discovery.options.model,
-            commitContext: {
+        await pMap(
+          clueAnalysis.clues,
+          async (clue: string) => {
+            logger.info('Processing clue', {
+              clue,
+              repoId: repoRecord.repoId,
+            })
+
+            const impactedStories = await agents.impact.run({
+              clue,
+              db,
+              repo: {
+                id: repoRecord.repoId,
+                slug: repoSlug,
+              },
+              sandboxId: sandbox.id,
               commitMessages,
               codeDiff: diff,
               changedFiles,
-              clues: clueAnalysis.clues,
-            },
-          },
-        })
+              telemetryTracer: getTelemetryTracer(),
+            })
 
-        void streams.append(
-          'progress',
-          dedent`
-            Found ${discoveryResult.stories.length} stories to compare to
-            ${existingStories.length} existing ones`,
-        )
+            if (impactedStories.stories.length === 0) {
+              // No impacted stories found - create a new story from the clue
+              logger.info(
+                'No impacted stories found for clue, creating new story',
+                {
+                  clue,
+                },
+              )
 
-        logger.info(
-          'Step 10: Comparing discovered stories with existing ones',
-          {
-            discoveredCount: discoveryResult.stories.length,
-            existingCount: existingStories.length,
-          },
-        )
-
-        // Compare stories - uses AI to generate story diffs
-        const comparison = await compareStories(
-          discoveryResult,
-          existingStories,
-          diff,
-          commitMessages,
-          changedFiles,
-        )
-
-        logger.info('Story discovery completed', {
-          repoSlug,
-          discoveredCount: discoveryResult.stories.length,
-          changedCount: comparison.potentiallyChangedStories.length,
-          newCount: comparison.potentiallyNewStories.length,
-        })
-
-        void streams.append(
-          'progress',
-          dedent`
-            Found ${comparison.potentiallyNewStories.length} new stories
-            and ${comparison.potentiallyChangedStories.length} potentially changed stories.`,
-        )
-
-        // Save potentially new stories to the database with 'generated' state
-        const savedStories = []
-        if (comparison.potentiallyNewStories.length > 0) {
-          const storiesToInsert = comparison.potentiallyNewStories.map(
-            (discoveredStory) => ({
-              repoId: repoRecord.repoId,
-              name:
-                discoveredStory.title ||
-                discoveredStory.text.split('\n')[0] ||
-                'Untitled Story',
-              story: discoveredStory.text,
-              state: 'generated' as const,
-              metadata: {
-                discoveredFrom: 'commits',
-                commitSha: after,
-                commitRange: { before, after },
-                changedFiles,
+              const newStoryResult = await createStoryFromClue(
+                clue,
+                diff,
                 commitMessages,
-                clues: clueAnalysis.clues,
-                triggerRunId: ctx.run.id,
-              },
-            }),
-          )
+                changedFiles,
+                db,
+                {
+                  id: repoRecord.repoId,
+                  slug: repoSlug,
+                },
+                sandbox.id,
+              )
+
+              // Add new stories from this clue
+              for (const story of newStoryResult.stories) {
+                newStories.push({
+                  title:
+                    story.title ||
+                    story.text.split('\n')[0] ||
+                    'Untitled Story',
+                  text: story.text,
+                  clue,
+                })
+              }
+            } else {
+              // Found impacted stories - collect them for rewriting
+              logger.info('Found impacted stories for clue', {
+                clue,
+                storyCount: impactedStories.stories.length,
+              })
+
+              // The findImpactedStories function returns stories that match existing ones
+              // We need to fetch the actual existing story records to rewrite them
+              for (const discoveredStory of impactedStories.stories) {
+                // Build a query from the discovered story to find the matching existing story
+                const storyText = discoveredStory.text
+                const title =
+                  discoveredStory.title || storyText.split('\n')[0] || ''
+
+                // Use semantic search to find the matching existing story
+                const queryEmbedding = await generateEmbedding({
+                  text: `${title}\n\n${storyText}`,
+                })
+                const embeddingVector = `[${queryEmbedding.join(',')}]`
+
+                // Search for the story using semantic similarity
+                const matchingStories = await db
+                  .selectFrom('stories')
+                  .select(['id', 'name', 'story'])
+                  .where('repoId', '=', repoRecord.repoId)
+                  .where('state', 'in', ['active', 'paused', 'generated'])
+                  .where('embedding', 'is not', null)
+                  .orderBy(
+                    sql`embedding <=> ${sql.raw(`'${embeddingVector}'`)}::vector`,
+                    'asc',
+                  )
+                  .limit(1)
+                  .execute()
+
+                // If we found a match with high similarity, add it to rewrite list
+                if (matchingStories.length > 0) {
+                  const match = matchingStories[0]
+                  // Calculate similarity to verify it's a good match
+                  // We'll use a threshold - if it's in the top result, it's likely a match
+                  storiesToRewrite.push({
+                    clue,
+                    story: {
+                      id: match.id,
+                      name: match.name,
+                      story: match.story,
+                    },
+                  })
+                } else {
+                  logger.warn(
+                    'Could not find matching existing story for discovered story',
+                    {
+                      clue,
+                      discoveredTitle: title,
+                    },
+                  )
+                }
+              }
+            }
+          },
+          { concurrency: 1 },
+        )
+
+        logger.info('Clue processing completed', {
+          repoId: repoRecord.repoId,
+          clueCount: clueAnalysis.clues.length,
+          newStoriesCount: newStories.length,
+          storiesToRewriteCount: storiesToRewrite.length,
+        })
+
+        void streams.append(
+          'progress',
+          dedent`
+            Found ${newStories.length} new stories
+            and ${storiesToRewrite.length} stories to rewrite.`,
+        )
+
+        logger.info('Step 9: Rewriting stories based on changes', {
+          storiesToRewriteCount: storiesToRewrite.length,
+        })
+
+        // Rewrite each story found per clue
+        const changedStories: ChangedStory[] = await pMap(
+          storiesToRewrite,
+          async ({ clue, story }) => {
+            const rewrittenStory = await agents.rewrite.run({
+              clue,
+              codeDiff: diff,
+              commitMessages,
+              changedFiles,
+              existingStory: story,
+              sandboxId: sandbox.id,
+              telemetryTracer: getTelemetryTracer(),
+            })
+
+            return {
+              existingStory: story,
+              rewrittenStory,
+              clue,
+            }
+          },
+          { concurrency: 3 },
+        )
+
+        logger.info('Story rewriting completed', {
+          changedStoriesCount: changedStories.length,
+        })
+
+        // Log the changes
+        logger.info('Story changes summary', {
+          repoSlug,
+          newStoriesCount: newStories.length,
+          changedStoriesCount: changedStories.length,
+          newStories: newStories.map((s) => ({ title: s.title, clue: s.clue })),
+          changedStories: changedStories.map((s) => ({
+            storyId: s.existingStory.id,
+            storyName: s.existingStory.name,
+            clue: s.clue,
+          })),
+        })
+
+        // Save only NEW stories to the database with 'generated' state
+        const savedStories = []
+        if (newStories.length > 0) {
+          const storiesToInsert = newStories.map((newStory) => ({
+            repoId: repoRecord.repoId,
+            name: newStory.title,
+            story: newStory.text,
+            state: 'generated' as const,
+            metadata: {
+              discoveredFrom: 'commits',
+              commitSha: after,
+              commitRange: { before, after },
+              changedFiles,
+              commitMessages,
+              clue: newStory.clue,
+              triggerRunId: ctx.run.id,
+            },
+          }))
 
           const insertedStories = await db
             .insertInto('stories')
@@ -761,7 +525,7 @@ export const discoverStoriesFromCommitsTask = task({
 
           savedStories.push(...insertedStories)
 
-          logger.info('Saved discovered stories to database', {
+          logger.info('Saved new stories to database', {
             repoSlug,
             savedCount: insertedStories.length,
             storyIds: insertedStories.map((s) => s.id),
@@ -817,8 +581,16 @@ export const discoverStoriesFromCommitsTask = task({
           changedFiles,
           commitMessages,
           clueAnalysis,
-          potentiallyChangedStories: comparison.potentiallyChangedStories,
-          potentiallyNewStories: comparison.potentiallyNewStories,
+          newStories: newStories.map((s) => ({
+            title: s.title,
+            text: s.text,
+            clue: s.clue,
+          })),
+          changedStories: changedStories.map((s) => ({
+            existingStory: s.existingStory,
+            rewrittenStory: s.rewrittenStory,
+            clue: s.clue,
+          })),
           savedStories: savedStories.map((s) => ({
             id: s.id,
             name: s.name,

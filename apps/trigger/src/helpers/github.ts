@@ -2,6 +2,7 @@ import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
 import { setupDb } from '@app/db'
 import { getConfig } from '@app/config'
+import { logger } from '@trigger.dev/sdk'
 
 export function createOctokit(installationId: number): Octokit {
   const env = getConfig()
@@ -154,4 +155,127 @@ export async function getGithubBranchDetails(
     commitSha,
     commitMessage,
   }
+}
+
+/**
+ * Get code diff from GitHub between two commits
+ * Filters to only TypeScript/TSX files and truncates to avoid context overflow
+ * Note: The sandbox can be used for full context if needed
+ */
+export async function getGitHubDiff(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  base: string,
+  head: string,
+  maxDiffSize: number = 50000, // ~50KB max diff size
+): Promise<{ diff: string; changedFiles: string[] }> {
+  logger.info('Fetching diff from GitHub', {
+    owner,
+    repo,
+    base,
+    head,
+  })
+
+  const comparison = await octokit.rest.repos.compareCommits({
+    owner,
+    repo,
+    base,
+    head,
+  })
+
+  // Filter to only TypeScript/TSX files
+  const tsFiles =
+    comparison.data.files?.filter(
+      (file) => file.filename.endsWith('.ts') || file.filename.endsWith('.tsx'),
+    ) || []
+
+  // Build diff string, truncating if necessary
+  let diff = ''
+  let totalSize = 0
+  const truncatedFiles: string[] = []
+
+  for (const file of tsFiles) {
+    const fileDiff = `diff --git a/${file.filename} b/${file.filename}\nindex ${file.sha}..${file.sha}\n--- a/${file.filename}\n+++ b/${file.filename}\n${file.patch || ''}`
+    const fileDiffSize = fileDiff.length
+
+    if (totalSize + fileDiffSize > maxDiffSize) {
+      // Truncate this file's diff if adding it would exceed the limit
+      const remainingSpace = maxDiffSize - totalSize
+      if (remainingSpace > 100) {
+        // Only add if we have meaningful space left
+        const truncatedPatch = file.patch
+          ? file.patch.substring(0, remainingSpace - 200) +
+            '\n... (diff truncated - use sandbox for full context)'
+          : ''
+        diff += `diff --git a/${file.filename} b/${file.filename}\nindex ${file.sha}..${file.sha}\n--- a/${file.filename}\n+++ b/${file.filename}\n${truncatedPatch}\n\n`
+        truncatedFiles.push(file.filename)
+      }
+      break
+    }
+
+    diff += fileDiff + '\n\n'
+    totalSize += fileDiffSize
+  }
+
+  const changedFiles = tsFiles.map((file) => file.filename)
+
+  if (truncatedFiles.length > 0) {
+    logger.info('Diff truncated due to size limit', {
+      owner,
+      repo,
+      truncatedFileCount: truncatedFiles.length,
+      totalSize,
+      maxDiffSize,
+      truncatedFiles,
+    })
+  }
+
+  logger.info('Fetched diff from GitHub', {
+    owner,
+    repo,
+    changedFileCount: changedFiles.length,
+    diffLength: diff.length,
+    truncatedFileCount: truncatedFiles.length,
+  })
+
+  return { diff, changedFiles }
+}
+
+/**
+ * Get commit messages for a range of commits
+ */
+export async function getCommitMessages(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  base: string,
+  head: string,
+): Promise<string[]> {
+  logger.info('Fetching commit messages', {
+    owner,
+    repo,
+    base,
+    head,
+  })
+
+  const commits = await octokit.rest.repos.compareCommits({
+    owner,
+    repo,
+    base,
+    head,
+  })
+
+  const messages =
+    commits.data.commits
+      ?.map((commit) => commit.commit.message)
+      .filter(Boolean) || []
+
+  logger.info('Fetched commit messages', {
+    owner,
+    repo,
+    commitCount: messages.length,
+  })
+
+  return messages
 }
