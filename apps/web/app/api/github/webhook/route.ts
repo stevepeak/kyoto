@@ -37,6 +37,133 @@ function verifyGitHubSignature(
   return timingSafeEqual(signatureBuffer, digestBuffer)
 }
 
+type PreviewDeploymentProvider = 'vercel'
+
+interface PreviewDeploymentDetectionResult {
+  previewUrl: string
+  provider: PreviewDeploymentProvider
+  source: 'deployment_status' | 'repository_dispatch'
+}
+
+type PreviewDetector = (
+  eventType: string,
+  payload: unknown,
+) => PreviewDeploymentDetectionResult | null
+
+function detectVercelPreviewDeployment(
+  eventType: string,
+  payload: unknown,
+): PreviewDeploymentDetectionResult | null {
+  if (!payload || typeof payload !== 'object') {
+    return null
+  }
+
+  if (eventType === 'deployment_status') {
+    const root = payload as Record<string, unknown>
+    const deploymentStatusRaw = root.deployment_status
+    const deploymentRaw = root.deployment
+
+    if (
+      deploymentStatusRaw &&
+      typeof deploymentStatusRaw === 'object' &&
+      deploymentRaw &&
+      typeof deploymentRaw === 'object'
+    ) {
+      const deploymentStatus = deploymentStatusRaw as Record<string, unknown>
+      const deployment = deploymentRaw as Record<string, unknown>
+
+      const environmentUrl = deploymentStatus.environment_url
+      const environment = deployment.environment
+
+      if (
+        typeof environmentUrl === 'string' &&
+        typeof environment === 'string' &&
+        environment.toLowerCase() === 'preview'
+      ) {
+        return {
+          previewUrl: environmentUrl,
+          provider: 'vercel',
+          source: 'deployment_status',
+        }
+      }
+    }
+
+    return null
+  }
+
+  if (eventType === 'repository_dispatch') {
+    const root = payload as Record<string, unknown>
+    const action = typeof root.action === 'string' ? root.action : null
+    const clientPayloadRaw = root.client_payload
+
+    if (
+      !action ||
+      !action.startsWith('vercel.deployment.') ||
+      !clientPayloadRaw ||
+      typeof clientPayloadRaw !== 'object'
+    ) {
+      return null
+    }
+
+    const clientPayload = clientPayloadRaw as Record<string, unknown>
+    const deploymentRaw = clientPayload.deployment
+
+    const urlCandidate = clientPayload.url
+    const deployment =
+      deploymentRaw && typeof deploymentRaw === 'object'
+        ? (deploymentRaw as Record<string, unknown>)
+        : null
+
+    const url =
+      typeof urlCandidate === 'string'
+        ? urlCandidate
+        : deployment && typeof deployment.url === 'string'
+          ? deployment.url
+          : null
+
+    const environmentCandidate = deployment?.environment ?? clientPayload.environment
+
+    const environment =
+      typeof environmentCandidate === 'string' ? environmentCandidate : null
+
+    if (url && environment && environment.toLowerCase() === 'preview') {
+      return {
+        previewUrl: url,
+        provider: 'vercel',
+        source: 'repository_dispatch',
+      }
+    }
+
+    return null
+  }
+
+  return null
+}
+
+const PREVIEW_DEPLOYMENT_DETECTORS: Record<
+  PreviewDeploymentProvider,
+  PreviewDetector
+> = {
+  vercel: detectVercelPreviewDeployment,
+}
+
+// Currently only Vercel is supported; update this when adding new providers.
+const DEFAULT_PREVIEW_PROVIDER: PreviewDeploymentProvider = 'vercel'
+
+function detectPreviewDeployment(
+  provider: PreviewDeploymentProvider,
+  eventType: string,
+  payload: unknown,
+): PreviewDeploymentDetectionResult | null {
+  const detector = PREVIEW_DEPLOYMENT_DETECTORS[provider]
+
+  if (!detector) {
+    return null
+  }
+
+  return detector(eventType, payload)
+}
+
 export async function POST(request: NextRequest) {
   try {
     ensureTriggerConfigured()
@@ -103,6 +230,22 @@ export async function POST(request: NextRequest) {
 
     // Parse payload
     const payload = JSON.parse(rawBody) as unknown
+
+    const previewDeployment = detectPreviewDeployment(
+      DEFAULT_PREVIEW_PROVIDER,
+      eventType,
+      payload,
+    )
+
+    if (previewDeployment) {
+      console.info('Detected preview deployment from GitHub webhook', {
+        eventType,
+        deliveryId,
+        previewUrl: previewDeployment.previewUrl,
+        provider: previewDeployment.provider,
+        source: previewDeployment.source,
+      })
+    }
 
     // Skip events that are not in the allowed list
     const allowedEvents = [
