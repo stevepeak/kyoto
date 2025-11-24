@@ -172,8 +172,6 @@ export const discoverStoriesFromCommitsTask = task({
     void streams.append('progress', `Starting story discovery for ${repoSlug}`)
 
     try {
-      logger.info('Step 1: Finding repository in database', { repoSlug })
-
       // Find repository
       const repoRecord = await findRepoByOwnerAndName(db, {
         ownerLogin,
@@ -186,19 +184,8 @@ export const discoverStoriesFromCommitsTask = task({
         )
       }
 
-      logger.info('Step 2: Getting GitHub client', {
-        repoId: repoRecord.repoId,
-      })
-
       // Get GitHub client
       const { octokit } = await getOctokitClient(repoRecord.repoId)
-
-      logger.info('Step 3: Fetching commit messages', {
-        ownerLogin,
-        repoName,
-        before,
-        after,
-      })
 
       // Get commit messages
       const commitMessages = await getCommitMessages(
@@ -208,14 +195,6 @@ export const discoverStoriesFromCommitsTask = task({
         before,
         after,
       )
-
-      logger.info('Step 4: Fetching code diff', {
-        ownerLogin,
-        repoName,
-        before,
-        after,
-      })
-
       // Get code diff
       const { diff, changedFiles } = await getGitHubDiff(
         octokit,
@@ -225,17 +204,13 @@ export const discoverStoriesFromCommitsTask = task({
         after,
       )
 
-      logger.info('Step 5: Checking for TypeScript/TSX file changes', {
-        changedFileCount: changedFiles.length,
-      })
-
       // Check if any TypeScript/TSX files changed
       const hasTsFiles = changedFiles.some(
         (file) => file.endsWith('.ts') || file.endsWith('.tsx'),
       )
 
       if (!hasTsFiles) {
-        logger.info('No TypeScript/TSX files changed, exiting', {
+        logger.warn('No TypeScript/TSX files changed, exiting', {
           changedFiles,
         })
         void streams.append(
@@ -249,14 +224,9 @@ export const discoverStoriesFromCommitsTask = task({
         }
       }
 
-      logger.info('Step 6: Analyzing clues from commits', {
-        commitCount: commitMessages.length,
-        changedFileCount: changedFiles.length,
-      })
-
       void streams.append(
         'progress',
-        'Analyzing commits for feature change clues',
+        `Analyzing ${commitMessages.length} commits with ${changedFiles.length} changed files`,
       )
 
       // Analyze clues
@@ -268,15 +238,11 @@ export const discoverStoriesFromCommitsTask = task({
       const clueAnalysis: ClueAnalysisResult = await agents.clueAnalysis.run({
         repoSlug,
         commit,
-      })
-
-      logger.info('Clue analysis completed', {
-        hasClues: clueAnalysis.hasClues,
-        clueCount: clueAnalysis.clues.length,
+        options: { maxClueCount: options.maxClueCount ?? 10 },
       })
 
       if (!clueAnalysis.hasClues) {
-        logger.info('No clues found, exiting', {
+        logger.warn('No clues found, exiting', {
           explanation: clueAnalysis.explanation,
         })
         void streams.append(
@@ -291,10 +257,6 @@ export const discoverStoriesFromCommitsTask = task({
         }
       }
 
-      logger.info('Step 7: Creating sandbox for story discovery', {
-        repoId: repoRecord.repoId,
-      })
-
       void streams.append('progress', 'Creating sandbox for code analysis')
 
       // Create sandbox
@@ -303,14 +265,9 @@ export const discoverStoriesFromCommitsTask = task({
       })
 
       try {
-        logger.info('Step 8: Finding impacted stories for clues', {
-          repoId: repoRecord.repoId,
-          clueCount: clueAnalysis.clues.length,
-        })
-
         void streams.append(
           'progress',
-          `Finding impacted stories for ${clueAnalysis.clues.length} clue(s)`,
+          `Found ${clueAnalysis.clues.length} potential feature changes in analysis`,
         )
 
         // Process each clue individually to find impacted stories
@@ -327,11 +284,6 @@ export const discoverStoriesFromCommitsTask = task({
         await pMap(
           clueAnalysis.clues,
           async (clue: string) => {
-            logger.info('Processing clue', {
-              clue,
-              repoId: repoRecord.repoId,
-            })
-
             const impactedStories: StoryDiscoveryOutput =
               await agents.impact.run({
                 clue,

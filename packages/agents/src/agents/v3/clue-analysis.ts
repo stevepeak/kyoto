@@ -96,11 +96,6 @@ export async function analyzeClues({
     Determine if there are clues suggesting feature changes and list them.
   `
 
-  logger.info('Analyzing clues from commits', {
-    repoSlug,
-    changedFileCount: commit.changedFiles.length,
-  })
-
   const result = await agent.generate({ prompt })
 
   return result.experimental_output

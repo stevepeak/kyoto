@@ -170,13 +170,6 @@ export async function getGitHubDiff(
   head: string,
   maxDiffSize: number = 50000, // ~50KB max diff size
 ): Promise<{ diff: string; changedFiles: string[] }> {
-  logger.info('Fetching diff from GitHub', {
-    owner,
-    repo,
-    base,
-    head,
-  })
-
   const comparison = await octokit.rest.repos.compareCommits({
     owner,
     repo,
@@ -230,14 +223,6 @@ export async function getGitHubDiff(
       truncatedFiles,
     })
   }
-
-  logger.info('Fetched diff from GitHub', {
-    owner,
-    repo,
-    changedFileCount: changedFiles.length,
-    diffLength: diff.length,
-    truncatedFileCount: truncatedFiles.length,
-  })
 
   return { diff, changedFiles }
 }

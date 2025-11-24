@@ -160,14 +160,9 @@ export async function findImpactedStories({
     When you have completed your analysis, respond with the JSON object that matches the schema.
   `
 
-  logger.info('Finding impacted stories for clue', {
-    clue,
-    repoId: repo.id,
-  })
-
   void streams.append(
     'progress',
-    `Finding impacted stories for clue: "${clue}"`,
+    `Search for stories related to "${clue.substring(0, 30)}..."`,
   )
 
   const result = await agent.generate({ prompt })
