@@ -36,6 +36,11 @@ export function RepoOverviewClient({
     router.refresh()
   }
 
+  const handleRefreshStories = () => {
+    // Refresh the server component data
+    router.refresh()
+  }
+
   return (
     <RepoOverview
       orgName={orgName}
@@ -44,6 +49,7 @@ export function RepoOverviewClient({
       runs={runs}
       stories={stories}
       onRefreshRuns={handleRefreshRuns}
+      onRefreshStories={handleRefreshStories}
     />
   )
 }

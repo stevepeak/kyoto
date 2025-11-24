@@ -274,6 +274,7 @@ export const assertionEvidenceSchema = z.object({
    */
   evidence: z
     .array(z.string().min(1))
+    .min(1)
     .describe(
       'File references with line ranges, e.g., ["src/auth/session.ts:12-28"]',
     ),
@@ -290,12 +291,10 @@ export const assertionEvidenceSchema = z.object({
   /**
    * Optional reason/explanation for why an assertion failed.
    * Only present when the assertion fails.
-   * TODO - remove optional at some point.
    */
   reason: z
     .string()
     .min(1)
-    .optional()
     .describe('Explanation for why the assertion failed'),
 })
 

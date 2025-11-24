@@ -33,6 +33,7 @@ interface Props {
   runs: RunItem[]
   stories: StoryItem[]
   onRefreshRuns?: () => void
+  onRefreshStories?: () => void
 }
 
 export function RepoOverview({
@@ -42,6 +43,7 @@ export function RepoOverview({
   runs,
   stories,
   onRefreshRuns,
+  onRefreshStories,
 }: Props) {
   const trpc = useTRPCClient()
   const [isCreatingRun, setIsCreatingRun] = useState(false)
@@ -152,6 +154,7 @@ export function RepoOverview({
                   stories={stories}
                   orgName={orgName}
                   repoName={repoName}
+                  onStoriesChange={onRefreshStories}
                 />
               </div>
             </div>

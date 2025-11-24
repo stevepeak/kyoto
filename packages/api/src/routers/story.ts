@@ -377,6 +377,72 @@ export const storyRouter = router({
       return { story: updatedStory }
     }),
 
+  bulkPause: protectedProcedure
+    .input(
+      z.object({
+        orgName: z.string(),
+        repoName: z.string(),
+        storyIds: z.array(z.string()).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const repo = await requireRepoForUser(ctx.db, {
+        orgName: input.orgName,
+        repoName: input.repoName,
+        userId,
+      })
+
+      // Update all stories to paused state
+      const updatedStories = await ctx.db
+        .updateTable('stories')
+        .set({ state: 'paused' })
+        .where('repoId', '=', repo.id)
+        .where('id', 'in', input.storyIds)
+        .returningAll()
+        .execute()
+
+      return { count: updatedStories.length }
+    }),
+
+  bulkArchive: protectedProcedure
+    .input(
+      z.object({
+        orgName: z.string(),
+        repoName: z.string(),
+        storyIds: z.array(z.string()).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id
+
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      const repo = await requireRepoForUser(ctx.db, {
+        orgName: input.orgName,
+        repoName: input.repoName,
+        userId,
+      })
+
+      // Update all stories to archived state
+      const updatedStories = await ctx.db
+        .updateTable('stories')
+        .set({ state: 'archived' })
+        .where('repoId', '=', repo.id)
+        .where('id', 'in', input.storyIds)
+        .returningAll()
+        .execute()
+
+      return { count: updatedStories.length }
+    }),
+
   test: protectedProcedure
     .input(
       z.object({
