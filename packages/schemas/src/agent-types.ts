@@ -8,6 +8,19 @@ import type { CacheEntry, CacheValidationResult } from './story-flow'
 export type { CacheEntry, CacheValidationResult as ValidationResult }
 
 /**
+ * Commit information containing message, code diff, and changed files
+ * Used throughout the story discovery and analysis pipeline
+ */
+export interface Commit {
+  /** Commit message(s) - can be a single message or multiple joined with newlines */
+  message: string
+  /** Code diff showing the changes */
+  diff: string
+  /** Array of file paths that were changed */
+  changedFiles: string[]
+}
+
+/**
  * Options for the evaluation agent
  * Note: decomposition type is imported from @app/agents at usage sites to avoid circular dependency
  */

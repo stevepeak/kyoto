@@ -5,6 +5,7 @@ import { logger } from '@trigger.dev/sdk'
 import { z } from 'zod'
 
 import { agents } from '../..'
+import type { Commit } from '@app/schemas'
 
 export const clueAnalysisOutputSchema = z.object({
   hasClues: z
@@ -24,9 +25,7 @@ export type ClueAnalysisResult = z.infer<typeof clueAnalysisOutputSchema>
 
 interface AnalyzeCluesOptions {
   repoSlug: string
-  commitMessages: string[]
-  codeDiff: string
-  changedFiles: string[]
+  commit: Commit
   model?: LanguageModel
 }
 
@@ -37,9 +36,7 @@ interface AnalyzeCluesOptions {
  */
 export async function analyzeClues({
   repoSlug,
-  commitMessages,
-  codeDiff,
-  changedFiles,
+  commit,
   model: providedModel,
 }: AnalyzeCluesOptions): Promise<ClueAnalysisResult> {
   const model = providedModel ?? agents.discovery.options.model
@@ -86,14 +83,14 @@ export async function analyzeClues({
     ${repoSlug}
 
     ## Changed Files (TypeScript/TSX only)
-    ${changedFiles.map((f) => `- ${f}`).join('\n')}
+    ${commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
 
-    ## Commit Messages
-    ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+    ## Commit Message
+    ${commit.message}
 
     ## Code Diff (TypeScript/TSX files only, may be truncated - sandbox available for full context)
     \`\`\`
-    ${codeDiff}
+    ${commit.diff}
     \`\`\`
 
     Determine if there are clues suggesting feature changes and list them.
@@ -101,8 +98,7 @@ export async function analyzeClues({
 
   logger.info('Analyzing clues from commits', {
     repoSlug,
-    commitCount: commitMessages.length,
-    changedFileCount: changedFiles.length,
+    changedFileCount: commit.changedFiles.length,
   })
 
   const result = await agent.generate({ prompt })

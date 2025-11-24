@@ -60,8 +60,9 @@ export {
 // AGENT TYPES (Agent-specific configuration types)
 // ============================================================================
 
-export type {
-  CacheEntry as AgentCacheEntry, // Re-exported for clarity
-  ValidationResult,
-  evaluationAgentOptions,
+export {
+  type CacheEntry as AgentCacheEntry, // Re-exported for clarity
+  type ValidationResult,
+  type evaluationAgentOptions,
+  type Commit,
 } from './agent-types'

@@ -10,7 +10,7 @@ import { createResolveLibraryTool } from '../../tools/context7-tool'
 import { createSearchStoriesTool } from '../../tools/search-stories-tool'
 import { logger, streams } from '@trigger.dev/sdk'
 import type { LanguageModel } from 'ai'
-import { rawStoryInputSchema } from '@app/schemas'
+import { rawStoryInputSchema, type Commit } from '@app/schemas'
 import { agents } from '../..'
 import { dedent } from 'ts-dedent'
 import type { setupDb } from '@app/db'
@@ -39,16 +39,17 @@ type StoryDiscoveryAgentOptions = {
     telemetryTracer?: Tracer
     maxSteps?: number
     model?: LanguageModel
-    commitContext?: {
-      commitMessages: string[]
-      codeDiff: string
-      changedFiles: string[]
-      clues: string[]
+    context?: {
+      scope: string[]
+      commit: Commit
     }
   }
 }
 
-function buildDiscoveryInstructions(): string {
+function buildDiscoveryInstructions(context?: {
+  scope: string[]
+  commit: Commit
+}): string {
   return dedent`
   
     You are an expert software analyst tasked with discovering user stories from a codebase.
@@ -90,6 +91,23 @@ function buildDiscoveryInstructions(): string {
     - Feature workflows with multiple steps
     - UI interactions (dialogs, modals, forms, buttons)
 
+    ${
+      context
+        ? dedent`
+    # Scope-Based Discovery (When Context is Provided)
+    When context is provided with a required scope:
+    - **The scope defines WHAT you must discover** - focus your discovery strictly within the scope boundaries
+    - **The commit message, code diff, and changed files are supporting details** that help you understand HOW the scope was implemented
+    - **Code changes must be captured in the story** - ensure the story reflects the behaviors and functionality shown in the code changes
+    - Use the code diff to understand:
+      * What new code was added (new features, functions, components)
+      * What existing code was modified (changed behaviors, updated logic)
+      * What files were affected (which parts of the system changed)
+    - The story should describe the user-facing impact of these code changes, not the code itself
+    `
+        : ''
+    }
+
     # Output Guidelines
     - Write stories in clear, natural language
     - Focus on one specific functionality per story
@@ -97,6 +115,7 @@ function buildDiscoveryInstructions(): string {
     - Each story should represent a complete, testable feature
     - Include 0 - 2 additional acceptance criteria to clarify anything that is ambiguous or requiring refinement
     - Keep stories focused on high-level behavior, not low-level code details
+    ${context ? '- When context is provided: ensure the story captures the code changes as user-facing behaviors' : ''}
 
     # Resources Available
     You have read-only tools to:
@@ -110,6 +129,7 @@ function buildDiscoveryInstructions(): string {
     - Keep it simple, keep it short. But have the story have enough detail to be useful as a test.
     - Do not use temporal adverbs like "immediately", "instantly", "right away", etc. if necessary use the word "then" or "after" instead.
     - Aim for no ambiguous statements. Do not use "should" in the stories. Use "then" instead.
+    ${context ? '- When context is provided: the story must reflect the code changes as user behaviors, ensuring the diff is captured in the story narrative' : ''}
 
     Use these tools to understand the codebase structure and identify user-facing features.
 
@@ -121,17 +141,16 @@ function buildDiscoveryInstructions(): string {
     # Goal
     Discover and document user stories that represent the main features and workflows in this codebase.
     Focus on high-level user interactions, not implementation details.
-`
+    ${context ? 'When scope is provided, ensure all discovered stories relate to that scope and capture the code changes as user-facing behaviors.' : ''}
+  `
 }
 
 function buildDiscoveryPrompt(
   repoSlug: string,
   storyCount: number,
-  commitContext?: {
-    commitMessages: string[]
-    codeDiff: string
-    changedFiles: string[]
-    clues: string[]
+  context?: {
+    scope: string[]
+    commit: Commit
   },
 ): string {
   const existingStoriesSection = dedent`
@@ -158,34 +177,47 @@ function buildDiscoveryPrompt(
     - Provide novel insights into areas of the codebase that haven't been explored yet
   `
 
-  const commitContextSection = commitContext
+  const contextSection = context
     ? dedent`
     
-    # 📝 Commit Context
-    You are analyzing a specific set of commits that have been identified as potentially containing feature changes. Use this context to focus your discovery:
+    # 📝 Context - Scope-Focused Discovery
+    You are analyzing a specific set of commits with a REQUIRED SCOPE for discovery. The scope defines what area or feature you must focus on when discovering stories.
 
-    ## Clues Found
-    ${commitContext.clues.map((clue, i) => `${i + 1}. ${clue}`).join('\n')}
+    ## Required Scope
+    ${context.scope.map((scope, i) => `${i + 1}. ${scope}`).join('\n')}
 
-    ## Changed Files
-    ${commitContext.changedFiles.map((f) => `- ${f}`).join('\n')}
+    **CRITICAL**: Your discovery MUST be focused on the scope(s) listed above. All stories you discover must relate directly to these scopes. The commit message, code diff, and changed files are supporting details that help you understand HOW the scope was implemented, but the SCOPE is what defines WHAT you should discover.
 
-    ## Commit Messages
-    ${commitContext.commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+    ## Supporting Details (Use to understand the scope implementation)
 
-    ## Code Diff
+    ### Changed Files
+    ${context.commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
+
+    ### Commit Message
+    ${context.commit.message}
+
+    ### Code Diff
     \`\`\`
-    ${commitContext.codeDiff.substring(0, 10000)}${commitContext.codeDiff.length > 10000 ? '\n... (diff truncated)' : ''}
+    ${context.commit.diff.substring(0, 10000)}${context.commit.diff.length > 10000 ? '\n... (diff truncated)' : ''}
     \`\`\`
 
-    Focus your discovery on the changes made in these commits. Look for:
-    - New features introduced
-    - Existing features modified
-    - User-facing changes
-    - Behavioral changes
-    - API or interface changes
+    ## Discovery Instructions
+    When discovering stories:
+    1. **Primary Focus**: The required scope(s) define what feature or area you must discover stories for
+    2. **Supporting Context**: Use the commit message, code diff, and changed files to understand:
+       - How the scope was implemented
+       - What code changes support the scope
+       - What user-facing behaviors were added or modified
+    3. **Story Requirements**: Each story you discover must:
+       - Directly relate to at least one of the required scopes
+       - Capture the code changes that implement the scope (describe the behavior, not the code itself)
+       - Reflect the user-facing impact of the changes shown in the diff
+    4. **Code Change Integration**: Ensure your stories capture:
+       - New functionality introduced in the code changes
+       - Modified behaviors reflected in the diff
+       - User interactions enabled by the changed files
 
-    Use the searchStories tool to check existing stories and compare against what you discover.
+    Use the searchStories tool to check existing stories and compare against what you discover within the required scope.
   `
     : ''
 
@@ -193,7 +225,7 @@ function buildDiscoveryPrompt(
     Analyze this codebase and discover ${storyCount} user stories that represent the main features and workflows.
 
     ${existingStoriesSection}
-    ${commitContextSection}
+    ${contextSection}
 
     Explore the codebase using the available tools to understand the structure and identify user-facing features.
     When you have discovered ${storyCount} stories, respond only with the JSON object that matches the schema.
@@ -209,7 +241,7 @@ export async function runStoryDiscoveryAgent({
 
   const agent = new Agent({
     model: options?.model ?? agents.discovery.options.model,
-    system: buildDiscoveryInstructions(),
+    system: buildDiscoveryInstructions(options.context),
     tools: {
       terminalCommand: createTerminalCommandTool({ sandbox }),
       readFile: createReadFileTool({ sandbox }),
@@ -239,7 +271,7 @@ export async function runStoryDiscoveryAgent({
   const prompt = buildDiscoveryPrompt(
     repo.slug,
     options.storyCount,
-    options.commitContext,
+    options.context,
   )
 
   const result = await agent.generate({ prompt })

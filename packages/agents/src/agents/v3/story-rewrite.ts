@@ -9,12 +9,11 @@ import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
 import { createReadFileTool } from '../../tools/read-file-tool'
 import { createResolveLibraryTool } from '../../tools/context7-tool'
 import { agents } from '../..'
+import type { Commit } from '@app/schemas'
 
 interface RewriteStoryForChangesOptions {
   clue: string
-  codeDiff: string
-  commitMessages: string[]
-  changedFiles: string[]
+  commit: Commit
   existingStory: {
     id: string
     name: string
@@ -32,9 +31,7 @@ interface RewriteStoryForChangesOptions {
  */
 export async function rewriteStoryForChanges({
   clue,
-  codeDiff,
-  commitMessages,
-  changedFiles,
+  commit,
   existingStory,
   sandboxId,
   model: providedModel,
@@ -106,14 +103,14 @@ export async function rewriteStoryForChanges({
 
     # Code Changes Context
     **Changed Files:**
-    ${changedFiles.map((f) => `- ${f}`).join('\n')}
+    ${commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
 
-    **Commit Messages:**
-    ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+    **Commit Message:**
+    ${commit.message}
 
     **Code Diff (truncated - sandbox available for full context):**
     \`\`\`
-    ${codeDiff.substring(0, 10000)}${codeDiff.length > 10000 ? '\n... (diff truncated)' : ''}
+    ${commit.diff.substring(0, 10000)}${commit.diff.length > 10000 ? '\n... (diff truncated)' : ''}
     \`\`\`
 
     # Instructions

@@ -16,6 +16,7 @@ import {
   type StoryDiscoveryOutput,
 } from '../..'
 import type { setupDb } from '@app/db'
+import type { Commit } from '@app/schemas'
 
 type DbClient = ReturnType<typeof setupDb>
 
@@ -27,9 +28,7 @@ interface FindImpactedStoriesOptions {
     slug: string
   }
   sandboxId: string
-  commitMessages: string[]
-  codeDiff: string
-  changedFiles: string[]
+  commit: Commit
   model?: LanguageModel
   telemetryTracer?: Tracer
   maxSteps?: number
@@ -44,9 +43,7 @@ export async function findImpactedStories({
   db,
   repo,
   sandboxId,
-  commitMessages,
-  codeDiff,
-  changedFiles,
+  commit,
   model: providedModel,
   telemetryTracer,
   maxSteps = 30,
@@ -144,14 +141,14 @@ export async function findImpactedStories({
     ${clue}
 
     # Changed Files
-    ${changedFiles.map((f) => `- ${f}`).join('\n')}
+    ${commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
 
-    # Commit Messages
-    ${commitMessages.map((msg, i) => `${i + 1}. ${msg}`).join('\n')}
+    # Commit Message
+    ${commit.message}
 
     # Code Diff
     \`\`\`
-    ${codeDiff.substring(0, 10000)}${codeDiff.length > 10000 ? '\n... (diff truncated)' : ''}
+    ${commit.diff.substring(0, 10000)}${commit.diff.length > 10000 ? '\n... (diff truncated)' : ''}
     \`\`\`
 
     # Instructions

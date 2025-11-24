@@ -9,6 +9,7 @@ import {
   type StoryDiscoveryOutput,
   type ClueAnalysisResult,
 } from '@app/agents'
+import type { Commit } from '@app/schemas'
 import { findRepoByOwnerAndName } from './github/shared/db'
 import {
   getOctokitClient,
@@ -54,9 +55,7 @@ interface NewStory {
  */
 async function createStoryFromClue(
   clue: string,
-  codeDiff: string,
-  commitMessages: string[],
-  changedFiles: string[],
+  commit: Commit,
   db: ReturnType<typeof setupDb>,
   repo: {
     id: string
@@ -78,11 +77,9 @@ async function createStoryFromClue(
       daytonaSandboxId: sandboxId,
       storyCount: 1,
       telemetryTracer: getTelemetryTracer(),
-      commitContext: {
-        commitMessages,
-        codeDiff,
-        changedFiles,
-        clues: [clue],
+      context: {
+        scope: [clue],
+        commit,
       },
     },
   })
@@ -263,11 +260,14 @@ export const discoverStoriesFromCommitsTask = task({
       )
 
       // Analyze clues
+      const commit: Commit = {
+        message: commitMessages.join('\n\n'),
+        diff,
+        changedFiles,
+      }
       const clueAnalysis: ClueAnalysisResult = await agents.clueAnalysis.run({
         repoSlug,
-        commitMessages,
-        codeDiff: diff,
-        changedFiles,
+        commit,
       })
 
       logger.info('Clue analysis completed', {
@@ -341,9 +341,7 @@ export const discoverStoriesFromCommitsTask = task({
                   slug: repoSlug,
                 },
                 sandboxId: sandbox.id,
-                commitMessages,
-                codeDiff: diff,
-                changedFiles,
+                commit,
                 telemetryTracer: getTelemetryTracer(),
               })
 
@@ -358,9 +356,7 @@ export const discoverStoriesFromCommitsTask = task({
 
               const newStoryResult = await createStoryFromClue(
                 clue,
-                diff,
-                commitMessages,
-                changedFiles,
+                commit,
                 db,
                 {
                   id: repoRecord.repoId,
@@ -467,9 +463,7 @@ export const discoverStoriesFromCommitsTask = task({
           async ({ clue, story }) => {
             const rewrittenStory = await agents.rewrite.run({
               clue,
-              codeDiff: diff,
-              commitMessages,
-              changedFiles,
+              commit,
               existingStory: story,
               sandboxId: sandbox.id,
               telemetryTracer: getTelemetryTracer(),
