@@ -35,7 +35,7 @@ export function LandingNavbar() {
             Product
           </a>
           <a
-            href="#/pricing"
+            href="/#pricing"
             className="transition-colors hover:text-foreground focus-visible:text-foreground"
           >
             Pricing
