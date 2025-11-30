@@ -16,6 +16,11 @@ export {
   findStoryForUser,
   requireRepoForUser,
 } from './helpers/memberships'
+export {
+  getRepoBadgeMetrics,
+  type BadgeMetrics,
+  type BadgeStatusLabel,
+} from './helpers/badge'
 
 export const appRouter = router({
   user: userRouter,
