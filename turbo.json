@@ -7,7 +7,6 @@
       "env": [
         "DATABASE_URL",
         "DATABASE_URL_UNPOOLED",
-        "AUTH_SECRET",
         "GITHUB_CLIENT_ID",
         "GITHUB_CLIENT_SECRET",
         "GITHUB_APP_ID",

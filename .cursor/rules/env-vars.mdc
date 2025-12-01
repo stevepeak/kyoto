@@ -130,7 +130,6 @@ alwaysApply: false
           "dependsOn": ["^build"],
           "env": [
             "DATABASE_URL",
-            "AUTH_SECRET",
             "MY_NEW_ENV_VAR",   // Add your new env var here
             // ... other env vars
           ]

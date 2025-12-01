@@ -7,7 +7,6 @@ const envSchema = z.object({
     .min(1)
     .transform((value) => value.replace(/\/+$/, ''))
     .default('https://usekyoto.com'),
-  AUTH_SECRET: z.string().min(1),
 
   // GitHub
   GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
