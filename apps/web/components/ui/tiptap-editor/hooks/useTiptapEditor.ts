@@ -73,10 +73,10 @@ export function useTiptapEditor({
       return
     }
 
-    const currentMarkdown = editor.getMarkdown()
+    const currentContent = editor.getMarkdown()
 
     // Only update if content actually changed
-    if (value !== currentMarkdown) {
+    if (value !== currentContent) {
       editor.commands.setContent(value || '', { contentType: 'markdown' })
     }
   }, [value, editor])
