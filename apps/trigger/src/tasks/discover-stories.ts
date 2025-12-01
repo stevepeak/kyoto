@@ -83,7 +83,7 @@ export const discoverStoriesTask = task({
       void streams.append('progress', 'Starting story discovery')
 
       // Run the story discovery agent
-      const discoveryResult = await agents.discovery.run({
+      const discoveryResult: StoryDiscoveryOutput = await agents.discovery.run({
         db,
         repo: {
           id: repoRecord.repoId,
