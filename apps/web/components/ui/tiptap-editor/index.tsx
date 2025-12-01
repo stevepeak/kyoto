@@ -3,7 +3,6 @@
 import { EditorContent } from '@tiptap/react'
 import { useTiptapEditor } from './hooks/useTiptapEditor'
 import { useTiptapAutoFocus } from './hooks/useTiptapAutoFocus'
-import { TiptapToolbar } from './TiptapToolbar'
 import { cn } from '@/lib/utils'
 
 interface TiptapEditorProps {
@@ -98,7 +97,6 @@ export function TiptapEditor({
           className,
         )}
       >
-        <TiptapToolbar editor={editor} />
         {/* Editor Content */}
         <div className="p-4 text-sm text-card-foreground overflow-auto flex-1 min-h-0">
           <EditorContent editor={editor} />
