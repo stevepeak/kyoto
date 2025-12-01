@@ -61,7 +61,8 @@ The sentence should be clear, specific, and capture the essence of what the stor
       }
 
       // Run the story decomposition agent
-      const decompositionResult = await agents.decomposition.run({
+      const decompositionResult: DecompositionAgentResult =
+        await agents.decomposition.run({
         story,
         repo,
         options: {

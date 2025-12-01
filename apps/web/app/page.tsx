@@ -1,3 +1,5 @@
+import type { Metadata } from 'next'
+
 import {
   LandingNavbar,
   LandingHero,
@@ -8,6 +10,18 @@ import {
   Faq,
   LandingFooter,
 } from '@/components/landing'
+
+export const metadata: Metadata = {
+  title: 'Kyoto - testing in the age of vibe',
+  description: 'testing in the age of vibe',
+  openGraph: {
+    title: 'Kyoto - testing in the age of vibe',
+    description: 'testing in the age of vibe',
+    url: 'https://usekyoto.com',
+    siteName: 'Kyoto',
+    type: 'website',
+  },
+}
 
 // Landing page can be statically generated and cached
 export const dynamic = 'force-static'
