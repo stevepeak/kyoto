@@ -222,3 +222,18 @@
     max-width: 100%;
   }
 }
+
+/* Shiki code block styles */
+.shiki-container {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #dedabf;
+}
+
+.shiki-container pre {
+  margin: 0;
+  padding: 1.5rem;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
