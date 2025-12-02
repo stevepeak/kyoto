@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useHotkeys } from 'react-hotkeys-hook'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@app/api'
 import { SiGithub } from 'react-icons/si'
@@ -20,7 +22,6 @@ import {
 } from '@/components/ui/dialog'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 import { RunTrackingContent } from './repo-overview/RunTrackingContent'
-import { useRepoKeyboardShortcuts } from './repo-overview/hooks/useRepoKeyboardShortcuts'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]
@@ -46,6 +47,7 @@ export function RepoOverview({
   onRefreshStories,
 }: Props) {
   const trpc = useTRPCClient()
+  const router = useRouter()
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   // Dialog state - local to this component
@@ -60,8 +62,13 @@ export function RepoOverview({
     (run) => run.status === 'queued' || run.status === 'running',
   )
 
-  // Handle keyboard shortcuts
-  useRepoKeyboardShortcuts({ orgName, repoName })
+  useHotkeys(
+    'mod+enter',
+    () => {
+      router.push(`/org/${orgName}/repo/${repoName}/stories/new`)
+    },
+    { preventDefault: true },
+  )
 
   const handleStartRun = async () => {
     if (!defaultBranch) {

@@ -11,9 +11,9 @@ import {
   DialogDescription,
   VisuallyHidden,
 } from '@/components/ui/dialog'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { useStoryLoaderState } from './hooks/useStoryLoaderState'
 import { useStoryActions } from './hooks/useStoryActions'
-import { useStoryKeyboardShortcuts } from './hooks/useStoryKeyboardShortcuts'
 import { useStoryGeneration } from './hooks/useStoryGeneration'
 import { StoryLoaderTabs } from './components/StoryLoaderTabs'
 import { StoryGenerationTracking } from './components/StoryGenerationTracking'
@@ -76,14 +76,23 @@ export function StoryLoaderClient({
   })
 
   // Keyboard shortcuts
-  useStoryKeyboardShortcuts({
-    isSaving: state.isSaving,
-    isCreateMode,
-    hasChanges: state.hasChanges,
-    orgName,
-    repoName,
-    handleSave: actions.handleSave,
-  })
+  // Handle Cmd/Ctrl+Enter for save
+  useHotkeys(
+    'mod+enter',
+    (event) => {
+      // Prevent default to stop TipTap from inserting newline
+      event.preventDefault()
+      event.stopPropagation()
+      if (!state.isSaving && (isCreateMode || state.hasChanges)) {
+        void actions.handleSave()
+      }
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: true,
+      enableOnContentEditable: true,
+    },
+  )
 
   const breadcrumbs = [
     { label: orgName, href: `/org/${orgName}` },

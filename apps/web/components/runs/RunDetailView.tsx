@@ -22,8 +22,6 @@ import { RunStoryList } from './RunStoryList'
 import { RunStoryCard } from './RunStoryCard'
 
 export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
-  const router = useRouter()
-
   // Console log trigger runId and accessKey when opening a new run
   useEffect(() => {
     if (run.extTriggerDev) {
@@ -107,22 +105,6 @@ export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
     }
     return sortedStories[0] ?? null
   }, [sortedStories, selectedStoryId])
-
-  // Keyboard shortcut handler for Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        e.stopPropagation()
-        router.push(`/org/${orgName}/repo/${repoName}`)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown, true)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown, true)
-    }
-  }, [orgName, repoName, router])
 
   return (
     <div className="flex flex-col">

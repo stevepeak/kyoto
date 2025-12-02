@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { SiGithub } from 'react-icons/si'
 import { Plus } from 'lucide-react'
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { RepoList } from './RepoList'
 import { ConnectRepoDialog } from './ConnectRepoDialog'
-import { useRepoKeyboardShortcuts } from './hooks/useRepoKeyboardShortcuts'
 
 interface RepoItem {
   id: string
@@ -37,9 +37,12 @@ export function OrgRepoDashboard({ org, repos }: Props) {
     setIsDialogOpen(true)
   }, [])
 
-  useRepoKeyboardShortcuts(
-    handleOpenDialog,
-    repos.length === 0 && !isDialogOpen,
+  useHotkeys(
+    'mod+enter',
+    () => {
+      handleOpenDialog()
+    },
+    { enabled: repos.length === 0 && !isDialogOpen, preventDefault: true },
   )
 
   return (
