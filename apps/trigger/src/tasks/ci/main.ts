@@ -1,6 +1,7 @@
 import { logger, task } from '@trigger.dev/sdk'
 import { setupDb } from '@app/db'
 import { getConfig } from '@app/config'
+import * as Sentry from '@sentry/node'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import {
   getGithubBranchDetails,
@@ -30,6 +31,10 @@ import type { RunCiPayload } from './types'
 export const runCiTask = task({
   id: 'run-ci',
   run: async (payload: RunCiPayload, { ctx }) => {
+    Sentry.setUser({
+      username: `${payload.orgName}/${payload.repoName}`,
+    })
+
     const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 

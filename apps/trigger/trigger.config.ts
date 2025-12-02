@@ -53,7 +53,7 @@ export default defineConfig({
   maxDuration: 60 * 15, // 15 minute
 })
 
-tasks.onStart(({ ctx }) => {
+tasks.onStartAttempt(({ ctx }) => {
   const sha = ctx.deployment?.git?.commitSha
   if (sha) {
     Sentry.setTag('release', sha)

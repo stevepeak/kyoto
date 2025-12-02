@@ -7,6 +7,7 @@ import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import type { DecompositionAgentResult } from '@app/agents'
 import { invalidateCacheForStory } from '@app/cache'
+import * as Sentry from '@sentry/node'
 
 interface DecompositionPayload {
   /** A raw user story written in Gherkin or natural language */
@@ -31,6 +32,8 @@ export const storyDecompositionTask = task({
   }: DecompositionPayload): Promise<DecompositionAgentResult> => {
     const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
+
+    Sentry.setUser({ name: repo.slug })
 
     // Create the sandbox and clone the repository
     const sandbox = await createDaytonaSandbox({ repoId: repo.id })

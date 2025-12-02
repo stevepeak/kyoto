@@ -7,6 +7,7 @@ import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
 import type { StoryDiscoveryOutput } from '@app/agents'
 import { findRepoByOwnerAndName } from './github/shared/db'
+import * as Sentry from '@sentry/node'
 
 interface DiscoverStoriesPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -26,6 +27,8 @@ export const discoverStoriesTask = task({
   }: DiscoverStoriesPayload): Promise<StoryDiscoveryOutput> => {
     const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
+
+    Sentry.setUser({ name: repoSlug })
 
     // Parse repo slug to get owner and repo name
     const [ownerLogin, repoName] = repoSlug.split('/')

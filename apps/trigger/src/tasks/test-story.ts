@@ -1,5 +1,5 @@
 import { task, logger } from '@trigger.dev/sdk'
-
+import * as Sentry from '@sentry/node'
 import { setupDb } from '@app/db'
 
 import { agents, getDaytonaSandbox } from '@app/agents'
@@ -82,6 +82,8 @@ export const testStoryTask = task({
     if (!storyRecord) {
       throw new Error(`Story ${payload.storyId} not found`)
     }
+
+    Sentry.setUser({ name: `${storyRecord.ownerName}/${storyRecord.repoName}` })
 
     // We can create a new sandbox if one is not provided
     let daytonaSandboxId = payload.daytonaSandboxId
