@@ -54,18 +54,18 @@ export function RunList({ runs, orgName, repoName }: RunListProps) {
         kanjiTitle="Ito-kenshō - intent testing."
         title="What is intent testing?"
         description="Your commits and pull requests will soon be tested with Kyoto's intent testing, an AI powered QA platform with the goal of preventing regressions and shipping code that works according to the intent behind your stories."
-        action={
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => {
-              window.alert('Coming soon')
-            }}
-          >
-            <Play className="h-4 w-4" />
-            Watch demo
-          </Button>
-        }
+        // action={
+        //   <Button
+        //     size="lg"
+        //     variant="outline"
+        //     onClick={() => {
+        //       window.alert('Coming soon')
+        //     }}
+        //   >
+        //     <Play className="h-4 w-4" />
+        //     Watch demo
+        //   </Button>
+        // }
       />
     )
   }
