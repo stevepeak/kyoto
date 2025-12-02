@@ -36,6 +36,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Allow PostHog ingest routes (they are proxied to PostHog servers)
+  if (pathname.startsWith('/ingest/')) {
+    return NextResponse.next()
+  }
+
+  // Allow .well-known routes (used for various standards like security.txt, devtools, etc.)
+  if (pathname.startsWith('/.well-known/')) {
+    return NextResponse.next()
+  }
+
   // Check for session cookie (better-auth uses cookies with 'better-auth' prefix)
   // Common cookie names: better-auth.session_token, better-auth.*
   // This is a lightweight check - actual session validation happens at page/API level
