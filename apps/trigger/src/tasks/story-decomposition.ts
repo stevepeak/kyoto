@@ -64,14 +64,15 @@ The sentence should be clear, specific, and capture the essence of what the stor
       }
 
       // Run the story decomposition agent
-      const decompositionResult = await agents.decomposition.run({
-        story,
-        repo,
-        options: {
-          daytonaSandboxId: sandbox.id,
-          telemetryTracer: getTelemetryTracer(),
-        },
-      })
+      const decompositionResult: DecompositionAgentResult =
+        await agents.decomposition.run({
+          story,
+          repo,
+          options: {
+            daytonaSandboxId: sandbox.id,
+            telemetryTracer: getTelemetryTracer(),
+          },
+        })
 
       // Save decomposition results to the story record if story.id exists
       if (story.id) {

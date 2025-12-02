@@ -169,7 +169,7 @@ export const testStoryTask = task({
     /**
      * Agent to evaluate the story
      */
-    const evaluation = await agents.evaluation.run({
+    const evaluation: EvaluationOutput = await agents.evaluation.run({
       repo: {
         id: storyRecord.repoId,
         slug: `${storyRecord.ownerName}/${storyRecord.repoName}`,
