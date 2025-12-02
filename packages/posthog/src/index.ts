@@ -7,6 +7,11 @@ let posthogClient: PostHogClient | null = null
  * Get or create PostHog client instance
  */
 function getPostHogClient(): PostHogClient | null {
+  // Skip PostHog in local development
+  if (process.env.NODE_ENV === 'development') {
+    return null
+  }
+
   if (posthogClient) {
     return posthogClient
   }
