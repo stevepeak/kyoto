@@ -387,10 +387,7 @@ export const evaluationOutputSchema = z.object({
   /**
    * Human-readable explanation of the evaluation results
    */
-  explanation: z
-    .string()
-    .min(1)
-    .describe('Explanation of the evaluation results'),
+  explanation: z.string().describe('Explanation of the evaluation results'),
 
   /**
    * Evaluation results for each step in the decomposition

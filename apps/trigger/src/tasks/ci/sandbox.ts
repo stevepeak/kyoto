@@ -9,6 +9,7 @@ import { testStoryTask } from '../test-story'
 import { createDaytonaSandbox } from '../../helpers/daytona'
 import { saveCachedEvidence, buildCacheDataFromEvaluation } from '@app/cache'
 import { logger } from '@trigger.dev/sdk'
+import * as Sentry from '@sentry/node'
 
 interface RunStoriesWithSandboxParams {
   repoRecord: RepoRecord
@@ -185,28 +186,32 @@ export async function runStoriesWithSandbox({
 
           return { resultId, ...taskResult }
         } catch (error) {
-          const failureDescription =
-            error instanceof Error ? error.message : 'Unknown error occurred'
+          try {
+            const failureDescription =
+              error instanceof Error ? error.message : 'Unknown error occurred'
 
-          const failureAnalysis = agents.evaluation.schema.parse({
-            version: 3,
-            status: 'error',
-            explanation: failureDescription,
-            steps: [],
-          })
-
-          const completedAt = new Date()
-
-          await db
-            .updateTable('storyTestResults')
-            .set(() => ({
+            const failureAnalysis = agents.evaluation.schema.parse({
+              version: 3,
               status: 'error',
-              analysis: JSON.stringify(failureAnalysis),
-              completedAt,
-              durationMs: completedAt.getTime() - startedAt.getTime(),
-            }))
-            .where('id', '=', resultId)
-            .execute()
+              explanation: failureDescription,
+              steps: [],
+            })
+
+            const completedAt = new Date()
+
+            await db
+              .updateTable('storyTestResults')
+              .set(() => ({
+                status: 'error',
+                analysis: JSON.stringify(failureAnalysis),
+                completedAt,
+                durationMs: completedAt.getTime() - startedAt.getTime(),
+              }))
+              .where('id', '=', resultId)
+              .execute()
+          } catch (err) {
+            Sentry.captureException(err)
+          }
 
           throw error
         }
