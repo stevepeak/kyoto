@@ -1,7 +1,7 @@
 import { Archive, Pause } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { TiptapEditor } from '@/components/tiptap-editor'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 
 interface StoryEditFormProps {

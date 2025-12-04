@@ -1,4 +1,4 @@
-import { SignIn } from '@/components/sign-in'
+import { SignIn } from '@/components/features/auth/sign-in'
 
 // Auth page can be statically generated
 export const dynamic = 'force-static'

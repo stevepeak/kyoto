@@ -8,7 +8,7 @@ import { codeToHtml } from 'shiki'
 import { AppLayout } from '@/components/layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { TiptapEditor } from '@/components/tiptap-editor'
 
 function XLogo({ className }: { className?: string }) {
   return (
@@ -154,7 +154,7 @@ interface ChangelogAppProps {
   repoName: string
 }
 
-export function ChangelogApp({ orgName, repoName }: ChangelogAppProps) {
+export function ChangelogPage({ orgName, repoName }: ChangelogAppProps) {
   const data = buildSampleChangelogData()
 
   return (

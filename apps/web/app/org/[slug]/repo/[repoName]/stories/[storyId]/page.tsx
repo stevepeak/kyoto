@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 
-import { StoryPage } from '@/components/apps/story-page'
+import { StoryPage } from '@/components/features/stories/story-page'
 import { findStoryForUser, getUser } from '@app/api'
 import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
@@ -93,6 +93,7 @@ export default async function StoryDetailPage({
 }: {
   params: Promise<{ slug: string; repoName: string; storyId: string }>
 }) {
-  const { slug, repoName, storyId } = await params
+  const resolvedParams = await params
+  const { slug, repoName, storyId } = resolvedParams
   return <StoryPage orgName={slug} repoName={repoName} storyId={storyId} />
 }

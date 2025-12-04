@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 
-import { RepoApp } from '@/components/apps/repo-app'
+import { RepoPage as RepoPageComponent } from '@/components/pages/RepoPage'
 import { findRepoForUser, getUser } from '@app/api'
 import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
@@ -91,6 +91,7 @@ export default async function RepoPage({
 }: {
   params: Promise<{ slug: string; repoName: string }>
 }) {
-  const { slug, repoName } = await params
-  return <RepoApp orgName={slug} repoName={repoName} />
+  const resolvedParams = await params
+  const { slug, repoName } = resolvedParams
+  return <RepoPageComponent orgName={slug} repoName={repoName} />
 }

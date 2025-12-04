@@ -11,8 +11,8 @@ import { Loader2 } from 'lucide-react'
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
-import { RunList } from '@/components/runs/RunList'
-import { StoryList } from '@/components/stories/StoryList'
+import { RunList } from '@/components/features/runs/RunList'
+import { StoryList } from '@/components/features/stories/story-list'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   VisuallyHidden,
 } from '@/components/ui/dialog'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
-import { RunTrackingContent } from './repo-overview/RunTrackingContent'
+import { RunTrackingContent } from './run-tracking-content'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]

@@ -1,6 +1,6 @@
-import { RunDetailLoader } from './run-detail-loader'
+import { RunDetailLoader } from '@/components/features/runs/run-detail-loader'
 
-export function RunApp({
+export function RunPage({
   orgName,
   repoName,
   runId,

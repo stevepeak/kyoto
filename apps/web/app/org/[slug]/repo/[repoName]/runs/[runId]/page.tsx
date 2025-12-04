@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 
-import { RunApp } from '@/components/apps/run-app'
+import { RunPage as RunPageComponent } from '@/components/pages/RunPage'
 import { findRepoForUser, getUser } from '@app/api'
 import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
@@ -115,6 +115,7 @@ export default async function RunDetailPage({
 }: {
   params: Promise<{ slug: string; repoName: string; runId: string }>
 }) {
-  const { slug, repoName, runId } = await params
-  return <RunApp orgName={slug} repoName={repoName} runId={runId} />
+  const resolvedParams = await params
+  const { slug, repoName, runId } = resolvedParams
+  return <RunPageComponent orgName={slug} repoName={repoName} runId={runId} />
 }

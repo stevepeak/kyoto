@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { TiptapEditor } from '@/components/tiptap-editor'
 import { cn } from '@/lib/utils'
 
 interface StoryTemplate {

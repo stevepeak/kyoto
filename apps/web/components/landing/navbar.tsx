@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import { useSession } from '@/client/auth-client'
-import { GitHubSignInButton } from '@/components/github-sign-in-button'
+import { GitHubSignInButton } from '@/components/features/auth/github-sign-in-button'
 import { Button } from '@/components/ui/button'
 
 export function LandingNavbar() {

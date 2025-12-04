@@ -29,7 +29,7 @@ const syncResponseSchema = z.object({
   error: z.string().optional(),
 })
 
-export function SetupInstallApp({ installationId }: SetupInstallAppProps) {
+export function SetupPage({ installationId }: SetupInstallAppProps) {
   const router = useRouter()
   const [apiError, setApiError] = useState<string | null>(null)
   const [isTriggering, setIsTriggering] = useState(true)

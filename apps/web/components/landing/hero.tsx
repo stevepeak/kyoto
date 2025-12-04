@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
-import { GitHubSignInButton } from '@/components/github-sign-in-button'
+import { GitHubSignInButton } from '@/components/features/auth/github-sign-in-button'
 
 export function LandingHero() {
   return (

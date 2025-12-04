@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { StoryTemplatesPanel } from '@/components/apps/story-templates-panel'
+import { StoryTemplatesPanel } from '@/components/features/stories/story-templates-panel'
 
 interface StoryTemplatesDialogProps {
   open: boolean

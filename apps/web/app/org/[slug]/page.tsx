@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 
-import { OrgApp } from '@/components/apps/org-app'
+import { OrgPage as OrgPageComponent } from '@/components/pages/OrgPage'
 import { findOwnerForUser, getUser } from '@app/api'
 import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
@@ -80,6 +80,7 @@ export default async function OrgPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const { slug } = await params
-  return <OrgApp orgName={slug} />
+  const resolvedParams = await params
+  const { slug } = resolvedParams
+  return <OrgPageComponent orgName={slug} />
 }

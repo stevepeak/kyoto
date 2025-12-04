@@ -1,6 +1,6 @@
-import { RepoOverviewLoader } from './repo-overview-loader'
+import { RepoOverviewLoader } from '@/components/features/repos/repo-overview-loader'
 
-export function RepoApp({
+export function RepoPage({
   orgName,
   repoName,
 }: {

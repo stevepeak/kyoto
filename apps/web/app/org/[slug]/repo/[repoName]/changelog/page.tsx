@@ -1,4 +1,4 @@
-import { ChangelogApp } from '@/components/apps/changelog-app'
+import { ChangelogPage as ChangelogPageComponent } from '@/components/pages/ChangelogPage'
 
 export const dynamic = 'force-dynamic'
 export const dynamicParams = true
@@ -8,7 +8,8 @@ export default async function ChangelogPage({
 }: {
   params: Promise<{ slug: string; repoName: string }>
 }) {
-  const { slug, repoName } = await params
+  const resolvedParams = await params
+  const { slug, repoName } = resolvedParams
 
-  return <ChangelogApp orgName={slug} repoName={repoName} />
+  return <ChangelogPageComponent orgName={slug} repoName={repoName} />
 }

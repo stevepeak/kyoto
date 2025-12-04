@@ -1,4 +1,4 @@
-import { StoryCreatePage } from '@/components/apps/story-create-page'
+import { StoryCreatePage } from '@/components/features/stories/story-create-page'
 
 // Story create page is user-specific and always dynamic
 export const dynamic = 'force-dynamic'
@@ -9,6 +9,7 @@ export default async function StoryNewPage({
 }: {
   params: Promise<{ slug: string; repoName: string }>
 }) {
-  const { slug, repoName } = await params
+  const resolvedParams = await params
+  const { slug, repoName } = resolvedParams
   return <StoryCreatePage orgName={slug} repoName={repoName} />
 }

@@ -1,9 +1,9 @@
 'use client'
 
 import { AppLayout } from '@/components/layout'
-import { StoryArchiveDialog } from '@/components/apps/story-archive-dialog'
-import { StoryTemplatesDialog } from '@/components/apps/story-templates-dialog'
-import { StoryCreateForm } from '@/components/apps/story-create-form'
+import { StoryArchiveDialog } from '@/components/features/stories/story-archive-dialog'
+import { StoryTemplatesDialog } from '@/components/features/stories/story-templates-dialog'
+import { StoryCreateForm } from '@/components/features/stories/story-create-form'
 import {
   Dialog,
   DialogContent,

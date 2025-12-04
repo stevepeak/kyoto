@@ -1,6 +1,6 @@
 import { getTRPCCaller } from '@/lib/trpc-server'
 import { AppLayout } from '@/components/layout'
-import { RunDetailView } from '@/components/runs/RunDetailView'
+import { RunDetailView } from '@/components/features/runs/RunDetailView'
 import { transformRunResponse } from './transformers/transformRunResponse'
 
 interface RunDetailContentProps {

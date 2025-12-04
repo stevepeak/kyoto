@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { SetupInstallAppWrapper } from '@/components/apps/setup-install-app-wrapper'
+import { SetupPageWrapper } from '@/components/pages/SetupPageWrapper'
 import { getAuth } from '@/lib/auth'
 
 // Setup page is user-specific and always dynamic
@@ -28,7 +28,7 @@ export default async function SetupPage({
   if (installationIdParam) {
     const installationId = Number.parseInt(installationIdParam, 10)
     if (!Number.isNaN(installationId)) {
-      return <SetupInstallAppWrapper installationId={installationId} />
+      return <SetupPageWrapper installationId={installationId} />
     }
   }
 
