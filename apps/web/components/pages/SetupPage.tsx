@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
+import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import {
   Card,
@@ -11,26 +12,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { z } from 'zod'
 
 interface SetupInstallAppProps {
   installationId?: number
 }
 
-const syncResponseSchema = z.object({
-  success: z.boolean(),
-  triggerHandle: z
-    .object({
-      publicAccessToken: z.string(),
-      id: z.string(),
-    })
-    .optional(),
-  installationId: z.number().optional(),
-  error: z.string().optional(),
-})
-
 export function SetupPage({ installationId }: SetupInstallAppProps) {
   const router = useRouter()
+  const trpc = useTRPCClient()
   const [apiError, setApiError] = useState<string | null>(null)
   const [isTriggering, setIsTriggering] = useState(true)
   const [triggerHandle, setTriggerHandle] = useState<{
@@ -65,34 +54,20 @@ export function SetupPage({ installationId }: SetupInstallAppProps) {
       }
 
       try {
-        const response = await fetch('/api/github/app/sync-installation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            installation_id: installationId,
-          }),
+        const result = await trpc.org.syncInstallation.mutate({
+          installationId,
         })
 
-        const data = syncResponseSchema.parse(await response.json())
-
-        if (!data.success) {
-          setApiError(data.error ?? 'Failed to sync installation')
-          setIsTriggering(false)
-          return
-        }
-
-        if (!data.triggerHandle) {
-          setApiError('Missing trigger handle')
+        if (!result.success || !result.triggerHandle) {
+          setApiError('Failed to sync installation')
           setIsTriggering(false)
           return
         }
 
         // Set trigger handle to enable the hook
         setTriggerHandle({
-          runId: data.triggerHandle.id,
-          publicAccessToken: data.triggerHandle.publicAccessToken,
+          runId: result.triggerHandle.id,
+          publicAccessToken: result.triggerHandle.publicAccessToken,
         })
         setIsTriggering(false)
       } catch (err) {
@@ -105,7 +80,7 @@ export function SetupPage({ installationId }: SetupInstallAppProps) {
     }
 
     void syncInstallation()
-  }, [installationId])
+  }, [installationId, trpc])
 
   // Derive display state from hook values and local state
   const error =
