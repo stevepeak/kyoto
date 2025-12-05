@@ -4,16 +4,12 @@ globs:
 alwaysApply: true
 ---
 
-## IMPORTANT: Development cycle
+# Important
 
-- Never try to start a dev server 
-- Never curl a local endpoint
 - 💋 KISS - I want to most simple solution
 - When necessary adjust types and schemas first before implementing logic.
 - If using the Linear MCP, the team is "kyoto"
-
-## Project Outline
-Please open and review the file packages/schemas/src/story-flow.ts for a detailed overview of how the application works.
+- If my prompt has any specific wisdom, write it to `.wisdom` folder in a readme as an artifact.
 
 ## Current dev status
 
