@@ -1,10 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { useRealtimeRun, useRealtimeStream } from '@trigger.dev/react-hooks'
+import { toast } from 'sonner'
 
 interface UseTriggerRunOptions<T = unknown> {
   runId: string | null
   publicAccessToken: string | null
-  enabled?: boolean
+  showToast?: boolean
+  toastMessages?: {
+    onProgress?: (streamText: string) => string
+    onSuccess?: string
+    onError?: (error: Error | string) => string
+  }
   onComplete?: (output: T) => void
   onError?: (error: Error | string) => void
   onStreamText?: (text: string) => void
@@ -42,143 +48,143 @@ interface UseTriggerRunResult<T = unknown> {
 export function useTriggerRun<T = unknown>({
   runId,
   publicAccessToken,
-  enabled = true,
+  showToast = true,
+  toastMessages = {},
   onComplete,
   onError,
   onStreamText,
 }: UseTriggerRunOptions<T>): UseTriggerRunResult<T> {
-  const isEnabled =
-    enabled &&
-    runId !== null &&
-    publicAccessToken !== null &&
-    runId !== '' &&
-    publicAccessToken !== ''
+  const isEnabled = Boolean(runId && publicAccessToken)
+
+  const toastIdRef = useRef<string | number | null>(null)
+  const streamTextRef = useRef<string>('')
+  const lastRunIdRef = useRef<string | null>(null)
 
   const { run, error: runError } = useRealtimeRun(runId ?? '', {
     accessToken: publicAccessToken ?? undefined,
     enabled: isEnabled,
   })
 
-  // Subscribe to stream if onStreamText is provided
-  const streamEnabled = isEnabled && onStreamText !== undefined
+  const needsStream = isEnabled && (onStreamText !== undefined || showToast)
   const { parts: streamParts } = useRealtimeStream<string>(
     runId ?? '',
     'progress',
     {
       accessToken: publicAccessToken ?? undefined,
-      enabled: streamEnabled,
+      enabled: needsStream,
     },
   )
 
-  // Track previously seen stream chunks
-  const previousStreamLengthRef = useRef<number>(0)
-
-  // Call onStreamText callback for new chunks
+  // Reset when runId changes
   useEffect(() => {
-    if (
-      streamParts &&
-      onStreamText &&
-      streamParts.length > previousStreamLengthRef.current
-    ) {
-      const newParts = streamParts.slice(previousStreamLengthRef.current)
-      newParts.forEach((text) => {
-        onStreamText(text)
-      })
-      previousStreamLengthRef.current = streamParts.length
-    }
-  }, [streamParts, onStreamText, runId])
+    if (runId !== lastRunIdRef.current) {
+      lastRunIdRef.current = runId
+      streamTextRef.current = ''
 
-  const previousStatusRef = useRef<string | null>(null)
-  const previousErrorRef = useRef<unknown>(null)
-  const hasCalledOnCompleteRef = useRef(false)
-
-  // Reset completion tracking when runId changes
-  useEffect(() => {
-    if (runId === null) {
-      hasCalledOnCompleteRef.current = false
-      previousStatusRef.current = null
-      previousErrorRef.current = null
-      previousStreamLengthRef.current = 0
-    } else if (runId !== '') {
-      previousStreamLengthRef.current = 0
+      if (toastIdRef.current) {
+        toast.dismiss(toastIdRef.current)
+        toastIdRef.current = null
+      }
     }
   }, [runId])
 
-  // Handle errors
+  // Toast management
   useEffect(() => {
-    if (runError && runError !== previousErrorRef.current) {
-      previousErrorRef.current = runError
-      let errorMessage: Error | string
-      if (runError instanceof Error) {
-        errorMessage = runError
-      } else {
-        const errorObj = runError as { message?: unknown }
-        const message =
-          errorObj && typeof errorObj === 'object' && 'message' in errorObj
-            ? String(errorObj.message)
-            : 'Trigger run failed'
-        errorMessage = new Error(message)
+    if (!showToast || !isEnabled) {
+      return
+    }
+
+    if (!toastIdRef.current && runId) {
+      const message = toastMessages.onProgress?.('') ?? 'Loading...'
+      toastIdRef.current = toast.loading(message)
+    }
+  }, [runId, isEnabled, showToast, toastMessages])
+
+  // Stream handling
+  useEffect(() => {
+    if (!streamParts?.length) {
+      return
+    }
+
+    const fullText = streamParts.join('\n')
+    const currentLines = streamTextRef.current.split('\n').filter(Boolean)
+    const newParts = streamParts.slice(currentLines.length)
+
+    if (newParts.length > 0) {
+      streamTextRef.current = fullText
+      newParts.forEach((text) => {
+        onStreamText?.(text)
+      })
+
+      // KEEP THIS LOG
+      console.log('[useTriggerRun 🌊] streaming...', streamParts)
+
+      if (showToast && toastIdRef.current) {
+        const message = toastMessages.onProgress
+          ? toastMessages.onProgress(fullText)
+          : (streamParts[streamParts.length - 1] ?? 'Loading...')
+        toast.loading(message, { id: toastIdRef.current })
       }
-
-      onError?.(errorMessage)
     }
-  }, [runError, onError, runId])
+  }, [streamParts, onStreamText, showToast, toastMessages])
 
-  // Handle completion
+  // Completion/error handling
   useEffect(() => {
-    if (
-      run &&
-      run.status === 'COMPLETED' &&
-      run.status !== previousStatusRef.current &&
-      !hasCalledOnCompleteRef.current
-    ) {
-      previousStatusRef.current = run.status
-      hasCalledOnCompleteRef.current = true
-
-      const output = run.output as T
-
-      onComplete?.(output)
+    if (!run || run.id !== runId) {
+      return
     }
 
-    // Handle failed/crashed states
-    if (
-      run &&
-      (run.status === 'FAILED' || run.status === 'CRASHED') &&
-      run.status !== previousStatusRef.current
-    ) {
-      previousStatusRef.current = run.status
-      const errorMessage = new Error(
-        run.status === 'FAILED' ? 'Trigger run failed' : 'Trigger run crashed',
-      )
-
-      onError?.(errorMessage)
+    if (run.isCompleted) {
+      if (showToast && toastIdRef.current) {
+        const message = toastMessages.onSuccess ?? 'Sync completed successfully'
+        toast.success(message, { id: toastIdRef.current })
+        toastIdRef.current = null
+      }
+      onComplete?.(run.output as T)
     }
 
-    // Update previous status ref for any status change (after handling completion/failure)
-    if (run && run.status !== previousStatusRef.current) {
-      previousStatusRef.current = run.status
+    if (run.isFailed || run.isCancelled) {
+      const error = new Error('Workflow failed')
+      if (showToast && toastIdRef.current) {
+        const message = toastMessages.onError
+          ? toastMessages.onError(error)
+          : error.message
+        toast.error(message, { id: toastIdRef.current })
+        toastIdRef.current = null
+      }
+      onError?.(error)
     }
-  }, [run, onComplete, onError, runId])
+  }, [run, runId, onComplete, onError, showToast, toastMessages])
 
-  // isLoading should be true when:
-  // 1. We have runId and token (enabled)
-  // 2. Either run is null (still fetching) OR run exists but not in terminal state
-  // 3. No error occurred
+  // Handle runError
+  useEffect(() => {
+    if (!runError) {
+      return
+    }
+
+    const error =
+      runError instanceof Error ? runError : new Error(String(runError))
+
+    if (showToast && toastIdRef.current) {
+      const message = toastMessages.onError
+        ? toastMessages.onError(error)
+        : error.message
+      toast.error(message, { id: toastIdRef.current })
+      toastIdRef.current = null
+    }
+    onError?.(error)
+  }, [runError, onError, showToast, toastMessages])
+
   const isLoading =
     isEnabled &&
     runError === null &&
-    (run === null ||
-      run === undefined ||
-      (run.status !== 'COMPLETED' &&
-        run.status !== 'FAILED' &&
-        run.status !== 'CRASHED'))
+    (run == null || !['COMPLETED', 'FAILED', 'CRASHED'].includes(run.status))
 
   const isCompleted = run?.status === 'COMPLETED' || false
   const isFailed =
-    run?.status === 'FAILED' || run?.status === 'CRASHED' || false
+    (run?.status === 'FAILED' || run?.status === 'CRASHED') ?? false
 
-  const output =
-    (run?.status === 'COMPLETED' ? (run.output as T) : null) ?? null
+  const output = run?.status === 'COMPLETED' ? (run.output as T) : null
 
   return {
     run,

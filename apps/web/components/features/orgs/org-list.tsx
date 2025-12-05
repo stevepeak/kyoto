@@ -9,20 +9,13 @@ import { LoadingProgress } from '@/components/ui/loading-progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/common/EmptyState'
 import { SiGithub } from 'react-icons/si'
-import { RefreshCw, Loader2 } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  VisuallyHidden,
-} from '@/components/ui/dialog'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 
 interface OrgItem {
@@ -32,86 +25,16 @@ interface OrgItem {
   repoCount: number
 }
 
-interface OrgSyncTrackingContentProps {
-  runId: string | null
-  publicAccessToken: string | null
-  onClose: () => void
-}
-
-function OrgSyncTrackingContent({
-  runId,
-  publicAccessToken,
-  onClose,
-}: OrgSyncTrackingContentProps) {
-  const { isLoading, isFailed, error } = useTriggerRun({
-    runId,
-    publicAccessToken,
-    enabled: runId !== null && publicAccessToken !== null,
-    onComplete: () => {
-      // Dialog will be closed by parent after delay
-    },
-  })
-
-  const displayError = error
-    ? error instanceof Error
-      ? error.message
-      : String(error)
-    : isFailed
-      ? 'Workflow failed'
-      : null
-
-  if (isLoading) {
-    return (
-      <EmptyState
-        kanji="せつぞく"
-        kanjiTitle="Setsuzoku - to connect."
-        title="Syncing repositories..."
-        description="Refreshing your organization's repositories and memberships. This may take a few moments."
-        action={
-          <div className="flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">
-              Tracking sync status...
-            </span>
-          </div>
-        }
-      />
-    )
-  }
-
-  if (displayError) {
-    return (
-      <EmptyState
-        title="Sync failed"
-        description={displayError}
-        action={
-          <Button onClick={onClose} variant="outline">
-            Close
-          </Button>
-        }
-      />
-    )
-  }
-
-  return (
-    <EmptyState
-      title="Waiting for sync..."
-      description="Preparing to sync your organization."
-    />
-  )
-}
-
 export function OrgListApp() {
   const trpc = useTRPCClient()
   const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [orgs, setOrgs] = useState<OrgItem[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [runId, setRunId] = useState<string | null>(null)
-  const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
-    null,
-  )
+  const [triggerHandle, setTriggerHandle] = useState<{
+    runId: string
+    publicAccessToken: string
+  } | null>(null)
+  const [isStartingRefresh, setIsStartingRefresh] = useState(false)
 
   const GITHUB_APP_SLUG = process.env.NEXT_PUBLIC_GITHUB_APP_SLUG || ''
   const installUrl = `https://github.com/apps/${GITHUB_APP_SLUG}/installations/new`
@@ -120,6 +43,25 @@ export function OrgListApp() {
     const data = await trpc.org.listInstalled.query()
     return data.orgs
   }, [trpc])
+
+  // Track trigger run and update toast with streaming text
+  const { isLoading: isRefreshingInstallation } = useTriggerRun({
+    runId: triggerHandle?.runId ?? null,
+    publicAccessToken: triggerHandle?.publicAccessToken ?? null,
+    onComplete: () => {
+      setTriggerHandle(null)
+      setIsStartingRefresh(false)
+      // Refresh orgs list after sync completes
+      void queryOrganizations().then((refreshedOrgs) => {
+        setOrgs(refreshedOrgs)
+      })
+    },
+    onError: (err) => {
+      console.log('[❌ onError] Run error:', err)
+      setTriggerHandle(null)
+      setIsStartingRefresh(false)
+    },
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -153,29 +95,50 @@ export function OrgListApp() {
   }, [queryOrganizations])
 
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
+    setIsStartingRefresh(true)
     try {
       const result = await trpc.org.refreshInstallations.mutate()
+      console.log('[Button]handleRefresh', result)
 
-      // Open dialog with run tracking info if available
+      // Clear any existing run before starting a new one
+      setTriggerHandle(null)
+
+      // Set run tracking info if available
       if (result.triggerHandle?.publicAccessToken && result.triggerHandle?.id) {
-        setRunId(result.triggerHandle.id)
-        setPublicAccessToken(result.triggerHandle.publicAccessToken)
-        setDialogOpen(true)
+        setTriggerHandle({
+          runId: result.triggerHandle.id,
+          publicAccessToken: result.triggerHandle.publicAccessToken,
+        })
+        // isStartingRefresh will be cleared when isTriggerRunLoading becomes true
+      } else {
+        // If no trigger handle, refresh orgs immediately
+        const refreshedOrgs = await queryOrganizations()
+        setOrgs(refreshedOrgs)
+        setIsStartingRefresh(false)
       }
 
-      const refreshedOrgs = await queryOrganizations()
-      setOrgs(refreshedOrgs)
       setError(null)
     } catch (e) {
+      console.error('[🔄 Button Clicked] Error:', e)
       setError(
         e instanceof Error ? e.message : 'Failed to refresh organizations',
       )
+      // Error toast will be shown by useTriggerRun hook if runId is set
+      setIsStartingRefresh(false)
     } finally {
-      setIsRefreshing(false)
       setIsLoading(false)
     }
   }, [queryOrganizations, trpc])
+
+  // Clear isStartingRefresh once the trigger run starts tracking
+  useEffect(() => {
+    if (isRefreshingInstallation && isStartingRefresh) {
+      setIsStartingRefresh(false)
+    }
+  }, [isRefreshingInstallation, isStartingRefresh])
+
+  // Button should be disabled while starting refresh or trigger run is loading
+  const isRefreshing = isStartingRefresh || isRefreshingInstallation
 
   if (isLoading) {
     return (
@@ -264,42 +227,6 @@ export function OrgListApp() {
           ))}
         </div>
       </div>
-      <Dialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open)
-          if (!open) {
-            setRunId(null)
-            setPublicAccessToken(null)
-            // Refresh orgs list when dialog closes
-            void queryOrganizations().then((refreshedOrgs) => {
-              setOrgs(refreshedOrgs)
-            })
-          }
-        }}
-      >
-        <DialogContent className="max-w-lg !left-[50%] !top-[50%] !bottom-auto !translate-x-[-50%] !translate-y-[-50%] data-[state=closed]:!slide-out-to-bottom data-[state=open]:!slide-in-from-bottom data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 sm:rounded-lg">
-          <VisuallyHidden>
-            <DialogTitle>Organization Sync</DialogTitle>
-            <DialogDescription>
-              Track the progress of your organization sync
-            </DialogDescription>
-          </VisuallyHidden>
-          <OrgSyncTrackingContent
-            runId={runId}
-            publicAccessToken={publicAccessToken}
-            onClose={() => {
-              setDialogOpen(false)
-              setRunId(null)
-              setPublicAccessToken(null)
-              // Refresh orgs list when dialog closes
-              void queryOrganizations().then((refreshedOrgs) => {
-                setOrgs(refreshedOrgs)
-              })
-            }}
-          />
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   )
 }

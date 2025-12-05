@@ -30,7 +30,6 @@ interface UseStoryActionsProps {
   setIsGenerating: (value: boolean) => void
   setGenerationRunId: (value: string | null) => void
   setGenerationAccessToken: (value: string | null) => void
-  setShowGenerationDialog: (value: boolean) => void
 }
 
 export function useStoryActions({
@@ -58,9 +57,8 @@ export function useStoryActions({
   setIsDecomposing,
   setIsTesting,
   setIsGenerating,
-  setGenerationRunId,
-  setGenerationAccessToken,
-  setShowGenerationDialog,
+    setGenerationRunId,
+    setGenerationAccessToken,
 }: UseStoryActionsProps) {
   const trpc = useTRPCClient()
   const router = useRouter()
@@ -148,8 +146,6 @@ export function useStoryActions({
 
     setIsGenerating(true)
     setError(null)
-    // Open the dialog immediately
-    setShowGenerationDialog(true)
 
     try {
       const result = await trpc.story.generate.mutate({
@@ -159,10 +155,9 @@ export function useStoryActions({
 
       if (result.triggerHandle?.publicAccessToken && result.triggerHandle?.id) {
         // Set the run ID and token to enable the hook
-        // The dialog is already open and will update when these are set
         setGenerationRunId(result.triggerHandle.id)
         setGenerationAccessToken(result.triggerHandle.publicAccessToken)
-        // Keep isGenerating true while dialog is open - don't set to false here
+        // Keep isGenerating true while run is in progress
       } else {
         throw new Error('Failed to get trigger handle')
       }
@@ -174,8 +169,6 @@ export function useStoryActions({
       )
       toast.error('Failed to generate story')
       setIsGenerating(false)
-      // Close the dialog on error
-      setShowGenerationDialog(false)
       setGenerationRunId(null)
       setGenerationAccessToken(null)
     }

@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
+import { z } from 'zod'
 
 import { router, protectedProcedure } from '../trpc'
 
@@ -126,8 +127,8 @@ export const orgRouter = router({
             installationId: installation.installationId,
           },
           {
-            idempotencyKey: `sync-${installation.installationId}`,
-            idempotencyKeyTTL: '10m',
+            // idempotencyKey: `sync-${installation.installationId}`,
+            // idempotencyKeyTTL: '1m',
             priority: 10,
           },
         ),
@@ -153,4 +154,29 @@ export const orgRouter = router({
         : undefined,
     }
   }),
+
+  syncInstallation: protectedProcedure
+    .input(z.object({ installationId: z.number() }))
+    .mutation(async ({ input }) => {
+      const handle = await tasks.trigger(
+        'sync-github-installation',
+        {
+          installationId: input.installationId,
+        },
+        {
+          idempotencyKey: `sync-${input.installationId}`,
+          idempotencyKeyTTL: '10m',
+          priority: 10,
+        },
+      )
+
+      return {
+        success: true,
+        triggerHandle: {
+          publicAccessToken: handle.publicAccessToken,
+          id: handle.id,
+        },
+        installationId: input.installationId,
+      }
+    }),
 })

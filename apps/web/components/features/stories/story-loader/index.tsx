@@ -4,13 +4,6 @@ import { AppLayout } from '@/components/layout'
 import { StoryArchiveDialog } from '@/components/features/stories/story-archive-dialog'
 import { StoryTemplatesDialog } from '@/components/features/stories/story-templates-dialog'
 import { StoryCreateForm } from '@/components/features/stories/story-create-form'
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  VisuallyHidden,
-} from '@/components/ui/dialog'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useStoryLoaderState } from './hooks/useStoryLoaderState'
 import { useStoryActions } from './hooks/useStoryActions'
@@ -58,18 +51,13 @@ export function StoryLoaderClient({
     setIsGenerating: state.setIsGenerating,
     setGenerationRunId: state.setGenerationRunId,
     setGenerationAccessToken: state.setGenerationAccessToken,
-    setShowGenerationDialog: state.setShowGenerationDialog,
   })
 
   // Generation logic
   const generation = useStoryGeneration({
-    generationRunId: state.generationRunId,
-    generationAccessToken: state.generationAccessToken,
-    showGenerationDialog: state.showGenerationDialog,
     setIsGenerating: state.setIsGenerating,
     setGenerationRunId: state.setGenerationRunId,
     setGenerationAccessToken: state.setGenerationAccessToken,
-    setShowGenerationDialog: state.setShowGenerationDialog,
     setStoryContent: state.setStoryContent,
     setStoryName: state.setStoryName,
     setError: state.setError,
@@ -173,25 +161,19 @@ export function StoryLoaderClient({
         isArchiving={state.isArchiving}
         onArchive={actions.handleArchive}
       />
-      <Dialog
-        open={state.showGenerationDialog}
-        onOpenChange={generation.handleGenerationDialogChange}
-      >
-        <DialogContent className="max-w-lg !left-[50%] !top-[50%] !bottom-auto !translate-x-[-50%] !translate-y-[-50%] data-[state=closed]:!slide-out-to-bottom data-[state=open]:!slide-in-from-bottom data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 sm:rounded-lg">
-          <VisuallyHidden>
-            <DialogTitle>Story Generation</DialogTitle>
-            <DialogDescription>
-              Track the progress of your story generation
-            </DialogDescription>
-          </VisuallyHidden>
-          <StoryGenerationTracking
-            runId={state.generationRunId}
-            publicAccessToken={state.generationAccessToken}
-            onComplete={generation.handleGenerationComplete}
-            onClose={() => generation.handleGenerationDialogChange(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <StoryGenerationTracking
+        runId={state.generationRunId}
+        publicAccessToken={state.generationAccessToken}
+        onComplete={generation.handleGenerationComplete}
+        onError={(error) => {
+          state.setError(
+            error instanceof Error ? error.message : String(error),
+          )
+          state.setIsGenerating(false)
+          state.setGenerationRunId(null)
+          state.setGenerationAccessToken(null)
+        }}
+      />
     </AppLayout>
   )
 }

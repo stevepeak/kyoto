@@ -13,15 +13,8 @@ import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { RunList } from '@/components/features/runs/RunList'
 import { StoryList } from '@/components/features/stories/story-list'
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  VisuallyHidden,
-} from '@/components/ui/dialog'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
-import { RunTrackingContent } from './run-tracking-content'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type RunItem = RouterOutputs['run']['listByRepo']['runs'][number]
@@ -50,12 +43,28 @@ export function RepoOverview({
   const router = useRouter()
   const [isCreatingRun, setIsCreatingRun] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
-  // Dialog state - local to this component
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [runId, setRunId] = useState<string | null>(null)
-  const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
-    null,
-  )
+  const [triggerHandle, setTriggerHandle] = useState<{
+    runId: string
+    publicAccessToken: string
+  } | null>(null)
+
+  // Use trigger run hook to track CI runs with built-in toast
+  useTriggerRun({
+    runId: triggerHandle?.runId ?? null,
+    publicAccessToken: triggerHandle?.publicAccessToken ?? null,
+    onComplete: () => {
+      // Clear trigger handle after completion
+      setTriggerHandle(null)
+      // Refresh runs list
+      if (onRefreshRuns) {
+        onRefreshRuns()
+      }
+    },
+    onError: () => {
+      // Clear trigger handle after error
+      setTriggerHandle(null)
+    },
+  })
 
   // Check if any CI build is in progress
   const hasRunningBuild = runs.some(
@@ -84,11 +93,12 @@ export function RepoOverview({
         repoName,
       })
 
-      // Open dialog with run tracking info
+      // Set trigger handle to start tracking with toast
       if (result.triggerHandle?.publicAccessToken && result.triggerHandle?.id) {
-        setRunId(result.triggerHandle.id)
-        setPublicAccessToken(result.triggerHandle.publicAccessToken)
-        setDialogOpen(true)
+        setTriggerHandle({
+          runId: result.triggerHandle.id,
+          publicAccessToken: result.triggerHandle.publicAccessToken,
+        })
 
         // Refresh runs list after successful creation
         if (onRefreshRuns) {
@@ -203,34 +213,6 @@ export function RepoOverview({
           </div>
         </div>
       </div>
-      <Dialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open)
-          if (!open) {
-            setRunId(null)
-            setPublicAccessToken(null)
-          }
-        }}
-      >
-        <DialogContent className="max-w-lg !left-[50%] !top-[50%] !bottom-auto !translate-x-[-50%] !translate-y-[-50%] data-[state=closed]:!slide-out-to-bottom data-[state=open]:!slide-in-from-bottom data-[state=closed]:!zoom-out-100 data-[state=open]:!zoom-in-100 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 sm:rounded-lg">
-          <VisuallyHidden>
-            <DialogTitle>Run Tracking</DialogTitle>
-            <DialogDescription>
-              Track the progress of your CI run
-            </DialogDescription>
-          </VisuallyHidden>
-          <RunTrackingContent
-            runId={runId}
-            publicAccessToken={publicAccessToken}
-            onClose={() => {
-              setDialogOpen(false)
-              setRunId(null)
-              setPublicAccessToken(null)
-            }}
-          />
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   )
 }

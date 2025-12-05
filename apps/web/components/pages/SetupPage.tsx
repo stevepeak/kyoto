@@ -33,10 +33,10 @@ export function SetupPage({ installationId }: SetupInstallAppProps) {
   const router = useRouter()
   const [apiError, setApiError] = useState<string | null>(null)
   const [isTriggering, setIsTriggering] = useState(true)
-  const [runId, setRunId] = useState<string | null>(null)
-  const [publicAccessToken, setPublicAccessToken] = useState<string | null>(
-    null,
-  )
+  const [triggerHandle, setTriggerHandle] = useState<{
+    runId: string
+    publicAccessToken: string
+  } | null>(null)
 
   // Use the reusable trigger run hook
   const {
@@ -44,9 +44,9 @@ export function SetupPage({ installationId }: SetupInstallAppProps) {
     isFailed,
     error: runError,
   } = useTriggerRun({
-    runId,
-    publicAccessToken,
-    enabled: runId !== null && publicAccessToken !== null,
+    runId: triggerHandle?.runId ?? null,
+    publicAccessToken: triggerHandle?.publicAccessToken ?? null,
+    showToast: false,
     onComplete: () => {
       // Navigate when completed
       router.push('/app')
@@ -89,9 +89,11 @@ export function SetupPage({ installationId }: SetupInstallAppProps) {
           return
         }
 
-        // Set runId and token to enable the hook
-        setRunId(data.triggerHandle.id)
-        setPublicAccessToken(data.triggerHandle.publicAccessToken)
+        // Set trigger handle to enable the hook
+        setTriggerHandle({
+          runId: data.triggerHandle.id,
+          publicAccessToken: data.triggerHandle.publicAccessToken,
+        })
         setIsTriggering(false)
       } catch (err) {
         console.error('Failed to sync installation:', err)

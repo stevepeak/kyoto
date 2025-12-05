@@ -1,34 +1,23 @@
 import { useCallback } from 'react'
-import { toast } from 'sonner'
-import { useTriggerRun } from '@/hooks/use-trigger-run'
 import type { StoryDiscoveryOutput } from '../types'
 
 interface UseStoryGenerationProps {
-  generationRunId: string | null
-  generationAccessToken: string | null
-  showGenerationDialog: boolean
   setIsGenerating: (value: boolean) => void
   setGenerationRunId: (value: string | null) => void
   setGenerationAccessToken: (value: string | null) => void
-  setShowGenerationDialog: (value: boolean) => void
   setStoryContent: (value: string) => void
   setStoryName: (value: string) => void
   setError: (value: string | null) => void
 }
 
 interface UseStoryGenerationReturn {
-  handleGenerationComplete: () => void
-  handleGenerationDialogChange: (open: boolean) => void
+  handleGenerationComplete: (output: StoryDiscoveryOutput) => void
 }
 
 export function useStoryGeneration({
-  generationRunId,
-  generationAccessToken,
-  showGenerationDialog,
   setIsGenerating,
   setGenerationRunId,
   setGenerationAccessToken,
-  setShowGenerationDialog,
   setStoryContent,
   setStoryName,
   setError,
@@ -42,44 +31,21 @@ export function useStoryGeneration({
         if (generatedStory.title) {
           setStoryName(generatedStory.title)
         }
-        toast.success('Story generated successfully')
       } else {
         setError('No story was generated')
-        toast.error('No story was generated')
       }
     },
     [setStoryContent, setStoryName, setError],
   )
 
-  // Use trigger run hook to track the generation (output only, completion handled by StoryGenerationTracking)
-  const { output } = useTriggerRun<StoryDiscoveryOutput>({
-    runId: generationRunId,
-    publicAccessToken: generationAccessToken,
-    enabled:
-      showGenerationDialog &&
-      generationRunId !== null &&
-      generationAccessToken !== null,
-    // Don't handle completion here - let StoryGenerationTracking handle it
-    // to avoid race conditions and duplicate dialog closes
-    onError: (err) => {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to generate story'
-      setError(errorMessage)
-      toast.error('Failed to generate story')
-      setIsGenerating(false)
-      setGenerationRunId(null)
-      setGenerationAccessToken(null)
-      setShowGenerationDialog(false)
-    },
-  })
+  // Output is handled by StoryGenerationTracking component
+  // No need to call useTriggerRun here since StoryGenerationTracking handles it
 
-  // Handle story generation completion (called from dialog)
+  // Handle story generation completion (called from StoryGenerationTracking)
   const handleGenerationComplete = useCallback(
-    (outputFromDialog?: StoryDiscoveryOutput) => {
-      // Use output from dialog if provided, otherwise fall back to hook output
-      const finalOutput = outputFromDialog ?? output
-      if (finalOutput) {
-        handleStoryOutput(finalOutput)
+    (output: StoryDiscoveryOutput) => {
+      if (output) {
+        handleStoryOutput(output)
       } else {
         setError('Story generation is still processing')
       }
@@ -87,40 +53,17 @@ export function useStoryGeneration({
       setIsGenerating(false)
       setGenerationRunId(null)
       setGenerationAccessToken(null)
-      setShowGenerationDialog(false)
     },
     [
-      output,
       handleStoryOutput,
       setIsGenerating,
       setGenerationRunId,
       setGenerationAccessToken,
-      setShowGenerationDialog,
       setError,
-    ],
-  )
-
-  // Handle dialog close (manual or on completion)
-  const handleGenerationDialogChange = useCallback(
-    (open: boolean) => {
-      setShowGenerationDialog(open)
-      if (!open) {
-        // If dialog is closed manually, clean up
-        setIsGenerating(false)
-        setGenerationRunId(null)
-        setGenerationAccessToken(null)
-      }
-    },
-    [
-      setShowGenerationDialog,
-      setIsGenerating,
-      setGenerationRunId,
-      setGenerationAccessToken,
     ],
   )
 
   return {
     handleGenerationComplete,
-    handleGenerationDialogChange,
   }
 }

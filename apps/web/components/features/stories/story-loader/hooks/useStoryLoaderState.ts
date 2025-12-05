@@ -27,7 +27,6 @@ export function useStoryLoaderState({
   // UI state (dialogs and flags)
   const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [showTemplatesDialog, setShowTemplatesDialog] = useState(false)
-  const [showGenerationDialog, setShowGenerationDialog] = useState(false)
   const [createMore, setCreateMore] = useState(false)
 
   // Action states
@@ -83,8 +82,6 @@ export function useStoryLoaderState({
     setShowArchiveDialog,
     showTemplatesDialog,
     setShowTemplatesDialog,
-    showGenerationDialog,
-    setShowGenerationDialog,
     createMore,
     setCreateMore,
 
