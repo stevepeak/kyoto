@@ -7,6 +7,7 @@
   "description": "Kyoto - AI-powered QA",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@app/web",
     "build": "turbo run build",
     "preview": "turbo run preview",
     "lint": "turbo run lint",

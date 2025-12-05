@@ -1,6 +1,17 @@
 const { withSentryConfig } = require('@sentry/nextjs')
 const path = require('path')
 
+const kyselyAdapterPath = path.resolve(
+  __dirname,
+  'node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs',
+)
+
+const isProd = process.env.NODE_ENV === 'production'
+
+// Note: the dev script runs `next dev` (Turbopack by default), while
+// production builds use `next build --webpack`. Keep aliases and plugins
+// in sync across both bundlers to avoid environment-specific bugs.
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -41,6 +52,14 @@ const nextConfig = {
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+  // Turbopack-specific configuration for development
+  // Mirrors the webpack alias below so the better-auth Kysely adapter
+  // continues to resolve correctly when using Turbopack.
+  turbopack: {
+    resolveAlias: {
+      'better-auth/adapters/kysely-adapter': kyselyAdapterPath,
+    },
+  },
   webpack: (config) => {
     // Suppress webpack warnings from Sentry/OpenTelemetry instrumentation
     config.ignoreWarnings = [
@@ -50,10 +69,6 @@ const nextConfig = {
 
     // Allow importing kysely-adapter from better-auth
     // Use direct path to bypass package.json exports restriction
-    const kyselyAdapterPath = path.resolve(
-      __dirname,
-      'node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs',
-    )
     config.resolve.alias = {
       ...config.resolve.alias,
       'better-auth/adapters/kysely-adapter': kyselyAdapterPath,
@@ -81,5 +96,11 @@ const sentryWebpackPluginOptions = {
   // Only upload source maps in production builds
   dryRun: process.env.NODE_ENV !== 'production',
 }
+// We only enable the Sentry webpack plugin for production builds so that
+// local development (Turbopack or Webpack) stays as fast as possible.
+// Runtime Sentry remains configured via `instrumentation.ts`.
+const exportedConfig = isProd
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig
 
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+module.exports = exportedConfig
