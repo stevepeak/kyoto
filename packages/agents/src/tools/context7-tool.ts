@@ -50,7 +50,7 @@ export function createResolveLibraryTool() {
     execute: async (input) => {
       try {
         const env = getConfig()
-        const headers: HeadersInit = {
+        const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         }
 
@@ -108,7 +108,7 @@ export function createGetLibraryDocsTool() {
     execute: async (input) => {
       try {
         const env = getConfig()
-        const headers: HeadersInit = {
+        const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         }
 

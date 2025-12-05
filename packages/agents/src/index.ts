@@ -37,33 +37,6 @@ export { createReadFileTool } from './tools/read-file-tool'
 export { createResolveLibraryTool } from './tools/context7-tool'
 export { createSearchStoriesTool } from './tools/search-stories-tool'
 
-// @ts-expect-error - model is not used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function model(
-  gateway: 'openai' | 'openrouter' | 'ai-gateway',
-  modelId: string,
-): any {
-  const env = getConfig()
-  if (gateway === 'openai') {
-    return createOpenAI({ apiKey: env.OPENAI_API_KEY })(modelId)
-  }
-  if (gateway === 'openrouter') {
-    // ! DOES NOT WORK YET
-    return createOpenRouter({
-      apiKey: env.OPENROUTER_API_KEY,
-      // extraBody: {
-      //   reasoning: {
-      //     max_tokens: 10,
-      //   },
-      // },
-    })(modelId)
-  }
-  if (gateway === 'ai-gateway') {
-    return modelId
-  }
-  throw new Error(`Unsupported provider: ${gateway}`)
-}
-
 type Agent<TSchema extends z.ZodSchema = z.ZodSchema> = {
   id: string
   version: string

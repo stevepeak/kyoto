@@ -7,6 +7,7 @@
   "description": "Kyoto - AI-powered QA",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@app/web",
     "build": "turbo run build",
     "preview": "turbo run preview",
     "lint": "turbo run lint",
@@ -21,7 +22,8 @@
     "fix:prettier": "prettier --write .",
     "fix:eslint": "turbo run lint:fix",
     "fix:tsconfig": "monorepo-typescript-references fix",
-    "clean": "turbo run clean && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
+    "clean": "turbo run clean && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "kyoto": "pnpm --filter @app/cli run kyoto"
   },
   "devDependencies": {
     "@ocavue/eslint-config": "^3.6.0",
