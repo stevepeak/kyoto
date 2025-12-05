@@ -259,32 +259,4 @@ export const repoRouter = router({
 
       return { enabled: true, repoId: repo.id }
     }),
-
-  disableRepo: protectedProcedure
-    .input(z.object({ orgName: z.string(), repoName: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.id
-
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' })
-      }
-
-      const repo = await requireRepoForUser(ctx.db, {
-        orgName: input.orgName,
-        repoName: input.repoName,
-        userId,
-      })
-
-      if (!repo.enabled) {
-        return { enabled: false, repoId: repo.id }
-      }
-
-      await ctx.db
-        .updateTable('repos')
-        .set({ enabled: false })
-        .where('id', '=', repo.id)
-        .execute()
-
-      return { enabled: false, repoId: repo.id }
-    }),
 })

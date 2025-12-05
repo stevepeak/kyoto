@@ -1,19 +1,9 @@
 import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
-import { z } from 'zod'
 
 import { router, protectedProcedure } from '../trpc'
 
 export const orgRouter = router({
-  getDefault: protectedProcedure.query(() => {
-    return {
-      org: {
-        id: 'demo-org',
-        slug: 'demo-org',
-        name: 'Demo Org',
-      },
-    }
-  }),
   listInstalled: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user?.id
 
@@ -154,29 +144,4 @@ export const orgRouter = router({
         : undefined,
     }
   }),
-
-  syncInstallation: protectedProcedure
-    .input(z.object({ installationId: z.number() }))
-    .mutation(async ({ input }) => {
-      const handle = await tasks.trigger(
-        'sync-github-installation',
-        {
-          installationId: input.installationId,
-        },
-        {
-          idempotencyKey: `sync-${input.installationId}`,
-          idempotencyKeyTTL: '10m',
-          priority: 10,
-        },
-      )
-
-      return {
-        success: true,
-        triggerHandle: {
-          publicAccessToken: handle.publicAccessToken,
-          id: handle.id,
-        },
-        installationId: input.installationId,
-      }
-    }),
 })

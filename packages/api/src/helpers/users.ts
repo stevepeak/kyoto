@@ -1,9 +1,10 @@
-import type { DB, User } from '@app/db/types'
+import type { DB } from '@app/db/types'
 import { sql } from 'kysely'
-import type { Kysely, Selectable, Updateable } from 'kysely'
+import type { Kysely, Selectable } from 'kysely'
 import { z } from 'zod'
 
 import { trpcNotFoundError } from './kysely-trprc'
+import type { User } from '@app/db/types'
 
 /**
  * Retrieves a user by ID
@@ -23,31 +24,6 @@ export async function getUser({
     .selectFrom('user')
     .where('id', '=', userId)
     .selectAll()
-    .executeTakeFirstOrThrow(trpcNotFoundError)
-}
-
-/**
- * Updates a user's details
- * @param db - Database instance
- * @param userId - The user ID to update
- * @param values - The values to update
- * @returns The updated user
- * @throws TRPCError with NOT_FOUND if user doesn't exist
- */
-export async function updateUser({
-  db,
-  userId,
-  values,
-}: {
-  db: Kysely<DB>
-  userId: string
-  values: Partial<Updateable<User>>
-}): Promise<Selectable<User>> {
-  return await db
-    .updateTable('user')
-    .set(values)
-    .where('id', '=', userId)
-    .returningAll()
     .executeTakeFirstOrThrow(trpcNotFoundError)
 }
 
