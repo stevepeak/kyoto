@@ -1,36 +1,37 @@
-import { Command, Args, Flags } from '@oclif/core'
+import { Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import { stat } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import ora from 'ora'
+import { writeFile } from 'node:fs/promises'
+import { resolve, join } from 'node:path'
 
 import { getModel } from '../helpers/get-model.js'
+import { validateStoryStructure } from '../helpers/wiki-validation.js'
 import {
-  generateStories,
-  type Story,
-} from '../helpers/story-generator-agent.js'
+  getFolderHierarchy,
+  getStoriesInFolder,
+  folderHasStories,
+  type FolderInfo,
+} from '../helpers/wiki-traversal.js'
+import { generateDomainSummary } from '../helpers/wiki-summary-agent.js'
+import { generateMermaidChart } from '../helpers/wiki-mermaid-agent.js'
 import {
-  validateFilePath,
-  findTypeScriptFiles,
-} from '../helpers/file-discovery.js'
-import { writeStoriesToFiles } from '../helpers/write-stories.js'
+  generateFolderMarkdown,
+  combineMarkdownFiles,
+  type FolderMarkdown,
+} from '../helpers/wiki-markdown-generator.js'
+import { displayHeader } from '../helpers/display-header.js'
+
+const STORIES_DIR = '.stories'
 
 export default class Wiki extends Command {
-  static override description = 'Generate behavior stories from a code file'
+  static override description =
+    'Generate wiki documentation from organized story files'
 
   static override examples = [
-    '$ kyoto wiki .',
-    '$ kyoto wiki . --model "gpt-4o-mini" --provider openai',
-    '$ kyoto wiki . --model "openai/gpt-4o-mini" --provider vercel',
+    '$ kyoto wiki',
+    '$ kyoto wiki --model "gpt-4o-mini" --provider openai',
+    '$ kyoto wiki --model "openai/gpt-4o-mini" --provider vercel',
   ]
-
-  static override args = {
-    filePath: Args.string({
-      description:
-        'Path to the file to analyze (relative to current directory)',
-      required: true,
-    }),
-  }
 
   static override flags = {
     model: Flags.string({
@@ -47,49 +48,36 @@ export default class Wiki extends Command {
   }
 
   override async run(): Promise<void> {
-    const { args, flags } = await this.parse(Wiki)
-    const inputPath = args.filePath
+    const { flags } = await this.parse(Wiki)
 
-    // Create a logger that uses oclif's log method (passes through colored messages)
+    // Create a logger that uses oclif's log method
     const logger = (message: string) => {
       this.log(message)
     }
 
     try {
-      // Validate path exists
-      await validateFilePath(inputPath)
+      // Show stage header
+      displayHeader(logger)
 
-      // Determine if it's a file or directory
-      const resolvedPath = resolve(process.cwd(), inputPath)
-      const stats = await stat(resolvedPath)
-      const isDirectory = stats.isDirectory()
+      // Validation Phase
+      logger(chalk.grey('• Validating story structure...'))
+      const validationSpinner = ora({
+        text: chalk.white('Validating story structure...'),
+        spinner: 'squareCorners',
+        color: 'red',
+      }).start()
 
-      // Get list of files to process
-      const filesToProcess = isDirectory
-        ? await findTypeScriptFiles(inputPath)
-        : [inputPath]
-
-      if (filesToProcess.length === 0) {
-        logger(
-          chalk.hex('#c27a52')(
-            `\n⚠️  No TypeScript files found in ${inputPath}\n`,
-          ),
-        )
+      try {
+        await validateStoryStructure()
+        validationSpinner.succeed(chalk.white('Story structure validated'))
+      } catch (error) {
+        validationSpinner.fail(chalk.white('Story structure validation failed'))
+        if (error instanceof Error) {
+          logger(chalk.hex('#c27a52')(`\n⚠️  ${error.message}\n`))
+        }
+        this.exit(1)
         return
       }
-
-      // Show stage header with red kanji
-      logger(chalk.red('こ ん に ち は 京'))
-      logger(chalk.bold.white('Hello, Kyoto\n'))
-      logger(
-        chalk.grey(
-          `• Crafting user behaviors wiki for ${chalk.hex('#7b301f')(filesToProcess.length)} ${filesToProcess.length === 1 ? chalk.hex('#7b301f')('file') : chalk.hex('#7b301f')('files')}`,
-        ),
-      )
-
-      // Process each file with its own agent
-      const allStories: Story[] = []
-      const allWrittenFiles: string[] = []
 
       // Get model configuration
       const { model, modelId, provider } = getModel({
@@ -103,52 +91,139 @@ export default class Wiki extends Command {
         ),
       )
 
-      for (const filePath of filesToProcess) {
-        // Create a new spinner for each file (white filepath, beige spinner)
-        const spinner = ora({
-          text: chalk.white(filePath),
+      // Discovery Phase
+      logger(chalk.grey('• Discovering folder hierarchy...'))
+      const discoverySpinner = ora({
+        text: chalk.white('Discovering folders...'),
+        spinner: 'squareCorners',
+        color: 'red',
+      }).start()
+
+      const folders = await getFolderHierarchy()
+
+      // Filter to only folders that contain stories (not just subfolders)
+      const foldersWithStories: FolderInfo[] = []
+      for (const folder of folders) {
+        const hasStories = await folderHasStories(folder.path)
+        if (hasStories) {
+          foldersWithStories.push(folder)
+        }
+      }
+
+      discoverySpinner.succeed(
+        chalk.white(
+          `Found ${foldersWithStories.length} ${foldersWithStories.length === 1 ? 'folder' : 'folders'} with stories`,
+        ),
+      )
+
+      if (foldersWithStories.length === 0) {
+        logger(
+          chalk.hex('#c27a52')(
+            `\n⚠️  No folders with stories found to process.\n`,
+          ),
+        )
+        return
+      }
+
+      // Processing Phase (bottom-up)
+      logger(
+        chalk.grey(
+          `\n• Processing ${foldersWithStories.length} ${foldersWithStories.length === 1 ? 'folder' : 'folders'}...\n`,
+        ),
+      )
+
+      const folderMarkdowns: FolderMarkdown[] = []
+      let processedCount = 0
+      let failedCount = 0
+
+      for (const folder of foldersWithStories) {
+        const folderSpinner = ora({
+          text: chalk.white(folder.path),
           spinner: 'squareCorners',
           color: 'red',
         }).start()
 
         try {
-          // Update spinner to show current file
-          spinner.text = chalk.white(filePath)
+          // Get stories in this folder
+          folderSpinner.text =
+            chalk.white(folder.path) + ' ' + chalk.grey('reading stories...')
+          const stories = await getStoriesInFolder(folder.path)
 
-          // Generate stories for this file
-          const { stories } = await generateStories({
+          if (stories.length === 0) {
+            folderSpinner.succeed(
+              chalk.white(`${folder.path} - ${chalk.grey('no stories')}`),
+            )
+            continue
+          }
+
+          // Generate summary
+          folderSpinner.text =
+            chalk.white(folder.path) + ' ' + chalk.grey('generating summary...')
+          const summary = await generateDomainSummary({
             model,
-            filePath,
+            stories,
+            folderPath: folder.path,
             onProgress: (progress) => {
-              spinner.text = chalk.white(filePath) + ' ' + chalk.grey(progress)
+              folderSpinner.text =
+                chalk.white(folder.path) + ' ' + chalk.grey(progress)
             },
           })
 
-          if (stories.length > 0) {
-            spinner.text =
-              chalk.white(filePath) +
-              ' ' +
-              chalk.grey(`writing ${stories.length} stories...`)
+          // Generate mermaid chart
+          folderSpinner.text =
+            chalk.white(folder.path) + ' ' + chalk.grey('generating diagram...')
+          const mermaidChart = await generateMermaidChart({
+            model,
+            stories,
+            folderPath: folder.path,
+            onProgress: (progress) => {
+              folderSpinner.text =
+                chalk.white(folder.path) + ' ' + chalk.grey(progress)
+            },
+          })
 
-            // Write stories to files
-            const writtenFiles = await writeStoriesToFiles(stories)
-            allStories.push(...stories)
-            allWrittenFiles.push(...writtenFiles)
-          }
+          // Generate markdown
+          folderSpinner.text =
+            chalk.white(folder.path) +
+            ' ' +
+            chalk.grey('generating markdown...')
+          const markdown = generateFolderMarkdown({
+            summary,
+            mermaidChart,
+            stories,
+            folderPath: folder.path,
+            depth: folder.depth,
+          })
 
-          // Update spinner to show completion
-          spinner.succeed(
+          // Write README.md to folder
+          const folderFullPath = resolve(
+            process.cwd(),
+            STORIES_DIR,
+            folder.path,
+          )
+          const readmePath = join(folderFullPath, 'README.md')
+          await writeFile(readmePath, markdown, 'utf-8')
+
+          // Store for final combination
+          folderMarkdowns.push({
+            folderPath: folder.path,
+            markdown,
+            depth: folder.depth,
+          })
+
+          folderSpinner.succeed(
             chalk.white(
-              `${filePath} - ` +
-                chalk.hex('#7ba179')(
-                  `${stories.length} ${stories.length === 1 ? 'behavior' : 'behaviors'} discovered`,
-                ),
+              `${folder.path} - ${chalk.hex('#7ba179')(`${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`)}`,
             ),
           )
+          processedCount++
         } catch (error) {
-          spinner.fail(chalk.white(filePath))
-          logger(chalk.hex('#c27a52')(`\n⚠️  Failed to generate stories\n`))
-          // Continue processing other files even if one fails
+          folderSpinner.fail(chalk.white(folder.path))
+          logger(
+            chalk.hex('#c27a52')(
+              `\n⚠️  Failed to process folder: ${folder.path}\n`,
+            ),
+          )
           if (error instanceof Error) {
             // Check if it's an API key related error
             if (
@@ -166,59 +241,77 @@ export default class Wiki extends Command {
                   'Please check your OPENAI_API_KEY or AI_GATEWAY_API_KEY environment variable.\n',
                 ),
               )
-            } else if (
-              error.message.includes('Vercel AI Gateway') ||
-              error.message.includes('Gateway request failed') ||
-              error.message.includes('Invalid error response format')
-            ) {
-              logger(chalk.hex('#c27a52')('AI Gateway error detected.\n'))
-              logger(
-                chalk.hex('#7c6653')(
-                  'The AI Gateway request failed. This could be due to:\n',
-                ),
-              )
-              logger(
-                chalk.hex('#7c6653')(
-                  '  - Invalid or expired AI_GATEWAY_API_KEY\n',
-                ),
-              )
-              logger(chalk.hex('#7c6653')('  - Network connectivity issues\n'))
-              logger(
-                chalk.hex('#7c6653')(
-                  '  - Gateway service temporarily unavailable\n',
-                ),
-              )
-              logger(
-                chalk.hex('#7c6653')(
-                  '\nTry using --provider openai with OPENAI_API_KEY instead.\n',
-                ),
-              )
             } else {
               logger(chalk.hex('#7c6653')(`Error: ${error.message}\n`))
             }
-          } else {
-            logger(chalk.hex('#7c6653')('An unknown error occurred.\n'))
           }
+          failedCount++
         }
       }
 
-      if (allStories.length === 0) {
-        logger(chalk.hex('#c27a52')('\nNo stories generated\n'))
-        return
-      }
+      // Final Output Phase
+      if (folderMarkdowns.length > 0) {
+        logger(
+          chalk.grey(`\n• Combining markdown files into root README.md...\n`),
+        )
 
-      logger(
-        chalk.hex('#7ba179')(
-          `\√ Found ${allStories.length} stories from ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}:\n`,
-        ),
-      )
+        const combineSpinner = ora({
+          text: chalk.white('Combining markdown files...'),
+          spinner: 'squareCorners',
+          color: 'red',
+        }).start()
+
+        try {
+          const combinedMarkdown = combineMarkdownFiles({
+            folderMarkdowns,
+            rootPath: STORIES_DIR,
+          })
+
+          const rootReadmePath = resolve(
+            process.cwd(),
+            STORIES_DIR,
+            'README.md',
+          )
+          await writeFile(rootReadmePath, combinedMarkdown, 'utf-8')
+
+          combineSpinner.succeed(chalk.white('Root README.md created'))
+
+          // Summary
+          logger(
+            chalk.hex('#7ba179')(
+              `\n✓ Generated wiki documentation:\n` +
+                `  • ${processedCount} ${processedCount === 1 ? 'folder' : 'folders'} processed\n` +
+                `  • Root README.md: ${chalk.hex('#7c6653')(rootReadmePath)}\n`,
+            ),
+          )
+
+          if (failedCount > 0) {
+            logger(
+              chalk.hex('#c27a52')(
+                `\n⚠️  Failed to process ${failedCount} ${failedCount === 1 ? 'folder' : 'folders'}\n`,
+              ),
+            )
+          }
+        } catch (error) {
+          combineSpinner.fail(chalk.white('Failed to combine markdown files'))
+          if (error instanceof Error) {
+            logger(chalk.hex('#7c6653')(`Error: ${error.message}\n`))
+          }
+          throw error
+        }
+      } else {
+        logger(
+          chalk.hex('#c27a52')(
+            `\n⚠️  No folders were successfully processed.\n`,
+          ),
+        )
+      }
     } catch (error) {
       if (error instanceof Error) {
         // Check if it's a file validation error
         if (
           error.message.includes('not found') ||
-          error.message.includes('Path is not a file') ||
-          error.message.includes('Path is not a directory')
+          error.message.includes('Stories directory not found')
         ) {
           logger(chalk.hex('#c27a52')(`\n⚠️  ${error.message}\n`))
           this.exit(1)
@@ -227,7 +320,7 @@ export default class Wiki extends Command {
         // For other errors, use the default error handler
         this.error(error.message, { exit: 1 })
       } else {
-        this.error('Failed to generate stories', { exit: 1 })
+        this.error('Failed to generate wiki', { exit: 1 })
       }
     }
   }
