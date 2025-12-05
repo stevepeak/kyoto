@@ -52,6 +52,10 @@ const nextConfig = {
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+  experimental: {
+    // Enable Turbopack's filesystem cache in development for faster rebuilds
+    turbopackFileSystemCacheForDev: true,
+  },
   // Turbopack-specific configuration for development
   // Mirrors the webpack alias below so the better-auth Kysely adapter
   // continues to resolve correctly when using Turbopack.
