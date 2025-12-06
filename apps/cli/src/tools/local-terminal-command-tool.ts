@@ -27,6 +27,7 @@ export function createLocalTerminalCommandTool(
         const { stdout, stderr, exitCode } = await execa(input.command, {
           shell: true,
           cwd: process.cwd(),
+          timeout: 30000, // 30 second timeout
         })
 
         if (exitCode !== 0) {
@@ -38,8 +39,18 @@ export function createLocalTerminalCommandTool(
 
         return stdout || ''
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Command execution failed'
+        let message = 'Command execution failed'
+        if (error instanceof Error) {
+          // Check if it's a timeout error
+          if (
+            error.message.includes('timeout') ||
+            error.message.includes('Timed out')
+          ) {
+            message = `Command timed out after 30 seconds: ${input.command}`
+          } else {
+            message = error.message
+          }
+        }
         return JSON.stringify({
           exitCode: 1,
           output: message,

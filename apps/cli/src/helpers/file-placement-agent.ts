@@ -37,8 +37,8 @@ You MUST call the moveFile tool to move the file. This is mandatory - you cannot
 # Path Format
 When calling moveFile:
 - Use paths relative to current working directory
-- Source: ".stories/filename.json" (the current file location)
-- Target: ".stories/directory-path/filename.json" (where it should go)
+- Source: ".kyoto/filename.json" (the current file location)
+- Target: ".kyoto/directory-path/filename.json" (where it should go)
 
 # Output
 After moving the file, provide a plain text explanation of why you chose that folder location.`
@@ -91,7 +91,7 @@ Behavior: ${storyFile.story.behavior}
 Story Content:
 ${storyContent}
 
-MANDATORY: You MUST call the moveFile tool to move the file from "${storyFile.path}" to the appropriate location in the hierarchy. The target path should be relative to the current working directory (e.g., ".stories/users/preference/${storyFile.filename}").
+MANDATORY: You MUST call the moveFile tool to move the file from "${storyFile.path}" to the appropriate location in the hierarchy. The target path should be relative to the current working directory (e.g., ".kyoto/users/preference/${storyFile.filename}").
 
 After moving the file, explain in plain text why you chose that folder location.`
 

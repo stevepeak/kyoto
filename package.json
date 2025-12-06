@@ -22,8 +22,7 @@
     "fix:prettier": "prettier --write .",
     "fix:eslint": "turbo run lint:fix",
     "fix:tsconfig": "monorepo-typescript-references fix",
-    "clean": "turbo run clean && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
-    "kyoto": "pnpm --filter @app/cli run kyoto"
+    "clean": "turbo run clean && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
   },
   "devDependencies": {
     "@ocavue/eslint-config": "^3.6.0",

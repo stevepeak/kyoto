@@ -1,9 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises'
-import { resolve, join } from 'node:path'
+import { join } from 'node:path'
 import chalk from 'chalk'
 import type { Story } from './story-generator-agent.js'
+import { findKyotoDir } from './find-kyoto-dir.js'
 
-const STORIES_DIR = '.stories'
+const STORIES_DIR = '.kyoto'
 
 interface TreeNode {
   name: string
@@ -14,7 +15,7 @@ interface TreeNode {
 }
 
 /**
- * Recursively reads all story files from the .stories directory.
+ * Recursively reads all story files from the .kyoto directory.
  */
 async function readStoryFilesRecursive(
   dirPath: string,
@@ -158,7 +159,7 @@ function formatTreeNode(
 export async function displayStoryTree(
   logger: (message: string) => void,
 ): Promise<void> {
-  const storiesDir = resolve(process.cwd(), STORIES_DIR)
+  const storiesDir = await findKyotoDir()
 
   try {
     const stories = await readStoryFilesRecursive(storiesDir)
@@ -168,7 +169,7 @@ export async function displayStoryTree(
 
     const tree = buildTree(stories)
     
-    // Skip the root .stories node and display its children directly
+    // Skip the root .kyoto node and display its children directly
     const lines: string[] = []
     if (tree.children && tree.children.length > 0) {
       const sortedChildren = [...tree.children].sort((a, b) => {

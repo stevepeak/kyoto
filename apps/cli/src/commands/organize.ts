@@ -2,7 +2,7 @@ import { Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
 import ora from 'ora'
 import { readdir } from 'node:fs/promises'
-import { resolve, join } from 'node:path'
+import { join } from 'node:path'
 
 import { getModel } from '../helpers/get-model.js'
 import { readAllStoryFiles } from '../helpers/story-file-reader.js'
@@ -12,6 +12,7 @@ import { determineFilePlacement } from '../helpers/file-placement-agent.js'
 import { createStoryDirectory } from '../helpers/file-organizer.js'
 import { displayHeader } from '../helpers/display-header.js'
 import { displayStoryTree } from '../helpers/display-story-tree.js'
+import { findKyotoDir } from '../helpers/find-kyoto-dir.js'
 
 function formatStoryFilename(filename: string): string {
   return filename
@@ -47,10 +48,10 @@ async function findDirectories(
 }
 
 /**
- * Checks if there are any subdirectories in the .stories directory.
+ * Checks if there are any subdirectories in the .kyoto directory.
  */
 async function hasExistingDirectories(): Promise<boolean> {
-  const storiesDir = resolve(process.cwd(), '.stories')
+  const storiesDir = await findKyotoDir()
   try {
     const entries = await readdir(storiesDir, { withFileTypes: true })
     return entries.some((entry) => entry.isDirectory())
@@ -60,10 +61,10 @@ async function hasExistingDirectories(): Promise<boolean> {
 }
 
 /**
- * Builds a hierarchy from existing directories in .stories.
+ * Builds a hierarchy from existing directories in .kyoto.
  */
 async function buildHierarchyFromExistingDirectories(): Promise<HierarchyOutput> {
-  const storiesDir = resolve(process.cwd(), '.stories')
+  const storiesDir = await findKyotoDir()
   const directories = await findDirectories(storiesDir)
 
   const hierarchy: HierarchyOutput = {
@@ -118,7 +119,7 @@ export default class Organize extends Command {
       if (storyFiles.length === 0) {
         logger(
           chalk.hex('#c27a52')(
-            `\n⚠️  No story files found in .stories directory to organize.\n`,
+            `\n⚠️  No story files found in .kyoto directory to organize.\n`,
           ),
         )
         return
@@ -327,7 +328,7 @@ export default class Organize extends Command {
         // Check if it's a file validation error
         if (
           error.message.includes('not found') ||
-          error.message.includes('Stories directory not found')
+          error.message.includes('.kyoto directory not found')
         ) {
           logger(chalk.hex('#c27a52')(`\n⚠️  ${error.message}\n`))
           this.exit(1)

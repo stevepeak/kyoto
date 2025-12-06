@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
-import { resolve, join } from 'node:path'
+import { join } from 'node:path'
 import type { Story } from './story-generator-agent.js'
+import { findKyotoDir } from './find-kyoto-dir.js'
 
 export interface StoryFile {
   path: string
@@ -8,16 +9,16 @@ export interface StoryFile {
   story: Story
 }
 
-const STORIES_DIR = '.stories'
+const STORIES_DIR = '.kyoto'
 
 /**
- * Reads all story JSON files from the .stories directory.
+ * Reads all story JSON files from the .kyoto directory.
  *
  * @returns Array of story files with their paths and parsed content
- * @throws {Error} If the .stories directory doesn't exist or can't be read
+ * @throws {Error} If the .kyoto directory doesn't exist or can't be read
  */
 export async function readAllStoryFiles(): Promise<StoryFile[]> {
-  const storiesDir = resolve(process.cwd(), STORIES_DIR)
+  const storiesDir = await findKyotoDir()
 
   try {
     const files = await readdir(storiesDir)
@@ -40,25 +41,26 @@ export async function readAllStoryFiles(): Promise<StoryFile[]> {
     return storyFiles
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      throw new Error(`Stories directory not found: ${STORIES_DIR}`)
+      throw new Error(`.kyoto directory not found: ${STORIES_DIR}`)
     }
     throw error
   }
 }
 
 /**
- * Recursively reads all story JSON files from the .stories directory and all subdirectories.
+ * Recursively reads all story JSON files from the .kyoto directory and all subdirectories.
  *
- * @param folderPath - Optional folder path within .stories to scan (relative to .stories)
+ * @param folderPath - Optional folder path within .kyoto to scan (relative to .kyoto)
  * @returns Array of story files with their paths and parsed content
- * @throws {Error} If the .stories directory doesn't exist or can't be read
+ * @throws {Error} If the .kyoto directory doesn't exist or can't be read
  */
 export async function readAllStoryFilesRecursively(
   folderPath?: string,
 ): Promise<StoryFile[]> {
+  const kyotoDir = await findKyotoDir()
   const baseDir = folderPath
-    ? resolve(process.cwd(), STORIES_DIR, folderPath)
-    : resolve(process.cwd(), STORIES_DIR)
+    ? join(kyotoDir, folderPath)
+    : kyotoDir
 
   const storyFiles: StoryFile[] = []
 
@@ -105,8 +107,8 @@ export async function readAllStoryFilesRecursively(
       ) {
         throw new Error(
           folderPath
-            ? `Stories directory not found: ${STORIES_DIR}/${folderPath}`
-            : `Stories directory not found: ${STORIES_DIR}`,
+            ? `.kyoto directory not found: ${STORIES_DIR}/${folderPath}`
+            : `.kyoto directory not found: ${STORIES_DIR}`,
         )
       }
       // Continue processing other directories

@@ -21,7 +21,7 @@ import {
 } from '../helpers/wiki-markdown-generator.js'
 import { displayHeader } from '../helpers/display-header.js'
 
-const STORIES_DIR = '.stories'
+const STORIES_DIR = '.kyoto'
 
 export default class Wiki extends Command {
   static override description =
@@ -311,7 +311,7 @@ export default class Wiki extends Command {
         // Check if it's a file validation error
         if (
           error.message.includes('not found') ||
-          error.message.includes('Stories directory not found')
+          error.message.includes('.kyoto directory not found')
         ) {
           logger(chalk.hex('#c27a52')(`\n⚠️  ${error.message}\n`))
           this.exit(1)

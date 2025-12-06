@@ -1,19 +1,21 @@
 import { mkdir, access, unlink } from 'node:fs/promises'
-import { resolve, join, dirname } from 'node:path'
+import { join, dirname } from 'node:path'
 import { rename } from 'node:fs/promises'
 import { constants } from 'node:fs'
+import { findKyotoDir } from './find-kyoto-dir.js'
 
-const STORIES_DIR = '.stories'
+const STORIES_DIR = '.kyoto'
 
 /**
- * Creates a directory within the .stories folder.
+ * Creates a directory within the .kyoto folder.
  *
- * @param relativePath - Path relative to .stories (e.g., "users/preference")
+ * @param relativePath - Path relative to .kyoto (e.g., "users/preference")
  */
 export async function createStoryDirectory(
   relativePath: string,
 ): Promise<void> {
-  const fullPath = resolve(process.cwd(), STORIES_DIR, relativePath)
+  const kyotoDir = await findKyotoDir()
+  const fullPath = join(kyotoDir, relativePath)
   try {
     await access(fullPath, constants.F_OK)
     // Directory already exists, skip creation
@@ -25,17 +27,18 @@ export async function createStoryDirectory(
 }
 
 /**
- * Moves a story file to a new location within .stories.
+ * Moves a story file to a new location within .kyoto.
  *
- * @param fromPath - Current path relative to .stories (e.g., "filename.json")
- * @param toPath - Target path relative to .stories (e.g., "users/preference/filename.json")
+ * @param fromPath - Current path relative to .kyoto (e.g., "filename.json")
+ * @param toPath - Target path relative to .kyoto (e.g., "users/preference/filename.json")
  */
 export async function moveStoryFile(
   fromPath: string,
   toPath: string,
 ): Promise<void> {
-  const fromFullPath = resolve(process.cwd(), STORIES_DIR, fromPath)
-  const toFullPath = resolve(process.cwd(), STORIES_DIR, toPath)
+  const kyotoDir = await findKyotoDir()
+  const fromFullPath = join(kyotoDir, fromPath)
+  const toFullPath = join(kyotoDir, toPath)
   const toDir = dirname(toFullPath)
 
   // Ensure destination directory exists
@@ -46,23 +49,25 @@ export async function moveStoryFile(
 }
 
 /**
- * Gets the full path for a story file relative to .stories.
+ * Gets the full path for a story file relative to .kyoto.
  *
- * @param relativePath - Path relative to .stories
+ * @param relativePath - Path relative to .kyoto
  * @returns Full absolute path
  */
-export function getStoryFilePath(relativePath: string): string {
-  return resolve(process.cwd(), STORIES_DIR, relativePath)
+export async function getStoryFilePath(relativePath: string): Promise<string> {
+  const kyotoDir = await findKyotoDir()
+  return join(kyotoDir, relativePath)
 }
 
 /**
- * Deletes a story file from the .stories directory.
+ * Deletes a story file from the .kyoto directory.
  *
- * @param relativePath - Path relative to .stories (e.g., "filename.json" or "users/preference/filename.json")
+ * @param relativePath - Path relative to .kyoto (e.g., "filename.json" or "users/preference/filename.json")
  * @throws {Error} If the file cannot be deleted
  */
 export async function deleteStoryFile(relativePath: string): Promise<void> {
-  const fullPath = resolve(process.cwd(), STORIES_DIR, relativePath)
+  const kyotoDir = await findKyotoDir()
+  const fullPath = join(kyotoDir, relativePath)
 
   try {
     await unlink(fullPath)

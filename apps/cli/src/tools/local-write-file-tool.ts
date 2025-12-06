@@ -4,6 +4,7 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
 import type { Ora } from 'ora'
+import { findGitRoot } from '../helpers/find-kyoto-dir.js'
 
 const writeFileInputSchema = z.object({
   path: z
@@ -11,7 +12,7 @@ const writeFileInputSchema = z.object({
     .min(1)
     .max(4_096)
     .describe(
-      'Absolute or relative path to the file. If relative, it will be resolved from the current working directory.',
+      'Absolute or relative path to the file. If relative, it will be resolved from the git repository root.',
     ),
   content: z.string().describe('The content to write to the file.'),
 })
@@ -20,7 +21,8 @@ export async function writeLocalFile(
   path: string,
   content: string,
 ): Promise<void> {
-  const absFilePath = resolve(process.cwd(), path)
+  const gitRoot = await findGitRoot()
+  const absFilePath = resolve(gitRoot, path)
   const dir = dirname(absFilePath)
 
   try {

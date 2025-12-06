@@ -2,6 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { findGitRoot } from '../helpers/find-kyoto-dir.js'
 
 const readFileInputSchema = z.object({
   path: z
@@ -9,12 +10,13 @@ const readFileInputSchema = z.object({
     .min(1)
     .max(4_096)
     .describe(
-      'Absolute or relative path to the file. If relative, it will be resolved from the current working directory.',
+      'Absolute or relative path to the file. If relative, it will be resolved from the git repository root.',
     ),
 })
 
 export async function readLocalFile(path: string): Promise<string> {
-  const absFilePath = resolve(process.cwd(), path)
+  const gitRoot = await findGitRoot()
+  const absFilePath = resolve(gitRoot, path)
   const content = await readFile(absFilePath, 'utf-8')
   return content
 }

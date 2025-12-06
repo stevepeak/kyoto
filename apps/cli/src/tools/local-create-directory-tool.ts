@@ -4,6 +4,7 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import type { Ora } from 'ora'
+import { findGitRoot } from '../helpers/find-kyoto-dir.js'
 
 const createDirectoryInputSchema = z.object({
   path: z
@@ -11,12 +12,13 @@ const createDirectoryInputSchema = z.object({
     .min(1)
     .max(4_096)
     .describe(
-      'Absolute or relative path to the directory. If relative, it will be resolved from the current working directory.',
+      'Absolute or relative path to the directory. If relative, it will be resolved from the git repository root.',
     ),
 })
 
 export async function createLocalDirectory(path: string): Promise<void> {
-  const absPath = resolve(process.cwd(), path)
+  const gitRoot = await findGitRoot()
+  const absPath = resolve(gitRoot, path)
 
   try {
     await mkdir(absPath, { recursive: true })

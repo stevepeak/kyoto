@@ -14,7 +14,7 @@ const hierarchyOutputSchema = z.object({
       path: z
         .string()
         .describe(
-          'Directory path relative to .stories (e.g., "users/preference" or "auth")',
+          'Directory path relative to .kyoto (e.g., "users/preference" or "auth")',
         ),
       description: z
         .string()

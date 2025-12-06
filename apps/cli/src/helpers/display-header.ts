@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { execa } from 'execa'
 
 /**
  * Displays the Kyoto CLI header with red kanji and greeting.
@@ -6,10 +7,17 @@ import chalk from 'chalk'
  * @param logger - A function that logs messages (typically from oclif's log method)
  */
 export function displayHeader(logger: (message: string) => void): void {
-  logger(chalk.red('こ ん に ち は 京'))
+  const linkUrl = `https://usekyoto.com/`
+  const kyotoLink = `\u001B]8;;${linkUrl}\u0007${chalk.white.bold('Kyoto')}\u001B]8;;\u0007`
+
   logger(
-    chalk.bold.white(
-      chalk.red('——') + '    Kyoto    ' + chalk.red('——') + '\n',
-    ),
+    `${chalk.red(`
+入  ｜ 
+京  ｜ 
+行  ｜  `)}${kyotoLink}${chalk.red(` 
+改  ｜ 
+善  ｜ 
+
+`)}`,
   )
 }

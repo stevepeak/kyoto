@@ -1,15 +1,19 @@
 import { stat, readdir } from 'node:fs/promises'
-import { resolve, join, extname } from 'node:path'
+import { resolve, join, extname, isAbsolute } from 'node:path'
+import { findGitRoot } from './find-kyoto-dir.js'
 
 /**
  * Validates that a file or directory path exists and is accessible.
  * Throws an error if the path doesn't exist or is not a file or directory.
  *
- * @param filePath - Relative or absolute path to validate
+ * @param filePath - Relative or absolute path to validate (relative paths are resolved from git root)
  * @throws {Error} If the path doesn't exist or is not a file/directory
  */
 export async function validateFilePath(filePath: string): Promise<void> {
-  const resolvedPath = resolve(process.cwd(), filePath)
+  const gitRoot = await findGitRoot()
+  const resolvedPath = isAbsolute(filePath)
+    ? filePath
+    : resolve(gitRoot, filePath)
 
   try {
     const stats = await stat(resolvedPath)
@@ -36,12 +40,15 @@ export async function validateFilePath(filePath: string): Promise<void> {
  * Skips common build and dependency directories (node_modules, dist, .next, etc.)
  * and hidden directories/files.
  *
- * @param dirPath - Directory path to search (relative to current working directory)
+ * @param dirPath - Directory path to search (relative to git root or absolute)
  * @returns Array of relative file paths sorted alphabetically
  */
 export async function findTypeScriptFiles(dirPath: string): Promise<string[]> {
   const files: string[] = []
-  const resolvedPath = resolve(process.cwd(), dirPath)
+  const gitRoot = await findGitRoot()
+  const resolvedPath = isAbsolute(dirPath)
+    ? dirPath
+    : resolve(gitRoot, dirPath)
 
   async function walkDir(currentPath: string): Promise<void> {
     const entries = await readdir(currentPath, { withFileTypes: true })
@@ -65,12 +72,9 @@ export async function findTypeScriptFiles(dirPath: string): Promise<string[]> {
       } else if (entry.isFile()) {
         const ext = extname(entry.name)
         if (ext === '.ts' || ext === '.tsx') {
-          // Return relative path from original dirPath
-          const relativePath = fullPath.replace(
-            resolve(process.cwd(), dirPath) + '/',
-            '',
-          )
-          files.push(join(dirPath, relativePath))
+          // Return relative path from git root
+          const relativePath = fullPath.replace(gitRoot + '/', '')
+          files.push(relativePath)
         }
       }
     }

@@ -189,4 +189,3 @@ export async function groupDuplicates(
   // Return only groups with more than one story (actual duplicates)
   return Array.from(groups.values()).filter((group) => group.length > 1)
 }
-

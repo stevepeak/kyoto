@@ -32,7 +32,7 @@ export default class Dedupe extends Command {
     }),
     folder: Flags.string({
       description:
-        'Optional folder path within .stories to scan (default: scan all)',
+        'Optional folder path within .kyoto to scan (default: scan all)',
       char: 'f',
     }),
   }
@@ -74,7 +74,7 @@ export default class Dedupe extends Command {
         readSpinner.fail(chalk.white('No story files found'))
         logger(
           chalk.hex('#c27a52')(
-            `\n⚠️  No story files found in ${flags.folder ? `.stories/${flags.folder}` : '.stories'}\n`,
+            `\n⚠️  No story files found in ${flags.folder ? `.kyoto/${flags.folder}` : '.kyoto'}\n`,
           ),
         )
         return
@@ -118,14 +118,8 @@ export default class Dedupe extends Command {
       )
 
       if (groups.length === 0) {
-        duplicateSpinner.succeed(
-          chalk.white('No duplicates found'),
-        )
-        logger(
-          chalk.hex('#7ba179')(
-            `\n✓ All stories are unique (similarity < ${threshold})\n`,
-          ),
-        )
+        duplicateSpinner.succeed(chalk.white('No duplicates found'))
+        logger(chalk.hex('#7ba179')(`✓ All stories are unique enough`))
         return
       }
 
@@ -142,9 +136,7 @@ export default class Dedupe extends Command {
         logger(chalk.grey(`Group ${i + 1}:`))
         for (const file of group) {
           const formattedName = formatStoryFilename(file.filename)
-          logger(
-            chalk.grey(`  - ${chalk.white(formattedName)} (${file.path})`),
-          )
+          logger(chalk.grey(`  - ${chalk.white(formattedName)} (${file.path})`))
         }
         logger('')
       }
@@ -217,7 +209,7 @@ export default class Dedupe extends Command {
         // Check if it's a file validation error
         if (
           error.message.includes('not found') ||
-          error.message.includes('Stories directory not found')
+          error.message.includes('.kyoto directory not found')
         ) {
           logger(chalk.hex('#c27a52')(`\n⚠️  ${error.message}\n`))
           this.exit(1)
@@ -231,4 +223,3 @@ export default class Dedupe extends Command {
     }
   }
 }
-

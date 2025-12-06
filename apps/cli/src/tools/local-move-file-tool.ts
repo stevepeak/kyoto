@@ -4,6 +4,7 @@ import { rename, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
 import type { Ora } from 'ora'
+import { findGitRoot } from '../helpers/find-kyoto-dir.js'
 
 const moveFileInputSchema = z.object({
   from: z
@@ -11,14 +12,14 @@ const moveFileInputSchema = z.object({
     .min(1)
     .max(4_096)
     .describe(
-      'Absolute or relative path to the source file. If relative, it will be resolved from the current working directory.',
+      'Absolute or relative path to the source file. If relative, it will be resolved from the git repository root.',
     ),
   to: z
     .string()
     .min(1)
     .max(4_096)
     .describe(
-      'Absolute or relative path to the destination file. If relative, it will be resolved from the current working directory.',
+      'Absolute or relative path to the destination file. If relative, it will be resolved from the git repository root.',
     ),
 })
 
@@ -26,8 +27,9 @@ export async function moveLocalFile(
   from: string,
   to: string,
 ): Promise<void> {
-  const absFromPath = resolve(process.cwd(), from)
-  const absToPath = resolve(process.cwd(), to)
+  const gitRoot = await findGitRoot()
+  const absFromPath = resolve(gitRoot, from)
+  const absToPath = resolve(gitRoot, to)
   const dir = dirname(absToPath)
 
   try {

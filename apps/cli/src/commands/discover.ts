@@ -1,7 +1,7 @@
 import { Command, Args, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import { stat } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { stat, mkdir } from 'node:fs/promises'
+import { resolve, join } from 'node:path'
 import ora from 'ora'
 
 import { getModel } from '../helpers/get-model.js'
@@ -15,6 +15,7 @@ import {
 } from '../helpers/file-discovery.js'
 import { writeStoriesToFiles } from '../helpers/write-stories.js'
 import { displayHeader } from '../helpers/display-header.js'
+import { findGitRoot } from '../helpers/find-kyoto-dir.js'
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'
@@ -23,6 +24,7 @@ export default class Discover extends Command {
     '$ kyoto discover .',
     '$ kyoto discover . --model "gpt-4o-mini" --provider openai',
     '$ kyoto discover . --model "openai/gpt-4o-mini" --provider vercel',
+    '$ kyoto discover . --limit 5',
   ]
 
   static override args = {
@@ -45,6 +47,10 @@ export default class Discover extends Command {
       options: ['openai', 'vercel', 'auto'],
       default: 'auto',
     }),
+    limit: Flags.integer({
+      description: 'Maximum number of stories to discover before stopping',
+      char: 'l',
+    }),
   }
 
   override async run(): Promise<void> {
@@ -57,6 +63,11 @@ export default class Discover extends Command {
     }
 
     try {
+      // Ensure .kyoto directory exists
+      const gitRoot = await findGitRoot()
+      const kyotoDir = join(gitRoot, '.kyoto')
+      await mkdir(kyotoDir, { recursive: true })
+
       // Validate path exists
       await validateFilePath(inputPath)
 
@@ -90,6 +101,7 @@ export default class Discover extends Command {
       // Process each file with its own agent
       const allStories: Story[] = []
       const allWrittenFiles: string[] = []
+      const storyLimit = flags.limit
 
       // Get model configuration
       const { model, modelId, provider } = getModel({
@@ -99,11 +111,28 @@ export default class Discover extends Command {
       })
       logger(
         chalk.grey(
-          `• Using ${chalk.hex('#7b301f')(modelId)} on ${chalk.hex('#7b301f')(provider)}\n`,
+          `• Using ${chalk.hex('#7b301f')(modelId)} on ${chalk.hex('#7b301f')(provider)}`,
         ),
       )
 
+      if (storyLimit) {
+        logger(
+          chalk.grey(
+            `• Limit ${chalk.hex('#7b301f')(storyLimit.toString())} behaviors`,
+          ),
+        )
+      }
+
       for (const filePath of filesToProcess) {
+        // Check if we've reached the limit
+        if (storyLimit && allStories.length >= storyLimit) {
+          logger(
+            chalk.grey(
+              `\n• Reached story limit of ${chalk.hex('#7b301f')(storyLimit.toString())}. Stopping discovery.\n`,
+            ),
+          )
+          break
+        }
         // Create a new spinner for each file (white filepath, beige spinner)
         const spinner = ora({
           text: chalk.white(filePath),
@@ -115,10 +144,16 @@ export default class Discover extends Command {
           // Update spinner to show current file
           spinner.text = chalk.white(filePath)
 
+          // Calculate how many stories we can still discover
+          const remainingLimit = storyLimit
+            ? storyLimit - allStories.length
+            : undefined
+
           // Generate stories for this file
           const { stories } = await generateStories({
             model,
             filePath,
+            maxStories: remainingLimit,
             onProgress: (progress) => {
               spinner.text = chalk.white(filePath) + ' ' + chalk.grey(progress)
             },
@@ -232,4 +267,3 @@ export default class Discover extends Command {
     }
   }
 }
-
