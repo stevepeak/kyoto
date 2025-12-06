@@ -4,8 +4,6 @@ import { rename } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { findKyotoDir } from './find-kyoto-dir.js'
 
-const STORIES_DIR = '.kyoto'
-
 /**
  * Creates a directory within the .kyoto folder.
  *
