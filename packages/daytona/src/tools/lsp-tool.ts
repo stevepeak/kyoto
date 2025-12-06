@@ -3,8 +3,8 @@ import { LspLanguageId } from '@daytonaio/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
 
-import { resolveWorkspacePath } from '../helpers/daytona'
 import { streams } from '@trigger.dev/sdk'
+import { resolveWorkspacePath } from '../helpers/resolve-workspace-path'
 
 const lspLanguageSchema = z.enum(['typescript', 'python'])
 

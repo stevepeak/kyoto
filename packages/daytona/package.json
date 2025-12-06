@@ -1,0 +1,26 @@
+{
+  "name": "@app/daytona",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Daytona sandbox integration utilities and tools",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0 --cache --concurrency=2",
+    "lint:fix": "eslint . --fix --cache --concurrency=2"
+  },
+  "dependencies": {
+    "@app/config": "workspace:*",
+    "@daytonaio/sdk": "^0.113.1",
+    "@trigger.dev/sdk": "^4.1.1",
+    "ai": "5.0.93",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.10"
+  }
+}
