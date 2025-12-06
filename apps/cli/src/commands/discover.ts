@@ -1,7 +1,8 @@
 import { Command, Args, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import { stat, mkdir } from 'node:fs/promises'
+import { stat, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
+import { execa } from 'execa'
 import ora from 'ora'
 
 import { getModel } from '../helpers/get-model.js'
@@ -14,6 +15,77 @@ import {
 import { writeStoriesToFiles } from '../helpers/write-stories.js'
 import { displayHeader } from '../helpers/display-header.js'
 import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
+
+interface DetailsJson {
+  latest?: {
+    sha: string
+    branch: string
+  }
+}
+
+/**
+ * Gets the current branch name from git
+ */
+async function getCurrentBranch(gitRoot: string): Promise<string | null> {
+  try {
+    const { stdout } = await execa(
+      'git',
+      ['rev-parse', '--abbrev-ref', 'HEAD'],
+      {
+        cwd: gitRoot,
+      },
+    )
+    return stdout.trim() || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Gets the current commit SHA from git
+ */
+async function getCurrentCommitSha(gitRoot: string): Promise<string | null> {
+  try {
+    const { stdout } = await execa('git', ['log', '-1', '--format=%H'], {
+      cwd: gitRoot,
+    })
+    return stdout.trim() || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Updates the .kyoto/details.json file with the latest branch and commit SHA
+ */
+async function updateDetailsJson(
+  kyotoDir: string,
+  branch: string | null,
+  sha: string | null,
+): Promise<void> {
+  const detailsPath = join(kyotoDir, 'details.json')
+  let details: DetailsJson = {}
+
+  // Read existing details.json if it exists
+  try {
+    const content = await readFile(detailsPath, 'utf-8')
+    details = JSON.parse(content) as DetailsJson
+  } catch {
+    // File doesn't exist or is invalid, start with empty object
+    details = {}
+  }
+
+  // Update the latest field
+  if (branch && sha) {
+    details.latest = {
+      sha,
+      branch,
+    }
+
+    // Write the updated details back
+    await writeFile(detailsPath, JSON.stringify(details, null, 2) + '\n', 'utf-8')
+  }
+}
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'
@@ -239,6 +311,11 @@ export default class Discover extends Command {
           }
         }
       }
+
+      // Record current branch and commit SHA to details.json
+      const branch = await getCurrentBranch(gitRoot)
+      const sha = await getCurrentCommitSha(gitRoot)
+      await updateDetailsJson(kyotoDir, branch, sha)
 
       if (allStories.length === 0) {
         logger(chalk.hex('#c27a52')('\nNo stories generated\n'))
