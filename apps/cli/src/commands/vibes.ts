@@ -1,10 +1,14 @@
 import { Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
 import { execa } from 'execa'
-import { findGitRoot } from '../helpers/find-kyoto-dir.js'
+import ora from 'ora'
+import { agents } from '@app/agents'
+import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
+import { displayHeader } from '../helpers/display-header.js'
 
 interface CommitInfo {
-  hash: string
+  hash: string // Full hash
+  shortHash: string // Short hash (6 chars)
   message: string
 }
 
@@ -13,13 +17,9 @@ interface CommitInfo {
  */
 async function getLatestCommit(gitRoot: string): Promise<CommitInfo | null> {
   try {
-    const { stdout } = await execa(
-      'git',
-      ['log', '-1', '--format=%H|%s'],
-      {
-        cwd: gitRoot,
-      },
-    )
+    const { stdout } = await execa('git', ['log', '-1', '--format=%H|%s'], {
+      cwd: gitRoot,
+    })
 
     if (!stdout.trim()) {
       return null
@@ -29,7 +29,8 @@ async function getLatestCommit(gitRoot: string): Promise<CommitInfo | null> {
     const message = messageParts.join('|') // Rejoin in case message contains |
 
     return {
-      hash: hash.substring(0, 6), // Short hash (6 chars)
+      hash: hash, // Full hash
+      shortHash: hash.substring(0, 6), // Short hash (6 chars)
       message: message.trim(),
     }
   } catch {
@@ -56,23 +57,53 @@ export default class Vibes extends Command {
     }),
   }
 
+  /**
+   * Process a new commit using the commit evaluator agent
+   */
+  private async processCommit(commit: CommitInfo): Promise<string> {
+    const result = await agents.commitEvaluator.run({
+      commitSha: commit.hash,
+      options: {
+        maxSteps: agents.commitEvaluator.options.maxSteps,
+        onProgress: (_message: string) => {
+          // Progress updates can be handled here if needed
+        },
+      },
+    })
+
+    return result
+  }
+
   override async run(): Promise<void> {
     const { flags } = await this.parse(Vibes)
     const maxLength = flags['max-length'] ?? 60
     const interval = flags.interval ?? 1000
 
+    const logger = (message: string) => {
+      this.log(message)
+    }
+
     try {
-      const gitRoot = await findGitRoot()
+      // Assert prerequisites (AI needed for commit evaluation)
+      const { gitRoot, github } = await assertCliPrerequisites({
+        requireAi: true,
+      })
+
+      // Display header banner
+      displayHeader({ logger, message: 'Vibe in Kyoto' })
 
       // Get the initial commit to establish baseline
       let lastCommitHash: string | null = null
       const initialCommit = await getLatestCommit(gitRoot)
 
       if (initialCommit) {
-        lastCommitHash = initialCommit.hash
+        lastCommitHash = initialCommit.shortHash
+        const repoSlug = github
+          ? `${github.owner}/${github.repo}`
+          : (gitRoot.split('/').pop() ?? 'repository')
         this.log(
           chalk.grey(
-            `Monitoring commits in ${chalk.hex('#7b301f')(gitRoot)}...`,
+            `Monitoring commits to ${chalk.hex('#7b301f')(repoSlug)}...`,
           ),
         )
         this.log('')
@@ -92,8 +123,8 @@ export default class Vibes extends Command {
           pollInterval = null
         }
         shouldExit = true
-        this.log('\n')
-        this.exit(0)
+        this.log('\n' + chalk.grey('Goodbye! 👋'))
+        process.exit(0)
       }
 
       process.on('SIGINT', cleanup)
@@ -111,25 +142,46 @@ export default class Vibes extends Command {
         }
 
         // Check if this is a new commit
-        if (latestCommit.hash !== lastCommitHash) {
+        if (latestCommit.shortHash !== lastCommitHash) {
           // Truncate message if needed
           const truncatedMessage =
             latestCommit.message.length > maxLength
               ? latestCommit.message.substring(0, maxLength - 3) + '...'
               : latestCommit.message
 
-          // Format: 決   |    • 72c246 updated readme
-          this.log(
-            chalk.hex('#7b301f')('決') +
-              '   |    ' +
-              chalk.grey('•') +
-              ' ' +
-              chalk.hex('#7b301f')(latestCommit.hash) +
+          // Show spinner with commit info
+          const spinner = ora({
+            text:
+              chalk.hex('#7b301f')(latestCommit.shortHash) +
               ' ' +
               chalk.white(truncatedMessage),
-          )
+            spinner: 'squareCorners',
+            color: 'red',
+          }).start()
 
-          lastCommitHash = latestCommit.hash
+          try {
+            // Process the commit using the agent
+            const explanation = await this.processCommit(latestCommit)
+
+            // Stop the spinner
+            spinner.stop()
+
+            // Display the explanation
+            this.log('')
+            this.log(chalk.grey(explanation))
+            this.log('')
+          } catch (error) {
+            spinner.stop()
+            this.log('')
+            this.log(
+              chalk.hex('#c27a52')(
+                `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              ),
+            )
+            this.log('')
+          }
+
+          lastCommitHash = latestCommit.shortHash
         }
       }, interval)
 
@@ -146,4 +198,3 @@ export default class Vibes extends Command {
     }
   }
 }
-

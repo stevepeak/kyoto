@@ -15,6 +15,7 @@ import {
 } from './agents/v3/story-impact.js'
 import { generateChangelogSummary } from './agents/v3/changelog-summary.js'
 import { extractScope } from './agents/v3/scope-extraction.js'
+import { evaluateCommit } from './agents/v3/commit-evaluator.js'
 import { compositionAgentOutputSchema } from '../../schemas/src/story-flow.js'
 
 export { type TestStatus as Status }
@@ -44,6 +45,7 @@ type AgentsConfig = {
   impact: Agent
   changelogSummary: Agent
   scopeExtraction: Agent
+  commitEvaluator: Agent
 }
 
 export const agents: AgentsConfig = {
@@ -125,6 +127,16 @@ export const agents: AgentsConfig = {
     options: {
       maxSteps: 1,
       model: 'openai/gpt-4o-mini',
+    },
+  },
+  commitEvaluator: {
+    id: 'commit-evaluator-v3',
+    version: 'v3',
+    schema: z.string(),
+    run: evaluateCommit,
+    options: {
+      maxSteps: 10,
+      model: 'openai/gpt-5-mini',
     },
   },
 }
