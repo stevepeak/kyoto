@@ -57,8 +57,8 @@ export function useStoryActions({
   setIsDecomposing,
   setIsTesting,
   setIsGenerating,
-    setGenerationRunId,
-    setGenerationAccessToken,
+  setGenerationRunId,
+  setGenerationAccessToken,
 }: UseStoryActionsProps) {
   const trpc = useTRPCClient()
   const router = useRouter()
@@ -107,7 +107,12 @@ export function useStoryActions({
         }
 
         const result = await trpc.story.update.mutate(updatePayload)
-        setStory(result.story as Story)
+        if (result.story) {
+          setStory({
+            ...result.story,
+            composition: result.story.composition as Story['composition'],
+          } as Story)
+        }
         setOriginalStoryContent(storyContent)
         setOriginalStoryName(storyName)
         setIsSaving(false)
@@ -218,7 +223,10 @@ export function useStoryActions({
         state: newState,
       })
       if (result.story) {
-        setStory(result.story as Story)
+        setStory({
+          ...result.story,
+          composition: result.story.composition as Story['composition'],
+        } as Story)
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to toggle story state')
@@ -244,7 +252,10 @@ export function useStoryActions({
         storyId: storyId,
       })
       if (resp.story) {
-        setStory(resp.story as Story)
+        setStory({
+          ...resp.story,
+          composition: resp.story.composition as Story['composition'],
+        } as Story)
         setStoryName(resp.story.name)
         setOriginalStoryName(resp.story.name)
         setStoryContent(resp.story.story)

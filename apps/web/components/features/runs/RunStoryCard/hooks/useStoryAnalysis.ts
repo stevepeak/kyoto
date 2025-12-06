@@ -22,7 +22,7 @@ export function useStoryAnalysis(
     const analysis = testResult?.analysis ?? null
     const displayStatus = getDisplayStatus(story)
     const isRunning = displayStatus === 'running'
-    const decomposition = parseDecomposition(story.story?.decomposition)
+    const decomposition = parseDecomposition(story.story?.composition)
     const showDecompositionLoading =
       (!testResult || isRunning) && decomposition !== null
 

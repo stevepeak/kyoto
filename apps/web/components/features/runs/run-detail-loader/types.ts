@@ -38,7 +38,7 @@ export interface RunStory {
     commitSha: string | null
     createdAt: string
     updatedAt: string
-    decomposition: unknown
+    composition: unknown
   } | null
   testResult: StoryTestResult | null
   extTriggerDev: { runId: string } | null

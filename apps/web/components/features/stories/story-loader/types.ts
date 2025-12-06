@@ -1,4 +1,4 @@
-import type { DecompositionOutput } from '@app/schemas'
+import type { CompositionAgentOutput } from '@app/schemas'
 
 // Define StoryDiscoveryOutput type locally to avoid importing from @app/agents
 export interface StoryDiscoveryOutput {
@@ -21,7 +21,7 @@ export interface Story {
     | 'processing'
   createdAt: Date | string | null
   updatedAt: Date | string | null
-  decomposition: DecompositionOutput | null
+  composition: CompositionAgentOutput | null
   repoId: string
   metadata?: any
 }

@@ -5,7 +5,7 @@ import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
 
 import { StoryLoaderClient } from './story-loader/index'
-import type { DecompositionOutput } from '@app/schemas'
+import type { CompositionAgentOutput } from '@app/schemas'
 
 interface Story {
   id: string
@@ -20,7 +20,7 @@ interface Story {
     | 'processing'
   createdAt: Date | string | null
   updatedAt: Date | string | null
-  decomposition: DecompositionOutput | null
+  composition: CompositionAgentOutput | null
   repoId: string
 }
 

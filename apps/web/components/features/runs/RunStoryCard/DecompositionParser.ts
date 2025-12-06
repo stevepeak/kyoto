@@ -1,13 +1,13 @@
-import { decompositionOutputSchema } from '@app/schemas'
-import type { DecompositionOutput } from '@app/schemas'
+import { compositionAgentOutputSchema } from '@app/schemas'
+import type { CompositionAgentOutput } from '@app/schemas'
 
 /**
- * Parses decomposition data from unknown format (string or object)
- * and validates it against the decomposition schema
+ * Parses composition data from unknown format (string or object)
+ * and validates it against the composition schema
  */
 export function parseDecomposition(
   decomposition: unknown,
-): DecompositionOutput | null {
+): CompositionAgentOutput | null {
   if (!decomposition) {
     return null
   }
@@ -16,7 +16,7 @@ export function parseDecomposition(
       typeof decomposition === 'string'
         ? JSON.parse(decomposition)
         : decomposition
-    return decompositionOutputSchema.parse(parsed)
+    return compositionAgentOutputSchema.parse(parsed)
   } catch {
     return null
   }

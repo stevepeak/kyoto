@@ -106,7 +106,7 @@ export function StoryLoaderTabs({
         tabIndex={-1}
       >
         <StoryDecompositionTab
-          decomposition={story?.decomposition ?? null}
+          decomposition={story?.composition ?? null}
           isDecomposing={isDecomposing}
           onDecompose={onDecompose}
         />

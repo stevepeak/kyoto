@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils'
 import { ChevronDown } from 'lucide-react'
 import { getLoadingConclusionDisplay } from '../../utils'
-import type { DecompositionOutput } from '@app/schemas'
+import type { CompositionAgentOutput } from '@app/schemas'
 
 interface DecompositionDisplayProps {
-  decomposition: DecompositionOutput
+  decomposition: CompositionAgentOutput
   showLoadingState?: boolean
 }
 
