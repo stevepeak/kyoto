@@ -1,5 +1,6 @@
-import { stat, readdir } from 'node:fs/promises'
-import { resolve, join, extname, isAbsolute } from 'node:path'
+import { stat } from 'node:fs/promises'
+import { resolve, extname, isAbsolute } from 'node:path'
+import { execa } from 'execa'
 import { findGitRoot } from './find-kyoto-dir.js'
 
 /**
@@ -36,50 +37,58 @@ export async function validateFilePath(filePath: string): Promise<void> {
 }
 
 /**
- * Recursively finds all TypeScript files (.ts, .tsx) in a directory.
- * Skips common build and dependency directories (node_modules, dist, .next, etc.)
- * and hidden directories/files.
+ * Finds all TypeScript files (.ts, .tsx) in a directory using git ls-files.
+ * Only returns files that are tracked by git.
  *
  * @param dirPath - Directory path to search (relative to git root or absolute)
  * @returns Array of relative file paths sorted alphabetically
  */
 export async function findTypeScriptFiles(dirPath: string): Promise<string[]> {
-  const files: string[] = []
   const gitRoot = await findGitRoot()
-  const resolvedPath = isAbsolute(dirPath)
-    ? dirPath
-    : resolve(gitRoot, dirPath)
+  const resolvedPath = isAbsolute(dirPath) ? dirPath : resolve(gitRoot, dirPath)
 
-  async function walkDir(currentPath: string): Promise<void> {
-    const entries = await readdir(currentPath, { withFileTypes: true })
-
-    for (const entry of entries) {
-      const fullPath = join(currentPath, entry.name)
-
-      // Skip node_modules, .git, dist, etc.
-      if (
-        entry.name.startsWith('.') ||
-        entry.name === 'node_modules' ||
-        entry.name === 'dist' ||
-        entry.name === '.next' ||
-        entry.name === '.turbo'
-      ) {
-        continue
-      }
-
-      if (entry.isDirectory()) {
-        await walkDir(fullPath)
-      } else if (entry.isFile()) {
-        const ext = extname(entry.name)
-        if (ext === '.ts' || ext === '.tsx') {
-          // Return relative path from git root
-          const relativePath = fullPath.replace(gitRoot + '/', '')
-          files.push(relativePath)
-        }
-      }
-    }
+  // Ensure the path is under the git root
+  if (!resolvedPath.startsWith(gitRoot)) {
+    throw new Error(
+      `Path ${dirPath} is not within the git repository root: ${gitRoot}`,
+    )
   }
 
-  await walkDir(resolvedPath)
-  return files.sort()
+  // Get relative path from git root
+  let relativePath = resolvedPath.replace(gitRoot + '/', '')
+  // Handle case where resolvedPath equals gitRoot (empty relative path)
+  if (relativePath === resolvedPath) {
+    relativePath = '.'
+  }
+
+  try {
+    // Use git ls-files to get only tracked files
+    // This ensures we only look at files that are checked into git
+    // If relativePath is a directory, git ls-files will list all files under it
+    const { stdout } = await execa('git', ['ls-files', '--', relativePath], {
+      cwd: gitRoot,
+    })
+
+    const allFiles = stdout
+      .trim()
+      .split('\n')
+      .filter((line) => line.length > 0)
+
+    // Filter for TypeScript files
+    const tsFiles = allFiles.filter((file) => {
+      const ext = extname(file)
+      return ext === '.ts' || ext === '.tsx'
+    })
+
+    return tsFiles.sort()
+  } catch (error) {
+    // If git ls-files fails, throw a helpful error
+    if (error instanceof Error) {
+      throw new Error(
+        `Failed to list git files: ${error.message}\n` +
+          'Make sure you are in a git repository and the path is valid.',
+      )
+    }
+    throw error
+  }
 }

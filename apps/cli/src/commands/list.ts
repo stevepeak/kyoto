@@ -1,7 +1,13 @@
 import { Command } from '@oclif/core'
 import chalk from 'chalk'
+import { resolve } from 'node:path'
+import { readdir } from 'node:fs/promises'
+import terminalLink from 'terminal-link'
 import { readAllStoryFilesRecursively } from '../helpers/story-file-reader.js'
 import { displayHeader } from '../helpers/display-header.js'
+import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
+import { findGitRoot, findKyotoDir } from '../helpers/find-kyoto-dir.js'
+import { displayStoryTree } from '../helpers/display-story-tree.js'
 
 export default class List extends Command {
   static override description =
@@ -15,6 +21,9 @@ export default class List extends Command {
     }
 
     try {
+      // Assert prerequisites: git repository (no AI env vars needed for list)
+      await assertCliPrerequisites({ requireAi: false })
+
       // Show stage header with red kanji
       displayHeader(logger)
 
@@ -37,18 +46,30 @@ export default class List extends Command {
       )
 
       // Display each story
+      const gitRoot = await findGitRoot()
       for (const storyFile of storyFiles) {
-        const path = storyFile.path.replace('.kyoto/', '')
-        logger(
-          chalk.white(
-            `${chalk.hex('#7ba179')('•')} ${chalk.hex('#7ba179')(path)}`,
-          ),
-        )
-        logger(chalk.grey(`${chalk.white(storyFile.story.title)}`))
+        const absolutePath = resolve(gitRoot, storyFile.path)
+        const linkUrl = `vscode://file/${absolutePath}`
+        const styledTitle = chalk.bold.hex('#7ba179')(storyFile.story.title)
+        const titleLink = terminalLink(styledTitle, linkUrl)
+        logger(titleLink)
         if (storyFile.story.behavior) {
           logger(chalk.grey(`${storyFile.story.behavior}`))
         }
         logger('') // Empty line between stories
+      }
+
+      // Check if stories are organized (have directories) and display tree structure
+      try {
+        const storiesDir = await findKyotoDir()
+        const entries = await readdir(storiesDir, { withFileTypes: true })
+        const hasDirectories = entries.some((entry) => entry.isDirectory())
+
+        if (hasDirectories) {
+          await displayStoryTree(logger)
+        }
+      } catch {
+        // Silently fail if we can't check for directories
       }
     } catch (error) {
       if (error instanceof Error) {

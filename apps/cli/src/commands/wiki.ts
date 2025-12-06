@@ -20,6 +20,7 @@ import {
   type FolderMarkdown,
 } from '../helpers/wiki-markdown-generator.js'
 import { displayHeader } from '../helpers/display-header.js'
+import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 
 const STORIES_DIR = '.kyoto'
 
@@ -56,6 +57,9 @@ export default class Wiki extends Command {
     }
 
     try {
+      // Assert prerequisites: environment variables and git repository
+      await assertCliPrerequisites()
+
       // Show stage header
       displayHeader(logger)
 

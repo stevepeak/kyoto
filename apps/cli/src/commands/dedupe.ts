@@ -6,6 +6,7 @@ import { readAllStoryFilesRecursively } from '../helpers/story-file-reader.js'
 import { findDuplicates } from '../helpers/story-dedupe.js'
 import { deleteStoryFile } from '../helpers/file-organizer.js'
 import { displayHeader } from '../helpers/display-header.js'
+import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 
 function formatStoryFilename(filename: string): string {
   return filename
@@ -46,6 +47,9 @@ export default class Dedupe extends Command {
     }
 
     try {
+      // Assert prerequisites: environment variables and git repository
+      await assertCliPrerequisites()
+
       // Show stage header
       displayHeader(logger)
 

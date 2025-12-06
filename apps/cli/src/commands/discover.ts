@@ -15,7 +15,7 @@ import {
 } from '../helpers/file-discovery.js'
 import { writeStoriesToFiles } from '../helpers/write-stories.js'
 import { displayHeader } from '../helpers/display-header.js'
-import { findGitRoot } from '../helpers/find-kyoto-dir.js'
+import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'
@@ -63,8 +63,10 @@ export default class Discover extends Command {
     }
 
     try {
+      // Assert prerequisites: environment variables and git repository
+      const { gitRoot } = await assertCliPrerequisites()
+
       // Ensure .kyoto directory exists
-      const gitRoot = await findGitRoot()
       const kyotoDir = join(gitRoot, '.kyoto')
       await mkdir(kyotoDir, { recursive: true })
 

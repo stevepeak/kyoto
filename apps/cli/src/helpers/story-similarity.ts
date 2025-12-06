@@ -1,5 +1,3 @@
-import OpenAI from 'openai'
-import { getConfig } from '@app/config'
 import type { Story } from './story-generator-agent.js'
 import type { StoryFile } from './story-file-reader.js'
 
@@ -15,15 +13,8 @@ async function generateEmbedding({
   text: string
   modelId?: string
 }): Promise<number[]> {
-  const { OPENAI_API_KEY } = getConfig()
-  const openai = new OpenAI({ apiKey: OPENAI_API_KEY })
-
-  const response = await openai.embeddings.create({
-    model: modelId,
-    input: text,
-  })
-
-  return response.data[0]?.embedding ?? []
+  // TODO
+  return []
 }
 
 /**

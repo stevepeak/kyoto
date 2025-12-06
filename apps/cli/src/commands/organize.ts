@@ -13,6 +13,7 @@ import { createStoryDirectory } from '../helpers/file-organizer.js'
 import { displayHeader } from '../helpers/display-header.js'
 import { displayStoryTree } from '../helpers/display-story-tree.js'
 import { findKyotoDir } from '../helpers/find-kyoto-dir.js'
+import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 
 function formatStoryFilename(filename: string): string {
   return filename
@@ -111,6 +112,9 @@ export default class Organize extends Command {
     }
 
     try {
+      // Assert prerequisites: environment variables and git repository
+      await assertCliPrerequisites()
+
       // Show stage header with red kanji
       displayHeader(logger)
 
@@ -118,10 +122,12 @@ export default class Organize extends Command {
 
       if (storyFiles.length === 0) {
         logger(
-          chalk.hex('#c27a52')(
-            `\n⚠️  No story files found in .kyoto directory to organize.\n`,
+          chalk.hex('#7ba179')(
+            `\n✓ Organization is already complete. Nothing more to organize.\n`,
           ),
         )
+        // Display the tree structure
+        await displayStoryTree(logger)
         return
       }
 

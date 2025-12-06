@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { execa } from 'execa'
+import terminalLink from 'terminal-link'
 
 /**
  * Displays the Kyoto CLI header with red kanji and greeting.
@@ -8,15 +8,16 @@ import { execa } from 'execa'
  */
 export function displayHeader(logger: (message: string) => void): void {
   const linkUrl = `https://usekyoto.com/`
-  const kyotoLink = `\u001B]8;;${linkUrl}\u0007${chalk.white.bold('Kyoto')}\u001B]8;;\u0007`
+  const styledText = chalk.white.bold('Kyoto')
+  const kyotoLink = terminalLink(styledText, linkUrl)
 
   logger(
     `${chalk.red(`
-入  ｜ 
-京  ｜ 
-行  ｜  `)}${kyotoLink}${chalk.red(` 
-改  ｜ 
-善  ｜ 
+入   |  
+京   |  
+行   |   `)}${kyotoLink}${chalk.red(` 
+改   |  
+善   |  
 
 `)}`,
   )
