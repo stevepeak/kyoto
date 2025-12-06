@@ -1,7 +1,6 @@
 import {
   evaluationOutputSchema,
   decompositionOutputSchema,
-  type DecompositionOutput,
   type TestStatus,
 } from '@app/schemas'
 import { runDecompositionAgent } from './agents/v3/story-decomposition'
@@ -19,17 +18,17 @@ import {
 } from './agents/v3/story-impact'
 import { generateChangelogSummary } from './agents/v3/changelog-summary'
 
-import { getConfig } from '@app/config'
-import { createOpenAI } from '@ai-sdk/openai'
-import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import z from 'zod'
 
 export { type TestStatus as Status }
 export { generateText } from './helpers/generate-text'
 export { generateEmbedding } from './helpers/generate-embedding'
-// Re-export for backward compatibility
-export type { DecompositionOutput as DecompositionAgentResult }
+// Re-export decomposition agent result type
+export type { DecompositionAgentResult } from './agents/v3/story-decomposition'
 export { getDaytonaSandbox } from './helpers/daytona'
+
+// Export ProviderContext interface
+export type { ProviderContext } from './types/provider-context'
 
 export { getFileContentFromSandbox } from './tools/read-file-tool'
 export { createTerminalCommandTool } from './tools/terminal-command-tool'

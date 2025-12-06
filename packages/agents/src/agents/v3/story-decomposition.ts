@@ -13,14 +13,23 @@ import {
   decompositionOutputSchema,
   type DecompositionOutput,
 } from '@app/schemas'
+import { generateText } from '../../helpers/generate-text'
+import { generateEmbedding } from '../../helpers/generate-embedding'
 
-export type DecompositionAgentResult = DecompositionOutput
+export type DecompositionAgentResult = DecompositionOutput & {
+  /** Generated or provided title for the story */
+  title: string
+  /** Embedding vector for the story and decomposition (1536 dimensions) */
+  embedding: number[]
+}
 
 type DecompositionAgentOptions = {
   story: {
     /** Optional because we can test decomposition with just the text alone */
     id?: string
     text: string
+    /** Story title - empty string if needs to be generated */
+    title?: string
   }
   repo: {
     id: string
@@ -109,6 +118,21 @@ export async function runDecompositionAgent({
 }: DecompositionAgentOptions): Promise<DecompositionAgentResult> {
   const sandbox = await getDaytonaSandbox(options.daytonaSandboxId)
 
+  // Generate title if empty
+  let title = story.title
+  if (!title || title.trim() === '') {
+    title = await generateText({
+      prompt: `Generate a concise, descriptive sentence (maximum 60 characters) for this user story:
+
+${story.text}
+
+The sentence should be clear, specific, and capture the essence of what the story is about. Use sentence case (only capitalize the first word and proper nouns), not title case. Return only the sentence, no additional text.`,
+      modelId: 'gpt-4o-mini',
+    })
+    // Strip surrounding quotes if present
+    title = title.replace(/^["']|["']$/g, '')
+  }
+
   const agent = new Agent({
     model: agents.decomposition.options.model,
     system: buildDecompositionInstructions(),
@@ -147,5 +171,20 @@ export async function runDecompositionAgent({
 
   logger.debug('🤖 Story Decomposition Agent Result', { result })
 
-  return result.experimental_output
+  const decomposition = result.experimental_output
+
+  // Create embedding from story and decomposition
+  const embeddingText = JSON.stringify({
+    story: story.text,
+    decomposition,
+  })
+  const embedding = await generateEmbedding({
+    text: embeddingText,
+  })
+
+  return {
+    ...decomposition,
+    title,
+    embedding,
+  }
 }

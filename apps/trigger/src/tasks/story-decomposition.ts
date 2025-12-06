@@ -1,7 +1,7 @@
 import { task, logger } from '@trigger.dev/sdk'
 
 import { setupDb, sql } from '@app/db'
-import { agents, generateText, generateEmbedding } from '@app/agents'
+import { agents } from '@app/agents'
 import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
@@ -39,30 +39,6 @@ export const storyDecompositionTask = task({
     const sandbox = await createDaytonaSandbox({ repoId: repo.id })
 
     try {
-      // Generate title if empty and save it immediately
-      if (story.id && (!story.title || story.title.trim() === '')) {
-        const generatedTitle = await generateText({
-          prompt: `Generate a concise, descriptive sentence (maximum 60 characters) for this user story:
-
-${story.text}
-
-The sentence should be clear, specific, and capture the essence of what the story is about. Use sentence case (only capitalize the first word and proper nouns), not title case. Return only the sentence, no additional text.`,
-          modelId: 'gpt-4o-mini',
-        })
-
-        // Save the generated title immediately
-        await db
-          .updateTable('stories')
-          .set({ name: generatedTitle.replace(/^["']|["']$/g, '') })
-          .where('id', '=', story.id)
-          .execute()
-
-        logger.info('Generated and saved story title', {
-          storyId: story.id,
-          title: generatedTitle,
-        })
-      }
-
       // Run the story decomposition agent
       const decompositionResult: DecompositionAgentResult =
         await agents.decomposition.run({
@@ -83,20 +59,13 @@ The sentence should be clear, specific, and capture the essence of what the stor
           .where('id', '=', story.id)
           .executeTakeFirst()
 
-        const newDecomposition = JSON.stringify(decompositionResult)
+        // Extract just the decomposition steps (without title and embedding) for comparison
+        const { title, embedding, ...decompositionSteps } = decompositionResult
+        const newDecomposition = JSON.stringify(decompositionSteps)
         const decompositionChanged =
           !existingStory ||
           existingStory.decomposition === null ||
           JSON.stringify(existingStory.decomposition) !== newDecomposition
-
-        // Create embedding from story and decomposition
-        const embeddingText = JSON.stringify({
-          story: story.text,
-          decomposition: decompositionResult,
-        })
-        const embedding = await generateEmbedding({
-          text: embeddingText,
-        })
 
         // Format embedding array as pgvector string format: '[1,2,3]'
         const embeddingVector = `[${embedding.join(',')}]`
@@ -104,6 +73,7 @@ The sentence should be clear, specific, and capture the essence of what the stor
         await db
           .updateTable('stories')
           .set({
+            name: title,
             decomposition: newDecomposition,
             embedding: sql`${embeddingVector}::vector`,
           })
