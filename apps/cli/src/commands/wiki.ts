@@ -61,7 +61,7 @@ export default class Wiki extends Command {
       await assertCliPrerequisites()
 
       // Show stage header
-      displayHeader(logger)
+      displayHeader({ logger })
 
       // Validation Phase
       logger(chalk.grey('• Validating story structure...'))

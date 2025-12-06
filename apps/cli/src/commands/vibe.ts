@@ -11,6 +11,6 @@ export default class Vibe extends Command {
       this.log(message)
     }
 
-    displayHeader(logger)
+    displayHeader({ logger })
   }
 }

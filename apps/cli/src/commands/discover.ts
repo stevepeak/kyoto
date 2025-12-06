@@ -91,7 +91,7 @@ export default class Discover extends Command {
       }
 
       // Show stage header with red kanji
-      displayHeader(logger)
+      displayHeader({ logger })
       logger(
         chalk.grey(
           `• Discovering user behaviors for ${chalk.hex('#7b301f')(filesToProcess.length)} ${filesToProcess.length === 1 ? chalk.hex('#7b301f')('file') : chalk.hex('#7b301f')('files')}`,

@@ -51,7 +51,7 @@ export default class Dedupe extends Command {
       await assertCliPrerequisites()
 
       // Show stage header
-      displayHeader(logger)
+      displayHeader({ logger })
 
       // Parse threshold
       const threshold = parseFloat(flags.threshold ?? '0.85')

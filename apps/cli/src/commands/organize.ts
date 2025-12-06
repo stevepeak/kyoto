@@ -116,7 +116,7 @@ export default class Organize extends Command {
       await assertCliPrerequisites()
 
       // Show stage header with red kanji
-      displayHeader(logger)
+      displayHeader({ logger })
 
       const storyFiles = await readAllStoryFiles()
 

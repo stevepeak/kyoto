@@ -25,7 +25,7 @@ export default class List extends Command {
       await assertCliPrerequisites({ requireAi: false })
 
       // Show stage header with red kanji
-      displayHeader(logger)
+      displayHeader({ logger })
 
       // Read all story files recursively
       const storyFiles = await readAllStoryFilesRecursively()
