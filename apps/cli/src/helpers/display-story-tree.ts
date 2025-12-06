@@ -2,10 +2,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import chalk from 'chalk'
 import treeify from 'object-treeify'
-import { findKyotoDir } from './find-kyoto-dir.js'
+import { pwdKyoto } from './find-kyoto-dir.js'
 import { discoveredStorySchema } from '@app/schemas'
-
-const STORIES_DIR = '.kyoto'
 
 interface TreeNode {
   name: string
@@ -16,7 +14,7 @@ interface TreeNode {
 }
 
 /**
- * Recursively reads all story files from the .kyoto directory.
+ * Recursively reads all story files
  */
 async function readStoryFilesRecursive(
   dirPath: string,
@@ -56,9 +54,10 @@ async function readStoryFilesRecursive(
  */
 function buildTree(
   stories: Array<{ path: string; relativePath: string; title: string }>,
+  storiesDirName: string,
 ): TreeNode {
   const root: TreeNode = {
-    name: STORIES_DIR,
+    name: storiesDirName,
     type: 'directory',
     children: [],
     path: '',
@@ -143,7 +142,7 @@ function convertToTreeifyFormat(node: TreeNode): Record<string, any> {
 export async function displayStoryTree(
   logger: (message: string) => void,
 ): Promise<void> {
-  const storiesDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
 
   try {
     const stories = await readStoryFilesRecursive(storiesDir)
@@ -151,9 +150,9 @@ export async function displayStoryTree(
       return
     }
 
-    const tree = buildTree(stories)
+    const tree = buildTree(stories, '.kyoto/stories')
 
-    // Convert to treeify format, skipping the root .kyoto node
+    // Convert to treeify format, skipping the root .kyoto/stories node
     const treeifyObject: Record<string, any> = {}
     if (tree.children && tree.children.length > 0) {
       // Sort children: directories first, then files

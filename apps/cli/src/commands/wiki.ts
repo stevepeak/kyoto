@@ -22,7 +22,7 @@ import {
 import { displayHeader } from '../helpers/display-header.js'
 import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 
-const STORIES_DIR = '.kyoto'
+const STORIES_DIR = '.kyoto/stories'
 
 export default class Wiki extends Command {
   static override description =

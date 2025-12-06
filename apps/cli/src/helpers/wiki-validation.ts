@@ -1,36 +1,36 @@
 import { readdir } from 'node:fs/promises'
 import { readAllStoryFiles, readAllStoryFilesRecursively } from './story-file-reader.js'
-import { findKyotoDir } from './find-kyoto-dir.js'
+import { pwdKyoto } from './find-kyoto-dir.js'
 
-const STORIES_DIR = '.kyoto'
+const STORIES_DIR = '.kyoto/stories'
 
 /**
  * Validates that stories are organized in a folder structure:
  * - At least one story file exists in a subfolder (not at root)
- * - No story files exist at .kyoto/ root level
+ * - No story files exist at .kyoto/stories/ root level
  *
  * @throws {Error} If validation fails with a descriptive message
  */
 export async function validateStoryStructure(): Promise<void> {
-  const storiesDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
 
   try {
-    // Check if .kyoto directory exists
+    // Check if .kyoto/stories directory exists
     await readdir(storiesDir)
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       throw new Error(
-        `.kyoto directory not found: ${STORIES_DIR}\n\nPlease ensure you have story files organized in folders.`,
+        `.kyoto/stories directory not found: ${STORIES_DIR}\n\nPlease ensure you have story files organized in folders.`,
       )
     }
     throw error
   }
 
-  // Check for story files at root level
+  // Check for story files at root level of .kyoto/stories/
   const rootStoryFiles = await readAllStoryFiles()
   if (rootStoryFiles.length > 0) {
     throw new Error(
-      `Found ${rootStoryFiles.length} story file(s) at the root of .kyoto/\n\n` +
+      `Found ${rootStoryFiles.length} story file(s) at the root of .kyoto/stories/\n\n` +
         `All story files must be organized in subfolders. Please move these files:\n` +
         rootStoryFiles.map((f) => `  - ${f.filename}`).join('\n'),
     )
@@ -40,7 +40,7 @@ export async function validateStoryStructure(): Promise<void> {
   const allStoryFiles = await readAllStoryFilesRecursively()
   if (allStoryFiles.length === 0) {
     throw new Error(
-      `No story files found in any subfolder of .kyoto/\n\n` +
+      `No story files found in any subfolder of .kyoto/stories/\n\n` +
         `Please ensure you have at least one story file organized in a folder structure.`,
     )
   }
@@ -54,7 +54,7 @@ export async function validateStoryStructure(): Promise<void> {
   if (storiesInSubfolders.length === 0) {
     throw new Error(
       `No story files found in subfolders.\n\n` +
-        `All story files must be organized in subfolders, not at the root of .kyoto/`,
+        `All story files must be organized in subfolders, not at the root of .kyoto/stories/`,
     )
   }
 }

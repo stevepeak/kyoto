@@ -3,10 +3,10 @@ import chalk from 'chalk'
 import { execa } from 'execa'
 import ora from 'ora'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
 import { agents } from '@app/agents'
 import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 import { displayHeader } from '../helpers/display-header.js'
+import { pwdKyoto, findGitRoot } from '../helpers/find-kyoto-dir.js'
 
 interface CommitInfo {
   hash: string // Full hash
@@ -69,11 +69,10 @@ async function getCurrentBranch(gitRoot: string): Promise<string | null> {
  * Updates the .kyoto/details.json file with the latest branch and commit SHA
  */
 async function updateDetailsJson(
-  kyotoDir: string,
+  detailsPath: string,
   branch: string | null,
   sha: string,
 ): Promise<void> {
-  const detailsPath = join(kyotoDir, 'details.json')
   let details: DetailsJson = {}
 
   // Read existing details.json if it exists
@@ -92,7 +91,8 @@ async function updateDetailsJson(
       branch,
     }
 
-    // Ensure .kyoto directory exists
+    // Ensure .kyoto directory exists (extract from details path)
+    const kyotoDir = detailsPath.replace('/details.json', '')
     await mkdir(kyotoDir, { recursive: true })
 
     // Write the updated details back
@@ -127,7 +127,7 @@ export default class Vibes extends Command {
    * Process a new commit using the commit evaluator agent
    */
   private async processCommit(commit: CommitInfo): Promise<string> {
-    const result = await agents.commitEvaluator.run({
+    const result: string = await agents.commitEvaluator.run({
       commitSha: commit.hash,
       options: {
         maxSteps: agents.commitEvaluator.options.maxSteps,
@@ -146,8 +146,7 @@ export default class Vibes extends Command {
   private async handleNewCommit(
     commit: CommitInfo,
     maxLength: number,
-    gitRoot: string,
-    kyotoDir: string,
+    detailsPath: string,
   ): Promise<void> {
     // Truncate message if needed
     const truncatedMessage =
@@ -167,19 +166,15 @@ export default class Vibes extends Command {
 
     try {
       // Process the commit using the agent
-      const explanation = await this.processCommit(commit)
+      await this.processCommit(commit)
 
       // Stop the spinner
       spinner.succeed()
 
-      // Display the explanation
-      this.log('')
-      this.log(chalk.grey(explanation))
-      this.log('')
-
       // Update details.json with the new commit
+      const gitRoot = await findGitRoot()
       const branch = await getCurrentBranch(gitRoot)
-      await updateDetailsJson(kyotoDir, branch, commit.hash)
+      await updateDetailsJson(detailsPath, branch, commit.hash)
     } catch (error) {
       spinner.fail(
         `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -203,19 +198,19 @@ export default class Vibes extends Command {
         requireAi: true,
       })
 
-      // Ensure .kyoto directory exists
-      const kyotoDir = join(gitRoot, '.kyoto')
-      await mkdir(kyotoDir, { recursive: true })
+      // Get Kyoto paths
+      const { root: kyotoRoot, details: detailsPath } = await pwdKyoto()
+      await mkdir(kyotoRoot, { recursive: true })
 
       // Display header banner
       displayHeader({ logger, message: 'Vibe in Kyoto' })
 
       // Get the initial commit to establish baseline
       let lastCommitHash: string | null = null
-      const initialCommit = await getLatestCommit(gitRoot)
+      const commit = await getLatestCommit(gitRoot)
 
-      if (initialCommit) {
-        lastCommitHash = initialCommit.shortHash
+      if (commit) {
+        lastCommitHash = commit.shortHash
         const repoSlug = github
           ? `${github.owner}/${github.repo}`
           : (gitRoot.split('/').pop() ?? 'repository')
@@ -271,7 +266,7 @@ export default class Vibes extends Command {
           // * ability to stop/quit
           // * batch many commits at once in a group
           // Process the commit asynchronously (don't await in the interval)
-          this.handleNewCommit(latestCommit, maxLength, gitRoot, kyotoDir)
+          this.handleNewCommit(latestCommit, maxLength, detailsPath)
             .then(() => {
               // Only update lastCommitHash after successful processing
               lastCommitHash = latestCommit.shortHash

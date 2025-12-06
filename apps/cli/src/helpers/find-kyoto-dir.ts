@@ -2,7 +2,7 @@ import { access, constants } from 'node:fs/promises'
 import { join } from 'node:path'
 import { execa } from 'execa'
 
-const STORIES_DIR = '.kyoto'
+const KYOTO_DIR = '.kyoto'
 
 let cachedGitRoot: string | null = null
 
@@ -43,23 +43,31 @@ export async function findGitRoot(): Promise<string> {
   }
 }
 
+interface KyotoPaths {
+  root: string
+  stories: string
+  details: string
+}
+
 /**
- * Finds the .kyoto directory by using git to find the project root.
+ * Finds the .kyoto directory paths by using git to find the project root.
  * This allows the CLI to work regardless of where it's invoked from.
  *
- * @returns The absolute path to the .kyoto directory
+ * @returns An object with absolute paths to .kyoto root, stories, and details.json
  * @throws {Error} If the .kyoto directory cannot be found or git root cannot be determined
  */
-export async function findKyotoDir(): Promise<string> {
+export async function pwdKyoto(): Promise<KyotoPaths> {
   const gitRoot = await findGitRoot()
-  const kyotoPath = join(gitRoot, STORIES_DIR)
+  const root = join(gitRoot, KYOTO_DIR)
+  const stories = join(root, 'stories')
+  const details = join(root, 'details.json')
 
   // Verify the .kyoto directory exists
   try {
-    await access(kyotoPath, constants.F_OK)
-    return kyotoPath
+    await access(root, constants.F_OK)
+    return { root, stories, details }
   } catch {
-    throw new Error(`.kyoto directory not found: ${STORIES_DIR}`)
+    throw new Error(`.kyoto directory not found: ${KYOTO_DIR}`)
   }
 }
 

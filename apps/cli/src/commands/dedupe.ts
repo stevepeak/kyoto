@@ -22,7 +22,6 @@ export default class Dedupe extends Command {
   static override examples = [
     '$ kyoto dedupe',
     '$ kyoto dedupe --threshold 0.85',
-    '$ kyoto dedupe --folder users',
   ]
 
   static override flags = {
@@ -30,11 +29,6 @@ export default class Dedupe extends Command {
       description:
         'Similarity threshold (0.0-1.0, default: 0.85). Higher values mean more similar stories are required to be considered duplicates.',
       default: '0.85',
-    }),
-    folder: Flags.string({
-      description:
-        'Optional folder path within .kyoto to scan (default: scan all)',
-      char: 'f',
     }),
   }
 
@@ -72,13 +66,13 @@ export default class Dedupe extends Command {
         color: 'red',
       }).start()
 
-      const storyFiles = await readAllStoryFilesRecursively(flags.folder)
+      const storyFiles = await readAllStoryFilesRecursively()
 
       if (storyFiles.length === 0) {
         readSpinner.fail(chalk.white('No story files found'))
         logger(
           chalk.hex('#c27a52')(
-            `\n⚠️  No story files found in ${flags.folder ? `.kyoto/${flags.folder}` : '.kyoto'}\n`,
+            `\n⚠️  No story files found in .kyoto/stories\n`,
           ),
         )
         return

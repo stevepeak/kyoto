@@ -2,7 +2,7 @@ import { stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { StoryFile } from './story-file-reader.js'
 import { groupDuplicates } from './story-similarity.js'
-import { findKyotoDir } from './find-kyoto-dir.js'
+import { pwdKyoto } from './find-kyoto-dir.js'
 
 /**
  * Selects the story file to keep from a group of duplicates.
@@ -20,15 +20,15 @@ async function selectStoryToKeep(group: StoryFile[]): Promise<StoryFile> {
     return group[0]!
   }
 
-  const kyotoDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
 
   // Get modification times for all files
   const fileStats = await Promise.all(
     group.map(async (file) => {
-      // file.path is relative to .kyoto (e.g., ".kyoto/folder/file.json")
-      // Remove the .kyoto/ prefix to get the relative path
-      const relativePath = file.path.replace(/^\.kyoto\//, '')
-      const fullPath = join(kyotoDir, relativePath)
+      // file.path is relative to git root (e.g., ".kyoto/stories/folder/file.json")
+      // Remove the .kyoto/stories/ prefix to get the relative path within stories
+      const relativePath = file.path.replace(/^\.kyoto\/stories\//, '')
+      const fullPath = join(storiesDir, relativePath)
       try {
         const stats = await stat(fullPath)
         return {

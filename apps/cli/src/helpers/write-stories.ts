@@ -2,10 +2,10 @@ import { mkdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { writeLocalFile } from '@app/shell'
 import type { DiscoveryAgentOutput } from '@app/schemas'
-import { findKyotoDir, findGitRoot } from './find-kyoto-dir.js'
+import { pwdKyoto, findGitRoot } from './find-kyoto-dir.js'
 
 /**
- * Writes story objects to JSON files in the `.kyoto` directory.
+ * Writes story objects to JSON files in the `.kyoto/stories` directory.
  * Creates safe filenames from story titles and ensures the output directory exists.
  *
  * @param stories - Array of story objects to write to files
@@ -15,7 +15,7 @@ import { findKyotoDir, findGitRoot } from './find-kyoto-dir.js'
 export async function writeStoriesToFiles(
   stories: DiscoveryAgentOutput,
 ): Promise<string[]> {
-  const kyotoDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
   const gitRoot = await findGitRoot()
   const writtenFiles: string[] = []
 
@@ -27,12 +27,12 @@ export async function writeStoriesToFiles(
       .replace(/^-|-$/g, '')
       .slice(0, 100) // Limit length
 
-    const storyPath = join(kyotoDir, `${safeTitle}.json`)
+    const storyPath = join(storiesDir, `${safeTitle}.json`)
     const json = JSON.stringify(story, null, 2)
 
     try {
-      // Ensure .kyoto directory exists
-      await mkdir(kyotoDir, { recursive: true })
+      // Ensure .kyoto/stories directory exists
+      await mkdir(storiesDir, { recursive: true })
 
       // Calculate relative path from git root to the story file
       const relativePath = relative(gitRoot, storyPath)

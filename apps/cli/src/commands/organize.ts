@@ -12,7 +12,7 @@ import { determineFilePlacement } from '../helpers/file-placement-agent.js'
 import { createStoryDirectory } from '../helpers/file-organizer.js'
 import { displayHeader } from '../helpers/display-header.js'
 import { displayStoryTree } from '../helpers/display-story-tree.js'
-import { findKyotoDir } from '../helpers/find-kyoto-dir.js'
+import { pwdKyoto } from '../helpers/find-kyoto-dir.js'
 import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 
 function formatStoryFilename(filename: string): string {
@@ -49,10 +49,10 @@ async function findDirectories(
 }
 
 /**
- * Checks if there are any subdirectories in the .kyoto directory.
+ * Checks if there are any subdirectories in the .kyoto/stories directory.
  */
 async function hasExistingDirectories(): Promise<boolean> {
-  const storiesDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
   try {
     const entries = await readdir(storiesDir, { withFileTypes: true })
     return entries.some((entry) => entry.isDirectory())
@@ -62,10 +62,10 @@ async function hasExistingDirectories(): Promise<boolean> {
 }
 
 /**
- * Builds a hierarchy from existing directories in .kyoto.
+ * Builds a hierarchy from existing directories in .kyoto/stories.
  */
 async function buildHierarchyFromExistingDirectories(): Promise<HierarchyOutput> {
-  const storiesDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
   const directories = await findDirectories(storiesDir)
 
   const hierarchy: HierarchyOutput = {

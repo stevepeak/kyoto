@@ -2,22 +2,22 @@ import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { StoryFile } from './story-file-reader.js'
 import { readAllStoryFilesRecursively } from './story-file-reader.js'
-import { findKyotoDir } from './find-kyoto-dir.js'
+import { pwdKyoto } from './find-kyoto-dir.js'
 
-const STORIES_DIR = '.kyoto'
+const STORIES_DIR = '.kyoto/stories'
 
 export interface FolderInfo {
-  path: string // Relative path from .kyoto (e.g., "api/webhooks/github")
+  path: string // Relative path from .kyoto/stories (e.g., "api/webhooks/github")
   fullPath: string // Absolute path
   depth: number // Depth level (0 = root, 1 = first level, etc.)
 }
 
 /**
- * Gets all folders in the .kyoto directory hierarchy, sorted by depth (deepest first).
+ * Gets all folders in the .kyoto/stories directory hierarchy, sorted by depth (deepest first).
  * This ensures we process folders bottom-up.
  */
 export async function getFolderHierarchy(): Promise<FolderInfo[]> {
-  const storiesDir = await findKyotoDir()
+  const { stories: storiesDir } = await pwdKyoto()
   const folders: FolderInfo[] = []
 
   async function walkDir(
@@ -52,7 +52,7 @@ export async function getFolderHierarchy(): Promise<FolderInfo[]> {
         'code' in error &&
         (error as NodeJS.ErrnoException).code === 'ENOENT'
       ) {
-        throw new Error(`.kyoto directory not found: ${STORIES_DIR}`)
+        throw new Error(`.kyoto/stories directory not found: ${STORIES_DIR}`)
       }
     }
   }
@@ -65,7 +65,7 @@ export async function getFolderHierarchy(): Promise<FolderInfo[]> {
 
 /**
  * Gets all story files in a specific folder.
- * @param folderPath - Relative path from .kyoto (e.g., "api/webhooks/github")
+ * @param folderPath - Relative path from .kyoto/stories (e.g., "api/webhooks/github")
  * @returns Array of story files in that folder
  */
 export async function getStoriesInFolder(
@@ -75,7 +75,7 @@ export async function getStoriesInFolder(
 
   // Filter to only stories that are directly in this folder (not in subfolders)
   const folderStories = allStories.filter((story) => {
-    // Remove .kyoto/ prefix
+    // Remove .kyoto/stories/ prefix
     const relativePath = story.path.replace(`${STORIES_DIR}/`, '')
     // Remove filename
     const storyFolder = relativePath.substring(0, relativePath.lastIndexOf('/'))

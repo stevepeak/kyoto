@@ -6,14 +6,15 @@ import terminalLink from 'terminal-link'
 import { readAllStoryFilesRecursively } from '../helpers/story-file-reader.js'
 import { displayHeader } from '../helpers/display-header.js'
 import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
-import { findGitRoot, findKyotoDir } from '../helpers/find-kyoto-dir.js'
+import { findGitRoot, pwdKyoto } from '../helpers/find-kyoto-dir.js'
 import { displayStoryTree } from '../helpers/display-story-tree.js'
 
 export default class List extends Command {
-  static override description =
-    'List all stories discovered from the .kyoto folder'
+  static override description = 'List all stories'
 
-  static override examples = ['$ kyoto list']
+  static override aliases = ['ls']
+
+  static override examples = ['$ kyoto list', '$ kyoto ls']
 
   override async run(): Promise<void> {
     const logger = (message: string) => {
@@ -33,7 +34,7 @@ export default class List extends Command {
       if (storyFiles.length === 0) {
         logger(
           chalk.hex('#c27a52')(
-            `\n⚠️  No story files found in .kyoto directory.\n`,
+            `\n⚠️  No story files found in .kyoto/stories directory.\n`,
           ),
         )
         return
@@ -61,7 +62,7 @@ export default class List extends Command {
 
       // Check if stories are organized (have directories) and display tree structure
       try {
-        const storiesDir = await findKyotoDir()
+        const { stories: storiesDir } = await pwdKyoto()
         const entries = await readdir(storiesDir, { withFileTypes: true })
         const hasDirectories = entries.some((entry) => entry.isDirectory())
 
