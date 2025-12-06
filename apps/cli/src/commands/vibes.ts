@@ -170,7 +170,7 @@ export default class Vibes extends Command {
       const explanation = await this.processCommit(commit)
 
       // Stop the spinner
-      spinner.stop()
+      spinner.succeed()
 
       // Display the explanation
       this.log('')
@@ -181,14 +181,9 @@ export default class Vibes extends Command {
       const branch = await getCurrentBranch(gitRoot)
       await updateDetailsJson(kyotoDir, branch, commit.hash)
     } catch (error) {
-      spinner.stop()
-      this.log('')
-      this.log(
-        chalk.hex('#c27a52')(
-          `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        ),
+      spinner.fail(
+        `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )
-      this.log('')
       throw error // Re-throw so caller knows processing failed
     }
   }
@@ -271,6 +266,10 @@ export default class Vibes extends Command {
           // Mark as processing to prevent concurrent processing
           isProcessing = true
 
+          // TODO
+          // * need a queue
+          // * ability to stop/quit
+          // * batch many commits at once in a group
           // Process the commit asynchronously (don't await in the interval)
           this.handleNewCommit(latestCommit, maxLength, gitRoot, kyotoDir)
             .then(() => {
