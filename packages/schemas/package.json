@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "clean": "rm -rf node_modules dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0 --cache --concurrency=2",
     "lint:fix": "eslint . --fix --cache --concurrency=2",
@@ -15,10 +16,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.10",
+    "tsconfig": "workspace:*",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@opentelemetry/api": "^1.9.0",
-    "zod": "^3.24.1"
+    "@opentelemetry/api": "catalog:",
+    "zod": "catalog:"
   }
 }

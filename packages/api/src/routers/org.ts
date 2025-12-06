@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
 import { z } from 'zod'
 
-import { router, protectedProcedure } from '../trpc'
+import { router, protectedProcedure } from '../trpc.js'
 
 export const orgRouter = router({
   listInstalled: protectedProcedure.query(async ({ ctx }) => {

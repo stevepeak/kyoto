@@ -1,14 +1,13 @@
 import { execa } from 'execa'
-import chalk from 'chalk'
 import { findGitRoot } from './find-kyoto-dir.js'
 
-export interface GitHubInfo {
+interface GitHubInfo {
   owner: string
   repo: string
   url: string
 }
 
-export interface CliPrerequisites {
+interface CliPrerequisites {
   gitRoot: string
   github: GitHubInfo | null
 }
@@ -62,7 +61,9 @@ async function getGitHubInfo(gitRoot: string): Promise<GitHubInfo | null> {
     const httpsMatch = remoteUrl.match(
       /^https?:\/\/github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?$/,
     )
-    const sshMatch = remoteUrl.match(/^git@github\.com:([^\/]+)\/([^\/]+?)(?:\.git)?$/)
+    const sshMatch = remoteUrl.match(
+      /^git@github\.com:([^\/]+)\/([^\/]+?)(?:\.git)?$/,
+    )
 
     if (httpsMatch) {
       const [, owner, repo] = httpsMatch
@@ -122,4 +123,3 @@ export async function assertCliPrerequisites(options?: {
     github,
   }
 }
-

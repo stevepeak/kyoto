@@ -1,0 +1,23 @@
+'use client';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RepoOverviewClient = RepoOverviewClient;
+var jsx_runtime_1 = require("react/jsx-runtime");
+var navigation_1 = require("next/navigation");
+var repo_overview_1 = require("./repo-overview");
+/**
+ * Client component wrapper for RepoOverview that handles refresh functionality
+ */
+function RepoOverviewClient(_a) {
+    var orgName = _a.orgName, repoName = _a.repoName, defaultBranch = _a.defaultBranch, runs = _a.runs, stories = _a.stories;
+    var router = (0, navigation_1.useRouter)();
+    var handleRefreshRuns = function () {
+        // Refresh the server component data
+        router.refresh();
+    };
+    var handleRefreshStories = function () {
+        // Refresh the server component data
+        router.refresh();
+    };
+    return ((0, jsx_runtime_1.jsx)(repo_overview_1.RepoOverview, { orgName: orgName, repoName: repoName, defaultBranch: defaultBranch, runs: runs, stories: stories, onRefreshRuns: handleRefreshRuns, onRefreshStories: handleRefreshStories }));
+}

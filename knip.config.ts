@@ -33,6 +33,11 @@ const config: KnipConfig = {
         'posthog-node',
       ],
     },
+    'apps/cli': {
+      entry: ['src/index.ts', 'src/commands/**/*.ts'],
+      project: ['src/**/*.ts'],
+      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
+    },
     'apps/trigger': {
       entry: ['trigger.config.ts'],
       project: ['src/**/*.ts'],

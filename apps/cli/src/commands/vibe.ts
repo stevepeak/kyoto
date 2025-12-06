@@ -14,4 +14,3 @@ export default class Vibe extends Command {
     displayHeader(logger)
   }
 }
-

@@ -1,7 +1,7 @@
-export { createLinearIssue } from './issues'
-export { findOrCreateLinearCustomer } from './customers'
-export { createLinearCustomerRequest } from './customer-requests'
-export { getLinearTeams } from './teams'
+export { createLinearIssue } from './issues.js'
+export { findOrCreateLinearCustomer } from './customers.js'
+export { createLinearCustomerRequest } from './customer-requests.js'
+export { getLinearTeams } from './teams.js'
 export type {
   CreateLinearIssueInput,
   CreateLinearIssueResult,
@@ -11,4 +11,4 @@ export type {
   CreateLinearCustomerRequestResult,
   GetLinearTeamsResult,
   LinearTeam,
-} from './types'
+} from './types.js'

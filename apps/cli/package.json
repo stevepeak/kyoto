@@ -11,6 +11,7 @@
     ".": "./dist/index.js"
   },
   "scripts": {
+    "clean": "rm -rf node_modules dist",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0 --cache --concurrency=2",
@@ -18,31 +19,33 @@
     "lint:ci": "eslint . --max-warnings=0 --cache --concurrency=1 --no-error-on-unmatched-pattern"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.77",
+    "@ai-sdk/openai": "catalog:",
     "@app/agents": "workspace:^",
-    "@app/config": "workspace:^",
     "@app/schemas": "workspace:^",
     "@app/shell": "workspace:^",
-    "@oclif/core": "^4.0.0",
-    "@openrouter/ai-sdk-provider": "^1.2.3",
-    "ai": "^5.0.107",
-    "chalk": "^5.6.2",
-    "dotenv": "^17.2.3",
-    "execa": "^9.6.1",
-    "object-treeify": "^5.0.1",
-    "openai": "^6.9.1",
-    "ora": "^9.0.0",
-    "terminal-link": "^5.0.0",
-    "zod": "^4.1.13"
+    "@oclif/core": "catalog:",
+    "@openrouter/ai-sdk-provider": "catalog:",
+    "ai": "catalog:",
+    "chalk": "catalog:",
+    "dotenv": "catalog:",
+    "execa": "catalog:",
+    "object-treeify": "catalog:",
+    "ora": "catalog:",
+    "terminal-link": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.18.10",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "tsconfig": "workspace:*"
   },
   "oclif": {
     "bin": "kyoto",
-    "dirname": "cli",
-    "commands": "./dist/commands",
-    "topics": {}
+    "dirname": "kyoto",
+    "commands": "./src/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-not-found"
+    ]
   }
 }

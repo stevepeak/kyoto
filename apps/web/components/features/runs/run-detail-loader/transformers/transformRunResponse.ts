@@ -85,7 +85,7 @@ export function transformRunResponse(data: RunQueryOutput): Run | null {
             commitSha: story.commitSha ?? null,
             createdAt: toIsoString(story.createdAt) ?? new Date().toISOString(),
             updatedAt: toIsoString(story.updatedAt) ?? new Date().toISOString(),
-            decomposition: story.decomposition ?? null,
+            composition: story.composition ?? null,
           }
         : null,
       testResult,

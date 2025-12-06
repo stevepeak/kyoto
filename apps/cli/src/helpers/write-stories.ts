@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { writeLocalFile } from '@app/shell'
-import type { Story } from './story-generator-agent.js'
+import type { DiscoveryAgentOutput } from '@app/schemas'
 import { findKyotoDir, findGitRoot } from './find-kyoto-dir.js'
 
 /**
@@ -12,7 +12,9 @@ import { findKyotoDir, findGitRoot } from './find-kyoto-dir.js'
  * @returns Array of file paths that were written
  * @throws {Error} If writing any story file fails
  */
-export async function writeStoriesToFiles(stories: Story[]): Promise<string[]> {
+export async function writeStoriesToFiles(
+  stories: DiscoveryAgentOutput,
+): Promise<string[]> {
   const kyotoDir = await findKyotoDir()
   const gitRoot = await findGitRoot()
   const writtenFiles: string[] = []

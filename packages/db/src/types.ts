@@ -1,3 +1,3 @@
-export * from './column-types'
-export * from './types.gen'
-export type { DB } from './types.gen'
+export * from './column-types.js'
+export * from './types.gen.js'
+export type { DB } from './types.gen.js'

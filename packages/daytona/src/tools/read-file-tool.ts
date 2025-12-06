@@ -2,7 +2,7 @@ import type { Sandbox } from '@daytonaio/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
 
-import { resolveWorkspacePath } from '../helpers/resolve-workspace-path'
+import { resolveWorkspacePath } from '../helpers/resolve-workspace-path.js'
 import { streams } from '@trigger.dev/sdk'
 
 const readFileInputSchema = z.object({

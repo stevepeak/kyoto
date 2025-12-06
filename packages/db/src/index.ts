@@ -1,5 +1,5 @@
-export { setupDb } from './db'
-export { json } from './utils'
+export { setupDb } from './db.js'
+export { json } from './utils.js'
 export { sql } from 'kysely'
 export type {
   RunStory,
@@ -8,5 +8,5 @@ export type {
   StoryAnalysisV1,
   StoryTestResultPayload,
   JSONValue,
-} from './column-types'
-export type { DB } from './types'
+} from './column-types.js'
+export type { DB } from './types.js'

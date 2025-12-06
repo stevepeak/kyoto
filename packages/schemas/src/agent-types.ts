@@ -1,5 +1,9 @@
 import type { Tracer } from '@opentelemetry/api'
-import type { CacheEntry, CacheValidationResult } from './story-flow'
+import type {
+  CacheEntry,
+  CacheValidationResult,
+  ComposedStory,
+} from './story-flow.js'
 
 /**
  * Re-export cache types for agent usage
@@ -22,25 +26,14 @@ export interface Commit {
 
 /**
  * Options for the evaluation agent
- * Note: decomposition type is imported from @app/agents at usage sites to avoid circular dependency
+ * Note: composition type is imported from @app/agents at usage sites to avoid circular dependency
  */
 export type evaluationAgentOptions = {
   repo: {
     id: string
     slug: string
   }
-  story: {
-    id: string
-    name: string
-    text: string
-    /**
-     * Decomposition output from the decomposition agent.
-     * Type is DecompositionOutput from story-flow.ts, but imported at usage sites
-     * to avoid circular dependencies.
-     * Using `any` here to allow flexibility at usage sites where the actual type is imported.
-     */
-    decomposition: any
-  }
+  story: ComposedStory
   options?: {
     /** Maximum number of steps to take */
     maxSteps?: number

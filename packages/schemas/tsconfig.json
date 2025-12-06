@@ -1,14 +1,5 @@
 {
-  "extends": "@ocavue/tsconfig/dom/app.json",
-  "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "dist",
-    "skipLibCheck": true,
-    "incremental": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", ".turbo"],
-  "references": []
+  "extends": "tsconfig/bun.json",
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/.*/"]
 }

@@ -1,18 +1,5 @@
 {
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
-  },
-  "include": ["src/**/*"],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/scripts/**/*",
-    "dist",
-    "node_modules"
-  ]
+  "extends": "tsconfig/bun.json",
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/.*/"]
 }

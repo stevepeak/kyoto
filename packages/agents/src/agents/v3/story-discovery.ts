@@ -1,282 +1,255 @@
 import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import type { Tracer } from '@opentelemetry/api'
-import { z } from 'zod'
-import zodToJsonSchema from 'zod-to-json-schema'
-
-import { getDaytonaSandbox } from '../../helpers/daytona'
-import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
-import { createReadFileTool } from '../../tools/read-file-tool'
-import { createResolveLibraryTool } from '../../tools/context7-tool'
-import { createSearchStoriesTool } from '../../tools/search-stories-tool'
-import { logger, streams } from '@trigger.dev/sdk'
-import type { LanguageModel } from 'ai'
-import { rawStoryInputSchema, type Commit } from '@app/schemas'
-import { agents } from '../..'
+import { readFile } from 'node:fs/promises'
+import { resolve, isAbsolute } from 'node:path'
 import { dedent } from 'ts-dedent'
-import type { setupDb } from '@app/db'
+import pMap from 'p-map'
 
-type DbClient = ReturnType<typeof setupDb>
-
-/**
- * Schema for the story discovery output
- * Returns an array of discovered stories
- */
-export const storyDiscoveryOutputSchema = z.object({
-  stories: z.array(rawStoryInputSchema),
-})
-
-export type StoryDiscoveryOutput = z.infer<typeof storyDiscoveryOutputSchema>
+import {
+  createLocalTerminalCommandTool,
+  createLocalWriteFileTool,
+  createLocalReadFileTool,
+  findGitRoot,
+} from '@app/shell'
+import type { LanguageModel } from 'ai'
+import {
+  discoveredStorySchema,
+  type DiscoveryAgentOutput,
+  discoveryAgentOutputSchema,
+} from '@app/schemas'
+import { agents, generateEmbedding } from '../../index.js'
+import { runCompositionAgent } from './story-composition.js'
+import z from 'zod'
 
 type StoryDiscoveryAgentOptions = {
-  db: DbClient
-  repo: {
-    id: string
-    slug: string
-  }
+  filePath: string
+  fileContent?: string
   options: {
-    daytonaSandboxId: string
-    storyCount: number
-    telemetryTracer?: Tracer
+    maxStories?: number
     maxSteps?: number
     model?: LanguageModel
-    context?: {
-      scope: string[]
-      commit: Commit
-    }
+    telemetryTracer?: Tracer
+    onProgress?: (message: string) => void
   }
 }
 
-function buildDiscoveryInstructions(context?: {
-  scope: string[]
-  commit: Commit
-}): string {
-  return dedent`
-  
-    You are an expert software analyst tasked with discovering user stories from a codebase.
-
-    # 🎯 Objective
-    Analyze the codebase to identify user-facing features and workflows. Focus on one specific functionality per story.
-
-    # Story Format
-    Each story must follow the classic agile format:
-
-    **Given** [some initial context or state], (optional)
-    **When** [an action is taken],
-    **Then** [an expected outcome occurs].
-    **And** [another action is taken], (optional)
-
-    # Examples
-
-    Example 1 - Password Reset:
-    \`\`\`
-    **Given** I am a registered user who has forgotten my password  
-    **When** I request a password reset  
-    **Then** I receive an email with a unique, one-time-use link that expires after 15 minutes
-    \`\`\`
-
-    Example 2 - User Login:
-    \`\`\`
-    **Given** I am a user with an existing account  
-    **When** I enter my email and password on the login page  
-    **Then** I click the "login" button
-    **And** upon successful, login I am redirected to the dashboard
-    \`\`\`
-
-
-    # Discovery Focus
-    Look for:
-    - Authentication & Authorization flows (login, logout, sign up, password reset)
-    - Navigation and routing features
-    - CRUD operations (create, read, update, delete)
-    - Feature workflows with multiple steps
-    - UI interactions (dialogs, modals, forms, buttons)
-
-    ${
-      context
-        ? dedent`
-    # Scope-Based Discovery (When Context is Provided)
-    When context is provided with a required scope:
-    - **The scope defines WHAT you must discover** - focus your discovery strictly within the scope boundaries
-    - **The commit message, code diff, and changed files are supporting details** that help you understand HOW the scope was implemented
-    - **Code changes must be captured in the story** - ensure the story reflects the behaviors and functionality shown in the code changes
-    - Use the code diff to understand:
-      * What new code was added (new features, functions, components)
-      * What existing code was modified (changed behaviors, updated logic)
-      * What files were affected (which parts of the system changed)
-    - The story should describe the user-facing impact of these code changes, not the code itself
-    `
-        : ''
-    }
-
-    # Output Guidelines
-    - Write stories in clear, natural language
-    - Focus on one specific functionality per story
-    - Focus on user-facing features, not implementation details
-    - Each story should represent a complete, testable feature
-    - Include 0 - 2 additional acceptance criteria to clarify anything that is ambiguous or requiring refinement
-    - Keep stories focused on high-level behavior, not low-level code details
-    ${context ? '- When context is provided: ensure the story captures the code changes as user-facing behaviors' : ''}
-
-    # Resources Available
-    You have read-only tools to:
-    - Explore repository structure and contents
-    - Inspect function/class/type names and symbol usage
-    - Read file contents to understand features
-    - Search for existing stories for the repository (use searchStories tool to avoid duplicates)
-
-    # Rules
-    - Never include source code or symbol references in the stories.
-    - Keep it simple, keep it short. But have the story have enough detail to be useful as a test.
-    - Do not use temporal adverbs like "immediately", "instantly", "right away", etc. if necessary use the word "then" or "after" instead.
-    - Aim for no ambiguous statements. Do not use "should" in the stories. Use "then" instead.
-    ${context ? '- When context is provided: the story must reflect the code changes as user behaviors, ensuring the diff is captured in the story narrative' : ''}
-
-    Use these tools to understand the codebase structure and identify user-facing features.
-
-    # Output Schema
-    \`\`\`json
-    ${JSON.stringify(zodToJsonSchema(storyDiscoveryOutputSchema), null, 2)}
-    \`\`\`
-
-    # Goal
-    Discover and document user stories that represent the main features and workflows in this codebase.
-    Focus on high-level user interactions, not implementation details.
-    ${context ? 'When scope is provided, ensure all discovered stories relate to that scope and capture the code changes as user-facing behaviors.' : ''}
-  `
-}
-
-function buildDiscoveryPrompt(
-  repoSlug: string,
-  storyCount: number,
-  context?: {
-    scope: string[]
-    commit: Commit
-  },
-): string {
-  const existingStoriesSection = dedent`
-    
-    # 🔍 Using searchStories Tool to Avoid Duplicates
-    
-    Before finalizing your discovered stories, you MUST use the searchStories tool to check for semantically similar existing stories. This will help you:
-    
-    - Identify gaps between existing stories (what's missing)
-    - Avoid writing duplicate stories that are too similar to existing ones
-    - Find opportunities to discover novel features in areas not yet covered
-    - Understand the semantic landscape of already-discovered stories
-    
-    **Workflow:**
-    1. As you explore the codebase and identify potential stories, use searchStories to check if similar stories already exist
-    2. If you find semantically similar stories (high similarity scores), dig deeper to find unique aspects, edge cases, or alternative user flows that haven't been documented
-    3. Focus on discovering stories that fill gaps between existing stories - look for features or workflows that exist in the code but aren't covered by current stories
-    4. Use the search results to guide your discovery toward novel, non-duplicate features
-    
-    Your goal is to discover ${storyCount} NEW stories that:
-    - Are semantically distinct from existing stories (use searchStories to verify)
-    - Cover features or workflows not already documented
-    - Fill gaps between existing stories
-    - Provide novel insights into areas of the codebase that haven't been explored yet
-  `
-
-  const contextSection = context
-    ? dedent`
-    
-    # 📝 Context - Scope-Focused Discovery
-    You are analyzing a specific set of commits with a REQUIRED SCOPE for discovery. The scope defines what area or feature you must focus on when discovering stories.
-
-    ## Required Scope
-    ${context.scope.map((scope, i) => `${i + 1}. ${scope}`).join('\n')}
-
-    **CRITICAL**: Your discovery MUST be focused on the scope(s) listed above. All stories you discover must relate directly to these scopes. The commit message, code diff, and changed files are supporting details that help you understand HOW the scope was implemented, but the SCOPE is what defines WHAT you should discover.
-
-    ## Supporting Details (Use to understand the scope implementation)
-
-    ### Changed Files
-    ${context.commit.changedFiles.map((f: string) => `- ${f}`).join('\n')}
-
-    ### Commit Message
-    ${context.commit.message}
-
-    ### Code Diff
-    \`\`\`
-    ${context.commit.diff.substring(0, 10000)}${context.commit.diff.length > 10000 ? '\n... (diff truncated)' : ''}
-    \`\`\`
-
-    ## Discovery Instructions
-    When discovering stories:
-    1. **Primary Focus**: The required scope(s) define what feature or area you must discover stories for
-    2. **Supporting Context**: Use the commit message, code diff, and changed files to understand:
-       - How the scope was implemented
-       - What code changes support the scope
-       - What user-facing behaviors were added or modified
-    3. **Story Requirements**: Each story you discover must:
-       - Directly relate to at least one of the required scopes
-       - Capture the code changes that implement the scope (describe the behavior, not the code itself)
-       - Reflect the user-facing impact of the changes shown in the diff
-    4. **Code Change Integration**: Ensure your stories capture:
-       - New functionality introduced in the code changes
-       - Modified behaviors reflected in the diff
-       - User interactions enabled by the changed files
-
-    Use the searchStories tool to check existing stories and compare against what you discover within the required scope.
-  `
+/**
+ * System instructions for file-based discovery (from story-generator-agent)
+ */
+function buildSystemInstructions(maxStories?: number): string {
+  const limitInstruction = maxStories
+    ? `\n# Story Limit\nGenerate at most ${maxStories} story/stories from this file. Focus on the most important user behaviors first.\n`
     : ''
 
   return dedent`
-    Analyze this codebase and discover ${storyCount} user stories that represent the main features and workflows.
+    You are an expert QA engineer who writes **Gherkin-style user behavior stories**. ${limitInstruction}
 
-    ${existingStoriesSection}
-    ${contextSection}
+    **Turn code into clear user-facing behavior stories**, not technical descriptions.
 
-    Explore the codebase using the available tools to understand the structure and identify user-facing features.
-    When you have discovered ${storyCount} stories, respond only with the JSON object that matches the schema.
+    # What You Produce
+
+    For each meaningful user-facing behavior, produce:
+
+    1. **Title** — one sentence describing the user outcome
+    2. **Gherkin Story** — GIVEN / WHEN / THEN (testable by QA without reviewing code)
+    3. **Dependencies** — brief notes:
+      * Entry point (where user accesses the feature)
+      * Exit point (what happens next / where user goes)
+      * Prerequisites (user-visible requirements)
+      * Side effects (user-visible changes)
+    4. **Acceptance Criteria** — testable, user-visible outcomes (REQUIRED - never leave empty)
+    5. **Code References** — \`filepath:lineStart:lineEnd\` for all files that contribute (REQUIRED - never leave empty)
+
+    Return stories as JSON.
+
+    # What Makes a Good User Story
+
+    A good user story meets these criteria:
+
+    1. **Business Value** — The story represents business logic that is valuable to the overall application.
+
+    2. **Implementation-Agnostic** — The story does not concern underlying implementation details. It should be written so that code changes, improvements, or refactors would not adjust the user behavior (unless explicitly changed by the code). For example, how/where data is stored in a database is not relevant to the user seeing the information they desire.
+
+    3. **Simple, Testable, and Valuable** — The story is simple, testable, and provides clear value.
+
+    # Granularity Guidelines
+
+    Stories must be at the **right level of granularity** - high enough to be implementation-agnostic, but specific enough to provide clear user-facing value.
+
+    ## ✅ Good Examples (Right Granularity)
+
+    - "User can sign in with GitHub" - Focuses on user outcome, not implementation
+    - "User receives email confirmation after registration" - User-visible result
+    - "User can create a new team" - Clear capability, not tied to specific API calls
+    - "User sees error message when login fails" - User-visible feedback
+
+    ## ❌ Bad Examples (Too Granular - Implementation Details)
+
+    - "Button accepts children prop to customize label" - This is about component API, not user behavior
+    - "Component calls signIn.social() method" - Implementation detail, user doesn't care about method names
+    - "User clicks button that triggers POST /api/teams" - Too technical, mentions API endpoints
+    - "Form validates email using regex pattern" - Implementation detail, user only sees validation result
+
+    ## ❌ Bad Examples (Too Vague - Not Actionable)
+
+    - "User interacts with authentication" - Too abstract, what specifically happens?
+    - "Component renders correctly" - Not a user behavior, too vague
+    - "User experiences the application" - No specific outcome
+
+    ## ❌ Bad Examples (UI Rendering - Skip These)
+
+    - "Page presents a welcome message and kanji label" - This is about static content rendering, not user behavior
+    - "User sees a button with GitHub icon" - Describes UI appearance, not a meaningful action
+    - "Component displays text and links" - Static content display is not a user behavior story
+
+    **Before writing a story, ask yourself:**
+    - "Would a user notice or care about this behavior?"
+    - "Is this describing what the user experiences, or how the code works?"
+
+    If it's about implementation details or static content rendering, skip it.
+
+    # How to Work
+
+    ### Step 1 — Determine if the file has distinct user-facing behaviors
+
+    Evaluate if the target file, on its own, contains distinct aspects that inform user behavior. Look for:
+    * User actions (clicking buttons, submitting forms, navigating)
+    * User-visible results (messages, UI changes, displayed data)
+
+    If the file only contains internal logic (helpers, utilities, schemas, state management), skip file discovery.
+
+    ### Step 2 — Write a user story for each unique behavior
+
+    For each unique user-facing behavior discovered, write a complete user story. Each story should focus on one outcome.
+
+    **Critical**: Every story MUST include:
+    - At least 3 acceptance criteria (user-visible, testable outcomes)
+    - At least 1 code reference (the file being analyzed, plus any related files)
+
+    ### Step 3 — Research and enrich with external context
+
+    Use the provided tools to research related files and code paths. Include any external referenced files that contribute to the story, ensuring you capture entry points, exit points, prerequisites, and side effects.
+
+    # ❌ Exclude
+
+    Skip stories about:
+    * Static UI rendering (just displaying content, not user actions)
+    * Component APIs, method names, or implementation details
+    * Internal logic invisible to users
+
+    Focus on what users experience, not how the code works.
   `
 }
 
-export async function runStoryDiscoveryAgent({
-  db,
-  repo,
-  options,
-}: StoryDiscoveryAgentOptions): Promise<StoryDiscoveryOutput> {
-  const sandbox = await getDaytonaSandbox(options.daytonaSandboxId)
+/**
+ * Prompt builder for file-based discovery
+ */
+function buildPrompt(
+  filePath: string,
+  fileContent: string,
+  maxStories?: number,
+): string {
+  const limitPrompt = maxStories
+    ? `\n\nGenerate at most ${maxStories} story/stories from this file. Focus on the most important user behaviors first.`
+    : ''
+
+  return dedent`
+    Analyze this code file and generate enriched user behavior stories.
+
+    Target File: ${filePath}
+
+    File Content:
+    ${fileContent}
+    ${limitPrompt}
+
+    Workflow:
+    1. First, navigate the codebase to understand context (imports, related files, parent components)
+    2. Then, discover user behaviors in THIS FILE (focal point)
+    3. Finally, navigate the codebase to enrich each behavior with specific details (entry points, exit points, prerequisites, side effects)
+
+    Remember: The target file is the focal point. Use navigation to enrich, not to discover new behaviors elsewhere.
+  `
+}
+
+export async function runStoryDiscoveryAgent(
+  options: StoryDiscoveryAgentOptions,
+): Promise<DiscoveryAgentOutput> {
+  const { filePath, fileContent } = options
+  const {
+    maxStories,
+    maxSteps = 30,
+    model = agents.discovery.options.model,
+    telemetryTracer,
+    onProgress,
+  } = options.options
+
+  // Resolve file path relative to git root
+  const gitRoot = await findGitRoot()
+  const resolvedFilePath = isAbsolute(filePath)
+    ? filePath
+    : resolve(gitRoot, filePath)
+  const content = fileContent ?? (await readFile(resolvedFilePath, 'utf-8'))
 
   const agent = new Agent({
-    model: options?.model ?? agents.discovery.options.model,
-    system: buildDiscoveryInstructions(options.context),
+    model,
+    system: buildSystemInstructions(maxStories),
     tools: {
-      terminalCommand: createTerminalCommandTool({ sandbox }),
-      readFile: createReadFileTool({ sandbox }),
-      resolveLibrary: createResolveLibraryTool(),
-      searchStories: createSearchStoriesTool({ db, repoId: repo.id }),
-    },
+      terminalCommand: createLocalTerminalCommandTool(onProgress),
+      readFile: createLocalReadFileTool(),
+      writeFile: createLocalWriteFileTool({ schema: discoveredStorySchema as unknown as z.ZodAny }),
+    } as any,
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-discovery-v3',
       metadata: {
-        repoId: repo.id,
-        repoSlug: repo.slug,
-        daytonaSandboxId: options.daytonaSandboxId,
-        storyCount: options.storyCount,
+        filePath,
       },
-      tracer: options.telemetryTracer,
+      tracer: telemetryTracer,
     },
-    onStepFinish: async (step) => {
+    onStepFinish: (step) => {
       if (step.reasoningText) {
-        await streams.append('progress', step.reasoningText)
+        onProgress?.(step.reasoningText)
       }
     },
-    stopWhen: stepCountIs(options.maxSteps ?? 30), // Allow more steps for discovery
-    experimental_output: Output.object({ schema: storyDiscoveryOutputSchema }),
+    stopWhen: stepCountIs(maxSteps),
+    // TODO tell the system prompt to return a list of strings
+    experimental_output: Output.object({
+      schema: z.array(z.string()),
+    }),
   })
 
-  const prompt = buildDiscoveryPrompt(
-    repo.slug,
-    options.storyCount,
-    options.context,
-  )
+  const prompt = buildPrompt(filePath, content, maxStories)
 
   const result = await agent.generate({ prompt })
+  const files = result.experimental_output
 
-  logger.debug('🤖 Story Discovery Agent Result', { result })
+  // Now add in the composition
+  const compositionStories: DiscoveryAgentOutput = await pMap(
+    files,
+    async (filePath) => {
+      // TODO read the file contents
+      console.log(filePath)
+      const story = discoveredStorySchema.parse(JSON.parse('{}'))
+      const composition = await runCompositionAgent({
+        story,
+        repo: {
+          id: '1',
+          slug: 'test',
+        },
+      })
 
-  return result.experimental_output
+      // add in embeddings
+      const embeddings = await generateEmbedding({
+        text: JSON.stringify({ ...story, composition }),
+      })
+
+      return {
+        ...story,
+        composition,
+        embeddings,
+      }
+    },
+  )
+
+  return discoveryAgentOutputSchema.parse(compositionStories)
 }

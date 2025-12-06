@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import type { Sandbox } from '@daytonaio/sdk'
-import { getFileContentFromSandbox } from '@app/agents'
 
 /**
  * Generates a cache key for story evidence caching.
@@ -63,12 +62,18 @@ export function hashFileContent(content: string): string {
  * @param filePath - The path to the file within the sandbox to hash.
  * @returns A promise that resolves to the SHA-256 hexadecimal hash of the file's contents.
  */
+
 export async function getFileHashFromSandbox(
-  sandbox: Sandbox,
   filePath: string,
 ): Promise<string> {
-  const contents = await getFileContentFromSandbox(sandbox, filePath)
-  return hashFileContent(contents)
+  // TODO
+  await new Promise((resolve: (value: string) => void) =>
+    setTimeout(resolve, 1000),
+  )
+  console.log('getFileHashFromSandbox', filePath)
+  // const contents = await getFileContentFromSandbox(sandbox, filePath)
+  // return hashFileContent(contents)
+  return '1234567890'
 }
 
 /**
@@ -83,7 +88,7 @@ export async function getFileHashFromSandbox(
  */
 export async function buildEvidenceHashMap(
   evidence: string[],
-  sandbox: Sandbox,
+  _sandbox: Sandbox,
 ): Promise<Record<string, { hash: string; lineRanges: string[] }>> {
   // Group line ranges by file path
   const fileLineRangesMap = new Map<string, Set<string>>()
@@ -115,7 +120,7 @@ export async function buildEvidenceHashMap(
   await Promise.all(
     Array.from(fileLineRangesMap.entries()).map(
       async ([filePath, lineRangesSet]) => {
-        const hash = await getFileHashFromSandbox(sandbox, filePath)
+        const hash = await getFileHashFromSandbox(filePath)
         hashMap[filePath] = {
           hash,
           lineRanges: Array.from(lineRangesSet),

@@ -1,4 +1,4 @@
-import type { Story } from './story-generator-agent.js'
+import { DiscoveredStory } from '@app/schemas'
 import type { StoryFile } from './story-file-reader.js'
 
 /**
@@ -14,6 +14,7 @@ async function generateEmbedding({
   modelId?: string
 }): Promise<number[]> {
   // TODO
+  console.log('generateEmbedding', text, modelId)
   return []
 }
 
@@ -47,7 +48,7 @@ function cosineSimilarity(vec1: number[], vec2: number[]): number {
 /**
  * Combines story fields into a single text string for embedding generation.
  */
-function storyToText(story: Story): string {
+function storyToText(story: DiscoveredStory): string {
   const parts: string[] = [story.title, story.behavior]
 
   if (story.acceptanceCriteria && story.acceptanceCriteria.length > 0) {
@@ -65,9 +66,9 @@ function storyToText(story: Story): string {
  * @param story2 - Second story to compare
  * @returns Similarity score (0-1)
  */
-export async function computeStorySimilarity(
-  story1: Story,
-  story2: Story,
+async function computeStorySimilarity(
+  story1: DiscoveredStory,
+  story2: DiscoveredStory,
 ): Promise<number> {
   const text1 = storyToText(story1)
   const text2 = storyToText(story2)

@@ -4,15 +4,13 @@ import { z } from 'zod'
 import type { StoryFile } from './story-file-reader.js'
 
 const mermaidChartOutputSchema = z.object({
-  chart: z
-    .string()
-    .describe('Mermaid diagram code (flowchart, graph, etc.)'),
+  chart: z.string().describe('Mermaid diagram code (flowchart, graph, etc.)'),
   chartType: z
     .enum(['flowchart', 'graph', 'sequenceDiagram', 'stateDiagram'])
     .describe('Type of mermaid chart generated'),
 })
 
-export interface GenerateMermaidChartOptions {
+interface GenerateMermaidChartOptions {
   model: LanguageModel
   stories: StoryFile[]
   folderPath: string
@@ -36,7 +34,6 @@ export async function generateMermaidChart(
   if (stories.length === 1) {
     // For a single story, create a simple node
     const story = stories[0]!
-    const safeTitle = story.story.title.replace(/[^a-zA-Z0-9]/g, '_')
     return `graph TD
     A["${story.story.title}"]`
   }
@@ -133,7 +130,7 @@ Return a JSON object with the chart code and chart type.`
       const output = result.experimental_output as z.infer<
         typeof mermaidChartOutputSchema
       >
-      return output.chart
+      return output.chart as string
     }
 
     // Fallback: try to parse raw text
@@ -143,7 +140,7 @@ Return a JSON object with the chart code and chart type.`
         const parsed = JSON.parse(rawText)
         const validationResult = mermaidChartOutputSchema.safeParse(parsed)
         if (validationResult.success) {
-          return validationResult.data.chart
+          return validationResult.data.chart as string
         }
       } catch {
         // If parsing fails, return a simple flowchart
@@ -184,4 +181,3 @@ ${connections}`
 ${nodes}`
   }
 }
-

@@ -6,7 +6,7 @@ export interface FolderMarkdown {
   depth: number
 }
 
-export interface GenerateFolderMarkdownOptions {
+interface GenerateFolderMarkdownOptions {
   summary: string
   mermaidChart: string
   stories: StoryFile[]
@@ -56,7 +56,7 @@ export function generateFolderMarkdown(
   return markdown
 }
 
-export interface CombineMarkdownFilesOptions {
+interface CombineMarkdownFilesOptions {
   folderMarkdowns: FolderMarkdown[]
   rootPath: string
 }

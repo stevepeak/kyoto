@@ -1,5 +1,5 @@
-import type { GetLinearTeamsResult, LinearTeam } from './types'
-import { LINEAR_API_URL, type LinearGraphQLResponse } from './common'
+import type { GetLinearTeamsResult, LinearTeam } from './types.js'
+import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
 
 interface GetTeamsResponse {
   teams: {
@@ -87,4 +87,3 @@ export async function getLinearTeams(
     }
   }
 }
-

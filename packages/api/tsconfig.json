@@ -1,26 +1,5 @@
 {
-  "extends": "@ocavue/tsconfig/dom/app.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "skipLibCheck": true,
-    "incremental": true
-  },
-  "exclude": ["node_modules", "dist", ".turbo"],
-  "references": [
-    {
-      "path": "../config/tsconfig.json"
-    },
-    {
-      "path": "../db/tsconfig.json"
-    },
-    {
-      "path": "../linear/tsconfig.json"
-    },
-    {
-      "path": "../posthog/tsconfig.json"
-    },
-    {
-      "path": "../schemas/tsconfig.json"
-    }
-  ]
+  "extends": "tsconfig/bun.json",
+  "include": ["src", "vitest.config.ts"],
+  "exclude": ["**/node_modules", "**/.*/"]
 }

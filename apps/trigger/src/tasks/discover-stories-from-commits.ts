@@ -3,13 +3,12 @@ import { setupDb } from '@app/db'
 import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
 import { getTelemetryTracer } from '@/telemetry'
-import {
-  agents,
-  type StoryDiscoveryOutput,
-  type StoryImpactOutput,
-  extractScope,
-} from '@app/agents'
-import type { Commit } from '@app/schemas'
+import { agents } from '@app/agents'
+import type {
+  Commit,
+  StoryImpactOutput,
+  DiscoveryAgentOutput,
+} from '@app/schemas'
 import { findRepoByOwnerAndName } from './github/shared/db'
 import {
   getOctokitClient,
@@ -17,7 +16,6 @@ import {
   getCommitMessages,
 } from '../helpers/github'
 import { dedent } from 'ts-dedent'
-import { storyDecompositionTask } from './story-decomposition'
 import pMap from 'p-map'
 import { diffLines } from 'diff'
 
@@ -226,7 +224,7 @@ export const discoverStoriesFromCommitsTask = task({
       logger.info(changelog)
 
       // Extract scope from changelog
-      const scopeItems: string[] = await extractScope({
+      const scopeItems: string[] = await agents.scopeExtraction.run({
         changelog,
         options: { maxScopeCount: options.maxScopeCount ?? 10 },
       })
@@ -390,7 +388,7 @@ export const discoverStoriesFromCommitsTask = task({
                 `Creating new story for "${scope.substring(0, 30)}..."`,
               )
 
-              const newStoryResult: StoryDiscoveryOutput =
+              const newStoryResult: DiscoveryAgentOutput =
                 await agents.discovery.run({
                   db,
                   repo: {
@@ -410,17 +408,17 @@ export const discoverStoriesFromCommitsTask = task({
 
               logger.info('Created new story from scope', {
                 scope,
-                shouldBeOne: newStoryResult.stories.length,
-                story: newStoryResult.stories[0],
+                shouldBeOne: newStoryResult.length,
+                story: newStoryResult[0],
               })
 
-              for (const story of newStoryResult.stories) {
+              for (const story of newStoryResult) {
                 newStories.push({
                   title:
                     story.title ||
-                    story.text.split('\n')[0] ||
+                    story.behavior.split('\n')[0] ||
                     'Untitled Story',
-                  text: story.text,
+                  text: story.behavior,
                   scope,
                 })
               }
@@ -558,34 +556,36 @@ export const discoverStoriesFromCommitsTask = task({
             `Saved ${insertedStories.length} new story/stories to database`,
           )
 
-          // Fire and forget: trigger decomposition tasks for each saved story
+          // Fire and forget: enrich each saved story
           if (options.runDecomposition !== false) {
             void streams.append(
               'progress',
               'Triggering story decomposition tasks',
             )
             for (const savedStory of insertedStories) {
-              await storyDecompositionTask.trigger(
-                {
-                  story: {
-                    id: savedStory.id,
-                    text: savedStory.story,
-                    title: savedStory.name,
-                  },
-                  repo: {
-                    id: repoRecord.repoId,
-                    slug: repoSlug,
-                  },
-                },
-                {
-                  tags: [
-                    `org_${ownerLogin}`,
-                    `repo_${repoName}`,
-                    `story_${savedStory.id}`,
-                  ],
-                  idempotencyKey: `story-decomposition-${savedStory.id}`,
-                },
-              )
+              // TODO
+              console.log('enriching story', savedStory)
+              // await storyDecompositionTask.trigger(
+              //   {
+              //     story: {
+              //       id: savedStory.id,
+              //       text: savedStory.story,
+              //       title: savedStory.name,
+              //     },
+              //     repo: {
+              //       id: repoRecord.repoId,
+              //       slug: repoSlug,
+              //     },
+              //   },
+              //   {
+              //     tags: [
+              //       `org_${ownerLogin}`,
+              //       `repo_${repoName}`,
+              //       `story_${savedStory.id}`,
+              //     ],
+              //     idempotencyKey: `story-decomposition-${savedStory.id}`,
+              //   },
+              // )
             }
           }
         } else {

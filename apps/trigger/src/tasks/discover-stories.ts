@@ -1,13 +1,11 @@
 import { task, logger, streams } from '@trigger.dev/sdk'
 
 import { setupDb } from '@app/db'
-import { agents } from '@app/agents'
 import { getConfig } from '@app/config'
 import { createDaytonaSandbox } from '../helpers/daytona'
-import { getTelemetryTracer } from '@/telemetry'
-import type { StoryDiscoveryOutput } from '@app/agents'
 import { findRepoByOwnerAndName } from './github/shared/db'
 import * as Sentry from '@sentry/node'
+import { agents } from '@app/agents'
 
 interface DiscoverStoriesPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -24,7 +22,7 @@ export const discoverStoriesTask = task({
     repoSlug,
     storyCount,
     save = false,
-  }: DiscoverStoriesPayload): Promise<StoryDiscoveryOutput> => {
+  }: DiscoverStoriesPayload) => {
     const env = getConfig()
     const db = setupDb(env.DATABASE_URL)
 
@@ -86,19 +84,15 @@ export const discoverStoriesTask = task({
       void streams.append('progress', 'Starting story discovery')
 
       // Run the story discovery agent
-      const discoveryResult: StoryDiscoveryOutput = await agents.discovery.run({
-        db,
-        repo: {
-          id: repoRecord.repoId,
-          slug: repoSlug,
-        },
-        options: {
-          daytonaSandboxId: sandbox.id,
-          storyCount,
-          telemetryTracer: getTelemetryTracer(),
-          model: agents.discovery.options.model,
-        },
-      })
+      const kyotoDiscoverCLIOutput = await sandbox.process.executeCommand(
+        'kyoto discover --json', // TODO instead get a list of created stories, read them using
+        `workspace/repo`,
+      )
+      // TODO sandbox.fs.downloadFile()
+
+      const discoveryResult = agents.discovery.schema.parse(
+        kyotoDiscoverCLIOutput.result,
+      )
 
       logger.info('Story discovery completed', {
         repoSlug,

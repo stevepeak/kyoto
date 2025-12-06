@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import type { Kysely, Selectable } from 'kysely'
 import { z } from 'zod'
 
-import { trpcNotFoundError } from './kysely-trprc'
+import { trpcNotFoundError } from './kysely-trprc.js'
 import type { User } from '@app/db/types'
 
 /**

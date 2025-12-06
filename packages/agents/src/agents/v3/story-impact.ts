@@ -2,35 +2,13 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import type { Tracer } from '@opentelemetry/api'
 import type { LanguageModel } from 'ai'
 import { dedent } from 'ts-dedent'
-import { logger, streams } from '@trigger.dev/sdk'
-import zodToJsonSchema from 'zod-to-json-schema'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 
-import { z } from 'zod'
-import { createSearchStoriesTool } from '../../tools/search-stories-tool'
-import { createKeywordSearchStoriesTool } from '../../tools/keyword-search-stories-tool'
-import { agents } from '../..'
-import type { setupDb } from '@app/db'
+import { agents } from '../../index.js'
 import type { Commit } from '@app/schemas'
-
-type DbClient = ReturnType<typeof setupDb>
-
-/**
- * Schema for the story impact output
- * Returns an array of impacted stories with their IDs and scope overlap assessment
- */
-export const storyImpactOutputSchema = z.object({
-  stories: z.array(
-    z.object({
-      id: z.string(),
-      scopeOverlap: z.enum(['significant', 'moderate', 'low']),
-    }),
-  ),
-})
-
-export type StoryImpactOutput = z.infer<typeof storyImpactOutputSchema>
+import { storyImpactOutputSchema, type StoryImpactOutput } from '@app/schemas'
 
 interface FindImpactedStoriesOptions {
-  db: DbClient
   repo: {
     id: string
     slug: string
@@ -50,7 +28,6 @@ interface FindImpactedStoriesOptions {
  * Returns an array of impacted stories with their IDs and scope overlap assessment
  */
 export async function findImpactedStories({
-  db,
   repo,
   commit,
   options: {
@@ -64,7 +41,7 @@ export async function findImpactedStories({
   const model = providedModel ?? agents.discovery.options.model
 
   const scopeText = scope.map((s, i) => `${i + 1}. ${s}`).join('\n')
-  const scopeSummary = scope.length === 1 ? scope[0] : `${scope.length} scopes`
+  // const scopeSummary = scope.length === 1 ? scope[0] : `${scope.length} scopes`
 
   const agent = new Agent({
     model,
@@ -107,12 +84,8 @@ export async function findImpactedStories({
       Focus on the scope: ${scopeText}
     `,
     tools: {
-      searchStories: createSearchStoriesTool({ db, repoId: repo.id }),
-      keywordSearchStories: createKeywordSearchStoriesTool({
-        db,
-        repoId: repo.id,
-      }),
-    } as any,
+      // TODO
+    },
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'find-impacted-stories',
@@ -125,7 +98,8 @@ export async function findImpactedStories({
     },
     onStepFinish: async (step) => {
       if (step.reasoningText) {
-        await streams.append('progress', step.reasoningText)
+        // await streams.append('progress', step.reasoningText)
+        // TODO
       }
     },
     stopWhen: stepCountIs(maxSteps),
@@ -169,19 +143,11 @@ export async function findImpactedStories({
     Respond with the JSON object that matches the schema.
   `
 
-  void streams.append(
-    'progress',
-    `Search for stories related to "${scopeSummary.substring(0, 30)}..."`,
-  )
-
   const result = await agent.generate({ prompt })
 
   const output = result.experimental_output
 
-  logger.debug('Scope processing result', {
-    scope,
-    storiesFound: output.stories.length,
-  })
-
   return output
 }
+
+export { storyImpactOutputSchema }

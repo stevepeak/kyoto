@@ -1,2 +1,2 @@
 export { default as is, assert } from '@sindresorhus/is'
-export { noop } from './noop'
+export { noop } from './noop.js'

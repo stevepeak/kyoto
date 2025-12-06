@@ -7,8 +7,8 @@ import {
   findOwnerForUser,
   findRepoForUser,
   requireRepoForUser,
-} from '../helpers/memberships'
-import { protectedProcedure, router } from '../trpc'
+} from '../helpers/memberships.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 type RepoListItemStatus = 'pass' | 'fail' | 'skipped' | 'running' | 'error'
 

@@ -6,7 +6,7 @@
  * This package provides Zod schemas for the complete story evaluation flow:
  *
  * 1. Raw Story → User input
- * 2. Decomposition → AI breaks story into steps
+ * 2. Composition → AI breaks story into steps
  * 3. Test/Evaluation → AI evaluates steps with evidence
  * 4. Cache → Stores file hashes for evidence validation
  *
@@ -20,17 +20,25 @@
 export {
   // Raw Story
   rawStoryInputSchema,
-  rawStorySchema,
+  discoveredStorySchema,
   type RawStoryInput,
-  type RawStory,
+  type DiscoveredStory,
+  type DiscoveryAgentOutput,
 
-  // Decomposition
-  decompositionStepSchema,
-  decompositionOutputSchema,
-  decompositionInputSchema,
-  type DecompositionStep,
-  type DecompositionOutput,
-  type DecompositionInput,
+  // Story Discovery
+  composedStorySchema,
+  storyDiscoveryOutputSchema,
+  storyImpactOutputSchema,
+  type ComposedStory,
+  type StoryDiscoveryOutput,
+  type StoryImpactOutput,
+  discoveryAgentOutputSchema,
+
+  // Composition
+  compositionStepSchema,
+  compositionAgentOutputSchema,
+  type CompositionStep,
+  type CompositionAgentOutput,
 
   // Test/Evaluation
   testStatusSchema,
@@ -56,7 +64,7 @@ export {
 
   // Complete story data
   type CompleteStoryData,
-} from './story-flow'
+} from './story-flow.js'
 
 // ============================================================================
 // AGENT TYPES (Agent-specific configuration types)
@@ -67,4 +75,4 @@ export {
   type ValidationResult,
   type evaluationAgentOptions,
   type Commit,
-} from './agent-types'
+} from './agent-types.js'

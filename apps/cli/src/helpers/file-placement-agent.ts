@@ -43,7 +43,7 @@ When calling moveFile:
 After moving the file, provide a plain text explanation of why you chose that folder location.`
 }
 
-export interface DetermineFilePlacementOptions {
+interface DetermineFilePlacementOptions {
   model: LanguageModel
   storyFile: StoryFile
   hierarchy: HierarchyOutput

@@ -2,7 +2,7 @@ import { task, logger } from '@trigger.dev/sdk'
 import * as Sentry from '@sentry/node'
 import { setupDb } from '@app/db'
 
-import { agents, getDaytonaSandbox } from '@app/agents'
+import { agents } from '@app/agents'
 import { getConfig } from '@app/config'
 import { getTelemetryTracer } from '@/telemetry'
 import type { EvaluationOutput } from '@app/schemas'
@@ -10,6 +10,7 @@ import {
   createDaytonaSandbox,
   getCommitSHAsFromSandbox,
 } from '@/helpers/daytona'
+import { getDaytonaSandbox } from '@app/daytona'
 import { getCachedEvidence, validateCacheEntry } from '@app/cache'
 
 export type TestStoryTaskResult = {
@@ -72,7 +73,7 @@ export const testStoryTask = task({
         'stories.story as story',
         'stories.repoId as repoId',
         'stories.name as name',
-        'stories.decomposition as decomposition',
+        'stories.composition as composition',
         'owners.login as ownerName',
         'repos.name as repoName',
       ])
@@ -178,9 +179,7 @@ export const testStoryTask = task({
         id: storyRecord.id,
         name: storyRecord.name,
         text: storyRecord.story,
-        decomposition: agents.decomposition.schema.parse(
-          storyRecord.decomposition,
-        ),
+        decomposition: agents.composition.schema.parse(storyRecord.composition),
       },
       options: {
         daytonaSandboxId,

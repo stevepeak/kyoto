@@ -1,0 +1,17 @@
+{
+  "name": "@stevepeak/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./bun.js",
+  "files": [
+    "bun.js"
+  ],
+  "devDependencies": {
+    "@dexaai/config": "^0.0.10",
+    "eslint": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

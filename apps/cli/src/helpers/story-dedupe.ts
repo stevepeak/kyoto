@@ -4,8 +4,6 @@ import type { StoryFile } from './story-file-reader.js'
 import { groupDuplicates } from './story-similarity.js'
 import { findKyotoDir } from './find-kyoto-dir.js'
 
-const STORIES_DIR = '.kyoto'
-
 /**
  * Selects the story file to keep from a group of duplicates.
  * Keeps the oldest file (by modification time), or first alphabetically if times are equal.
@@ -13,7 +11,7 @@ const STORIES_DIR = '.kyoto'
  * @param group - Array of duplicate story files
  * @returns The story file to keep
  */
-export async function selectStoryToKeep(group: StoryFile[]): Promise<StoryFile> {
+async function selectStoryToKeep(group: StoryFile[]): Promise<StoryFile> {
   if (group.length === 0) {
     throw new Error('Cannot select from empty group')
   }
@@ -95,4 +93,3 @@ export async function findDuplicates(
 
   return { groups, toDelete }
 }
-

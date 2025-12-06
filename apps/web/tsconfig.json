@@ -1,58 +1,25 @@
 {
-  "extends": "@ocavue/tsconfig/dom/app.json",
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    },
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
-  },
+  "extends": "tsconfig/bun.json",
   "include": [
-    "next-env.d.ts",
-    "app/**/*",
-    "components/**/*",
-    "client/**/*",
-    "hooks/**/*",
-    "lib/**/*",
-    "middleware.ts",
-    "instrumentation.ts",
-    "instrumentation-client.ts",
-    ".next/types/**/*.ts",
-    "types/**/*.d.ts"
+    "app",
+    "lib",
+    "app/ui",
+    "components",
+    "*.config.ts",
+    ".react-router/types/**/*",
+    "tests"
   ],
-  "exclude": [".next", "node_modules", "dist", ".turbo", ".next/cache"],
-  "references": [
-    {
-      "path": "../../packages/api/tsconfig.json"
-    },
-    {
-      "path": "../../packages/config/tsconfig.json"
-    },
-    {
-      "path": "../../packages/db/tsconfig.json"
-    },
-    {
-      "path": "../../packages/schemas/tsconfig.json"
-    },
-    {
-      "path": "../../packages/utils/tsconfig.json"
+  "exclude": ["**/node_modules", "**/.*/"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["node", "vite/client"],
+    "jsx": "react-jsx",
+    "rootDirs": [".", "./.react-router/types"],
+    "paths": {
+      // Easier to move files around the codebase and provide consistency
+      // FYI: This does NOT require 'baseUrl' to be set in order to resolve.
+      // Aligned with package.json "imports" field.
+      "#app/*": ["./app/*"]
     }
-  ]
+  }
 }

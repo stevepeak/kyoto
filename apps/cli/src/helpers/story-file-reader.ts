@@ -1,12 +1,12 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Story } from './story-generator-agent.js'
 import { findKyotoDir } from './find-kyoto-dir.js'
+import { DiscoveredStory, discoveredStorySchema } from '@app/schemas'
 
 export interface StoryFile {
   path: string
   filename: string
-  story: Story
+  story: DiscoveredStory
 }
 
 const STORIES_DIR = '.kyoto'
@@ -29,7 +29,7 @@ export async function readAllStoryFiles(): Promise<StoryFile[]> {
     for (const filename of jsonFiles) {
       const filePath = join(storiesDir, filename)
       const content = await readFile(filePath, 'utf-8')
-      const story = JSON.parse(content) as Story
+      const story = discoveredStorySchema.parse(JSON.parse(content))
 
       storyFiles.push({
         path: join(STORIES_DIR, filename),
@@ -58,13 +58,14 @@ export async function readAllStoryFilesRecursively(
   folderPath?: string,
 ): Promise<StoryFile[]> {
   const kyotoDir = await findKyotoDir()
-  const baseDir = folderPath
-    ? join(kyotoDir, folderPath)
-    : kyotoDir
+  const baseDir = folderPath ? join(kyotoDir, folderPath) : kyotoDir
 
   const storyFiles: StoryFile[] = []
 
-  async function walkDir(currentPath: string, relativeBase: string): Promise<void> {
+  async function walkDir(
+    currentPath: string,
+    relativeBase: string,
+  ): Promise<void> {
     try {
       const entries = await readdir(currentPath, { withFileTypes: true })
 
@@ -81,7 +82,7 @@ export async function readAllStoryFilesRecursively(
           // Read and parse JSON story file
           try {
             const content = await readFile(fullPath, 'utf-8')
-            const story = JSON.parse(content) as Story
+            const story = discoveredStorySchema.parse(JSON.parse(content))
 
             const relativePath = relativeBase
               ? join(STORIES_DIR, relativeBase, entry.name)
@@ -118,4 +119,3 @@ export async function readAllStoryFilesRecursively(
   await walkDir(baseDir, folderPath || '')
   return storyFiles
 }
-

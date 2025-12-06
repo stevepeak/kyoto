@@ -1,36 +1,8 @@
 {
+  "extends": "tsconfig/bun.json",
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/.*/"],
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022"],
-    "composite": true,
-    "declaration": true,
-    "outDir": "dist",
-    "baseUrl": ".",
-    "skipLibCheck": true,
-    "incremental": true,
-    "rootDir": "src",
-    "types": ["node"],
-    "noImplicitOverride": false,
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", ".turbo", "bin"],
-  "references": [
-    {
-        "path": "../../packages/agents/tsconfig.json"
-    },
-    {
-        "path": "../../packages/config/tsconfig.json"
-    },
-    {
-        "path": "../../packages/schemas/tsconfig.json"
-    }
-]
+    "noImplicitOverride": false
+  }
 }
-

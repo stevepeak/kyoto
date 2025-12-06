@@ -1,8 +1,8 @@
 import type {
   CreateLinearCustomerInput,
   CreateLinearCustomerResult,
-} from './types'
-import { LINEAR_API_URL, type LinearGraphQLResponse } from './common'
+} from './types.js'
+import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
 
 interface CreateCustomerResponse {
   customerCreate: {
@@ -302,4 +302,3 @@ export async function findOrCreateLinearCustomer(
     }
   }
 }
-

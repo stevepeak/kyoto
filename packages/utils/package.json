@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "clean": "rm -rf node_modules dist",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,10 +18,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.10",
+    "tsconfig": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@sindresorhus/is": "^7.1.1"
+    "@sindresorhus/is": "catalog:"
   }
 }

@@ -83,7 +83,7 @@ const envSchema = z.object({
   BROWSERBASE_PROJECT_ID: z.string().min(1),
 })
 
-type ParsedEnv = z.infer<typeof envSchema>
+export type ParsedEnv = z.infer<typeof envSchema>
 
 export function getConfig(
   environmentVariables?: Record<string, string>,
@@ -101,5 +101,3 @@ export function getConfig(
 
   return envSchema.parse(normalizedEnv)
 }
-
-export type { ParsedEnv }

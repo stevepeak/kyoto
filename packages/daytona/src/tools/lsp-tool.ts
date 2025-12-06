@@ -4,7 +4,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 
 import { streams } from '@trigger.dev/sdk'
-import { resolveWorkspacePath } from '../helpers/resolve-workspace-path'
+import { resolveWorkspacePath } from '../helpers/resolve-workspace-path.js'
 
 const lspLanguageSchema = z.enum(['typescript', 'python'])
 

@@ -2,8 +2,8 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { tasks } from '@trigger.dev/sdk'
 
-import { findRepoForUser, requireRepoForUser } from '../helpers/memberships'
-import { protectedProcedure, router } from '../trpc'
+import { findRepoForUser, requireRepoForUser } from '../helpers/memberships.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 export const runRouter = router({
   listByRepo: protectedProcedure

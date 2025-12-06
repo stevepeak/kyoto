@@ -34,7 +34,7 @@ export async function runStoriesWithSandbox({
   stories,
   initialRunStories,
   runId,
-  agentVersion = agents.decomposition.version,
+  agentVersion = agents.composition.version,
   extTriggerDev,
 }: RunStoriesWithSandboxParams): Promise<AggregatedRunOutcome> {
   const env = getConfig()

@@ -3,7 +3,7 @@ import { configure } from '@trigger.dev/sdk'
 import superjson from 'superjson'
 import * as Sentry from '@sentry/nextjs'
 
-import type { Context } from './context'
+import type { Context } from './context.js'
 import { getConfig } from '@app/config'
 
 /**

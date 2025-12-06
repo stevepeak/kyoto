@@ -2,8 +2,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import chalk from 'chalk'
 import treeify from 'object-treeify'
-import type { Story } from './story-generator-agent.js'
 import { findKyotoDir } from './find-kyoto-dir.js'
+import { discoveredStorySchema } from '@app/schemas'
 
 const STORIES_DIR = '.kyoto'
 
@@ -36,7 +36,7 @@ async function readStoryFilesRecursive(
     } else if (entry.isFile() && entry.name.endsWith('.json')) {
       try {
         const content = await readFile(fullPath, 'utf-8')
-        const story = JSON.parse(content) as Story
+        const story = discoveredStorySchema.parse(JSON.parse(content))
         stories.push({
           path: fullPath,
           relativePath,
@@ -152,7 +152,7 @@ export async function displayStoryTree(
     }
 
     const tree = buildTree(stories)
-    
+
     // Convert to treeify format, skipping the root .kyoto node
     const treeifyObject: Record<string, any> = {}
     if (tree.children && tree.children.length > 0) {
@@ -198,7 +198,7 @@ export async function displayStoryTree(
 
     // Apply colors to the output by identifying directories vs files
     const lines = treeOutput.split('\n')
-    const coloredLines = lines.map((line, index) => {
+    const coloredLines = lines.map((line) => {
       // Match the tree prefix and the first word (key name)
       const match = line.match(/^([├└│ ]+)([^\s]+)(.*)$/)
       if (!match) return line
@@ -220,4 +220,3 @@ export async function displayStoryTree(
     // Silently fail if we can't read the tree
   }
 }
-

@@ -8,8 +8,8 @@ import {
   createLinearCustomerRequest,
   getLinearTeams,
 } from '@app/linear'
-import { protectedProcedure, router } from '../trpc'
-import { getUserGithubLogin } from '../helpers/users'
+import { protectedProcedure, router } from '../trpc.js'
+import { getUserGithubLogin } from '../helpers/users.js'
 
 const submitFeedbackInputSchema = z.object({
   feedback: z.string().min(1, 'Feedback is required'),

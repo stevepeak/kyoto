@@ -9,7 +9,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "pnpm run build:clean && pnpm run build:compile",
+    "clean": "rm -rf node_modules dist",
+    "build": "bun run build:clean && bun run build:compile",
     "build:clean": "rm -rf dist",
     "build:compile": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
@@ -25,17 +26,18 @@
     "@app/linear": "workspace:*",
     "@app/posthog": "workspace:^",
     "@app/schemas": "workspace:*",
-    "@sentry/nextjs": "^10.25.0",
-    "@trigger.dev/sdk": "^4.1.1",
-    "@trpc/server": "11.6.0",
-    "kysely": "^0.28.8",
-    "superjson": "^2.2.2",
-    "ts-dedent": "^2.2.0",
-    "zod": "^3.25.76"
+    "@sentry/nextjs": "catalog:",
+    "@trigger.dev/sdk": "catalog:",
+    "@trpc/server": "catalog:",
+    "kysely": "catalog:",
+    "superjson": "catalog:",
+    "ts-dedent": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.18.10",
     "@types/pg": "^8.15.5",
+    "tsconfig": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

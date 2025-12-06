@@ -4,16 +4,8 @@ import {
   stepCountIs,
   generateText,
 } from 'ai'
-import type { DecompositionAgentResult } from './story-decomposition'
 import { dedent } from 'ts-dedent'
 
-import { getDaytonaSandbox } from '../../helpers/daytona'
-import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
-import { createReadFileTool } from '../../tools/read-file-tool'
-import {
-  createResolveLibraryTool,
-  createGetLibraryDocsTool,
-} from '../../tools/context7-tool'
 import {
   type TestStatus,
   evaluationOutputSchema,
@@ -21,13 +13,14 @@ import {
   assertionEvidenceSchema,
   assertionCacheEntrySchema,
 } from '@app/schemas'
-import type { evaluationAgentOptions } from '@app/schemas'
-import { logger, streams } from '@trigger.dev/sdk'
-import zodToJsonSchema from 'zod-to-json-schema'
-import { agents } from '../..'
+import type {
+  CompositionAgentOutput,
+  CompositionStep,
+  evaluationAgentOptions,
+} from '@app/schemas'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+import { agents } from '../../index.js'
 import { z } from 'zod'
-import { setupDb } from '@app/db'
-import { getConfig } from '@app/config'
 
 /**
  * Schema for agent output (step evaluation result)
@@ -45,10 +38,9 @@ const stepAgentOutputSchema = z.object({
 
 type StepAgentOutput = z.infer<typeof stepAgentOutputSchema>
 
-// Type definitions
 type StepContext = {
   stepIndex: number
-  step: DecompositionAgentResult['steps'][number]
+  step: CompositionStep
   previousResults: StepAgentOutput[]
   storyName: string
   storyText: string
@@ -61,7 +53,7 @@ function buildEvaluationInstructions(repoOutline: string): string {
 You are an expert software QA engineer evaluating whether a specific step from a user story is properly implemented given the current repository state.
 
 # Role & Objective
-You are evaluating a SINGLE step from a decomposed user story. Start with no assumptions that this step is implemented correctly. 
+You are evaluating a SINGLE step from a composed user story. Start with no assumptions that this step is implemented correctly. 
 You must discover evidence by gathering, searching, and evaluating source code to make a well-educated conclusion about whether this specific step is properly and fully implemented.
 
 # How to Perform Your Evaluation
@@ -158,24 +150,24 @@ function buildStepPrompt({
 }
 
 async function combineStepResults(args: {
-  decompositionSteps: DecompositionAgentResult
+  compositionSteps: CompositionAgentOutput
   analysisStepResults: StepAgentOutput[]
   modelId?: string // TODO implement this later
   cachedRunIds?: Map<string, string> // Map of "stepIndex:assertionIndex" -> runId
   previousExplanation?: string | null // Previous explanation if everything was cached
 }): Promise<EvaluationOutput> {
   const {
-    decompositionSteps,
+    compositionSteps,
     analysisStepResults,
     cachedRunIds,
     previousExplanation,
   } = args
 
-  // Map decomposition steps with their corresponding analysis results
-  const steps = decompositionSteps.steps.map((decompStep, index) => {
+  // Map composition steps with their corresponding analysis results
+  const steps = compositionSteps.steps.map((decompStep, index) => {
     const analysisResult = analysisStepResults[index]
 
-    // Use the original outcome from the decomposition step
+    // Use the original outcome from the composition step
     const outcome =
       decompStep.type === 'given' ? decompStep.given : decompStep.goal
 
@@ -209,7 +201,7 @@ async function combineStepResults(args: {
   let explanation: string
   if (previousExplanation) {
     explanation = previousExplanation
-    logger.info('Using cached explanation from previous run', {
+    console.info('Using cached explanation from previous run', {
       explanationLength: explanation.length,
     })
   } else {
@@ -256,25 +248,24 @@ ${stepSummary}
 async function agent(args: {
   stepContext: StepContext
   evaluationAgentOptions: evaluationAgentOptions
-  sandbox: Awaited<ReturnType<typeof getDaytonaSandbox>>
 }): Promise<StepAgentOutput> {
   const {
     stepContext,
     evaluationAgentOptions: { repo, options },
-    sandbox,
   } = args
 
   const agent = new Agent({
     model: agents.evaluation.options.model,
     system: buildEvaluationInstructions(stepContext.repoOutline),
     tools: {
-      terminalCommand: createTerminalCommandTool({ sandbox }),
-      readFile: createReadFileTool({ sandbox }),
-      resolveLibrary: createResolveLibraryTool(),
-      getLibraryDocs: createGetLibraryDocsTool(),
-      // TODO fix this getting: Error: "error starting LSP server"
-      // - **lsp**: Use the Language Server Protocol to list symbols in a file (\`documentSymbols\`) or discover symbols across the codebase (\`sandboxSymbols\`). Only supports TypeScript and Python sources.
-      // lsp: createLspTool({ sandbox }),
+      // TODO
+      // terminalCommand: createTerminalCommandTool({ sandbox }),
+      // readFile: createReadFileTool({ sandbox }),
+      // resolveLibrary: createResolveLibraryTool(),
+      // getLibraryDocs: createGetLibraryDocsTool(),
+      // // TODO fix this getting: Error: "error starting LSP server"
+      // // - **lsp**: Use the Language Server Protocol to list symbols in a file (\`documentSymbols\`) or discover symbols across the codebase (\`sandboxSymbols\`). Only supports TypeScript and Python sources.
+      // // lsp: createLspTool({ sandbox }),
     },
     toolChoice: 'auto', // must be auto to the agent can choose when to finish.
     experimental_telemetry: {
@@ -289,9 +280,10 @@ async function agent(args: {
       },
       tracer: options?.telemetryTracer,
     },
-    onStepFinish: async (step) => {
+    onStepFinish: (step) => {
       if (step.reasoningText) {
-        await streams.append('progress', step.reasoningText)
+        // await streams.append('progress', step.reasoningText)
+        // TODO
       }
     },
     maxRetries: 3, // @default 2
@@ -305,7 +297,7 @@ async function agent(args: {
 
   const result = await agent.generate({ prompt })
 
-  logger.log(`🌸 Step ${stepContext.stepIndex + 1} Evaluation Result`, {
+  console.log(`🌸 Step ${stepContext.stepIndex + 1} Evaluation Result`, {
     stepContext,
     prompt,
     result,
@@ -314,7 +306,7 @@ async function agent(args: {
   // Handle case where agent hit max steps without generating output
   if (!result.experimental_output) {
     const maxStepsUsed = options?.maxSteps ?? agents.evaluation.options.maxSteps
-    logger.warn(
+    console.warn(
       `Step ${stepContext.stepIndex + 1} hit max steps (${maxStepsUsed}) without generating output`,
     )
     return {
@@ -331,26 +323,26 @@ export async function main(
   payload: evaluationAgentOptions,
 ): Promise<EvaluationOutput> {
   const { story, options } = payload
-  const sandbox = await getDaytonaSandbox(options?.daytonaSandboxId ?? '')
 
   // Cache entry and validation result are passed from test-story.ts
   const cacheEntry = options?.cacheEntry ?? null
   const validationResult = options?.validationResult ?? null
   const cachedRunIds = new Map<string, string>() // Map of "stepIndex:assertionIndex" -> runId
 
-  // Get repository outline once for all steps
-  const repoOutline = await sandbox.process.executeCommand(
-    'tree -L 3 -I "dist|build|.git|.next|*.lock|*.log"',
-    `workspace/repo`,
-  )
-  if (repoOutline.exitCode !== 0) {
-    throw new Error(`Failed to get repo outline: ${repoOutline.result}`)
-  }
-  const outline = repoOutline.result ?? ''
+  // // Get repository outline once for all steps
+  // const repoOutline = await sandbox.process.executeCommand(
+  //   'tree -L 3 -I "dist|build|.git|.next|*.lock|*.log"',
+  //   `workspace/repo`,
+  // )
+  // if (repoOutline.exitCode !== 0) {
+  //   throw new Error(`Failed to get repo outline: ${repoOutline.result}`)
+  // }
+  // const outline = repoOutline.result ?? ''
+  const outline = ''
 
   // Process each step sequentially
   const stepResults: StepAgentOutput[] = []
-  const steps = (story.decomposition as DecompositionAgentResult).steps
+  const steps = story.composition.steps
   let allStepsCached = true // Track if all steps were cached
 
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
@@ -364,7 +356,7 @@ export async function main(
         assertions: [],
       }
       stepResults.push(stepResult)
-      logger.info(
+      console.info(
         `Skipping agent evaluation for given step ${stepIndex + 1} of ${steps.length}`,
         {
           step: step.given,
@@ -407,7 +399,7 @@ export async function main(
                 assertionCacheEntrySchema.safeParse(assertionCacheData)
 
               if (!parseResult.success) {
-                logger.warn(
+                console.warn(
                   `Failed to parse cache entry for assertion ${assertionIndex}`,
                   { error: parseResult.error },
                 )
@@ -460,7 +452,7 @@ export async function main(
             // Use the cached conclusion (pass or fail) instead of always 'pass'
             const cachedConclusion = stepCacheData.conclusion ?? 'pass'
 
-            logger.info(
+            console.info(
               `Using cached results for step ${stepIndex + 1} of ${steps.length}`,
               {
                 stepIndex,
@@ -493,19 +485,18 @@ export async function main(
       stepIndex,
       step,
       previousResults: [...stepResults],
-      storyName: story.name,
-      storyText: story.text,
+      storyName: story.title,
+      storyText: story.behavior,
       repoOutline: outline,
     }
 
-    logger.info(`Evaluating step ${stepIndex + 1} of ${steps.length}`, {
+    console.info(`Evaluating step ${stepIndex + 1} of ${steps.length}`, {
       stepContext,
     })
 
     const stepResult = await agent({
       stepContext,
       evaluationAgentOptions: payload,
-      sandbox,
     })
 
     stepResults.push(stepResult)
@@ -513,61 +504,62 @@ export async function main(
     // Early exit if a critical step fails
     // TODO: Determine if we should continue or stop on failure
     // if (stepResult.conclusion === 'error') {
-    //   logger.warn(`Step ${stepIndex + 1} encountered an error, continuing...`)
+    //   console.warn(`Step ${stepIndex + 1} encountered an error, continuing...`)
     // }
   }
 
-  // If everything was cached, retrieve the previous explanation from the database
-  let previousExplanation: string | null = null
-  if (
-    allStepsCached &&
-    cacheEntry?.runId &&
-    story.id &&
-    agents.evaluation.options.cacheOptions?.enabled
-  ) {
-    try {
-      const { DATABASE_URL } = getConfig()
-      const db = setupDb(DATABASE_URL)
+  console.log(allStepsCached)
+  // // If everything was cached, retrieve the previous explanation from the database
+  // let previousExplanation: string | null = null
+  // if (
+  //   allStepsCached &&
+  //   cacheEntry?.runId &&
+  //   story.id &&
+  //   agents.evaluation.options.cacheOptions?.enabled
+  // ) {
+  //   try {
+  //     const { DATABASE_URL } = getConfig()
+  //     const db = setupDb(DATABASE_URL)
 
-      const previousResult = await db
-        .selectFrom('storyTestResults')
-        .select(['analysis'])
-        .where('storyId', '=', story.id)
-        .where('runId', '=', cacheEntry.runId)
-        .orderBy('completedAt', 'desc')
-        .limit(1)
-        .executeTakeFirst()
+  //     const previousResult = await db
+  //       .selectFrom('storyTestResults')
+  //       .select(['analysis'])
+  //       .where('storyId', '=', story.id)
+  //       .where('runId', '=', cacheEntry.runId)
+  //       .orderBy('completedAt', 'desc')
+  //       .limit(1)
+  //       .executeTakeFirst()
 
-      if (previousResult?.analysis) {
-        const analysis = previousResult.analysis as EvaluationOutput | null
-        if (analysis?.explanation) {
-          previousExplanation = analysis.explanation
-          logger.info('Retrieved previous explanation from cached run', {
-            runId: cacheEntry.runId,
-            explanationLength: previousExplanation.length,
-          })
-        }
-      }
-    } catch (error) {
-      logger.warn(
-        'Failed to retrieve previous explanation, will generate new one',
-        {
-          error,
-        },
-      )
-    }
-  }
+  //     if (previousResult?.analysis) {
+  //       const analysis = previousResult.analysis as EvaluationOutput | null
+  //       if (analysis?.explanation) {
+  //         previousExplanation = analysis.explanation
+  //         console.info('Retrieved previous explanation from cached run', {
+  //           runId: cacheEntry.runId,
+  //           explanationLength: previousExplanation.length,
+  //         })
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.warn(
+  //       'Failed to retrieve previous explanation, will generate new one',
+  //       {
+  //         error,
+  //       },
+  //     )
+  //   }
+  // }
 
   // Combine all step results into final evaluation
   const finalResult = await combineStepResults({
-    decompositionSteps: story.decomposition as DecompositionAgentResult,
+    compositionSteps: story.composition,
     analysisStepResults: stepResults,
     modelId: options?.modelId,
     cachedRunIds,
-    previousExplanation,
+    previousExplanation: null, // TODO: Implement this later
   })
 
-  logger.debug('🤖 Evaluation Agent Final Result', {
+  console.debug('🤖 Evaluation Agent Final Result', {
     stepCount: stepResults.length,
     finalResult,
   })

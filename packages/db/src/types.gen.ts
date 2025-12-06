@@ -314,7 +314,7 @@ export interface Run {
   /**
    * Array of story execution details with storyId and status
    */
-  stories: import('./column-types').RunStoryColumnType;
+  stories: import('./column-types.js').RunStoryColumnType;
   /**
    * Summary of the run execution
    */
@@ -366,11 +366,11 @@ export interface Story {
    */
   createdAt: Generated<Timestamp | null>;
   /**
-   * Structured decomposition result containing steps (given preconditions and requirements with assertions)
+   * Structured composition result containing steps (given preconditions and requirements with assertions)
    */
-  decomposition: Json | null;
+  composition: Json | null;
   /**
-   * OpenAI embedding vector (1536 dimensions) for the story and decomposition, enables similarity search
+   * OpenAI embedding vector (1536 dimensions) for the story and composition, enables similarity search
    */
   embedding: string | null;
   /**

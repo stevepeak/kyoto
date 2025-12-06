@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
-import type { Ora } from 'ora'
 import { findGitRoot } from '../helpers/find-git-root.js'
 
 const writeFileInputSchema = z.object({
@@ -36,24 +35,24 @@ export async function writeLocalFile(
   }
 }
 
-export function createLocalWriteFileTool(ora?: Ora) {
+export function createLocalWriteFileTool(args: { schema: z.ZodAny }) {
   return tool({
     name: 'writeFile',
     description:
       'Write content to a file on the local filesystem. Creates directories as needed.',
-    inputSchema: writeFileInputSchema,
+    inputSchema: args.schema
+      ? writeFileInputSchema
+          .extend({ content: args.schema })
+          .transform((data) => ({
+            path: data.path,
+            content: JSON.stringify(data.content, null, 2),
+          }))
+      : writeFileInputSchema,
     execute: async (input) => {
       // Update ora to show file being written
-      if (ora) {
-        ora.text = chalk.hex('#f1dab4')(`Writing: ${input.path}`)
-      }
       await writeLocalFile(input.path, input.content)
       // Reset ora text after writing
-      if (ora) {
-        ora.text = ''
-      }
       return `Successfully wrote file: ${input.path}`
     },
   })
 }
-

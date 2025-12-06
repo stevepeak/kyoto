@@ -1,21 +1,21 @@
-import { userRouter } from './routers/user'
-import { router } from './trpc'
-import { orgRouter } from './routers/org'
-import { repoRouter } from './routers/repo'
-import { storyRouter } from './routers/story'
-import { runRouter } from './routers/run'
-import { feedbackRouter } from './routers/feedback'
+import { userRouter } from './routers/user.js'
+import { router } from './trpc.js'
+import { orgRouter } from './routers/org.js'
+import { repoRouter } from './routers/repo.js'
+import { storyRouter } from './routers/story.js'
+import { runRouter } from './routers/run.js'
+import { feedbackRouter } from './routers/feedback.js'
 
-export type { Context, Session, SessionUser } from './context'
+export type { Context, Session, SessionUser } from './context.js'
 
 // TODO maybe move these into a @app/utils package?
-export { getUser } from './helpers/users'
+export { getUser } from './helpers/users.js'
 export {
   findOwnerForUser,
   findRepoForUser,
   findStoryForUser,
   requireRepoForUser,
-} from './helpers/memberships'
+} from './helpers/memberships.js'
 
 export const appRouter = router({
   user: userRouter,

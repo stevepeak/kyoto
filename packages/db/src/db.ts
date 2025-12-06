@@ -3,7 +3,7 @@ import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 import ws from 'ws'
 
-import type { DB } from './types'
+import type { DB } from './types.js'
 
 type DatabasePool = NeonPool | Pool
 

@@ -2,13 +2,8 @@ import { Experimental_Agent as Agent, stepCountIs } from 'ai'
 import type { Tracer } from '@opentelemetry/api'
 import type { LanguageModel } from 'ai'
 import { dedent } from 'ts-dedent'
-import { logger, streams } from '@trigger.dev/sdk'
 
-import { getDaytonaSandbox } from '../../helpers/daytona'
-import { createTerminalCommandTool } from '../../tools/terminal-command-tool'
-import { createReadFileTool } from '../../tools/read-file-tool'
-import { createResolveLibraryTool } from '../../tools/context7-tool'
-import { agents } from '../..'
+import { agents } from '../../index.js'
 import type { Commit } from '@app/schemas'
 
 interface RewriteStoryForChangesOptions {
@@ -38,13 +33,11 @@ export async function rewriteStoryForChanges({
 }: RewriteStoryForChangesOptions): Promise<string> {
   const {
     scope,
-    sandboxId,
     model: providedModel,
     telemetryTracer,
     maxSteps = 20,
   } = options
   const model = providedModel ?? agents.discovery.options.model
-  const sandbox = await getDaytonaSandbox(sandboxId)
 
   const agent = new Agent({
     model,
@@ -70,23 +63,21 @@ export async function rewriteStoryForChanges({
 
     `,
     tools: {
-      terminalCommand: createTerminalCommandTool({ sandbox }),
-      readFile: createReadFileTool({ sandbox }),
-      resolveLibrary: createResolveLibraryTool(),
-    } as any,
+      // TODO
+    },
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'rewrite-story-for-changes',
       metadata: {
         storyId: story.id,
         scope: scope.join('; '),
-        daytonaSandboxId: sandboxId,
       },
       tracer: telemetryTracer,
     },
     onStepFinish: async (step) => {
       if (step.reasoningText) {
-        await streams.append('progress', step.reasoningText)
+        // await streams.append('progress', step.reasoningText)
+        // TODO
       }
     },
     stopWhen: stepCountIs(maxSteps),
@@ -121,17 +112,6 @@ export async function rewriteStoryForChanges({
 
     Return the complete rewritten story content.
   `
-
-  logger.info('Rewriting story for changes', {
-    storyId: story.id,
-    storyName: story.name,
-    scope: scope.join('; '),
-  })
-
-  void streams.append(
-    'progress',
-    `Rewriting story "${story.name.substring(0, 30)}..."`,
-  )
 
   const result = await agent.generate({ prompt })
 

@@ -2,7 +2,7 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import type { LanguageModel } from 'ai'
 import type { StoryFile } from './story-file-reader.js'
 
-export interface GenerateDomainSummaryOptions {
+interface GenerateDomainSummaryOptions {
   model: LanguageModel
   stories: StoryFile[]
   folderPath: string

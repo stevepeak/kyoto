@@ -9,8 +9,8 @@ import {
   findRepoForUser,
   findStoryForUser,
   requireRepoForUser,
-} from '../helpers/memberships'
-import { protectedProcedure, router } from '../trpc'
+} from '../helpers/memberships.js'
+import { protectedProcedure, router } from '../trpc.js'
 import type { TestStatus } from '@app/schemas'
 
 export const storyRouter = router({
@@ -187,9 +187,9 @@ export const storyRouter = router({
         userId,
       )
 
-      // Trigger story decomposition task
+      // Trigger story composition task
       await tasks.trigger(
-        'story-decomposition',
+        'story-composition',
         {
           story: {
             id: newStory.id,
@@ -205,7 +205,7 @@ export const storyRouter = router({
         {
           tags: [`owner_${input.orgName}`, `repo_${input.repoName}`],
           priority: 10,
-          idempotencyKey: `story-decomposition-${newStory.id}`,
+          idempotencyKey: `story-composition-${newStory.id}`,
         },
       )
 
@@ -259,7 +259,7 @@ export const storyRouter = router({
       }
       if (input.story !== undefined) {
         updateData.story = input.story
-        updateData.decomposition = null
+        updateData.composition = null
       }
 
       // Update story
@@ -286,10 +286,10 @@ export const storyRouter = router({
         userId,
       )
 
-      // Trigger story decomposition task if story text was updated
+      // Trigger story composition task if story text was updated
       if (input.story !== undefined) {
         await tasks.trigger(
-          'story-decomposition',
+          'story-composition',
           {
             story: {
               id: updatedStory.id,
@@ -305,7 +305,7 @@ export const storyRouter = router({
           {
             tags: [`owner_${input.orgName}`, `repo_${input.repoName}`],
             priority: 10,
-            idempotencyKey: `story-decomposition-${updatedStory.id}`,
+            idempotencyKey: `story-composition-${updatedStory.id}`,
           },
         )
       }
@@ -519,7 +519,7 @@ export const storyRouter = router({
       }
 
       const runHandle = await tasks.trigger(
-        'story-decomposition',
+        'story-composition',
         {
           story: {
             id: storyWithRepo.story.id,
@@ -534,7 +534,7 @@ export const storyRouter = router({
         {
           tags: [`owner_${owner.login}`, `repo_${storyWithRepo.repo.name}`],
           priority: 10,
-          idempotencyKey: `story-decomposition-${storyWithRepo.story.id}`,
+          idempotencyKey: `story-composition-${storyWithRepo.story.id}`,
         },
       )
 

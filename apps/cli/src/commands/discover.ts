@@ -5,10 +5,8 @@ import { resolve, join } from 'node:path'
 import ora from 'ora'
 
 import { getModel } from '../helpers/get-model.js'
-import {
-  generateStories,
-  type Story,
-} from '../helpers/story-generator-agent.js'
+import { agents } from '@app/agents'
+import type { ComposedStory, DiscoveryAgentOutput } from '@app/schemas'
 import {
   validateFilePath,
   findTypeScriptFiles,
@@ -101,7 +99,7 @@ export default class Discover extends Command {
       )
 
       // Process each file with its own agent
-      const allStories: Story[] = []
+      const allStories: ComposedStory[] = []
       const allWrittenFiles: string[] = []
       const storyLimit = flags.limit
 
@@ -151,13 +149,16 @@ export default class Discover extends Command {
             ? storyLimit - allStories.length
             : undefined
 
-          // Generate stories for this file
-          const { stories } = await generateStories({
-            model,
+          // Generate stories for this file using the discovery agent
+          const stories: DiscoveryAgentOutput = await agents.discovery.run({
             filePath,
-            maxStories: remainingLimit,
-            onProgress: (progress) => {
-              spinner.text = chalk.white(filePath) + ' ' + chalk.grey(progress)
+            options: {
+              model,
+              maxStories: remainingLimit,
+              onProgress: (progress: string) => {
+                spinner.text =
+                  chalk.white(filePath) + ' ' + chalk.grey(progress)
+              },
             },
           })
 

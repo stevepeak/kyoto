@@ -1,7 +1,6 @@
 {
   "extends": "@ocavue/tsconfig/dom/app.json",
   "compilerOptions": {
-    "composite": true,
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
@@ -13,25 +12,5 @@
     }
   },
   "include": ["src/**/*", "trigger/**/*", "trigger.config.ts"],
-  "exclude": ["node_modules", "dist", ".turbo"],
-  "references": [
-    {
-      "path": "../../packages/agents/tsconfig.json"
-    },
-    {
-      "path": "../../packages/cache/tsconfig.json"
-    },
-    {
-      "path": "../../packages/config/tsconfig.json"
-    },
-    {
-      "path": "../../packages/db/tsconfig.json"
-    },
-    {
-      "path": "../../packages/posthog/tsconfig.json"
-    },
-    {
-      "path": "../../packages/schemas/tsconfig.json"
-    }
-  ]
+  "exclude": ["node_modules", "dist", ".turbo"]
 }

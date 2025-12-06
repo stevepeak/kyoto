@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { StoryFile } from './story-file-reader.js'
 import { readAllStoryFilesRecursively } from './story-file-reader.js'
@@ -93,4 +93,3 @@ export async function folderHasStories(folderPath: string): Promise<boolean> {
   const stories = await getStoriesInFolder(folderPath)
   return stories.length > 0
 }
-

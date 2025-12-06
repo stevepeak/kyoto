@@ -65,7 +65,7 @@ You might create:
 - navigation/ (for navigation-related stories)`
 }
 
-export interface GenerateHierarchyOptions {
+interface GenerateHierarchyOptions {
   model: LanguageModel
   storyFiles: StoryFile[]
   onProgress?: (message: string) => void
@@ -80,8 +80,8 @@ export async function generateHierarchy(
     model,
     system: buildHierarchyInstructions(),
     tools: {
-      readFile: createLocalReadFileTool(onProgress),
-    },
+      readFile: createLocalReadFileTool(),
+    } as any,
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-hierarchy-generator',
@@ -159,4 +159,3 @@ You can read individual story files if you need more details. Create a hierarchy
     throw error
   }
 }
-

@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import type { DB } from '@app/db'
 import type { CacheEntry, CacheData, ValidationResult } from '@app/schemas'
 import { assertionCacheEntrySchema } from '@app/schemas'
-import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
+import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence.js'
 import type { Sandbox } from '@daytonaio/sdk'
 
 /**
@@ -116,7 +116,7 @@ export async function validateCacheEntry(args: {
   sandbox: Sandbox
   invalidationStrategy: 'step' | 'assertion'
 }): Promise<ValidationResult> {
-  const { cacheEntry, sandbox, invalidationStrategy } = args
+  const { cacheEntry, sandbox: _sandbox, invalidationStrategy } = args
 
   const invalidSteps: number[] = []
   const invalidAssertions: {
@@ -177,7 +177,7 @@ export async function validateCacheEntry(args: {
       ) as Array<[string, { hash: string; lineRanges: string[] }]>) {
         try {
           const cachedHash = fileCacheEntry.hash
-          const currentHash = await getFileHashFromSandbox(sandbox, filename)
+          const currentHash = await getFileHashFromSandbox(filename)
           if (currentHash !== cachedHash) {
             assertionIsValid = false
             stepHasInvalidAssertion = true
@@ -232,7 +232,7 @@ export async function invalidateCache(args: {
 
 /**
  * Invalidates all cache entries for a story (across all branches)
- * Used when decomposition changes
+ * Used when composition changes
  */
 export async function invalidateCacheForStory(args: {
   db: Kysely<DB>

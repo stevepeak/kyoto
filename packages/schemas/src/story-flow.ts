@@ -9,7 +9,7 @@ import { z } from 'zod'
  * system. Data moves through four distinct stages:
  *
  * 1. RAW STORY → User input (Gherkin text)
- * 2. DECOMPOSITION → AI breaks story into testable steps
+ * 2. COMPOSITION → AI breaks story into testable steps
  * 3. TEST/EVALUATION → AI evaluates each step with evidence
  * 4. CACHE → Stores file hashes for evidence validation
  *
@@ -17,6 +17,62 @@ import { z } from 'zod'
  * - Input schema (what it receives)
  * - Output schema (what it produces)
  * - Transformation documentation (how data changes)
+ *
+ * ============================================================================
+ * MERMAID FLOW DIAGRAM
+ * ============================================================================
+ *
+ * ```mermaid
+ * flowchart TD
+ *     Start([User Input]) --> RawInput[Raw Story Input<br/>rawStoryInputSchema<br/>text, title?, id?]
+ *
+ *     RawInput --> Store[Store in DB<br/>storedStorySchema<br/>stories.story]
+ *     Store --> StoredStory[Stored Story<br/>id, repoId, state, metadata]
+ *
+ *     StoredStory --> Discovery[Story Discovery<br/>File-based discovery]
+ *     Discovery --> Discovered[Discovered Story<br/>discoveredStorySchema<br/>title, behavior, dependencies,<br/>acceptanceCriteria, codeReferences]
+ *
+ *     Discovered --> Composition[Composition Agent<br/>AI breaks into steps]
+ *     Composition --> CompOutput[Composition Output<br/>compositionAgentOutputSchema<br/>steps: given | requirement]
+ *
+ *     Discovered --> CompOutput
+ *     CompOutput --> Composed[Composed Story<br/>composedStorySchema<br/>+ composition + embeddings]
+ *     Composed --> StoreComp[Store Composition<br/>stories.composition JSONB]
+ *
+ *     Composed --> EvalInput[Evaluation Input<br/>evaluationInputSchema<br/>repo + story + options]
+ *     EvalInput --> Evaluation[Evaluation Agent<br/>AI evaluates steps with evidence]
+ *     Evaluation --> EvalOutput[Evaluation Output<br/>evaluationOutputSchema<br/>status, explanation, steps]
+ *
+ *     EvalOutput --> StepEval[Step Evaluation<br/>stepEvaluationSchema<br/>type, conclusion, outcome, assertions]
+ *     StepEval --> Assertion[Assertion Evidence<br/>assertionEvidenceSchema<br/>fact, evidence[], reason?]
+ *
+ *     EvalOutput --> StoreEval[Store Evaluation<br/>story_test_results.analysis JSONB]
+ *
+ *     EvalOutput --> CacheTransform[Cache Transformation<br/>Extract file paths<br/>Compute hashes]
+ *     CacheTransform --> CacheData[Cache Data<br/>cacheDataSchema<br/>steps: stepIndex → assertions]
+ *     CacheData --> CacheEntry[Cache Entry<br/>cacheEntrySchema<br/>branchName, commitSha, cacheData]
+ *     CacheEntry --> StoreCache[Store Cache<br/>story_evidence_cache.cache_data JSONB]
+ *
+ *     StoreCache --> CacheValidation{Cache Validation<br/>Compare file hashes}
+ *     CacheValidation -->|Hashes Match| ReuseCache[Reuse Cached Evidence<br/>cachedFromRunId]
+ *     CacheValidation -->|Hashes Differ| ReEvaluate[Re-evaluate Step/Assertion]
+ *     ReEvaluate --> Evaluation
+ *     ReuseCache --> EvalOutput
+ *
+ *     Store --> Complete[Complete Story Data<br/>CompleteStoryData<br/>raw + composition + evaluation + cache]
+ *     StoreComp --> Complete
+ *     StoreEval --> Complete
+ *     StoreCache --> Complete
+ *
+ *     style Start fill:#e1f5ff
+ *     style RawInput fill:#fff4e1
+ *     style StoredStory fill:#fff4e1
+ *     style Composed fill:#e8f5e9
+ *     style EvalOutput fill:#f3e5f5
+ *     style CacheEntry fill:#fff9c4
+ *     style Complete fill:#e0f2f1
+ *     style CacheValidation fill:#ffebee
+ * ```
  *
  * ============================================================================
  */
@@ -30,7 +86,7 @@ import { z } from 'zod'
  * This is the initial user-provided story text in Gherkin or natural language.
  *
  * NOTE: The `files` field has been removed from stories.
- * Files are discovered during decomposition and evaluation stages,
+ * Files are discovered during composition and evaluation stages,
  * but are not stored on the story record itself.
  *
  * Example:
@@ -79,7 +135,7 @@ export type RawStoryInput = z.infer<typeof rawStoryInputSchema>
  * Raw story as stored in the database.
  * This is the persisted form of the raw story.
  */
-export const rawStorySchema = rawStoryInputSchema.extend({
+export const storedStorySchema = rawStoryInputSchema.extend({
   id: z.string().uuid(),
   repoId: z.string().uuid(),
   createdAt: z.date(),
@@ -90,52 +146,18 @@ export const rawStorySchema = rawStoryInputSchema.extend({
   metadata: z.record(z.unknown()).nullable().optional(),
 })
 
-export type RawStory = z.infer<typeof rawStorySchema>
+type StoredStory = z.infer<typeof storedStorySchema>
 
 // ============================================================================
-// STAGE 2: DECOMPOSITION
+// STORY DISCOVERY OUTPUT (File-based discovery)
 // ============================================================================
 
-/**
- * A single step in the decomposition.
- * Steps can be either:
- * - "given": A precondition that must be true before evaluation
- * - "requirement": A requirement with a goal and assertions
- */
-export const decompositionStepSchema = z.discriminatedUnion('type', [
-  /**
-   * A precondition step (Given).
-   * Represents a state that must be true before evaluating requirements.
-   *
-   * Example:
-   * ```json
-   * {
-   *   "type": "given",
-   *   "given": "The user is logged in with an active session"
-   * }
-   * ```
-   */
+export const compositionStepSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('given'),
     given: z.string().min(1).describe('A precondition that must be true'),
   }),
 
-  /**
-   * A requirement step (eg,. When/Then/And).
-   * Represents a requirement with a goal and verifiable assertions.
-   *
-   * Example:
-   * ```json
-   * {
-   *   "type": "requirement",
-   *   "goal": "User can create a new team",
-   *   "assertions": [
-   *     "The user can create a new team",
-   *     "The new team is created and appears in the user's team list"
-   *   ]
-   * }
-   * ```
-   */
   z.object({
     type: z.literal('requirement'),
     goal: z
@@ -158,66 +180,88 @@ export const decompositionStepSchema = z.discriminatedUnion('type', [
   }),
 ])
 
-export type DecompositionStep = z.infer<typeof decompositionStepSchema>
+export type CompositionStep = z.infer<typeof compositionStepSchema>
 
-/**
- * Decomposition output schema.
- * This is the result of the decomposition agent breaking down a raw story
- * into testable steps.
- *
- * TRANSFORMATION: Raw Story → Decomposition
- * - Input: Raw story text (string)
- * - Output: Structured steps with preconditions and requirements
- * - Stored in: stories.decomposition (JSONB)
- *
- * Example:
- * ```json
- * {
- *   "steps": [
- *     {
- *       "type": "given",
- *       "given": "The user is logged in"
- *     },
- *     {
- *       "type": "requirement",
- *       "goal": "User can create a new team",
- *       "assertions": [
- *         "The user can create a new team",
- *         "The new team appears in the user's team list"
- *       ]
- *     }
- *   ]
- * }
- * ```
- */
-export const decompositionOutputSchema = z.object({
+export const compositionAgentOutputSchema = z.object({
   steps: z
-    .array(decompositionStepSchema)
+    .array(compositionStepSchema)
     .min(1)
     .describe(
       'A sequential list of steps, each either a given precondition or a requirement with assertions.',
     ),
 })
 
-export type DecompositionOutput = z.infer<typeof decompositionOutputSchema>
+export type CompositionAgentOutput = z.infer<
+  typeof compositionAgentOutputSchema
+>
 
-/**
- * Decomposition input for the decomposition agent.
- * This is what gets passed to the decomposition agent.
- */
-export const decompositionInputSchema = z.object({
-  story: z.object({
-    id: z.string().uuid().optional(),
-    text: z.string().min(1),
-    title: z.string().optional(),
-  }),
-  repo: z.object({
-    id: z.string().uuid(),
-    slug: z.string(),
-  }),
+export const discoveredStorySchema = z.object({
+  title: z.string(),
+  behavior: z.string(),
+  dependencies: z
+    .object({
+      entry: z.string().nullable(),
+      exit: z.string().nullable(),
+      prerequisites: z.array(z.string()).default([]),
+      sideEffects: z.array(z.string()).default([]),
+    })
+    .nullable()
+    .default(null),
+  acceptanceCriteria: z.array(z.string()).default([]),
+  assumptions: z.array(z.string()).default([]),
+  codeReferences: z
+    .array(
+      z.object({
+        file: z.string(),
+        lines: z.string(),
+        description: z.string(),
+      }),
+    )
+    .default([]),
 })
 
-export type DecompositionInput = z.infer<typeof decompositionInputSchema>
+export type DiscoveredStory = z.infer<typeof discoveredStorySchema>
+
+// Add in the composition
+export const composedStorySchema = discoveredStorySchema.extend({
+  composition: compositionAgentOutputSchema,
+  embeddings: z
+    .array(z.number())
+    .describe(
+      'Embedding vector for the story and composition (1536 dimensions)',
+    ),
+})
+
+export const discoveryAgentOutputSchema = z.array(composedStorySchema)
+
+export type ComposedStory = z.infer<typeof composedStorySchema>
+
+export type DiscoveryAgentOutput = ComposedStory[]
+
+/**
+ * Story discovery output schema for file-based discovery.
+ * Returns an array of rich stories with detailed information.
+ */
+export const storyDiscoveryOutputSchema = z.object({
+  stories: z.array(composedStorySchema),
+})
+
+export type StoryDiscoveryOutput = z.infer<typeof storyDiscoveryOutputSchema>
+
+/**
+ * Story impact output schema.
+ * Returns an array of impacted stories with their IDs and scope overlap assessment.
+ */
+export const storyImpactOutputSchema = z.object({
+  stories: z.array(
+    z.object({
+      id: z.string(),
+      scopeOverlap: z.enum(['significant', 'moderate', 'low']),
+    }),
+  ),
+})
+
+export type StoryImpactOutput = z.infer<typeof storyImpactOutputSchema>
 
 // ============================================================================
 // STAGE 3: TEST/EVALUATION
@@ -331,48 +375,6 @@ export const stepEvaluationSchema = z.object({
 
 export type StepEvaluation = z.infer<typeof stepEvaluationSchema>
 
-/**
- * Evaluation output schema.
- * This is the result of the evaluation agent testing each step of the decomposition.
- *
- * TRANSFORMATION: Decomposition → Evaluation
- * - Input: Raw Story + Decomposition
- * - Output: Evaluation results with status, explanation, and evidence for each step
- * - Stored in: story_test_results.analysis (JSONB)
- *
- * Example:
- * ```json
- * {
- *   "version": 3,
- *   "status": "pass",
- *   "explanation": "All steps were successfully verified...",
- *   "steps": [
- *     {
- *       "type": "given",
- *       "conclusion": "pass",
- *       "outcome": "The user is logged in",
- *       "assertions": [
- *         {
- *           "fact": "The user is logged in",
- *           "evidence": ["src/auth/session.ts:12-28"]
- *         }
- *       ]
- *     },
- *     {
- *       "type": "requirement",
- *       "conclusion": "pass",
- *       "outcome": "User can create a new team",
- *       "assertions": [
- *         {
- *           "fact": "The user can create a new team",
- *           "evidence": ["src/teams/create.ts:45-67"]
- *         }
- *       ]
- *     }
- *   ]
- * }
- * ```
- */
 export const evaluationOutputSchema = z.object({
   /**
    * Schema version for future compatibility
@@ -390,31 +392,21 @@ export const evaluationOutputSchema = z.object({
   explanation: z.string().describe('Explanation of the evaluation results'),
 
   /**
-   * Evaluation results for each step in the decomposition
+   * Evaluation results for each step in the composition
    */
   steps: z.array(stepEvaluationSchema).min(1),
 })
 
 export type EvaluationOutput = z.infer<typeof evaluationOutputSchema>
 
-/**
- * Evaluation input for the evaluation agent.
- * This is what gets passed to the evaluation agent.
- */
 export const evaluationInputSchema = z.object({
   repo: z.object({
     id: z.string().uuid(),
     slug: z.string(),
   }),
-  story: z.object({
-    id: z.string().uuid(),
-    name: z.string(),
-    text: z.string().min(1),
-    decomposition: decompositionOutputSchema,
-  }),
+  story: composedStorySchema,
   options: z
     .object({
-      daytonaSandboxId: z.string().optional(),
       branchName: z.string().optional(),
       runId: z.string().uuid().optional(),
       maxSteps: z.number().int().positive().optional(),
@@ -591,14 +583,14 @@ export type CacheValidationResult = z.infer<typeof cacheValidationResultSchema>
  *    Schema: rawStoryInputSchema
  *    Storage: stories.story (text), stories.name (title)
  *
- * 2. DECOMPOSITION
+ * 2. COMPOSITION
  *    Input: Raw story text
  *    Process: AI agent breaks story into steps
- *    Output: decompositionOutputSchema
- *    Storage: stories.decomposition (JSONB)
+ *    Output: compositionAgentOutputSchema
+ *    Storage: stories.composition (JSONB)
  *
  * 3. TEST/EVALUATION
- *    Input: Raw story + Decomposition
+ *    Input: Raw story + Composition
  *    Process: AI agent evaluates each step, finds evidence
  *    Output: evaluationOutputSchema
  *    Storage: story_test_results.analysis (JSONB)
@@ -621,11 +613,11 @@ export type CacheValidationResult = z.infer<typeof cacheValidationResultSchema>
 
 /**
  * Complete story data including all stages.
- * This represents a story with its decomposition, evaluation, and cache.
+ * This represents a story with its composition, evaluation, and cache.
  */
 export type CompleteStoryData = {
-  raw: RawStory
-  decomposition: DecompositionOutput | null
+  raw: StoredStory
+  composition: CompositionAgentOutput | null
   evaluation: EvaluationOutput | null
   cache: CacheEntry | null
 }
