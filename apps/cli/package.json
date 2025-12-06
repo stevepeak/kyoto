@@ -22,6 +22,7 @@
     "@app/agents": "workspace:^",
     "@app/config": "workspace:^",
     "@app/schemas": "workspace:^",
+    "@app/shell": "workspace:^",
     "@oclif/core": "^4.0.0",
     "@openrouter/ai-sdk-provider": "^1.2.3",
     "ai": "^5.0.107",

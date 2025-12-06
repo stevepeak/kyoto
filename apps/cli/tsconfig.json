@@ -21,6 +21,16 @@
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", ".turbo", "bin"],
-  "references": []
+  "references": [
+    {
+        "path": "../../packages/agents/tsconfig.json"
+    },
+    {
+        "path": "../../packages/config/tsconfig.json"
+    },
+    {
+        "path": "../../packages/schemas/tsconfig.json"
+    }
+]
 }
 
