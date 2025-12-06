@@ -1,6 +1,4 @@
 .vercel
-vite.*.timestamp-*.mjs
-.astro
 .yalc
 yalc.lock
 .cache

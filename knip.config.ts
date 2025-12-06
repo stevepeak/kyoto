@@ -86,7 +86,6 @@ const config: KnipConfig = {
     '**/schema.sql',
   ],
   ignoreDependencies: [
-    'vitest',
     '@types/*',
     '@codemirror/lang-css',
     '@codemirror/lang-html',
