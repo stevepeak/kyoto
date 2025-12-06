@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
-import { writeLocalFile } from '../tools/local-write-file-tool.js'
+import { writeLocalFile } from '@app/shell'
 import type { Story } from './story-generator-agent.js'
 import { findKyotoDir, findGitRoot } from './find-kyoto-dir.js'
 

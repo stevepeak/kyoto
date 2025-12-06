@@ -1,7 +1,7 @@
 import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import type { LanguageModel } from 'ai'
 import { z } from 'zod'
-import { createLocalReadFileTool } from '../tools/local-read-file-tool.js'
+import { createLocalReadFileTool } from '@app/shell'
 import type { StoryFile } from './story-file-reader.js'
 
 // ============================================================================

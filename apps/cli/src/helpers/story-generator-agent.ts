@@ -5,8 +5,10 @@ import type { LanguageModel } from 'ai'
 import { readFile } from 'node:fs/promises'
 import { resolve, isAbsolute } from 'node:path'
 import { findGitRoot } from './find-kyoto-dir.js'
-import { createLocalTerminalCommandTool } from '../tools/local-terminal-command-tool.js'
-import { createLocalReadFileTool } from '../tools/local-read-file-tool.js'
+import {
+  createLocalTerminalCommandTool,
+  createLocalReadFileTool,
+} from '@app/shell'
 
 // ============================================================================
 // Zod Schema

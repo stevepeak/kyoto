@@ -1,7 +1,6 @@
 import { Experimental_Agent as Agent, stepCountIs } from 'ai'
 import type { LanguageModel } from 'ai'
-import { readLocalFile } from '../tools/local-read-file-tool.js'
-import { createLocalMoveFileTool } from '../tools/local-move-file-tool.js'
+import { readLocalFile, createLocalMoveFileTool } from '@app/shell'
 import type { StoryFile } from './story-file-reader.js'
 import type { HierarchyOutput } from './hierarchy-agent.js'
 
