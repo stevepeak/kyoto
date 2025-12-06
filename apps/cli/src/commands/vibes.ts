@@ -2,6 +2,8 @@ import { Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
 import { execa } from 'execa'
 import ora from 'ora'
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { agents } from '@app/agents'
 import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
 import { displayHeader } from '../helpers/display-header.js'
@@ -10,6 +12,13 @@ interface CommitInfo {
   hash: string // Full hash
   shortHash: string // Short hash (6 chars)
   message: string
+}
+
+interface DetailsJson {
+  latest?: {
+    sha: string
+    branch: string
+  }
 }
 
 /**
@@ -35,6 +44,63 @@ async function getLatestCommit(gitRoot: string): Promise<CommitInfo | null> {
     }
   } catch {
     return null
+  }
+}
+
+/**
+ * Gets the current branch name from git
+ */
+async function getCurrentBranch(gitRoot: string): Promise<string | null> {
+  try {
+    const { stdout } = await execa(
+      'git',
+      ['rev-parse', '--abbrev-ref', 'HEAD'],
+      {
+        cwd: gitRoot,
+      },
+    )
+    return stdout.trim() || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Updates the .kyoto/details.json file with the latest branch and commit SHA
+ */
+async function updateDetailsJson(
+  kyotoDir: string,
+  branch: string | null,
+  sha: string,
+): Promise<void> {
+  const detailsPath = join(kyotoDir, 'details.json')
+  let details: DetailsJson = {}
+
+  // Read existing details.json if it exists
+  try {
+    const content = await readFile(detailsPath, 'utf-8')
+    details = JSON.parse(content) as DetailsJson
+  } catch {
+    // File doesn't exist or is invalid, start with empty object
+    details = {}
+  }
+
+  // Update the latest field
+  if (branch && sha) {
+    details.latest = {
+      sha,
+      branch,
+    }
+
+    // Ensure .kyoto directory exists
+    await mkdir(kyotoDir, { recursive: true })
+
+    // Write the updated details back
+    await writeFile(
+      detailsPath,
+      JSON.stringify(details, null, 2) + '\n',
+      'utf-8',
+    )
   }
 }
 
@@ -74,6 +140,59 @@ export default class Vibes extends Command {
     return result
   }
 
+  /**
+   * Handles processing a new commit (shows spinner, processes, displays result)
+   */
+  private async handleNewCommit(
+    commit: CommitInfo,
+    maxLength: number,
+    gitRoot: string,
+    kyotoDir: string,
+  ): Promise<void> {
+    // Truncate message if needed
+    const truncatedMessage =
+      commit.message.length > maxLength
+        ? commit.message.substring(0, maxLength - 3) + '...'
+        : commit.message
+
+    // Show spinner with commit info
+    const spinner = ora({
+      text:
+        chalk.hex('#7b301f')(commit.shortHash) +
+        ' ' +
+        chalk.white(truncatedMessage),
+      spinner: 'squareCorners',
+      color: 'red',
+    }).start()
+
+    try {
+      // Process the commit using the agent
+      const explanation = await this.processCommit(commit)
+
+      // Stop the spinner
+      spinner.stop()
+
+      // Display the explanation
+      this.log('')
+      this.log(chalk.grey(explanation))
+      this.log('')
+
+      // Update details.json with the new commit
+      const branch = await getCurrentBranch(gitRoot)
+      await updateDetailsJson(kyotoDir, branch, commit.hash)
+    } catch (error) {
+      spinner.stop()
+      this.log('')
+      this.log(
+        chalk.hex('#c27a52')(
+          `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ),
+      )
+      this.log('')
+      throw error // Re-throw so caller knows processing failed
+    }
+  }
+
   override async run(): Promise<void> {
     const { flags } = await this.parse(Vibes)
     const maxLength = flags['max-length'] ?? 60
@@ -88,6 +207,10 @@ export default class Vibes extends Command {
       const { gitRoot, github } = await assertCliPrerequisites({
         requireAi: true,
       })
+
+      // Ensure .kyoto directory exists
+      const kyotoDir = join(gitRoot, '.kyoto')
+      await mkdir(kyotoDir, { recursive: true })
 
       // Display header banner
       displayHeader({ logger, message: 'Vibe in Kyoto' })
@@ -112,9 +235,10 @@ export default class Vibes extends Command {
         return
       }
 
-      // Poll for new commits
+      // Commit watcher and processor state
       let pollInterval: NodeJS.Timeout | null = null
       let shouldExit = false
+      let isProcessing = false
 
       // Handle graceful shutdown
       const cleanup = () => {
@@ -130,9 +254,10 @@ export default class Vibes extends Command {
       process.on('SIGINT', cleanup)
       process.on('SIGTERM', cleanup)
 
+      // Watcher: Lightweight polling that only detects new commits
       pollInterval = setInterval(async () => {
-        if (shouldExit) {
-          return
+        if (shouldExit || isProcessing) {
+          return // Skip if exiting or already processing
         }
 
         const latestCommit = await getLatestCommit(gitRoot)
@@ -143,45 +268,21 @@ export default class Vibes extends Command {
 
         // Check if this is a new commit
         if (latestCommit.shortHash !== lastCommitHash) {
-          // Truncate message if needed
-          const truncatedMessage =
-            latestCommit.message.length > maxLength
-              ? latestCommit.message.substring(0, maxLength - 3) + '...'
-              : latestCommit.message
+          // Mark as processing to prevent concurrent processing
+          isProcessing = true
 
-          // Show spinner with commit info
-          const spinner = ora({
-            text:
-              chalk.hex('#7b301f')(latestCommit.shortHash) +
-              ' ' +
-              chalk.white(truncatedMessage),
-            spinner: 'squareCorners',
-            color: 'red',
-          }).start()
-
-          try {
-            // Process the commit using the agent
-            const explanation = await this.processCommit(latestCommit)
-
-            // Stop the spinner
-            spinner.stop()
-
-            // Display the explanation
-            this.log('')
-            this.log(chalk.grey(explanation))
-            this.log('')
-          } catch (error) {
-            spinner.stop()
-            this.log('')
-            this.log(
-              chalk.hex('#c27a52')(
-                `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              ),
-            )
-            this.log('')
-          }
-
-          lastCommitHash = latestCommit.shortHash
+          // Process the commit asynchronously (don't await in the interval)
+          this.handleNewCommit(latestCommit, maxLength, gitRoot, kyotoDir)
+            .then(() => {
+              // Only update lastCommitHash after successful processing
+              lastCommitHash = latestCommit.shortHash
+              isProcessing = false
+            })
+            .catch(() => {
+              // On error, still mark as not processing so we can try again
+              // Don't update lastCommitHash so we'll retry on next interval
+              isProcessing = false
+            })
         }
       }, interval)
 
