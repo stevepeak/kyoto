@@ -15,7 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.64",
     "@app/config": "workspace:*",
-    "@app/db": "workspace:*",
+    "@app/context7": "workspace:*",
     "@app/schemas": "workspace:*",
     "@daytonaio/sdk": "^0.113.1",
     "@openrouter/ai-sdk-provider": "^1.2.3",

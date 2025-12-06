@@ -3,11 +3,12 @@
   "type": "module",
   "version": "0.0.1",
   "description": "Shell tools for file system and terminal operations",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
+    "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0 --cache --concurrency=2",
     "lint:fix": "eslint . --fix --cache --concurrency=2",

@@ -2,37 +2,49 @@
   "extends": "@ocavue/tsconfig/es/root.json",
   "references": [
     {
-      "path": "./apps/trigger/tsconfig.json"
+        "path": "./apps/cli/tsconfig.json"
     },
     {
-      "path": "./apps/web/tsconfig.json"
+        "path": "./apps/trigger/tsconfig.json"
     },
     {
-      "path": "./packages/agents/tsconfig.json"
+        "path": "./apps/web/tsconfig.json"
     },
     {
-      "path": "./packages/api/tsconfig.json"
+        "path": "./packages/agents/tsconfig.json"
     },
     {
-      "path": "./packages/cache/tsconfig.json"
+        "path": "./packages/api/tsconfig.json"
     },
     {
-      "path": "./packages/config/tsconfig.json"
+        "path": "./packages/cache/tsconfig.json"
     },
     {
-      "path": "./packages/db/tsconfig.json"
+        "path": "./packages/config/tsconfig.json"
     },
     {
-      "path": "./packages/linear/tsconfig.json"
+        "path": "./packages/context7/tsconfig.json"
     },
     {
-      "path": "./packages/posthog/tsconfig.json"
+        "path": "./packages/daytona/tsconfig.json"
     },
     {
-      "path": "./packages/schemas/tsconfig.json"
+        "path": "./packages/db/tsconfig.json"
     },
     {
-      "path": "./packages/utils/tsconfig.json"
+        "path": "./packages/linear/tsconfig.json"
+    },
+    {
+        "path": "./packages/posthog/tsconfig.json"
+    },
+    {
+        "path": "./packages/schemas/tsconfig.json"
+    },
+    {
+        "path": "./packages/shell/tsconfig.json"
+    },
+    {
+        "path": "./packages/utils/tsconfig.json"
     }
-  ]
+]
 }
