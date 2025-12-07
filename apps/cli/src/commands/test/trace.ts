@@ -6,6 +6,7 @@ export default class TestTrace extends Command {
   static override examples = ['$ kyoto test:trace']
 
   override async run(): Promise<void> {
+    await this.parse(TestTrace)
     // TODO: Implement test:trace logic
   }
 }

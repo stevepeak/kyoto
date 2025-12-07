@@ -6,6 +6,7 @@ export default class Test extends Command {
   static override examples = ['$ kyoto test']
 
   override async run(): Promise<void> {
+    await this.parse(Test)
     // TODO: Implement test logic
   }
 }

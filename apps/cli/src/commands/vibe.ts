@@ -9,6 +9,8 @@ export default class Vibe extends Command {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   override async run(): Promise<void> {
+    await this.parse(Vibe)
+
     const logger = (message: string) => {
       this.log(message)
     }

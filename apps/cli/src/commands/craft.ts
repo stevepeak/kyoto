@@ -6,6 +6,7 @@ export default class Craft extends Command {
   static override examples = ['$ kyoto craft']
 
   override async run(): Promise<void> {
+    await this.parse(Craft)
     // TODO: Implement craft logic
   }
 }

@@ -39,6 +39,8 @@ export default class Init extends Command {
   static override examples = ['$ kyoto init']
 
   override async run(): Promise<void> {
+    await this.parse(Init)
+
     const logger = (message: string) => {
       this.log(message)
     }

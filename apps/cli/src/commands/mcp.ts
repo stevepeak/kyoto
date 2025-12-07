@@ -6,6 +6,7 @@ export default class Mcp extends Command {
   static override examples = ['$ kyoto mcp']
 
   override async run(): Promise<void> {
+    await this.parse(Mcp)
     // TODO: Implement mcp logic
   }
 }

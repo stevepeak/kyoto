@@ -16,6 +16,8 @@ export default class List extends Command {
   static override examples = ['$ kyoto list', '$ kyoto ls']
 
   override async run(): Promise<void> {
+    await this.parse(List)
+
     const logger = (message: string) => {
       this.log(message)
     }
