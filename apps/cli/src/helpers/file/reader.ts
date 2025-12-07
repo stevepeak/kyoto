@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { pwdKyoto } from './find-kyoto-dir.js'
+import { join, relative } from 'node:path'
+import { findGitRoot } from '@app/shell'
+import { pwdKyoto } from '../config/find-kyoto-dir.js'
 import { DiscoveredStory, discoveredStorySchema } from '@app/schemas'
 
 export interface StoryFile {
@@ -8,8 +9,6 @@ export interface StoryFile {
   filename: string
   story: DiscoveredStory
 }
-
-const STORIES_DIR = '.kyoto/stories'
 
 /**
  * Reads all story JSON files from the .kyoto/stories directory.
@@ -19,6 +18,8 @@ const STORIES_DIR = '.kyoto/stories'
  */
 export async function readAllStoryFiles(): Promise<StoryFile[]> {
   const { stories: storiesDir } = await pwdKyoto()
+  const gitRoot = await findGitRoot()
+  const storiesRelativePath = relative(gitRoot, storiesDir)
 
   try {
     const files = await readdir(storiesDir)
@@ -32,7 +33,7 @@ export async function readAllStoryFiles(): Promise<StoryFile[]> {
       const story = discoveredStorySchema.parse(JSON.parse(content))
 
       storyFiles.push({
-        path: join(STORIES_DIR, filename),
+        path: join(storiesRelativePath, filename),
         filename,
         story,
       })
@@ -41,7 +42,9 @@ export async function readAllStoryFiles(): Promise<StoryFile[]> {
     return storyFiles
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      throw new Error(`.kyoto/stories directory not found: ${STORIES_DIR}`)
+      throw new Error(
+        `.kyoto/stories directory not found: ${storiesRelativePath}`,
+      )
     }
     throw error
   }
@@ -58,6 +61,8 @@ export async function readAllStoryFilesRecursively(
   folderPath?: string,
 ): Promise<StoryFile[]> {
   const { stories: storiesBaseDir } = await pwdKyoto()
+  const gitRoot = await findGitRoot()
+  const storiesRelativePath = relative(gitRoot, storiesBaseDir)
   const baseDir = folderPath ? join(storiesBaseDir, folderPath) : storiesBaseDir
 
   const storyFiles: StoryFile[] = []
@@ -85,8 +90,8 @@ export async function readAllStoryFilesRecursively(
             const story = discoveredStorySchema.parse(JSON.parse(content))
 
             const relativePath = relativeBase
-              ? join(STORIES_DIR, relativeBase, entry.name)
-              : join(STORIES_DIR, entry.name)
+              ? join(storiesRelativePath, relativeBase, entry.name)
+              : join(storiesRelativePath, entry.name)
 
             storyFiles.push({
               path: relativePath,
@@ -108,8 +113,8 @@ export async function readAllStoryFilesRecursively(
       ) {
         throw new Error(
           folderPath
-            ? `.kyoto/stories directory not found: ${STORIES_DIR}/${folderPath}`
-            : `.kyoto/stories directory not found: ${STORIES_DIR}`,
+            ? `.kyoto/stories directory not found: ${storiesRelativePath}/${folderPath}`
+            : `.kyoto/stories directory not found: ${storiesRelativePath}`,
         )
       }
       // Continue processing other directories

@@ -1,108 +1,21 @@
 import { Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import { execa } from 'execa'
 import ora from 'ora'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import { agents } from '@app/agents'
-import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
-import { displayHeader } from '../helpers/display-header.js'
-import { pwdKyoto, findGitRoot } from '../helpers/find-kyoto-dir.js'
-
-interface CommitInfo {
-  hash: string // Full hash
-  shortHash: string // Short hash (6 chars)
-  message: string
-}
-
-interface DetailsJson {
-  latest?: {
-    sha: string
-    branch: string
-  }
-}
-
-/**
- * Gets the latest commit information from the git repository
- */
-async function getLatestCommit(gitRoot: string): Promise<CommitInfo | null> {
-  try {
-    const { stdout } = await execa('git', ['log', '-1', '--format=%H|%s'], {
-      cwd: gitRoot,
-    })
-
-    if (!stdout.trim()) {
-      return null
-    }
-
-    const [hash, ...messageParts] = stdout.trim().split('|')
-    const message = messageParts.join('|') // Rejoin in case message contains |
-
-    return {
-      hash: hash, // Full hash
-      shortHash: hash.substring(0, 6), // Short hash (6 chars)
-      message: message.trim(),
-    }
-  } catch {
-    return null
-  }
-}
-
-/**
- * Gets the current branch name from git
- */
-async function getCurrentBranch(gitRoot: string): Promise<string | null> {
-  try {
-    const { stdout } = await execa(
-      'git',
-      ['rev-parse', '--abbrev-ref', 'HEAD'],
-      {
-        cwd: gitRoot,
-      },
-    )
-    return stdout.trim() || null
-  } catch {
-    return null
-  }
-}
-
-/**
- * Updates the .kyoto/details.json file with the latest branch and commit SHA
- */
-async function updateDetailsJson(
-  detailsPath: string,
-  branch: string | null,
-  sha: string,
-): Promise<void> {
-  let details: DetailsJson = {}
-
-  // Read existing details.json if it exists
-  try {
-    const content = await readFile(detailsPath, 'utf-8')
-    details = JSON.parse(content) as DetailsJson
-  } catch {
-    // File doesn't exist or is invalid, start with empty object
-    details = {}
-  }
-
-  // Update the latest field
-  if (branch && sha) {
-    details.latest = {
-      sha,
-      branch,
-    }
-
-    // Ensure .kyoto directory exists (extract from details path)
-    const kyotoDir = detailsPath.replace('/details.json', '')
-    await mkdir(kyotoDir, { recursive: true })
-
-    // Write the updated details back
-    await writeFile(
-      detailsPath,
-      JSON.stringify(details, null, 2) + '\n',
-      'utf-8',
-    )
-  }
-}
+import {
+  getChangedTsFiles,
+  getLatestCommit,
+  getCurrentBranch,
+  type CommitInfo,
+} from '@app/shell'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
+import { displayHeader } from '../helpers/display/display-header.js'
+import { findGitRoot } from '@app/shell'
+import { pwdKyoto } from '../helpers/config/find-kyoto-dir.js'
+import { readAllStoryFilesRecursively } from '../helpers/file/reader.js'
+import { updateDetailsJson } from '../helpers/config/update-details-json.js'
+import type { DiffEvaluatorOutput } from '@app/schemas'
 
 export default class Vibes extends Command {
   static override description =
@@ -124,20 +37,118 @@ export default class Vibes extends Command {
   }
 
   /**
+   * Deterministic pre-check: checks if any TS files changed and matches them against story codeReferences
+   */
+  private async deterministicCheck(
+    commitSha: string,
+    gitRoot: string,
+  ): Promise<DiffEvaluatorOutput | null> {
+    // Get changed TS files
+    const changedTsFiles = await getChangedTsFiles(commitSha, gitRoot)
+
+    // If no TS files changed, return early
+    if (changedTsFiles.length === 0) {
+      return {
+        text: 'No relevant files changed',
+        stories: [],
+      }
+    }
+
+    // Read all story files
+    let storyFiles
+    try {
+      storyFiles = await readAllStoryFilesRecursively()
+    } catch {
+      // If stories directory doesn't exist, skip deterministic check
+      return null
+    }
+
+    // Match changed files against story codeReferences
+    const matchedStories: DiffEvaluatorOutput['stories'] = []
+    const matchedStoryPaths = new Set<string>()
+
+    for (const storyFile of storyFiles) {
+      // Skip if already matched
+      if (matchedStoryPaths.has(storyFile.path)) {
+        continue
+      }
+
+      for (const codeRef of storyFile.story.codeReferences) {
+        // Simple file path matching - check if any changed file matches the codeReference file
+        const refFile = codeRef.file
+        const matches = changedTsFiles.some((changedFile) => {
+          // Check if paths match (handle relative paths)
+          return (
+            changedFile === refFile ||
+            changedFile.endsWith(refFile) ||
+            refFile.endsWith(changedFile)
+          )
+        })
+
+        if (matches) {
+          matchedStories.push({
+            filePath: storyFile.path,
+            scopeOverlap: 'significant', // Default to significant for deterministic matches
+            reasoning: `Changed file ${refFile} matches story code reference`,
+          })
+          matchedStoryPaths.add(storyFile.path)
+          // Only add each story once
+          break
+        }
+      }
+    }
+
+    // Return matched stories (will be merged with AI results)
+    if (matchedStories.length > 0) {
+      return {
+        text: '',
+        stories: matchedStories,
+      }
+    }
+
+    // No matches found deterministically, let AI do the analysis
+    return null
+  }
+
+  /**
    * Process a new commit using the commit evaluator agent
    */
-  private async processCommit(commit: CommitInfo): Promise<string> {
-    const result: string = await agents.commitEvaluator.run({
+  private async processCommit(
+    commit: CommitInfo,
+  ): Promise<DiffEvaluatorOutput> {
+    const gitRoot = await findGitRoot()
+
+    // Run deterministic check first
+    const deterministicResult = await this.deterministicCheck(
+      commit.hash,
+      gitRoot,
+    )
+
+    // If deterministic check found no TS files, return early
+    if (deterministicResult?.text === 'No relevant files changed') {
+      return deterministicResult
+    }
+
+    // Otherwise, run AI agent
+    const aiResult = await agents.diffEvaluator.run({
       commitSha: commit.hash,
       options: {
-        maxSteps: agents.commitEvaluator.options.maxSteps,
+        maxSteps: agents.diffEvaluator.options.maxSteps,
         onProgress: (_message: string) => {
           // Progress updates can be handled here if needed
         },
       },
     })
 
-    return result
+    // Merge deterministic and AI results if we have deterministic matches
+    if (deterministicResult && deterministicResult.stories.length > 0) {
+      return {
+        text: aiResult.text,
+        stories: [...deterministicResult.stories, ...aiResult.stories],
+      }
+    }
+
+    return aiResult
   }
 
   /**
@@ -166,10 +177,38 @@ export default class Vibes extends Command {
 
     try {
       // Process the commit using the agent
-      await this.processCommit(commit)
+      const result = await this.processCommit(commit)
+      // * NOTE ^^ cannot print to screen otherwise it busts the spinner
 
       // Stop the spinner
       spinner.succeed()
+
+      // Display impacted stories
+      if (result.stories.length > 0) {
+        this.log('')
+        this.log(
+          chalk.hex('#7ba179')(
+            `  ${result.stories.length} ${result.stories.length === 1 ? 'story' : 'stories'} impacted:`,
+          ),
+        )
+        this.log('')
+
+        for (const story of result.stories) {
+          const overlapColor =
+            story.scopeOverlap === 'significant'
+              ? chalk.hex('#c27a52')
+              : story.scopeOverlap === 'moderate'
+                ? chalk.hex('#d4a574')
+                : chalk.grey
+
+          this.log(`  ${overlapColor(story.scopeOverlap.toUpperCase())}`)
+          this.log(`    ${chalk.white(story.filePath)}`)
+          this.log(`    ${chalk.grey(story.reasoning)}`)
+          this.log('')
+        }
+      } else {
+        this.log(chalk.grey('  No stories impacted'))
+      }
 
       // Update details.json with the new commit
       const gitRoot = await findGitRoot()

@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve, isAbsolute } from 'node:path'
 import { dedent } from 'ts-dedent'
 import pMap from 'p-map'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 
 import {
   createLocalTerminalCommandTool,
@@ -130,12 +131,27 @@ function buildSystemInstructions(maxStories?: number): string {
 
     Use the provided tools to research related files and code paths. Include any external referenced files that contribute to the story, ensuring you capture entry points, exit points, prerequisites, and side effects.
 
+    ### Step 4 — Write story files and return paths
+
+    For each story you discover, you MUST:
+    1. Use the \`writeFile\` tool to write the story as a JSON file
+    2. Save each story to a file path (e.g., \`.kyoto/stories/story-name.json\`)
+    3. Return a list of all file paths you wrote as your final output
+
+    **CRITICAL**: Your final output must be an array of strings containing the file paths of all story files you wrote using the \`writeFile\` tool.
+
     # ❌ Exclude
 
     Skip stories about:
     * Static UI rendering (just displaying content, not user actions)
     * Component APIs, method names, or implementation details
     * Internal logic invisible to users
+    * 
+  
+    # Story Format
+    \`\`\`json
+    ${JSON.stringify(zodToJsonSchema(discoveredStorySchema), null, 2)}
+    \`\`\`
 
     Focus on what users experience, not how the code works.
   `
@@ -165,7 +181,11 @@ function buildPrompt(
     Workflow:
     1. First, navigate the codebase to understand context (imports, related files, parent components)
     2. Then, discover user behaviors in THIS FILE (focal point)
-    3. Finally, navigate the codebase to enrich each behavior with specific details (entry points, exit points, prerequisites, side effects)
+    3. Navigate the codebase to enrich each behavior with specific details (entry points, exit points, prerequisites, side effects)
+    4. For each story, use the \`writeFile\` tool to write it as a JSON file (e.g., \`.kyoto/stories/story-name.json\`)
+    5. Return an array of all file paths you wrote
+
+    **IMPORTANT**: You must use the \`writeFile\` tool to write each story json to a file, then return an array of those file paths as your final output.
 
     Remember: The target file is the focal point. Use navigation to enrich, not to discover new behaviors elsewhere.
   `
@@ -196,7 +216,9 @@ export async function runStoryDiscoveryAgent(
     tools: {
       terminalCommand: createLocalTerminalCommandTool(onProgress),
       readFile: createLocalReadFileTool(),
-      writeFile: createLocalWriteFileTool({ schema: discoveredStorySchema as unknown as z.ZodAny }),
+      writeFile: createLocalWriteFileTool({
+        schema: discoveredStorySchema as unknown as z.ZodAny,
+      }),
     } as any,
     experimental_telemetry: {
       isEnabled: true,
@@ -212,7 +234,6 @@ export async function runStoryDiscoveryAgent(
       }
     },
     stopWhen: stepCountIs(maxSteps),
-    // TODO tell the system prompt to return a list of strings
     experimental_output: Output.object({
       schema: z.array(z.string()),
     }),
@@ -227,9 +248,8 @@ export async function runStoryDiscoveryAgent(
   const compositionStories: DiscoveryAgentOutput = await pMap(
     files,
     async (filePath) => {
-      // TODO read the file contents
-      console.log(filePath)
-      const story = discoveredStorySchema.parse(JSON.parse('{}'))
+      const fileContent = await readFile(filePath, 'utf-8')
+      const story = discoveredStorySchema.parse(JSON.parse(fileContent))
       const composition = await runCompositionAgent({
         story,
         repo: {

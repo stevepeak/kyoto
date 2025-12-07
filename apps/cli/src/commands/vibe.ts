@@ -1,5 +1,5 @@
 import { Command } from '@oclif/core'
-import { displayHeader } from '../helpers/display-header.js'
+import { displayHeader } from '../helpers/display/display-header.js'
 
 export default class Vibe extends Command {
   static override description = 'Display the Kyoto CLI header'

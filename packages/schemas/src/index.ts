@@ -29,9 +29,11 @@ export {
   composedStorySchema,
   storyDiscoveryOutputSchema,
   storyImpactOutputSchema,
+  diffEvaluatorOutputSchema,
   type ComposedStory,
   type StoryDiscoveryOutput,
   type StoryImpactOutput,
+  type DiffEvaluatorOutput,
   discoveryAgentOutputSchema,
 
   // Composition

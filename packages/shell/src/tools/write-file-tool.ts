@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
-import { findGitRoot } from '../helpers/find-git-root.js'
+import { findGitRoot } from '../git/find-git-root.js'
 
 const writeFileInputSchema = z.object({
   path: z

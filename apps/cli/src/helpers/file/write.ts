@@ -2,7 +2,8 @@ import { mkdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { writeLocalFile } from '@app/shell'
 import type { DiscoveryAgentOutput } from '@app/schemas'
-import { pwdKyoto, findGitRoot } from './find-kyoto-dir.js'
+import { findGitRoot } from '@app/shell'
+import { pwdKyoto } from '../config/find-kyoto-dir.js'
 
 /**
  * Writes story objects to JSON files in the `.kyoto/stories` directory.

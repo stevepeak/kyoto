@@ -4,7 +4,7 @@ import { rename, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
 import type { Ora } from 'ora'
-import { findGitRoot } from '../helpers/find-git-root.js'
+import { findGitRoot } from '../git/find-git-root.js'
 
 const moveFileInputSchema = z.object({
   from: z

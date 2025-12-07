@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import chalk from 'chalk'
 import treeify from 'object-treeify'
-import { pwdKyoto } from './find-kyoto-dir.js'
+import { pwdKyoto } from '../config/find-kyoto-dir.js'
 import { discoveredStorySchema } from '@app/schemas'
 
 interface TreeNode {

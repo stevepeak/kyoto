@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises'
 import { resolve, extname, isAbsolute } from 'node:path'
 import { execa } from 'execa'
-import { findGitRoot } from './find-kyoto-dir.js'
+import { findGitRoot } from '@app/shell'
 
 /**
  * Validates that a file or directory path exists and is accessible.

@@ -263,6 +263,27 @@ export const storyImpactOutputSchema = z.object({
 
 export type StoryImpactOutput = z.infer<typeof storyImpactOutputSchema>
 
+/**
+ * Diff evaluator output schema.
+ * Returns a text explanation and array of impacted stories with file paths and scope overlap assessment.
+ */
+export const diffEvaluatorOutputSchema = z.object({
+  text: z.string().describe('Text explanation of the commit changes'),
+  stories: z.array(
+    z.object({
+      filePath: z.string().describe('Path to the story file in .kyoto/stories'),
+      scopeOverlap: z
+        .enum(['significant', 'moderate', 'low'])
+        .describe('Level of overlap between commit changes and story scope'),
+      reasoning: z
+        .string()
+        .describe('Explanation of why this story is impacted by the commit'),
+    }),
+  ),
+})
+
+export type DiffEvaluatorOutput = z.infer<typeof diffEvaluatorOutputSchema>
+
 // ============================================================================
 // STAGE 3: TEST/EVALUATION
 // ============================================================================

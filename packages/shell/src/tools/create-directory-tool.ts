@@ -4,7 +4,7 @@ import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import type { Ora } from 'ora'
-import { findGitRoot } from '../helpers/find-git-root.js'
+import { findGitRoot } from '../git/find-git-root.js'
 
 const createDirectoryInputSchema = z.object({
   path: z

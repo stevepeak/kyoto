@@ -3,7 +3,8 @@ import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { findGitRoot } from '../helpers/find-kyoto-dir.js'
+import { findGitRoot, getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+import { updateDetailsJson } from '../helpers/config/update-details-json.js'
 
 function getDefaultModelForProvider(provider: Provider): string {
   switch (provider) {
@@ -107,6 +108,11 @@ export default class Init extends Command {
         JSON.stringify(details, null, 2) + '\n',
         'utf-8',
       )
+
+      // Update details.json with current branch and commit SHA
+      const branch = await getCurrentBranch(gitRoot)
+      const sha = await getCurrentCommitSha(gitRoot)
+      await updateDetailsJson(detailsPath, branch, sha)
 
       logger(
         chalk.hex('#7ba179')(

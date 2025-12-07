@@ -4,6 +4,7 @@ import {
   evaluationOutputSchema,
   type TestStatus,
   discoveryAgentOutputSchema,
+  diffEvaluatorOutputSchema,
 } from '@app/schemas'
 import { runCompositionAgent } from './agents/v3/story-composition.js'
 import { main } from './agents/v3/story-evaluator.js'
@@ -15,7 +16,7 @@ import {
 } from './agents/v3/story-impact.js'
 import { generateChangelogSummary } from './agents/v3/changelog-summary.js'
 import { extractScope } from './agents/v3/scope-extraction.js'
-import { evaluateCommit } from './agents/v3/commit-evaluator.js'
+import { evaluateDiff } from './agents/v3/diff-evaluator.js'
 import { compositionAgentOutputSchema } from '../../schemas/src/story-flow.js'
 
 export { type TestStatus as Status }
@@ -45,7 +46,7 @@ type AgentsConfig = {
   impact: Agent
   changelogSummary: Agent
   scopeExtraction: Agent
-  commitEvaluator: Agent
+  diffEvaluator: Agent
 }
 
 export const agents: AgentsConfig = {
@@ -129,11 +130,11 @@ export const agents: AgentsConfig = {
       model: 'openai/gpt-4o-mini',
     },
   },
-  commitEvaluator: {
-    id: 'commit-evaluator-v3',
+  diffEvaluator: {
+    id: 'diff-evaluator-v3',
     version: 'v3',
-    schema: z.string(),
-    run: evaluateCommit,
+    schema: diffEvaluatorOutputSchema,
+    run: evaluateDiff,
     options: {
       maxSteps: 10,
       model: 'openai/gpt-5-mini',

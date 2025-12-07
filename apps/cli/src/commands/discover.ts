@@ -1,107 +1,37 @@
 import { Command, Args, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import { stat, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { stat, mkdir } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
-import { execa } from 'execa'
 import ora from 'ora'
 
-import { getModel } from '../helpers/get-model.js'
+import { getModel } from '../helpers/config/get-model.js'
 import { agents } from '@app/agents'
 import type { ComposedStory, DiscoveryAgentOutput } from '@app/schemas'
 import {
   validateFilePath,
   findTypeScriptFiles,
-} from '../helpers/file-discovery.js'
-import { writeStoriesToFiles } from '../helpers/write-stories.js'
-import { displayHeader } from '../helpers/display-header.js'
-import { assertCliPrerequisites } from '../helpers/assert-cli-prerequisites.js'
-
-interface DetailsJson {
-  latest?: {
-    sha: string
-    branch: string
-  }
-}
-
-/**
- * Gets the current branch name from git
- */
-async function getCurrentBranch(gitRoot: string): Promise<string | null> {
-  try {
-    const { stdout } = await execa(
-      'git',
-      ['rev-parse', '--abbrev-ref', 'HEAD'],
-      {
-        cwd: gitRoot,
-      },
-    )
-    return stdout.trim() || null
-  } catch {
-    return null
-  }
-}
-
-/**
- * Gets the current commit SHA from git
- */
-async function getCurrentCommitSha(gitRoot: string): Promise<string | null> {
-  try {
-    const { stdout } = await execa('git', ['log', '-1', '--format=%H'], {
-      cwd: gitRoot,
-    })
-    return stdout.trim() || null
-  } catch {
-    return null
-  }
-}
-
-/**
- * Updates the .kyoto/details.json file with the latest branch and commit SHA
- */
-async function updateDetailsJson(
-  kyotoDir: string,
-  branch: string | null,
-  sha: string | null,
-): Promise<void> {
-  const detailsPath = join(kyotoDir, 'details.json')
-  let details: DetailsJson = {}
-
-  // Read existing details.json if it exists
-  try {
-    const content = await readFile(detailsPath, 'utf-8')
-    details = JSON.parse(content) as DetailsJson
-  } catch {
-    // File doesn't exist or is invalid, start with empty object
-    details = {}
-  }
-
-  // Update the latest field
-  if (branch && sha) {
-    details.latest = {
-      sha,
-      branch,
-    }
-
-    // Write the updated details back
-    await writeFile(detailsPath, JSON.stringify(details, null, 2) + '\n', 'utf-8')
-  }
-}
+} from '../helpers/file/discovery.js'
+import { writeStoriesToFiles } from '../helpers/file/write.js'
+import { displayHeader } from '../helpers/display/display-header.js'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
+import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+import { updateDetailsJson } from '../helpers/config/update-details-json.js'
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'
 
   static override examples = [
-    '$ kyoto discover .',
-    '$ kyoto discover . --model "gpt-4o-mini" --provider openai',
-    '$ kyoto discover . --model "openai/gpt-4o-mini" --provider vercel',
-    '$ kyoto discover . --limit 5',
+    '$ kyoto discover',
+    '$ kyoto discover --limit 5',
+    '$ kyoto discover apps/web --model "gpt-4o-mini" --provider openai',
+    '$ kyoto discover packages/db/src --model "openai/gpt-4o-mini" --provider vercel',
   ]
 
   static override args = {
-    filePath: Args.string({
+    folder: Args.string({
       description:
-        'Path to the file to analyze (relative to current directory)',
-      required: true,
+        'Optional file or folder path to search (relative to git root). Defaults to git root if not provided.',
+      required: false,
     }),
   }
 
@@ -125,7 +55,6 @@ export default class Discover extends Command {
 
   override async run(): Promise<void> {
     const { args, flags } = await this.parse(Discover)
-    const inputPath = args.filePath
 
     // Create a logger that uses oclif's log method (passes through colored messages)
     const logger = (message: string) => {
@@ -140,11 +69,14 @@ export default class Discover extends Command {
       const kyotoDir = join(gitRoot, '.kyoto')
       await mkdir(kyotoDir, { recursive: true })
 
+      // Default to git root if no folder provided, otherwise use provided folder
+      const inputPath = args.folder || '.'
+
       // Validate path exists
       await validateFilePath(inputPath)
 
       // Determine if it's a file or directory
-      const resolvedPath = resolve(process.cwd(), inputPath)
+      const resolvedPath = resolve(gitRoot, inputPath)
       const stats = await stat(resolvedPath)
       const isDirectory = stats.isDirectory()
 
@@ -287,11 +219,7 @@ export default class Discover extends Command {
                   'The AI Gateway request failed. This could be due to:\n',
                 ),
               )
-              logger(
-                chalk.hex('#7c6653')(
-                  '  - Invalid or expired API key\n',
-                ),
-              )
+              logger(chalk.hex('#7c6653')('  - Invalid or expired API key\n'))
               logger(chalk.hex('#7c6653')('  - Network connectivity issues\n'))
               logger(
                 chalk.hex('#7c6653')(
@@ -313,9 +241,10 @@ export default class Discover extends Command {
       }
 
       // Record current branch and commit SHA to details.json
+      const detailsPath = join(kyotoDir, 'details.json')
       const branch = await getCurrentBranch(gitRoot)
       const sha = await getCurrentCommitSha(gitRoot)
-      await updateDetailsJson(kyotoDir, branch, sha)
+      await updateDetailsJson(detailsPath, branch, sha)
 
       if (allStories.length === 0) {
         logger(chalk.hex('#c27a52')('\nNo stories generated\n'))
