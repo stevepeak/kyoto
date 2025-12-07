@@ -98,7 +98,7 @@ export default class Discover extends Command {
       displayHeader({ logger })
       logger(
         chalk.grey(
-          `• Discovering user behaviors for ${chalk.hex('#7b301f')(filesToProcess.length)} ${filesToProcess.length === 1 ? chalk.hex('#7b301f')('file') : chalk.hex('#7b301f')('files')}`,
+          `• Exploring stories within ${chalk.hex('#7b301f')(filesToProcess.length)} ${filesToProcess.length === 1 ? chalk.hex('#7b301f')('file') : chalk.hex('#7b301f')('files')}`,
         ),
       )
 
