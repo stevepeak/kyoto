@@ -20,7 +20,7 @@ export function createLocalTerminalCommandTool(
     inputSchema: terminalCommandInputSchema,
     execute: async (input) => {
       if (onProgress) {
-        onProgress(input.command)
+        onProgress(`$ ${input.command}`)
       }
 
       try {
@@ -59,4 +59,3 @@ export function createLocalTerminalCommandTool(
     },
   })
 }
-

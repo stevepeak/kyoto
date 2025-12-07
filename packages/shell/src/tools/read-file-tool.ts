@@ -21,13 +21,18 @@ export async function readLocalFile(path: string): Promise<string> {
   return content
 }
 
-export function createLocalReadFileTool() {
+export function createLocalReadFileTool(
+  onProgress?: (message: string) => void,
+) {
   return tool({
     name: 'readFile',
     description:
       'Read and return the entire contents of a file from the local filesystem.',
     inputSchema: readFileInputSchema,
     execute: async (input) => {
+      if (onProgress) {
+        onProgress(`Reading file (${input.path})`)
+      }
       const content = await readLocalFile(input.path)
       return content
     },
