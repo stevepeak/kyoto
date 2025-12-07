@@ -46,26 +46,11 @@
       "cache": false
     },
     "test": {
-      "outputs": [],
       "dependsOn": ["^build"]
     },
-    "lint": {
-      "outputs": [],
-      "cache": true
-    },
-    "lint:fix": {
-      "outputs": [],
-      "cache": false
-    },
-    "lint:ci": {
-      "outputs": [],
-      "cache": true
-    },
-    "typecheck": {
-      "outputs": [],
-      "dependsOn": ["^build"],
-      "cache": true
-    },
+    "lint": {},
+    "fix": {},
+    "typecheck": {},
     "clean": {
       "cache": false
     }

@@ -62,17 +62,12 @@
     "build": "turbo run build",
     "preview": "turbo run preview",
     "lint": "turbo run lint",
-    "lint:profile": "TIMING=1 turbo run lint",
-    "lint:ci": "turbo run lint:ci --cache-dir=.turbo",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "knip": "knip",
     "knip:fix": "knip --fix",
     "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
-    "fix": "bun run fix:tsconfig && bun run fix:eslint && bun run fix:prettier",
-    "fix:prettier": "prettier --write .",
-    "fix:eslint": "turbo run lint:fix",
-    "fix:tsconfig": "monorepo-typescript-references fix",
+    "fix": "turbo run fix",
     "clean": "turbo run clean"
   },
   "devDependencies": {
