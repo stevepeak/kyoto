@@ -7,6 +7,7 @@ import ora from 'ora'
 import { getModel } from '../helpers/config/get-model.js'
 import { agents } from '@app/agents'
 import type { ComposedStory, DiscoveryAgentOutput } from '@app/schemas'
+import { createSearchStoriesTool } from '../helpers/tools/search-stories-tool.js'
 import {
   validateFilePath,
   findTypeScriptFiles,
@@ -16,6 +17,7 @@ import { displayHeader } from '../helpers/display/display-header.js'
 import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
 import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
 import { updateDetailsJson } from '../helpers/config/update-details-json.js'
+import { insertStoryEmbeddings } from '../helpers/stories/insert-embeddings.js'
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'
@@ -154,11 +156,13 @@ export default class Discover extends Command {
             : undefined
 
           // Generate stories for this file using the discovery agent
+          const searchStoriesTool = createSearchStoriesTool()
           const stories: DiscoveryAgentOutput = await agents.discovery.run({
             filePath,
             options: {
               model,
               maxStories: remainingLimit,
+              searchStoriesTool,
               onProgress: (progress: string) => {
                 spinner.text =
                   chalk.white(filePath) + ' ' + chalk.grey(progress)
@@ -176,6 +180,9 @@ export default class Discover extends Command {
             const writtenFiles = await writeStoriesToFiles(stories)
             allStories.push(...stories)
             allWrittenFiles.push(...writtenFiles)
+
+            // Add stories to vectra database
+            await insertStoryEmbeddings({ stories, writtenFiles })
           }
 
           // Update spinner to show completion
