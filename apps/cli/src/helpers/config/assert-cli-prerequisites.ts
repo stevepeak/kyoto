@@ -1,6 +1,8 @@
 import { findGitRoot, getGitHubInfo, type GitHubInfo } from '@app/shell'
+import { createIndex, ensureIndex } from '@app/vectra'
 import { getAiConfig } from './get-ai-config.js'
 import { detailsFileExists } from './kyoto-details.js'
+import { pwdKyoto } from './find-kyoto-dir.js'
 
 interface CliPrerequisites {
   gitRoot: string
@@ -31,6 +33,15 @@ async function assertAiConfiguration(): Promise<void> {
 }
 
 /**
+ * Ensures the vectra database exists for story search functionality
+ */
+async function ensureVectraDatabase(): Promise<void> {
+  const { vectra } = await pwdKyoto()
+  const index = createIndex(vectra)
+  await ensureIndex(index)
+}
+
+/**
  * Asserts CLI prerequisites:
  * 1. Optionally checks that the project is initialized (details.json exists with AI config)
  * 2. We are in a git repository
@@ -52,6 +63,8 @@ export async function assertCliPrerequisites(options?: {
   // Assert AI configuration if required (must be after gitRoot check)
   if (requireAi) {
     await assertAiConfiguration()
+    // Ensure vectra database exists for story search
+    await ensureVectraDatabase()
   }
 
   // Get GitHub info (optional - won't fail if not found)
