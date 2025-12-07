@@ -6,18 +6,16 @@ import ora from 'ora'
 
 import { getModel } from '../helpers/config/get-model.js'
 import { agents } from '@app/agents'
-import type { ComposedStory, DiscoveryAgentOutput } from '@app/schemas'
-import { createSearchStoriesTool } from '../helpers/tools/search-stories-tool.js'
+import type { DiscoveredStory } from '@app/schemas'
 import {
   validateFilePath,
   findTypeScriptFiles,
 } from '../helpers/file/discovery.js'
-import { writeStoriesToFiles } from '../helpers/file/write.js'
 import { displayHeader } from '../helpers/display/display-header.js'
 import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
 import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
 import { updateDetailsJson } from '../helpers/config/update-details-json.js'
-import { insertStoryEmbeddings } from '../helpers/stories/insert-embeddings.js'
+import { processDiscoveredCandidates } from '../helpers/stories/process-candidates.js'
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'
@@ -105,8 +103,7 @@ export default class Discover extends Command {
       )
 
       // Process each file with its own agent
-      const allStories: ComposedStory[] = []
-      const allWrittenFiles: string[] = []
+      let totalProcessedStories = 0
       const storyLimit = flags.limit
 
       // Get model configuration
@@ -131,7 +128,7 @@ export default class Discover extends Command {
 
       for (const filePath of filesToProcess) {
         // Check if we've reached the limit
-        if (storyLimit && allStories.length >= storyLimit) {
+        if (storyLimit && totalProcessedStories >= storyLimit) {
           logger(
             chalk.grey(
               `\n• Reached story limit of ${chalk.hex('#7b301f')(storyLimit.toString())}. Stopping discovery.\n`,
@@ -139,63 +136,67 @@ export default class Discover extends Command {
           )
           break
         }
-        // Create a new spinner for each file (white filepath, beige spinner)
-        const spinner = ora({
-          text: chalk.white(filePath),
-          spinner: 'squareCorners',
-          color: 'red',
-        }).start()
+        logger('')
+        logger(chalk.white(`Evaluating ${filePath}`))
 
         try {
-          // Update spinner to show current file
-          spinner.text = chalk.white(filePath)
-
           // Calculate how many stories we can still discover
           const remainingLimit = storyLimit
-            ? storyLimit - allStories.length
+            ? storyLimit - totalProcessedStories
             : undefined
 
-          // Generate stories for this file using the discovery agent
-          const searchStoriesTool = createSearchStoriesTool()
-          const stories: DiscoveryAgentOutput = await agents.discovery.run({
+          // Step 1: Discover candidate behaviors
+          const discoverySpinner = ora({
+            text:
+              chalk.hex('#7b301f')(`Discovery Agent: `) +
+              chalk.grey('Starting...'),
+            spinner: 'squareCorners',
+            color: 'red',
+            indent: 2,
+          }).start()
+
+          const discoveryResult = await agents.discovery.run({
             filePath,
             options: {
               model,
               maxStories: remainingLimit,
-              searchStoriesTool,
-              onProgress: (progress: string) => {
-                spinner.text =
-                  chalk.white(filePath) + ' ' + chalk.grey(progress)
+              logger: (msg: string) => {
+                discoverySpinner.text =
+                  chalk.hex('#7b301f')(`Discovery Agent: `) + chalk.grey(msg)
               },
             },
           })
 
-          if (stories.length > 0) {
-            spinner.text =
-              chalk.white(filePath) +
-              ' ' +
-              chalk.grey(`writing ${stories.length} stories...`)
+          const candidates = (discoveryResult as { stories: DiscoveredStory[] })
+            .stories
 
-            // Write stories to files
-            const writtenFiles = await writeStoriesToFiles(stories)
-            allStories.push(...stories)
-            allWrittenFiles.push(...writtenFiles)
-
-            // Add stories to vectra database
-            await insertStoryEmbeddings({ stories, writtenFiles })
+          if (candidates.length === 0) {
+            discoverySpinner.succeed(
+              chalk.hex('#7b301f')(`Discovery Agent: `) +
+                chalk.grey('No candidate behaviors found'),
+            )
+            continue
           }
 
-          // Update spinner to show completion
-          spinner.succeed(
-            chalk.white(
-              `${filePath} - ` +
-                chalk.hex('#7ba179')(
-                  `${stories.length} ${stories.length === 1 ? 'behavior' : 'behaviors'} discovered`,
-                ),
-            ),
+          discoverySpinner.succeed(
+            chalk.hex('#7b301f')(`Discovery Agent: `) +
+              chalk.grey(
+                `Found ${candidates.length} candidate behavior${candidates.length === 1 ? '' : 's'}`,
+              ),
           )
+
+          logger('')
+
+          // Step 2-6: Process candidates (check, enrich, embed, write, save)
+          const processedStories = await processDiscoveredCandidates({
+            candidates,
+            model,
+            logger,
+          })
+
+          totalProcessedStories += processedStories.length
         } catch (error) {
-          spinner.fail(chalk.white(filePath))
+          logger(chalk.red(`✖ ${filePath}`))
           logger(chalk.hex('#c27a52')(`\n⚠️  Failed to generate stories\n`))
           // Continue processing other files even if one fails
           if (error instanceof Error) {
@@ -253,14 +254,14 @@ export default class Discover extends Command {
       const sha = await getCurrentCommitSha(gitRoot)
       await updateDetailsJson(detailsPath, branch, sha)
 
-      if (allStories.length === 0) {
+      if (totalProcessedStories === 0) {
         logger(chalk.hex('#c27a52')('\nNo stories generated\n'))
         return
       }
 
       logger(
         chalk.hex('#7ba179')(
-          `\√ Found ${allStories.length} stories from ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}:\n`,
+          `\n√ Processed ${totalProcessedStories} ${totalProcessedStories === 1 ? 'story' : 'stories'} from ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}:\n`,
         ),
       )
     } catch (error) {

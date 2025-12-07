@@ -19,6 +19,7 @@ type CompositionAgentOptions = {
   options?: {
     telemetryTracer?: Tracer
     maxSteps?: number
+    logger?: (message: string) => void
   }
 }
 
@@ -98,6 +99,8 @@ export async function runCompositionAgent({
   repo,
   options,
 }: CompositionAgentOptions): Promise<CompositionAgentOutput> {
+  const { logger } = options ?? {}
+
   const agent = new Agent({
     model: agents.composition.options.model,
     system: makeSystemInstructions(),
@@ -118,9 +121,8 @@ export async function runCompositionAgent({
       options?.maxSteps ?? agents.composition.options.maxSteps,
     ),
     onStepFinish: (step) => {
-      if (step.reasoningText) {
-        // await streams.append('progress', step.reasoningText)
-        // TODO pass context onProgress()
+      if (step.reasoningText && !step.reasoningText.includes('[REDACTED]')) {
+        logger?.(step.reasoningText)
       }
     },
     experimental_output: Output.object({

@@ -13,7 +13,7 @@ import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisit
 import { displayHeader } from '../helpers/display/display-header.js'
 import { findGitRoot } from '@app/shell'
 import { pwdKyoto } from '../helpers/config/find-kyoto-dir.js'
-import { readAllStoryFilesRecursively } from '../helpers/file/reader.js'
+import { findStoriesByTrace } from '../helpers/stories/find-stories-by-trace.js'
 import { updateDetailsJson } from '../helpers/config/update-details-json.js'
 import type { DiffEvaluatorOutput } from '@app/schemas'
 
@@ -22,6 +22,9 @@ export default class Vibes extends Command {
     'Monitor the working project commits and log new commits'
 
   static override examples = ['$ kyoto vibes', '$ kyoto vibes --max-length 50']
+
+  private shouldExit = false
+  private activeSpinner: ReturnType<typeof ora> | null = null
 
   static override flags = {
     'max-length': Flags.integer({
@@ -46,60 +49,26 @@ export default class Vibes extends Command {
     // Get changed TS files
     const changedTsFiles = await getChangedTsFiles(commitSha, gitRoot)
 
-    // If no TS files changed, return early
+    // If no TS files changed, return null
     if (changedTsFiles.length === 0) {
-      return {
-        text: 'No relevant files changed',
-        stories: [],
-      }
-    }
-
-    // Read all story files
-    let storyFiles
-    try {
-      storyFiles = await readAllStoryFilesRecursively()
-    } catch {
-      // If stories directory doesn't exist, skip deterministic check
       return null
     }
 
-    // Match changed files against story codeReferences
-    const matchedStories: DiffEvaluatorOutput['stories'] = []
-    const matchedStoryPaths = new Set<string>()
-
-    for (const storyFile of storyFiles) {
-      // Skip if already matched
-      if (matchedStoryPaths.has(storyFile.path)) {
-        continue
-      }
-
-      for (const codeRef of storyFile.story.codeReferences) {
-        // Simple file path matching - check if any changed file matches the codeReference file
-        const refFile = codeRef.file
-        const matches = changedTsFiles.some((changedFile) => {
-          // Check if paths match (handle relative paths)
-          return (
-            changedFile === refFile ||
-            changedFile.endsWith(refFile) ||
-            refFile.endsWith(changedFile)
-          )
-        })
-
-        if (matches) {
-          matchedStories.push({
-            filePath: storyFile.path,
-            scopeOverlap: 'significant', // Default to significant for deterministic matches
-            reasoning: `Changed file ${refFile} matches story code reference`,
-          })
-          matchedStoryPaths.add(storyFile.path)
-          // Only add each story once
-          break
-        }
-      }
-    }
+    // Find stories that reference the changed files
+    const matchedStoryPaths = await findStoriesByTrace({
+      files: changedTsFiles,
+    })
 
     // Return matched stories (will be merged with AI results)
-    if (matchedStories.length > 0) {
+    if (matchedStoryPaths.length > 0) {
+      // Map to DiffEvaluatorOutput format
+      const matchedStories: DiffEvaluatorOutput['stories'] =
+        matchedStoryPaths.map((filePath) => ({
+          filePath,
+          scopeOverlap: 'significant', // Required by schema
+          reasoning: `Changed file matches story code reference`,
+        }))
+
       return {
         text: '',
         stories: matchedStories,
@@ -124,13 +93,16 @@ export default class Vibes extends Command {
       gitRoot,
     )
 
-    // If deterministic check found no TS files, return early
-    if (deterministicResult?.text === 'No relevant files changed') {
-      return deterministicResult
+    // If deterministic check returned null (no TS files changed), return early
+    if (deterministicResult === null) {
+      return {
+        text: 'No relevant files changed',
+        stories: [],
+      }
     }
 
     // Otherwise, run AI agent
-    const aiResult = await agents.diffEvaluator.run({
+    const aiResult: DiffEvaluatorOutput = await agents.diffEvaluator.run({
       commitSha: commit.hash,
       options: {
         maxSteps: agents.diffEvaluator.options.maxSteps,
@@ -141,7 +113,7 @@ export default class Vibes extends Command {
     })
 
     // Merge deterministic and AI results if we have deterministic matches
-    if (deterministicResult && deterministicResult.stories.length > 0) {
+    if (deterministicResult.stories.length > 0) {
       return {
         text: aiResult.text,
         stories: [...deterministicResult.stories, ...aiResult.stories],
@@ -175,20 +147,28 @@ export default class Vibes extends Command {
       color: 'red',
     }).start()
 
+    // Store spinner reference for cleanup
+    this.activeSpinner = spinner
+
     try {
       // Process the commit using the agent
       const result = await this.processCommit(commit)
       // * NOTE ^^ cannot print to screen otherwise it busts the spinner
 
-      // Stop the spinner
-      spinner.succeed()
+      // Stop the spinner if we're not exiting
+      if (!this.shouldExit) {
+        spinner.succeed()
+      } else {
+        spinner.stop()
+      }
+      this.activeSpinner = null
 
       // Display impacted stories
       if (result.stories.length > 0) {
         this.log('')
         this.log(
           chalk.hex('#7ba179')(
-            `  ${result.stories.length} ${result.stories.length === 1 ? 'story' : 'stories'} impacted:`,
+            `${result.stories.length} ${result.stories.length === 1 ? 'story' : 'stories'} impacted:`,
           ),
         )
         this.log('')
@@ -201,23 +181,29 @@ export default class Vibes extends Command {
                 ? chalk.hex('#d4a574')
                 : chalk.grey
 
-          this.log(`  ${overlapColor(story.scopeOverlap.toUpperCase())}`)
-          this.log(`    ${chalk.white(story.filePath)}`)
-          this.log(`    ${chalk.grey(story.reasoning)}`)
+          this.log(`${overlapColor(story.scopeOverlap.toUpperCase())}`)
+          this.log(`  ${chalk.white(story.filePath)}`)
+          this.log(`  ${chalk.grey(story.reasoning)}`)
           this.log('')
         }
       } else {
         this.log(chalk.grey('  No stories impacted'))
       }
+      this.log(chalk.yellow('  TODO check for new stories'))
 
       // Update details.json with the new commit
       const gitRoot = await findGitRoot()
       const branch = await getCurrentBranch(gitRoot)
       await updateDetailsJson(detailsPath, branch, commit.hash)
     } catch (error) {
-      spinner.fail(
-        `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      )
+      if (!this.shouldExit) {
+        spinner.fail(
+          `⚠️  Failed to evaluate commit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        )
+      } else {
+        spinner.stop()
+      }
+      this.activeSpinner = null
       throw error // Re-throw so caller knows processing failed
     }
   }
@@ -266,23 +252,44 @@ export default class Vibes extends Command {
 
       // Commit watcher and processor state
       let pollInterval: NodeJS.Timeout | null = null
-      let shouldExit = false
       let isProcessing = false
       let resolveExit: (() => void) | null = null
+      let cleanupCalled = false
+
+      // Reset instance state
+      this.shouldExit = false
+      this.activeSpinner = null
 
       // Handle graceful shutdown
       const cleanup = () => {
-        shouldExit = true
+        // Prevent multiple cleanup calls
+        if (cleanupCalled) {
+          return
+        }
+        cleanupCalled = true
+
+        this.shouldExit = true
+
+        // Stop the poll interval
         if (pollInterval) {
           clearInterval(pollInterval)
           pollInterval = null
         }
-        this.log('\n' + chalk.grey('Goodbye! 👋'))
+
+        // Stop any active spinner
+        if (this.activeSpinner) {
+          this.activeSpinner.stop()
+          this.activeSpinner = null
+        }
+
+        // Only log goodbye if we're not already processing (to avoid duplicate messages)
+        if (!isProcessing) {
+          this.log('\n' + chalk.grey('Goodbye! 👋'))
+        }
+
         // Resolve the exit promise to allow the process to exit
         if (resolveExit) {
           resolveExit()
-        } else {
-          process.exit(0)
         }
       }
 
@@ -291,7 +298,7 @@ export default class Vibes extends Command {
 
       // Watcher: Lightweight polling that only detects new commits
       pollInterval = setInterval(async () => {
-        if (shouldExit || isProcessing) {
+        if (this.shouldExit || isProcessing) {
           return // Skip if exiting or already processing
         }
 
@@ -314,7 +321,7 @@ export default class Vibes extends Command {
           this.handleNewCommit(latestCommit, maxLength, detailsPath)
             .then(() => {
               // Only update lastCommitHash after successful processing
-              if (!shouldExit) {
+              if (!this.shouldExit) {
                 lastCommitHash = latestCommit.shortHash
               }
               isProcessing = false

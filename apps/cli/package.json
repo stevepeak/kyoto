@@ -23,6 +23,7 @@
     "@app/agents": "workspace:^",
     "@app/schemas": "workspace:^",
     "@app/shell": "workspace:^",
+    "@app/vectra": "workspace:^",
     "@oclif/core": "catalog:",
     "@openrouter/ai-sdk-provider": "catalog:",
     "ai": "catalog:",
@@ -36,8 +37,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.10",
-    "typescript": "^5.9.3",
-    "tsconfig": "workspace:*"
+    "openai": "^6.10.0",
+    "tsconfig": "workspace:*",
+    "typescript": "^5.9.3"
   },
   "oclif": {
     "bin": "kyoto",

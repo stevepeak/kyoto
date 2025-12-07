@@ -9,6 +9,8 @@ import {
 import { runCompositionAgent } from './agents/v3/story-composition.js'
 import { main } from './agents/v3/story-evaluator.js'
 import { runStoryDiscoveryAgent } from './agents/v3/story-discovery.js'
+import { runStoryCheckAgent } from './agents/v3/story-check.js'
+import { runStoryEnrichmentAgent } from './agents/v3/story-enrichment.js'
 import { rewriteStoryForChanges } from './agents/v3/story-rewrite.js'
 import {
   findImpactedStories,
@@ -22,6 +24,8 @@ import { compositionAgentOutputSchema } from '../../schemas/src/story-flow.js'
 export { type TestStatus as Status }
 export { generateText } from './helpers/generate-text.js'
 export { generateEmbedding } from './helpers/generate-embedding.js'
+export { runStoryCheckAgent } from './agents/v3/story-check.js'
+export { runStoryEnrichmentAgent } from './agents/v3/story-enrichment.js'
 
 type Agent<TSchema extends z.ZodSchema = z.ZodSchema> = {
   id: string
@@ -42,6 +46,8 @@ type AgentsConfig = {
   composition: Agent
   evaluation: Agent
   discovery: Agent
+  storyCheck: Agent
+  storyEnrichment: Agent
   rewrite: Agent
   impact: Agent
   changelogSummary: Agent
@@ -57,6 +63,28 @@ export const agents: AgentsConfig = {
     run: runStoryDiscoveryAgent,
     options: {
       maxSteps: 30, // Allow more steps for discovery
+      model: 'openai/gpt-5-mini',
+    },
+  },
+  storyCheck: {
+    id: 'story-check-v3',
+    version: 'v3',
+    schema: z.boolean(),
+    run: runStoryCheckAgent,
+    options: {
+      maxSteps: 10,
+      model: 'openai/gpt-5-mini',
+    },
+  },
+  storyEnrichment: {
+    id: 'story-enrichment-v3',
+    version: 'v3',
+    schema: z.object({
+      story: z.any(), // DiscoveredStory schema
+    }),
+    run: runStoryEnrichmentAgent,
+    options: {
+      maxSteps: 20,
       model: 'openai/gpt-5-mini',
     },
   },

@@ -225,11 +225,6 @@ export type DiscoveredStory = z.infer<typeof discoveredStorySchema>
 // Add in the composition
 export const composedStorySchema = discoveredStorySchema.extend({
   composition: compositionAgentOutputSchema,
-  embeddings: z
-    .array(z.number())
-    .describe(
-      'Embedding vector for the story and composition (1536 dimensions)',
-    ),
 })
 
 export const discoveryAgentOutputSchema = z.array(composedStorySchema)

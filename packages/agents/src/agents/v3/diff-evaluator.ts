@@ -6,7 +6,6 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
 import {
   createLocalTerminalCommandTool,
   createLocalReadFileTool,
-  createSearchStoriesTool,
 } from '@app/shell'
 import { agents } from '../../index.js'
 import {
@@ -20,6 +19,7 @@ interface DiffEvaluatorOptions {
     maxSteps?: number
     model?: LanguageModel
     onProgress?: (message: string) => void
+    searchStoriesTool?: any
   }
 }
 
@@ -88,16 +88,23 @@ export async function evaluateDiff({
     maxSteps = 10,
     model = agents.discovery.options.model,
     onProgress,
+    searchStoriesTool,
   } = {},
 }: DiffEvaluatorOptions): Promise<DiffEvaluatorOutput> {
+  const tools: Record<string, any> = {
+    terminalCommand: createLocalTerminalCommandTool(onProgress),
+    readFile: createLocalReadFileTool(),
+  }
+
+  // Add searchStories tool if provided
+  if (searchStoriesTool) {
+    tools.searchStories = searchStoriesTool
+  }
+
   const agent = new Agent({
     model,
     system: buildSystemInstructions(),
-    tools: {
-      terminalCommand: createLocalTerminalCommandTool(onProgress),
-      readFile: createLocalReadFileTool(),
-      searchStories: createSearchStoriesTool(),
-    } as any,
+    tools: tools as any,
     onStepFinish: (step) => {
       if (step.reasoningText) {
         onProgress?.(step.reasoningText)

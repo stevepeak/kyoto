@@ -1,4 +1,4 @@
-import { tool } from 'ai'
+import { type Tool, tool } from 'ai'
 import { z } from 'zod'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
@@ -22,16 +22,16 @@ export async function readLocalFile(path: string): Promise<string> {
 }
 
 export function createLocalReadFileTool(
-  onProgress?: (message: string) => void,
-) {
+  logger?: (message: string) => void,
+): Tool {
   return tool({
     name: 'readFile',
     description:
       'Read and return the entire contents of a file from the local filesystem.',
     inputSchema: readFileInputSchema,
     execute: async (input) => {
-      if (onProgress) {
-        onProgress(`Reading file (${input.path})`)
+      if (logger) {
+        logger(`Reading file (${input.path})`)
       }
       const content = await readLocalFile(input.path)
       return content

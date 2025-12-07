@@ -3,23 +3,16 @@ import type { Tracer } from '@opentelemetry/api'
 import { readFile } from 'node:fs/promises'
 import { resolve, isAbsolute } from 'node:path'
 import { dedent } from 'ts-dedent'
-import pMap from 'p-map'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 import {
   createLocalTerminalCommandTool,
-  createLocalWriteFileTool,
   createLocalReadFileTool,
   findGitRoot,
 } from '@app/shell'
 import type { LanguageModel } from 'ai'
-import {
-  discoveredStorySchema,
-  type DiscoveryAgentOutput,
-  discoveryAgentOutputSchema,
-} from '@app/schemas'
-import { agents, generateEmbedding } from '../../index.js'
-import { runCompositionAgent } from './story-composition.js'
+import { discoveredStorySchema, type DiscoveredStory } from '@app/schemas'
+import { agents } from '../../index.js'
 import z from 'zod'
 
 type StoryDiscoveryAgentOptions = {
@@ -30,8 +23,7 @@ type StoryDiscoveryAgentOptions = {
     maxSteps?: number
     model?: LanguageModel
     telemetryTracer?: Tracer
-    onProgress?: (message: string) => void
-    searchStoriesTool?: any
+    logger?: (message: string) => void
   }
 }
 
@@ -120,34 +112,21 @@ function buildSystemInstructions(maxStories?: number): string {
 
     If the file only contains internal logic (helpers, utilities, schemas, state management), skip file discovery.
 
-    ### Step 2 — Check for existing stories
+    ### Step 2 — Write a user story for each unique behavior
 
-    **BEFORE writing a new story**, use the \`searchStories\` tool to check if a similar user behavior already exists in the database. 
-    
-    Search using the entire story behavior text.
-    
-    **If a story with the same user behavior already exists, SKIP writing that story.** Only write stories for behaviors that don't already exist.
-
-    ### Step 3 — Write a user story for each unique behaviors
-
-    For each unique user-facing behavior discovered that doesn't already exist, write a complete user story. Each story should focus on one outcome.
+    For each unique user-facing behavior discovered, write a complete user story. Each story should focus on one outcome.
 
     **Critical**: Every story MUST include:
     - At least 3 acceptance criteria (user-visible, testable outcomes)
     - At least 1 code reference (the file being analyzed, plus any related files)
 
-    ### Step 4 — Research and enrich with external context
+    ### Step 3 — Research and enrich with external context
 
     Use the provided tools to research related files and code paths. Include any external referenced files that contribute to the story, ensuring you capture entry points, exit points, prerequisites, and side effects.
 
-    ### Step 5 — Write story files and return paths
+    ### Step 4 — Return discovered stories
 
-    For each story you discover, you MUST:
-    1. Use the \`writeFile\` tool to write the story as a JSON file
-    2. Save each story to a file path (e.g., \`.kyoto/stories/story-name.json\`)
-    3. Return a list of all file paths you wrote as your final output
-
-    **CRITICAL**: Your final output must be an array of strings containing the file paths of all story files you wrote using the \`writeFile\` tool.
+    Return all discovered stories as an array of story objects in your final output.
 
     # ❌ Exclude
 
@@ -191,25 +170,26 @@ function buildPrompt(
     1. First, navigate the codebase to understand context (imports, related files, parent components)
     2. Then, discover user behaviors in THIS FILE (focal point)
     3. Navigate the codebase to enrich each behavior with specific details (entry points, exit points, prerequisites, side effects)
-    4. For each story, use the \`writeFile\` tool to write it as a JSON file (e.g., \`.kyoto/stories/story-name.json\`)
-    5. Return an array of all file paths you wrote
-
-    **IMPORTANT**: You must use the \`writeFile\` tool to write each story json to a file, then return an array of those file paths as your final output.
+    4. Return an array of all discovered story objects as your final output
 
     Remember: The target file is the focal point. Use navigation to enrich, not to discover new behaviors elsewhere.
   `
 }
 
+type StoryDiscoveryResult = {
+  stories: DiscoveredStory[]
+}
+
 export async function runStoryDiscoveryAgent(
   options: StoryDiscoveryAgentOptions,
-): Promise<DiscoveryAgentOutput> {
+): Promise<StoryDiscoveryResult> {
   const { filePath, fileContent } = options
   const {
     maxStories,
     maxSteps = 30,
     model = agents.discovery.options.model,
     telemetryTracer,
-    onProgress,
+    logger,
   } = options.options
 
   // Resolve file path relative to git root
@@ -220,16 +200,8 @@ export async function runStoryDiscoveryAgent(
   const content = fileContent ?? (await readFile(resolvedFilePath, 'utf-8'))
 
   const tools: Record<string, any> = {
-    terminalCommand: createLocalTerminalCommandTool(onProgress),
-    readFile: createLocalReadFileTool(),
-    writeFile: createLocalWriteFileTool({
-      schema: discoveredStorySchema,
-    }),
-  }
-
-  // Add searchStories tool if provided
-  if (options.options.searchStoriesTool) {
-    tools.searchStories = options.options.searchStoriesTool
+    terminalCommand: createLocalTerminalCommandTool(logger),
+    readFile: createLocalReadFileTool(logger),
   }
 
   const agent = new Agent({
@@ -245,47 +217,20 @@ export async function runStoryDiscoveryAgent(
       tracer: telemetryTracer,
     },
     onStepFinish: (step) => {
-      if (step.reasoningText) {
-        onProgress?.(step.reasoningText)
+      if (step.reasoningText && !step.reasoningText.includes('[REDACTED]')) {
+        logger?.(step.reasoningText)
       }
     },
     stopWhen: stepCountIs(maxSteps),
     experimental_output: Output.object({
-      schema: z.array(z.string()),
+      schema: z.array(discoveredStorySchema),
     }),
   })
 
   const prompt = buildPrompt(filePath, content, maxStories)
 
   const result = await agent.generate({ prompt })
-  const files = result.experimental_output
+  const stories = result.experimental_output
 
-  // Now add in the composition
-  const compositionStories: DiscoveryAgentOutput = await pMap(
-    files,
-    async (filePath) => {
-      const fileContent = await readFile(filePath, 'utf-8')
-      const story = discoveredStorySchema.parse(JSON.parse(fileContent))
-      const composition = await runCompositionAgent({
-        story,
-        repo: {
-          id: '1',
-          slug: 'test',
-        },
-      })
-
-      // add in embeddings
-      const embeddings = await generateEmbedding({
-        text: JSON.stringify({ ...story, composition }),
-      })
-
-      return {
-        ...story,
-        composition,
-        embeddings,
-      }
-    },
-  )
-
-  return discoveryAgentOutputSchema.parse(compositionStories)
+  return { stories }
 }

@@ -388,23 +388,26 @@ export const discoverStoriesFromCommitsTask = task({
                 `Creating new story for "${scope.substring(0, 30)}..."`,
               )
 
+              const result = (await agents.discovery.run({
+                db,
+                repo: {
+                  id: repoRecord.repoId,
+                  slug: repoSlug,
+                },
+                options: {
+                  daytonaSandboxId: sandbox.id,
+                  storyCount: 1,
+                  telemetryTracer: getTelemetryTracer(),
+                  context: {
+                    scope: [scope],
+                    commit,
+                  },
+                },
+              })) as { stories: DiscoveryAgentOutput; filePaths: string[] } | DiscoveryAgentOutput
+
+              // Extract stories from result (handle both old and new return types)
               const newStoryResult: DiscoveryAgentOutput =
-                await agents.discovery.run({
-                  db,
-                  repo: {
-                    id: repoRecord.repoId,
-                    slug: repoSlug,
-                  },
-                  options: {
-                    daytonaSandboxId: sandbox.id,
-                    storyCount: 1,
-                    telemetryTracer: getTelemetryTracer(),
-                    context: {
-                      scope: [scope],
-                      commit,
-                    },
-                  },
-                })
+                'stories' in result ? result.stories : result
 
               logger.info('Created new story from scope', {
                 scope,

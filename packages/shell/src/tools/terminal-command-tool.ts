@@ -1,4 +1,4 @@
-import { tool } from 'ai'
+import { type Tool, tool } from 'ai'
 import { z } from 'zod'
 import { execa } from 'execa'
 
@@ -11,16 +11,16 @@ const terminalCommandInputSchema = z.object({
 })
 
 export function createLocalTerminalCommandTool(
-  onProgress?: (message: string) => void,
-) {
+  logger?: (message: string) => void,
+): Tool {
   return tool({
     name: 'terminalCommand',
     description:
       'Execute shell commands (e.g. rg, fd, tree, sed, grep, git, find, etc.) in the current working directory.',
     inputSchema: terminalCommandInputSchema,
     execute: async (input) => {
-      if (onProgress) {
-        onProgress(`$ ${input.command}`)
+      if (logger) {
+        logger(`$ ${input.command}`)
       }
 
       try {
