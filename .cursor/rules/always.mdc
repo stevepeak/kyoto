@@ -14,6 +14,7 @@ alwaysApply: true
 - Always use ESM `import` and `export` (never use CJS `require`)
   - File imports should end with `.js` (NOT `.ts` or `.tsx`). Module or subpath imports don't need the extension.
 - Do not change `tsconfig.json`, ask permission with explaination if necessary
+- used named arguments `(args: {foo: string})` over inline arguments `(foo: string)`
 
 ## Current dev status
 
