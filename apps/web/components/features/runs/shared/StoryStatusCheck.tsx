@@ -5,6 +5,7 @@ import {
   MinusCircle,
   XCircle,
 } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 
 type StoryStatus = 'pass' | 'fail' | 'running' | 'skipped' | 'error'

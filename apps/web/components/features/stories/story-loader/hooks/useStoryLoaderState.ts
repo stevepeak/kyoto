@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import type { Story } from '../types'
+import { useEffect, useState } from 'react'
+
+import { type Story } from '../types'
 
 interface UseStoryLoaderStateProps {
   initialStory?: Story | null

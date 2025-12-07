@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+import { findStoryForUser, getUser } from '@app/api'
+import { setupDb } from '@app/db'
+import { type Metadata } from 'next'
 import { headers } from 'next/headers'
 
 import { StoryPage } from '@/components/features/stories/story-page'
-import { findStoryForUser, getUser } from '@app/api'
-import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
 // Story detail pages need fresh data (stories can be edited)

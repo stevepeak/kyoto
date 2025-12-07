@@ -1,9 +1,8 @@
-import type { Sandbox } from '@daytonaio/sdk'
-import { LspLanguageId } from '@daytonaio/sdk'
+import { LspLanguageId, type Sandbox } from '@daytonaio/sdk'
+import { streams } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
 
-import { streams } from '@trigger.dev/sdk'
 import { resolveWorkspacePath } from '../helpers/resolve-workspace-path.js'
 
 const lspLanguageSchema = z.enum(['typescript', 'python'])

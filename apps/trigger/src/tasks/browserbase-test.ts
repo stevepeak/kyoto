@@ -1,14 +1,14 @@
-import { task, logger, streams } from '@trigger.dev/sdk'
-import { Stagehand } from '@browserbasehq/stagehand'
-import { getConfig } from '@app/config'
-import { Experimental_Agent as Agent, stepCountIs } from 'ai'
 import {
   createActTool,
-  createExtractTool,
-  createObserveTool,
   createAgentTool,
+  createExtractTool,
   createGotoTool,
+  createObserveTool,
 } from '@app/browserbase'
+import { getConfig } from '@app/config'
+import { Stagehand } from '@browserbasehq/stagehand'
+import { logger, streams, task } from '@trigger.dev/sdk'
+import { Experimental_Agent as Agent, stepCountIs } from 'ai'
 
 export const browserbaseTestTask = task({
   id: 'browserbase-test',
@@ -35,7 +35,9 @@ export const browserbaseTestTask = task({
       logger.log('Initializing Stagehand')
       await stagehand.init()
 
+      // eslint-disable-next-line no-console
       console.log(`Stagehand Session Started`)
+      // eslint-disable-next-line no-console
       console.log(
         `📽️ Watch live: https://browserbase.com/sessions/${stagehand.browserbaseSessionID}`,
       )

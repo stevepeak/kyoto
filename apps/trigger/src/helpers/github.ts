@@ -1,7 +1,7 @@
+import { getConfig } from '@app/config'
+import { setupDb } from '@app/db'
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
-import { setupDb } from '@app/db'
-import { getConfig } from '@app/config'
 import { logger } from '@trigger.dev/sdk'
 
 export function createOctokit(installationId: number): Octokit {
@@ -168,7 +168,7 @@ export async function getGitHubDiff(
   repo: string,
   base: string,
   head: string,
-  maxDiffSize: number = 50000, // ~50KB max diff size
+  maxDiffSize = 50000, // ~50KB max diff size
 ): Promise<{ diff: string; changedFiles: string[] }> {
   const comparison = await octokit.rest.repos.compareCommits({
     owner,

@@ -1,7 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { RunStoryCardHeader } from './RunStoryCardHeader'
+
+import { type RunStory, type StoryTestResult } from '../types'
 import { RunStoryCardContent } from './RunStoryCardContent'
-import type { RunStory, StoryTestResult } from '../types'
+import { RunStoryCardHeader } from './RunStoryCardHeader'
 
 interface RunStoryCardProps {
   story: RunStory

@@ -1,7 +1,7 @@
+import { getConfig } from '@app/config'
 import { logger } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
-import { getConfig } from '@app/config'
 
 const resolveLibraryInputSchema = z.object({
   libraryName: z
@@ -72,4 +72,3 @@ export function createResolveLibraryTool() {
     },
   })
 }
-

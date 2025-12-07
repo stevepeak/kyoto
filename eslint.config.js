@@ -25,6 +25,8 @@ export default defineESLintConfig(
       '**/postcss.config.js',
       '**/tailwind.config.js',
       '**/next.config.js',
+      // Ignore bin directory files (executable scripts)
+      '**/bin/**',
     ],
   },
   {

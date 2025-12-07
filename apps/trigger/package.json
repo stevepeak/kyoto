@@ -14,7 +14,7 @@
     "deploy": "npx trigger.dev@latest deploy",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "@app/agents": "workspace:*",
@@ -43,9 +43,10 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
+    "@kyoto/eslint-config": "workspace:*",
     "@sentry/esbuild-plugin": "^4.6.0",
     "@trigger.dev/build": "catalog:",
-    "@types/node": "^22.18.10",
-    "typescript": "^5.9.3"
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
   }
 }

@@ -1,7 +1,7 @@
+import { findGitRoot } from '@app/shell'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { findGitRoot } from '@app/shell'
 
 type Provider = 'openai' | 'vercel' | 'openrouter'
 

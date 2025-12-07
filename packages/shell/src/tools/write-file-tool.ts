@@ -1,6 +1,6 @@
-import { writeFile, mkdir } from 'node:fs/promises'
-import { resolve, dirname } from 'node:path'
-import chalk from 'chalk'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
+
 import { findGitRoot } from '../git/find-git-root.js'
 
 export async function writeLocalFile(
@@ -16,8 +16,6 @@ export async function writeLocalFile(
     await mkdir(dir, { recursive: true })
     await writeFile(absFilePath, content, 'utf-8')
   } catch (error) {
-    const message = `Failed to write file: ${path}`
-    console.error(chalk.red(`📝 ${message}`), { error })
-    throw new Error(message)
+    throw new Error(`Failed to write file: ${path}`)
   }
 }

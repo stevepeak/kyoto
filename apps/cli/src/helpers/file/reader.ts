@@ -1,9 +1,9 @@
+import { type DiscoveredStory, discoveredStorySchema } from '@app/schemas'
+import { findGitRoot } from '@app/shell'
 import { readdir, readFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
-import { findGitRoot } from '@app/shell'
+
 import { pwdKyoto } from '../config/find-kyoto-dir.js'
-import type { DiscoveredStory } from '@app/schemas'
-import { discoveredStorySchema } from '@app/schemas'
 
 export interface StoryFile {
   path: string
@@ -50,4 +50,3 @@ export async function readAllStoryFiles(): Promise<StoryFile[]> {
     throw error
   }
 }
-

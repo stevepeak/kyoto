@@ -23,7 +23,7 @@
     "db:reset": "bun run db:migrate",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "@neondatabase/serverless": "catalog:",
@@ -33,12 +33,13 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^20.19.21",
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
     "@types/pg": "^8.15.5",
     "@types/ws": "^8.18.1",
     "kysely-codegen": "^0.19.0",
     "node-pg-migrate": "^8.0.3",
     "tsconfig": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   }
 }

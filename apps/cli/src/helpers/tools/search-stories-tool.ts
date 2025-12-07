@@ -1,8 +1,9 @@
+import { createDb, createIndex, query } from '@app/vectra'
 import { tool } from 'ai'
 import { z } from 'zod'
-import { createIndex, createDb, query } from '@app/vectra'
-import { generateEmbedding } from '../embeddings/generate-embedding.js'
+
 import { pwdKyoto } from '../config/find-kyoto-dir.js'
+import { generateEmbedding } from '../embeddings/generate-embedding.js'
 
 const searchStoriesInputSchema = z.object({
   query: z

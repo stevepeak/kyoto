@@ -1,5 +1,5 @@
+import { type Editor } from '@tiptap/react'
 import { useEffect } from 'react'
-import type { Editor } from '@tiptap/react'
 
 interface UseTiptapAutoFocusProps {
   editor: Editor | null

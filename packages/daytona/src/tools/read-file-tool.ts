@@ -1,9 +1,9 @@
-import type { Sandbox } from '@daytonaio/sdk'
+import { type Sandbox } from '@daytonaio/sdk'
+import { streams } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
 
 import { resolveWorkspacePath } from '../helpers/resolve-workspace-path.js'
-import { streams } from '@trigger.dev/sdk'
 
 const readFileInputSchema = z.object({
   path: z
@@ -23,6 +23,7 @@ export async function getFileContentFromSandbox(
 
   if (!absFilePath) {
     const message = 'File path must be within the current repository workspace.'
+    // eslint-disable-next-line no-console
     console.error(`📄 Failed to resolve file path`, {
       inputPath: path,
     })
@@ -34,6 +35,7 @@ export async function getFileContentFromSandbox(
     const content = downloadedFile.toString('utf-8')
     return content
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error(`📄 Failed to read file`, { error })
     throw error
   }
@@ -51,4 +53,3 @@ export function createReadFileTool(ctx: { sandbox: Sandbox }) {
     },
   })
 }
-

@@ -1,7 +1,8 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
-import type { LanguageModel } from 'ai'
+import { type LanguageModel } from 'ai'
 import chalk from 'chalk'
+
 import { getAiConfig } from './get-ai-config.js'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'auto'
@@ -29,6 +30,7 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
   apiKeySource: 'cli' | 'details' | 'none'
 }> {
   const { model: cliModel, provider: cliProvider, logger } = options
+  // eslint-disable-next-line no-console
   const log = logger || ((message: string) => console.log(chalk.grey(message)))
 
   // Get config from details.json

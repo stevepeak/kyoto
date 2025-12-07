@@ -1,6 +1,7 @@
-import { createIndex, createDb, query } from '@app/vectra'
-import { generateEmbedding } from '../embeddings/generate-embedding.js'
+import { createDb, createIndex, query } from '@app/vectra'
+
 import { pwdKyoto } from '../config/find-kyoto-dir.js'
+import { generateEmbedding } from '../embeddings/generate-embedding.js'
 
 export interface StoryMetadata {
   filePath: string

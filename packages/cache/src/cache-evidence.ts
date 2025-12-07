@@ -1,5 +1,5 @@
+import { type Sandbox } from '@daytonaio/sdk'
 import { createHash } from 'node:crypto'
-import type { Sandbox } from '@daytonaio/sdk'
 
 /**
  * Generates a cache key for story evidence caching.
@@ -70,6 +70,7 @@ export async function getFileHashFromSandbox(
   await new Promise((resolve: (value: string) => void) =>
     setTimeout(resolve, 1000),
   )
+  // eslint-disable-next-line no-console
   console.log('getFileHashFromSandbox', filePath)
   // const contents = await getFileContentFromSandbox(sandbox, filePath)
   // return hashFileContent(contents)

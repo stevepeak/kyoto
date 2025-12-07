@@ -1,6 +1,6 @@
+import { findGitRoot } from '@app/shell'
 import { access, constants } from 'node:fs/promises'
 import { join } from 'node:path'
-import { findGitRoot } from '@app/shell'
 
 const KYOTO_DIR = '.kyoto'
 

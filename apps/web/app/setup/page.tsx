@@ -1,5 +1,6 @@
-import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+
 import { SetupPageWrapper } from '@/components/pages/SetupPageWrapper'
 import { getAuth } from '@/lib/auth'
 

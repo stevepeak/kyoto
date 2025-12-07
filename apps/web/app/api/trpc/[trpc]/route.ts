@@ -1,12 +1,10 @@
-import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
-import type { NextRequest } from 'next/server'
-import * as Sentry from '@sentry/nextjs'
-
-import { appRouter } from '@app/api'
-import type { Context } from '@app/api'
-import { getUser } from '@app/api'
+import { appRouter, type Context, getUser } from '@app/api'
 import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
+import * as Sentry from '@sentry/nextjs'
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
+import { type NextRequest } from 'next/server'
+
 import { getAuth } from '@/lib/auth'
 
 async function createContext(req: NextRequest): Promise<Context> {

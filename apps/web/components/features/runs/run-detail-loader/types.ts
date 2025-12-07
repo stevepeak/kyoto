@@ -1,6 +1,6 @@
-import type { inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '@app/api'
-import type { EvaluationOutput } from '@app/schemas'
+import { type AppRouter } from '@app/api'
+import { type EvaluationOutput } from '@app/schemas'
+import { type inferRouterOutputs } from '@trpc/server'
 
 export type RunQueryOutput = inferRouterOutputs<AppRouter>['run']['getByRunId']
 export type ApiRun = NonNullable<RunQueryOutput['run']>

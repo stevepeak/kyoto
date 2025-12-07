@@ -1,7 +1,9 @@
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+
 import { useTRPCClient } from '@/client/trpc'
-import type { Story } from '../types'
+
+import { type Story } from '../types'
 
 interface UseStoryActionsProps {
   orgName: string
@@ -199,7 +201,7 @@ export function useStoryActions({
       await trpc.story.toggleState.mutate({
         orgName,
         repoName,
-        storyId: storyId,
+        storyId,
         state: 'archived',
       })
       router.push(`/org/${orgName}/repo/${repoName}`)
@@ -219,7 +221,7 @@ export function useStoryActions({
       const result = await trpc.story.toggleState.mutate({
         orgName,
         repoName,
-        storyId: storyId,
+        storyId,
         state: newState,
       })
       if (result.story) {
@@ -243,13 +245,13 @@ export function useStoryActions({
     setError(null)
     try {
       await trpc.story.decompose.mutate({
-        storyId: storyId,
+        storyId,
       })
       // Reload story to get updated decomposition
       const resp = await trpc.story.get.query({
         orgName,
         repoName,
-        storyId: storyId,
+        storyId,
       })
       if (resp.story) {
         setStory({
@@ -276,7 +278,7 @@ export function useStoryActions({
     setError(null)
     try {
       await trpc.story.test.mutate({
-        storyId: storyId,
+        storyId,
       })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to start test')
@@ -294,7 +296,7 @@ export function useStoryActions({
     try {
       // Trigger decomposition workflow
       await trpc.story.decompose.mutate({
-        storyId: storyId,
+        storyId,
       })
       // Navigate back to repos page
       router.push(`/org/${orgName}/repo/${repoName}`)

@@ -1,10 +1,17 @@
-import type { Kysely } from 'kysely'
-import { sql } from 'kysely'
-import type { DB } from '@app/db'
-import type { CacheEntry, CacheData, ValidationResult } from '@app/schemas'
-import { assertionCacheEntrySchema } from '@app/schemas'
-import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence.js'
-import type { Sandbox } from '@daytonaio/sdk'
+import { type DB } from '@app/db'
+import {
+  assertionCacheEntrySchema,
+  type CacheData,
+  type CacheEntry,
+  type ValidationResult,
+} from '@app/schemas'
+import { type Sandbox } from '@daytonaio/sdk'
+import { type Kysely, sql } from 'kysely'
+
+import {
+  buildEvidenceHashMap,
+  getFileHashFromSandbox,
+} from './cache-evidence.js'
 
 /**
  * Retrieves cached evidence for a story at a specific commit SHA or from a list of commit SHAs.
@@ -174,7 +181,7 @@ export async function validateCacheEntry(args: {
       let assertionIsValid = true
       for (const [filename, fileCacheEntry] of Object.entries(
         cacheEntry.evidence,
-      ) as Array<[string, { hash: string; lineRanges: string[] }]>) {
+      ) as [string, { hash: string; lineRanges: string[] }][]) {
         try {
           const cachedHash = fileCacheEntry.hash
           const currentHash = await getFileHashFromSandbox(filename)
@@ -252,13 +259,13 @@ export async function invalidateCacheForStory(args: {
  */
 export async function buildCacheDataFromEvaluation(args: {
   evaluation: {
-    steps: Array<{
+    steps: {
       conclusion: string
-      assertions: Array<{
+      assertions: {
         evidence: string[]
         reason?: string
-      }>
-    }>
+      }[]
+    }[]
   }
   sandbox: Sandbox
 }): Promise<CacheData> {

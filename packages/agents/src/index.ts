@@ -1,25 +1,25 @@
-import z from 'zod'
-
 import {
+  diffEvaluatorOutputSchema,
+  discoveryAgentOutputSchema,
   evaluationOutputSchema,
   type TestStatus,
-  discoveryAgentOutputSchema,
-  diffEvaluatorOutputSchema,
 } from '@app/schemas'
-import { runCompositionAgent } from './agents/v3/story-composition.js'
-import { main } from './agents/v3/story-evaluator.js'
-import { runStoryDiscoveryAgent } from './agents/v3/story-discovery.js'
+import z from 'zod'
+
+import { compositionAgentOutputSchema } from '../../schemas/src/story-flow.js'
+import { generateChangelogSummary } from './agents/v3/changelog-summary.js'
+import { evaluateDiff } from './agents/v3/diff-evaluator.js'
+import { extractScope } from './agents/v3/scope-extraction.js'
 import { runStoryCheckAgent } from './agents/v3/story-check.js'
+import { runCompositionAgent } from './agents/v3/story-composition.js'
+import { runStoryDiscoveryAgent } from './agents/v3/story-discovery.js'
 import { runStoryEnrichmentAgent } from './agents/v3/story-enrichment.js'
-import { rewriteStoryForChanges } from './agents/v3/story-rewrite.js'
+import { main } from './agents/v3/story-evaluator.js'
 import {
   findImpactedStories,
   storyImpactOutputSchema,
 } from './agents/v3/story-impact.js'
-import { generateChangelogSummary } from './agents/v3/changelog-summary.js'
-import { extractScope } from './agents/v3/scope-extraction.js'
-import { evaluateDiff } from './agents/v3/diff-evaluator.js'
-import { compositionAgentOutputSchema } from '../../schemas/src/story-flow.js'
+import { rewriteStoryForChanges } from './agents/v3/story-rewrite.js'
 
 export { type TestStatus as Status }
 export { generateText } from './helpers/generate-text.js'
@@ -31,6 +31,7 @@ type Agent<TSchema extends z.ZodSchema = z.ZodSchema> = {
   id: string
   version: string
   schema: TSchema
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   run: (options: any) => Promise<z.infer<TSchema>>
   options: {
     maxSteps: number

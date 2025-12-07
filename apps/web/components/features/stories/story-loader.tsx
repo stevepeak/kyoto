@@ -1,11 +1,11 @@
+import { type CompositionAgentOutput } from '@app/schemas'
 import { Suspense } from 'react'
 
-import { getTRPCCaller } from '@/lib/trpc-server'
 import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
+import { getTRPCCaller } from '@/lib/trpc-server'
 
 import { StoryLoaderClient } from './story-loader/index'
-import type { CompositionAgentOutput } from '@app/schemas'
 
 interface Story {
   id: string

@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
+import { type StoryState } from '@app/db/types'
+import { type TestStatus } from '@app/schemas'
+import { Archive, Pause } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+
+import { useTRPCClient } from '@/client/trpc'
 import { EmptyState } from '@/components/common/EmptyState'
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
-import { StoryCard } from './story-card'
-import { useTRPCClient } from '@/client/trpc'
-import { toast } from 'sonner'
-import { Archive, Pause } from 'lucide-react'
-
-import type { StoryState } from '@app/db/types'
-import type { TestStatus } from '@app/schemas'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
+import { StoryCard } from './story-card'
 
 type StoryStatus = TestStatus | null
 

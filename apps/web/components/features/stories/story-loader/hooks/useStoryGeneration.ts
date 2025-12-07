@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import type { StoryDiscoveryOutput } from '../types'
+
+import { type StoryDiscoveryOutput } from '../types'
 
 interface UseStoryGenerationProps {
   setIsGenerating: (value: boolean) => void

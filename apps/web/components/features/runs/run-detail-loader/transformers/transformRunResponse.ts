@@ -1,17 +1,17 @@
-import type {
-  RunQueryOutput,
-  ApiRun,
-  ApiStory,
-  ApiStoryResult,
-  StoryTestResult,
-  RunStory,
-  GitAuthor,
-  Run,
+import {
+  type ApiRun,
+  type ApiStory,
+  type ApiStoryResult,
+  type GitAuthor,
+  type Run,
+  type RunQueryOutput,
+  type RunStory,
+  type StoryTestResult,
 } from '../types'
 import {
-  normalizeStoryResultStatus,
-  normalizeRunStoryStatus,
   normalizeRunStatus,
+  normalizeRunStoryStatus,
+  normalizeStoryResultStatus,
   toIsoString,
 } from '../utils/normalizeStatus'
 

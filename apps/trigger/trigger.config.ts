@@ -1,14 +1,16 @@
-import { defineConfig, tasks } from '@trigger.dev/sdk'
-import {
-  esbuildPlugin,
-  type BuildExtension,
-} from '@trigger.dev/build/extensions'
 import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin'
 import * as Sentry from '@sentry/node'
+import {
+  type BuildExtension,
+  esbuildPlugin,
+} from '@trigger.dev/build/extensions'
+import { defineConfig, tasks } from '@trigger.dev/sdk'
+
 import { setupTelemetry } from './src/telemetry'
 
 export default defineConfig({
   // Your project ref (you can see it on the Project settings page in the dashboard)
+  // eslint-disable-next-line no-process-env
   project: process.env.TRIGGER_PROJECT_ID || 'proj_krmnzhlblfvcussrwlyu',
   // The paths for your trigger folders
   dirs: ['./src/tasks'],
@@ -19,6 +21,7 @@ export default defineConfig({
           org: 'kyoto',
           project: 'trigger',
           // Find this auth token in settings -> developer settings -> auth tokens
+          // eslint-disable-next-line no-process-env
           authToken: process.env.SENTRY_AUTH_TOKEN,
         }),
         { placement: 'last', target: 'deploy' },

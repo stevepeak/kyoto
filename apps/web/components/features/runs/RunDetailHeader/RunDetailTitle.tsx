@@ -1,7 +1,9 @@
 import { GitBranch, GitCommit, Timer } from 'lucide-react'
 import Image from 'next/image'
+
 import { cn } from '@/lib/utils'
-import type { Run, StatusDisplay } from '../types'
+
+import { type Run, type StatusDisplay } from '../types'
 
 interface RunDetailTitleProps {
   commitTitle: string

@@ -1,10 +1,13 @@
-import { Experimental_Agent as Agent, stepCountIs } from 'ai'
-import type { Tracer } from '@opentelemetry/api'
-import type { LanguageModel } from 'ai'
+import { type Commit } from '@app/schemas'
+import { type Tracer } from '@opentelemetry/api'
+import {
+  Experimental_Agent as Agent,
+  type LanguageModel,
+  stepCountIs,
+} from 'ai'
 import { dedent } from 'ts-dedent'
 
 import { agents } from '../../index.js'
-import type { Commit } from '@app/schemas'
 
 interface RewriteStoryForChangesOptions {
   commit: Commit
@@ -74,6 +77,7 @@ export async function rewriteStoryForChanges({
       },
       tracer: telemetryTracer,
     },
+    // eslint-disable-next-line @typescript-eslint/require-await
     onStepFinish: async (step) => {
       if (step.reasoningText) {
         // await streams.append('progress', step.reasoningText)

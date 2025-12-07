@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react'
-import type { EvaluationOutput } from '@app/schemas'
+import { type EvaluationOutput } from '@app/schemas'
+import { type LucideIcon } from 'lucide-react'
 
 export interface StoryTestResult {
   id: string

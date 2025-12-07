@@ -1,14 +1,14 @@
-import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
-import type { Tracer } from '@opentelemetry/api'
-
-import { agents } from '../../index.js'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 import {
-  compositionAgentOutputSchema,
   type CompositionAgentOutput,
+  compositionAgentOutputSchema,
   type DiscoveredStory,
 } from '@app/schemas'
+import { type Tracer } from '@opentelemetry/api'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+
+import { agents } from '../../index.js'
 
 type CompositionAgentOptions = {
   story: DiscoveredStory

@@ -1,6 +1,6 @@
 import { type Tool, tool } from 'ai'
-import { z } from 'zod'
 import { execa } from 'execa'
+import { z } from 'zod'
 
 const terminalCommandInputSchema = z.object({
   command: z

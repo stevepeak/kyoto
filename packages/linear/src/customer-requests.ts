@@ -1,8 +1,8 @@
-import type {
-  CreateLinearCustomerRequestInput,
-  CreateLinearCustomerRequestResult,
-} from './types.js'
 import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
+import {
+  type CreateLinearCustomerRequestInput,
+  type CreateLinearCustomerRequestResult,
+} from './types.js'
 
 interface CreateCustomerRequestResponse {
   customerNeedCreate: {

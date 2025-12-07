@@ -1,5 +1,5 @@
+import { type Stagehand } from '@browserbasehq/stagehand'
 import { tool } from 'ai'
-import { Stagehand } from '@browserbasehq/stagehand'
 import { z } from 'zod'
 
 export interface BrowserbaseToolsContext {
@@ -128,4 +128,3 @@ export function createGotoTool(ctx: BrowserbaseToolsContext) {
     },
   })
 }
-

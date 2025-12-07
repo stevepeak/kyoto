@@ -1,8 +1,9 @@
-import type { Tracer } from '@opentelemetry/api'
-import type {
-  CacheEntry,
-  CacheValidationResult,
-  ComposedStory,
+import { type Tracer } from '@opentelemetry/api'
+
+import {
+  type CacheEntry,
+  type CacheValidationResult,
+  type ComposedStory,
 } from './story-flow.js'
 
 /**
@@ -28,7 +29,7 @@ export interface Commit {
  * Options for the evaluation agent
  * Note: composition type is imported from @app/agents at usage sites to avoid circular dependency
  */
-export type evaluationAgentOptions = {
+export type EvaluationAgentOptions = {
   repo: {
     id: string
     slug: string

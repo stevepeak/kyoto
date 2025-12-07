@@ -1,6 +1,6 @@
 'use client'
 
-import type { AppRouter } from '@app/api'
+import { type AppRouter } from '@app/api'
 import { is } from '@app/utils'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchStreamLink, loggerLink } from '@trpc/client'
@@ -26,7 +26,7 @@ function makeQueryClient() {
   })
 }
 
-let browserQueryClient: QueryClient | undefined = undefined
+let browserQueryClient: QueryClient | undefined
 
 function getQueryClient() {
   if (typeof window === 'undefined') {

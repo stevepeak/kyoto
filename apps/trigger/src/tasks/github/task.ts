@@ -5,7 +5,7 @@ import { installationRepositoriesHandler } from './handlers/installation-reposit
 import { installationTargetsHandler } from './handlers/installation-targets'
 import { pullRequestHandler } from './handlers/pull-request'
 import { pushHandler } from './handlers/push'
-import type { WebhookHandler } from './types'
+import { type WebhookHandler } from './types'
 
 const handlers: Record<string, WebhookHandler | null> = {
   push: pushHandler,

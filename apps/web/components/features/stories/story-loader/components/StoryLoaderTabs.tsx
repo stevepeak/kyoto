@@ -1,10 +1,12 @@
-import { FileText, Layers, History } from 'lucide-react'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { StoryEditForm } from '@/components/features/stories/story-edit-form'
+import { FileText, History, Layers } from 'lucide-react'
+
 import { StoryDecompositionTab } from '@/components/features/stories/story-decomposition-tab'
+import { StoryEditForm } from '@/components/features/stories/story-edit-form'
 import { StoryRunsTab } from '@/components/features/stories/story-runs-tab'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+import { type Story } from '../types'
 import { StoryStateBanner } from './StoryStateBanner'
-import type { Story } from '../types'
 
 interface StoryLoaderTabsProps {
   story: Story | null

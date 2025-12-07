@@ -1,7 +1,9 @@
-import { cn } from '@/lib/utils'
+import { type EvaluationOutput } from '@app/schemas'
 import { ChevronDown } from 'lucide-react'
+
+import { cn } from '@/lib/utils'
+
 import { getConclusionStyles, getEvidenceConclusionDisplay } from '../../utils'
-import type { EvaluationOutput } from '@app/schemas'
 import { EvidenceList } from './EvidenceList'
 
 interface ConclusionDisplayProps {

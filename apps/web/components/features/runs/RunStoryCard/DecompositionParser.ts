@@ -1,5 +1,7 @@
-import { compositionAgentOutputSchema } from '@app/schemas'
-import type { CompositionAgentOutput } from '@app/schemas'
+import {
+  type CompositionAgentOutput,
+  compositionAgentOutputSchema,
+} from '@app/schemas'
 
 /**
  * Parses composition data from unknown format (string or object)

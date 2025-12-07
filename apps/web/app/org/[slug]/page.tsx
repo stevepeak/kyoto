@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+import { findOwnerForUser, getUser } from '@app/api'
+import { setupDb } from '@app/db'
+import { type Metadata } from 'next'
 import { headers } from 'next/headers'
 
 import { OrgPage as OrgPageComponent } from '@/components/pages/OrgPage'
-import { findOwnerForUser, getUser } from '@app/api'
-import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
 // Org pages are user-specific and always dynamic

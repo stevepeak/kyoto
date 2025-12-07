@@ -1,7 +1,7 @@
-import type { setupDb } from '@app/db'
+import { type setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
-import type { AccountPayload, RepositoryPayload } from './schemas'
+import { type AccountPayload, type RepositoryPayload } from './schemas'
 import { parseId, resolveAccountExternalId, toNullableString } from './utils'
 
 type DbClient = ReturnType<typeof setupDb>

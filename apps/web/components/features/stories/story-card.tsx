@@ -1,9 +1,11 @@
 'use client'
 
+import { type StoryState } from '@app/db/types'
 import { Pause, Sparkles } from 'lucide-react'
-import { cn } from '@/lib/utils'
+
 import { Checkbox } from '@/components/ui/checkbox'
-import type { StoryState } from '@app/db/types'
+import { cn } from '@/lib/utils'
+
 import { getStoryStatePillStyles } from './utils'
 
 interface StoryCardProps {

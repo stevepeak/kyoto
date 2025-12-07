@@ -1,20 +1,20 @@
-import { Command, Args, Flags } from '@oclif/core'
+import { agents } from '@app/agents'
+import { type DiscoveredStory } from '@app/schemas'
+import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+import { Args, Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import { stat, mkdir } from 'node:fs/promises'
-import { resolve, join } from 'node:path'
+import { mkdir, stat } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 import ora from 'ora'
 
-import { getModel } from '../helpers/config/get-model.js'
-import { agents } from '@app/agents'
-import type { DiscoveredStory } from '@app/schemas'
-import {
-  validateFilePath,
-  findTypeScriptFiles,
-} from '../helpers/file/discovery.js'
-import { displayHeader } from '../helpers/display/display-header.js'
 import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+import { getModel } from '../helpers/config/get-model.js'
 import { updateDetailsJson } from '../helpers/config/update-details-json.js'
+import { displayHeader } from '../helpers/display/display-header.js'
+import {
+  findTypeScriptFiles,
+  validateFilePath,
+} from '../helpers/file/discovery.js'
 import { processDiscoveredCandidates } from '../helpers/stories/process-candidates.js'
 
 export default class Discover extends Command {

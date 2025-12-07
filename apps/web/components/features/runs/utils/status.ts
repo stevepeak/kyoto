@@ -1,9 +1,3 @@
-import type {
-  Run,
-  RunStory,
-  StatusDisplay,
-  StoryStatusPillStatus,
-} from '../types'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -11,6 +5,13 @@ import {
   MinusCircle,
   XCircle,
 } from 'lucide-react'
+
+import {
+  type Run,
+  type RunStory,
+  type StatusDisplay,
+  type StoryStatusPillStatus,
+} from '../types'
 
 export function getStatusDisplay(status: Run['status']): StatusDisplay {
   switch (status) {

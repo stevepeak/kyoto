@@ -9,4 +9,3 @@ export default class TestApi extends Command {
     // TODO: Implement test:api logic
   }
 }
-

@@ -1,5 +1,5 @@
-import OpenAI from 'openai'
 import { getConfig } from '@app/config'
+import OpenAI from 'openai'
 
 interface GenerateEmbeddingOptions {
   /** The text to generate an embedding for */

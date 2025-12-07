@@ -2,7 +2,7 @@
 export type { VectraItem, VectraQueryOptions } from './types.js'
 
 // Create
-export { createIndex, createDb, ensureIndex } from './create.js'
+export { createDb, createIndex, ensureIndex } from './create.js'
 
 // Insert
 export { insert } from './insert.js'
@@ -17,4 +17,4 @@ export { getItem } from './get.js'
 export { listItems } from './list.js'
 
 // Delete
-export { deleteItem, deleteAll } from './delete.js'
+export { deleteAll, deleteItem } from './delete.js'

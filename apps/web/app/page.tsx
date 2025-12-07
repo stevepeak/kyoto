@@ -1,12 +1,12 @@
 import {
-  LandingNavbar,
-  LandingHero,
-  FeatureGrid,
-  Metrics,
-  Testimonials,
-  Pricing,
   Faq,
+  FeatureGrid,
   LandingFooter,
+  LandingHero,
+  LandingNavbar,
+  Metrics,
+  Pricing,
+  Testimonials,
 } from '@/components/landing'
 
 // Landing page can be statically generated and cached

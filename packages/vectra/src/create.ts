@@ -1,10 +1,10 @@
-import { LocalIndex } from 'vectra';
+import { LocalIndex } from 'vectra'
 
 /**
  * Creates a new VectraIndex instance
  */
 export function createIndex(indexPath: string): LocalIndex {
-  return new LocalIndex(indexPath);
+  return new LocalIndex(indexPath)
 }
 
 /**
@@ -12,7 +12,7 @@ export function createIndex(indexPath: string): LocalIndex {
  */
 export async function createDb(index: LocalIndex): Promise<void> {
   if (!(await index.isIndexCreated())) {
-    await index.createIndex();
+    await index.createIndex()
   }
 }
 
@@ -20,6 +20,5 @@ export async function createDb(index: LocalIndex): Promise<void> {
  * Checks if the index exists and creates it if needed
  */
 export async function ensureIndex(index: LocalIndex): Promise<void> {
-  await createDb(index);
+  await createDb(index)
 }
-

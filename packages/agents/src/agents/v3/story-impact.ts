@@ -1,12 +1,19 @@
-import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
-import type { Tracer } from '@opentelemetry/api'
-import type { LanguageModel } from 'ai'
+import {
+  type Commit,
+  type StoryImpactOutput,
+  storyImpactOutputSchema,
+} from '@app/schemas'
+import { type Tracer } from '@opentelemetry/api'
+import {
+  Experimental_Agent as Agent,
+  type LanguageModel,
+  Output,
+  stepCountIs,
+} from 'ai'
 import { dedent } from 'ts-dedent'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 import { agents } from '../../index.js'
-import type { Commit } from '@app/schemas'
-import { storyImpactOutputSchema, type StoryImpactOutput } from '@app/schemas'
 
 interface FindImpactedStoriesOptions {
   repo: {
@@ -96,6 +103,7 @@ export async function findImpactedStories({
       },
       tracer: telemetryTracer,
     },
+    // eslint-disable-next-line @typescript-eslint/require-await
     onStepFinish: async (step) => {
       if (step.reasoningText) {
         // await streams.append('progress', step.reasoningText)

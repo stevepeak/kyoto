@@ -1,4 +1,4 @@
-import type { StoryTestResult, RunStory, Run } from '../types'
+import { type Run, type RunStory, type StoryTestResult } from '../types'
 
 const STORY_RESULT_STATUS_VALUES: readonly StoryTestResult['status'][] = [
   'pass',

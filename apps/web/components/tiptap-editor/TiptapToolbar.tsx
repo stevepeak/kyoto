@@ -1,20 +1,21 @@
 'use client'
 
+import { type Editor } from '@tiptap/react'
 import {
   Bold,
-  Italic,
-  List,
-  ListOrdered,
   Code,
-  Link as LinkIcon,
-  Quote,
   Heading1,
   Heading2,
   Heading3,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Quote,
 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { Editor } from '@tiptap/react'
 
 interface TiptapToolbarProps {
   editor: Editor

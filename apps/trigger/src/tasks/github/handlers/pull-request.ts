@@ -6,7 +6,7 @@ import { runCiTask } from '../../ci/main'
 import { findActiveRunForPr, findRepoByOwnerAndName } from '../shared/db'
 import { pullRequestEventSchema } from '../shared/schemas'
 import { resolveRepositoryOwnerLogin, toNullableString } from '../shared/utils'
-import type { WebhookHandler } from '../types'
+import { type WebhookHandler } from '../types'
 
 const RUN_TRIGGER_ACTIONS = new Set([
   'opened',

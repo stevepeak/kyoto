@@ -1,9 +1,9 @@
-import { json } from '@app/db'
-import type { RunStory } from '@app/db'
-import type { AggregatedCounts } from '../../helpers/github-checks'
-import type { DbClient, StoryRow } from './types'
-import type { TestStoryTaskResult } from '../test-story'
-import type { Status } from '@app/agents'
+import { type Status } from '@app/agents'
+import { json, type RunStory } from '@app/db'
+
+import { type AggregatedCounts } from '../../helpers/github-checks'
+import { type TestStoryTaskResult } from '../test-story'
+import { type DbClient, type StoryRow } from './types'
 
 export interface AggregatedRunOutcome {
   aggregated: AggregatedCounts

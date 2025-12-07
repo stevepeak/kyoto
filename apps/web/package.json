@@ -2,13 +2,14 @@
   "name": "@app/web",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean": "rm -rf node_modules dist",
     "dev": "next dev --port 3001 --webpack",
     "build": "next build --webpack",
     "start": "next start --port 3001",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
+    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -35,16 +36,17 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@kyoto/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.19",
     "@trpc/server": "catalog:",
-    "@types/node": "^22.10.2",
+    "@types/node": "catalog:",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/unist": "^3.0.3",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.37.0",
     "tailwindcss": "^4.1.16",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   }
 }

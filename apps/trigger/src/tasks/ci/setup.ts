@@ -1,12 +1,12 @@
-import { sql } from '@app/db'
-import type { RunStory } from '@app/db'
-import type { GitAuthor } from '../../helpers/github'
-import type {
-  DbClient,
-  RepoRecord,
-  RunCiPayload,
-  RunInsert,
-  StoryRow,
+import { type RunStory, sql } from '@app/db'
+
+import { type GitAuthor } from '../../helpers/github'
+import {
+  type DbClient,
+  type RepoRecord,
+  type RunCiPayload,
+  type RunInsert,
+  type StoryRow,
 } from './types'
 
 export function getBranchName(payload: RunCiPayload): string {

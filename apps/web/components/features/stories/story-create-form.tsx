@@ -1,7 +1,8 @@
 import { FileText, Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { TiptapEditor } from '@/components/tiptap-editor'
+
 import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
+import { TiptapEditor } from '@/components/tiptap-editor'
+import { Button } from '@/components/ui/button'
 
 interface StoryCreateFormProps {
   storyContent: string

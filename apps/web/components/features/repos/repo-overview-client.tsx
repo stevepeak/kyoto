@@ -1,8 +1,8 @@
 'use client'
 
+import { type AppRouter } from '@app/api'
+import { type inferRouterOutputs } from '@trpc/server'
 import { useRouter } from 'next/navigation'
-import type { inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '@app/api'
 
 import { RepoOverview } from './repo-overview'
 

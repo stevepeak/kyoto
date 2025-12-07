@@ -22,4 +22,3 @@ export async function getCurrentBranch(
     return null
   }
 }
-

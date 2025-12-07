@@ -1,6 +1,6 @@
-import { generateText as aiGenerateText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { getConfig } from '@app/config'
+import { generateText as aiGenerateText } from 'ai'
 
 interface GenerateTextOptions {
   /** The prompt to generate text from */

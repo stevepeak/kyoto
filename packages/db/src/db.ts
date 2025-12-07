@@ -1,14 +1,15 @@
-import { Pool as NeonPool, neonConfig } from '@neondatabase/serverless'
+import { neonConfig, Pool as NeonPool } from '@neondatabase/serverless'
 import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 import ws from 'ws'
 
-import type { DB } from './types.js'
+import { type DB } from './types.js'
 
 type DatabasePool = NeonPool | Pool
 
 function attachPoolErrorHandler(pool: DatabasePool, poolType: string): void {
   pool.on('error', (err: Error) => {
+    // eslint-disable-next-line no-console
     console.error(`Unexpected error on idle ${poolType} client`, err)
   })
 }

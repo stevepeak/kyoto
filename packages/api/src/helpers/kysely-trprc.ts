@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import type { QueryNode } from 'kysely'
+import { type QueryNode } from 'kysely'
 
 export function trpcNotFoundError(_node?: QueryNode): TRPCError {
   // The '_node' parameter (QueryNode) is provided by Kysely and can be used

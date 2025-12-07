@@ -1,7 +1,7 @@
-import type { RunStory, StoryTestResult } from '../types'
-import { useStoryAnalysis } from './hooks/useStoryAnalysis'
+import { type RunStory, type StoryTestResult } from '../types'
 import { ConclusionDisplay } from './components/ConclusionDisplay'
 import { DecompositionDisplay } from './components/DecompositionDisplay'
+import { useStoryAnalysis } from './hooks/useStoryAnalysis'
 
 interface RunStoryCardContentProps {
   story: RunStory

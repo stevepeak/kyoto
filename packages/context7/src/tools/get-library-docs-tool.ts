@@ -1,7 +1,7 @@
+import { getConfig } from '@app/config'
 import { logger } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
-import { getConfig } from '@app/config'
 
 const getLibraryDocsInputSchema = z.object({
   libraryId: z
@@ -99,4 +99,3 @@ export function createGetLibraryDocsTool() {
     },
   })
 }
-

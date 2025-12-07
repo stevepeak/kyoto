@@ -1,4 +1,5 @@
 import { Command } from '@oclif/core'
+
 import { displayHeader } from '../helpers/display/display-header.js'
 
 export default class Vibe extends Command {
@@ -6,6 +7,7 @@ export default class Vibe extends Command {
 
   static override examples = ['$ kyoto vibe']
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   override async run(): Promise<void> {
     const logger = (message: string) => {
       this.log(message)

@@ -1,4 +1,4 @@
-import type { EvaluationConclusion, StoryStatusPillStatus } from '../types'
+import { type EvaluationConclusion, type StoryStatusPillStatus } from '../types'
 
 export function getConclusionStyles(conclusion: EvaluationConclusion): {
   container: string

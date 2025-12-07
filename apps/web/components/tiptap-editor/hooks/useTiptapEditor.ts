@@ -1,7 +1,9 @@
 import { useEditor } from '@tiptap/react'
-import { useEffect, useState, useMemo } from 'react'
-import { createEditorExtensions } from '../utils/editorExtensions'
+import { useEffect, useMemo, useState } from 'react'
+
 import { cn } from '@/lib/utils'
+
+import { createEditorExtensions } from '../utils/editorExtensions'
 
 interface UseTiptapEditorProps {
   value: string

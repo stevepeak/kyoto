@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+
 import { getAiConfig } from '../config/get-ai-config.js'
 
 interface GenerateEmbeddingOptions {
@@ -25,15 +26,17 @@ export async function generateEmbedding({
 
   switch (aiConfig.provider) {
     case 'openai':
-    case 'vercel': // Vercel uses OpenAI under the hood
+    case 'vercel': {
+      // Vercel uses OpenAI under the hood
       const openai = new OpenAI({ apiKey: aiConfig.apiKey })
       const response = await openai.embeddings.create({
         model: 'text-embedding-3-small',
         input: text,
       })
       return response.data[0]?.embedding ?? []
+    }
 
-    case 'openrouter':
+    case 'openrouter': {
       // OpenRouter supports OpenAI-compatible embeddings
       // Use OpenAI client with OpenRouter API key
       const openrouterOpenai = new OpenAI({
@@ -45,6 +48,7 @@ export async function generateEmbedding({
         input: text,
       })
       return openrouterResponse.data[0]?.embedding ?? []
+    }
 
     default:
       throw new Error(`Unsupported provider: ${aiConfig.provider}`)

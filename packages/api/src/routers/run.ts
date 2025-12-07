@@ -1,6 +1,6 @@
+import { tasks } from '@trigger.dev/sdk'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { tasks } from '@trigger.dev/sdk'
 
 import { findRepoForUser, requireRepoForUser } from '../helpers/memberships.js'
 import { protectedProcedure, router } from '../trpc.js'
@@ -47,31 +47,23 @@ export const runRouter = router({
         error: 'error',
       }
 
-      const runs = dbRuns.map((run: any) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const runs = dbRuns.map((run) => {
         const createdAt = run.createdAt as Date
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const updatedAt = run.updatedAt as Date
         // Calculate duration in milliseconds
         const durationMs = updatedAt.getTime() - createdAt.getTime()
 
         return {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           id: run.id,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           runId: String(run.number),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           status: statusMap[run.status] ?? 'queued',
 
           createdAt: createdAt.toISOString(),
 
           updatedAt: updatedAt.toISOString(),
           durationMs,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           commitSha: run.commitSha ?? null,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           commitMessage: run.commitMessage ?? null,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           branchName: run.branchName,
         }
       })

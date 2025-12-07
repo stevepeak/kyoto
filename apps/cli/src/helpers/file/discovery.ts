@@ -1,7 +1,7 @@
-import { stat } from 'node:fs/promises'
-import { resolve, extname, isAbsolute } from 'node:path'
-import { execa } from 'execa'
 import { findGitRoot } from '@app/shell'
+import { execa } from 'execa'
+import { stat } from 'node:fs/promises'
+import { extname, isAbsolute, resolve } from 'node:path'
 
 /**
  * Validates that a file or directory path exists and is accessible.
@@ -26,6 +26,7 @@ export async function validateFilePath(filePath: string): Promise<void> {
     if (
       error instanceof Error &&
       'code' in error &&
+      // eslint-disable-next-line no-undef
       (error as NodeJS.ErrnoException).code === 'ENOENT'
     ) {
       throw new Error(

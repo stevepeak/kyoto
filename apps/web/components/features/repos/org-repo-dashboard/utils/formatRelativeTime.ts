@@ -4,13 +4,13 @@ export function formatRelativeTime(value: Date | null): string | null {
   }
 
   const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
-  let deltaSeconds = Math.round((value.getTime() - Date.now()) / 1000)
+  const deltaSeconds = Math.round((value.getTime() - Date.now()) / 1000)
 
-  const units: Array<{
+  const units: {
     limit: number
     divisor: number
     unit: Intl.RelativeTimeFormatUnit
-  }> = [
+  }[] = [
     { limit: 60, divisor: 1, unit: 'second' },
     { limit: 3600, divisor: 60, unit: 'minute' },
     { limit: 86400, divisor: 3600, unit: 'hour' },

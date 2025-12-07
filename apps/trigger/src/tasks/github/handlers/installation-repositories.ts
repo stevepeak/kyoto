@@ -1,7 +1,7 @@
 import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
-import { logger } from '@trigger.dev/sdk'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
+import { logger } from '@trigger.dev/sdk'
 
 import {
   disableRepositories,
@@ -15,7 +15,7 @@ import {
 } from '../shared/db'
 import { installationRepositoriesEventSchema } from '../shared/schemas'
 import { parseId } from '../shared/utils'
-import type { WebhookHandler } from '../types'
+import { type WebhookHandler } from '../types'
 
 export const installationRepositoriesHandler: WebhookHandler = async ({
   deliveryId,

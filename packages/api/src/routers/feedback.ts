@@ -1,15 +1,15 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import { dedent } from 'ts-dedent'
-
 import {
+  createLinearCustomerRequest,
   createLinearIssue,
   findOrCreateLinearCustomer,
-  createLinearCustomerRequest,
   getLinearTeams,
 } from '@app/linear'
-import { protectedProcedure, router } from '../trpc.js'
+import { TRPCError } from '@trpc/server'
+import { dedent } from 'ts-dedent'
+import { z } from 'zod'
+
 import { getUserGithubLogin } from '../helpers/users.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 const submitFeedbackInputSchema = z.object({
   feedback: z.string().min(1, 'Feedback is required'),

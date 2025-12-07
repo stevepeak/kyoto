@@ -1,23 +1,25 @@
-import { task, logger, streams } from '@trigger.dev/sdk'
-import { setupDb } from '@app/db'
-import { getConfig } from '@app/config'
-import { createDaytonaSandbox } from '../helpers/daytona'
-import { getTelemetryTracer } from '@/telemetry'
 import { agents } from '@app/agents'
-import type {
-  Commit,
-  StoryImpactOutput,
-  DiscoveryAgentOutput,
-} from '@app/schemas'
-import { findRepoByOwnerAndName } from './github/shared/db'
+import { getConfig } from '@app/config'
+import { setupDb } from '@app/db'
 import {
-  getOctokitClient,
-  getGitHubDiff,
-  getCommitMessages,
-} from '../helpers/github'
-import { dedent } from 'ts-dedent'
-import pMap from 'p-map'
+  type Commit,
+  type DiscoveryAgentOutput,
+  type StoryImpactOutput,
+} from '@app/schemas'
+import { logger, streams, task } from '@trigger.dev/sdk'
 import { diffLines } from 'diff'
+import pMap from 'p-map'
+import { dedent } from 'ts-dedent'
+
+import { getTelemetryTracer } from '@/telemetry'
+
+import { createDaytonaSandbox } from '../helpers/daytona'
+import {
+  getCommitMessages,
+  getGitHubDiff,
+  getOctokitClient,
+} from '../helpers/github'
+import { findRepoByOwnerAndName } from './github/shared/db'
 
 interface DiscoverStoriesFromCommitsPayload {
   /** Repository slug in format {owner}/{repo} */
@@ -271,10 +273,10 @@ export const discoverStoriesFromCommitsTask = task({
         )
 
         // Step 1: Collect all impacted stories per scope (parallel)
-        const scopeToImpactedStories: Array<{
+        const scopeToImpactedStories: {
           scope: string
           impactedStories: StoryImpactOutput
-        }> = await pMap(
+        }[] = await pMap(
           scopeItems,
           async (
             scope: string,
@@ -300,6 +302,7 @@ export const discoverStoriesFromCommitsTask = task({
           { concurrency: 1 },
         )
 
+        // eslint-disable-next-line no-console
         console.log(`Found ${scopeToImpactedStories.length} impacted stories`, {
           stories: scopeToImpactedStories,
         })
@@ -329,14 +332,14 @@ export const discoverStoriesFromCommitsTask = task({
         }
 
         // Step 3: Fetch story records from database for deduped stories
-        const storiesToRewrite: Array<{
+        const storiesToRewrite: {
           story: {
             id: string
             name: string
             story: string
           }
           scopes: string[]
-        }> = []
+        }[] = []
 
         if (allStoryIds.size > 0) {
           const storyRecords = await db
@@ -403,7 +406,9 @@ export const discoverStoriesFromCommitsTask = task({
                     commit,
                   },
                 },
-              })) as { stories: DiscoveryAgentOutput; filePaths: string[] } | DiscoveryAgentOutput
+              })) as
+                | { stories: DiscoveryAgentOutput; filePaths: string[] }
+                | DiscoveryAgentOutput
 
               // Extract stories from result (handle both old and new return types)
               const newStoryResult: DiscoveryAgentOutput =
@@ -567,6 +572,7 @@ export const discoverStoriesFromCommitsTask = task({
             )
             for (const savedStory of insertedStories) {
               // TODO
+              // eslint-disable-next-line no-console
               console.log('enriching story', savedStory)
               // await storyDecompositionTask.trigger(
               //   {

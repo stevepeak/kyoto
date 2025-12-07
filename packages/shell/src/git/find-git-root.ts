@@ -28,7 +28,10 @@ export async function findGitRoot(): Promise<string> {
         `Git not found. Please ensure git is installed and you're in a git repository.`,
       )
     }
-    if (error instanceof Error && error.message.includes('not a git repository')) {
+    if (
+      error instanceof Error &&
+      error.message.includes('not a git repository')
+    ) {
       throw new Error(
         `Not a git repository. Please run this command from within a git repository.`,
       )
@@ -38,4 +41,3 @@ export async function findGitRoot(): Promise<string> {
     )
   }
 }
-

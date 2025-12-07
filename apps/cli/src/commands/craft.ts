@@ -9,4 +9,3 @@ export default class Craft extends Command {
     // TODO: Implement craft logic
   }
 }
-

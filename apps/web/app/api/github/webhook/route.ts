@@ -1,6 +1,6 @@
 import { configure, tasks } from '@trigger.dev/sdk'
+import { type NextRequest } from 'next/server'
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import type { NextRequest } from 'next/server'
 
 // Ensure Trigger.dev is configured once per process
 let isTriggerConfigured = false

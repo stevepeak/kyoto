@@ -1,21 +1,23 @@
+import { agents } from '@app/agents'
+import { type DiffEvaluatorOutput } from '@app/schemas'
+import {
+  type CommitInfo,
+  findGitRoot,
+  getChangedTsFiles,
+  getCurrentBranch,
+  getLatestCommit,
+} from '@app/shell'
 import { Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
-import ora from 'ora'
 import { mkdir } from 'node:fs/promises'
-import { agents } from '@app/agents'
-import {
-  getChangedTsFiles,
-  getLatestCommit,
-  getCurrentBranch,
-  type CommitInfo,
-} from '@app/shell'
+import ora from 'ora'
+
 import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { displayHeader } from '../helpers/display/display-header.js'
-import { findGitRoot } from '@app/shell'
 import { pwdKyoto } from '../helpers/config/find-kyoto-dir.js'
-import { findStoriesByTrace } from '../helpers/stories/find-stories-by-trace.js'
 import { updateDetailsJson } from '../helpers/config/update-details-json.js'
-import type { DiffEvaluatorOutput } from '@app/schemas'
+import { displayHeader } from '../helpers/display/display-header.js'
+import { findStoriesByTrace } from '../helpers/stories/find-stories-by-trace.js'
+import { createSearchStoriesTool } from '../helpers/tools/search-stories-tool.js'
 
 export default class Vibes extends Command {
   static override description =
@@ -102,8 +104,10 @@ export default class Vibes extends Command {
     }
 
     // Otherwise, run AI agent
+    const searchStoriesTool = createSearchStoriesTool()
     const aiResult: DiffEvaluatorOutput = await agents.diffEvaluator.run({
       commitSha: commit.hash,
+      searchStoriesTool,
       options: {
         maxSteps: agents.diffEvaluator.options.maxSteps,
         onProgress: (_message: string) => {
@@ -251,6 +255,7 @@ export default class Vibes extends Command {
       }
 
       // Commit watcher and processor state
+      // eslint-disable-next-line no-undef
       let pollInterval: NodeJS.Timeout | null = null
       let isProcessing = false
       let resolveExit: (() => void) | null = null

@@ -1,6 +1,6 @@
+import { type DB, type Owner, type Repo, type Story } from '@app/db/types'
 import { TRPCError } from '@trpc/server'
-import type { DB, Owner, Repo, Story } from '@app/db/types'
-import type { Kysely, Selectable } from 'kysely'
+import { type Kysely, type Selectable } from 'kysely'
 
 interface WithUserId {
   userId: string

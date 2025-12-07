@@ -11,7 +11,7 @@
     "clean": "rm -rf node_modules dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "@ai-sdk/openai": "catalog:",
@@ -28,8 +28,9 @@
     "zod-to-json-schema": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^22.18.10",
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   }
 }

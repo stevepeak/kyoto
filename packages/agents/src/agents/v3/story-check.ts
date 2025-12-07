@@ -1,15 +1,20 @@
-import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
-import type { Tracer } from '@opentelemetry/api'
-import { dedent } from 'ts-dedent'
-
-import type { LanguageModel } from 'ai'
 import { type DiscoveredStory } from '@app/schemas'
-import { agents } from '../../index.js'
+import { type Tracer } from '@opentelemetry/api'
+import {
+  Experimental_Agent as Agent,
+  type LanguageModel,
+  Output,
+  stepCountIs,
+  type Tool,
+} from 'ai'
+import { dedent } from 'ts-dedent'
 import z from 'zod'
+
+import { agents } from '../../index.js'
 
 type StoryCheckAgentOptions = {
   story: DiscoveredStory
-  searchStoriesTool: any
+  searchStoriesTool: Tool
   options: {
     maxSteps?: number
     model?: LanguageModel
@@ -90,14 +95,10 @@ export async function runStoryCheckAgent(
     logger,
   } = options.options
 
-  const tools: Record<string, any> = {
-    searchStories: searchStoriesTool,
-  }
-
   const agent = new Agent({
     model,
     system: buildSystemInstructions(),
-    tools: tools as any,
+    tools: { searchStories: searchStoriesTool },
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-check-v3',

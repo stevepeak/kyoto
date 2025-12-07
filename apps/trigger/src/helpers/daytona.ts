@@ -1,6 +1,6 @@
-import { Daytona } from '@daytonaio/sdk'
-import type { Sandbox } from '@daytonaio/sdk'
 import { getConfig } from '@app/config'
+import { Daytona, type Sandbox } from '@daytonaio/sdk'
+
 import { getOctokitClient } from './github'
 
 type DaytonaClient = InstanceType<typeof Daytona>

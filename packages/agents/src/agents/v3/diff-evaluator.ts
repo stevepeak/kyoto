@@ -1,25 +1,30 @@
-import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
-import type { LanguageModel } from 'ai'
+import {
+  type DiffEvaluatorOutput,
+  diffEvaluatorOutputSchema,
+} from '@app/schemas'
+import {
+  createLocalReadFileTool,
+  createLocalTerminalCommandTool,
+} from '@app/shell'
+import {
+  Experimental_Agent as Agent,
+  type LanguageModel,
+  Output,
+  stepCountIs,
+  type Tool,
+} from 'ai'
 import { dedent } from 'ts-dedent'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
-import {
-  createLocalTerminalCommandTool,
-  createLocalReadFileTool,
-} from '@app/shell'
 import { agents } from '../../index.js'
-import {
-  diffEvaluatorOutputSchema,
-  type DiffEvaluatorOutput,
-} from '@app/schemas'
 
 interface DiffEvaluatorOptions {
   commitSha: string
+  searchStoriesTool: Tool
   options?: {
     maxSteps?: number
     model?: LanguageModel
     onProgress?: (message: string) => void
-    searchStoriesTool?: any
   }
 }
 
@@ -84,27 +89,21 @@ function buildPrompt(commitSha: string): string {
 
 export async function evaluateDiff({
   commitSha,
+  searchStoriesTool,
   options: {
     maxSteps = 10,
     model = agents.discovery.options.model,
     onProgress,
-    searchStoriesTool,
   } = {},
 }: DiffEvaluatorOptions): Promise<DiffEvaluatorOutput> {
-  const tools: Record<string, any> = {
-    terminalCommand: createLocalTerminalCommandTool(onProgress),
-    readFile: createLocalReadFileTool(),
-  }
-
-  // Add searchStories tool if provided
-  if (searchStoriesTool) {
-    tools.searchStories = searchStoriesTool
-  }
-
   const agent = new Agent({
     model,
     system: buildSystemInstructions(),
-    tools: tools as any,
+    tools: {
+      terminalCommand: createLocalTerminalCommandTool(onProgress),
+      readFile: createLocalReadFileTool(),
+      searchStoriesTool,
+    },
     onStepFinish: (step) => {
       if (step.reasoningText) {
         onProgress?.(step.reasoningText)

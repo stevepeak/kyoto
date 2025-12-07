@@ -1,7 +1,8 @@
 import { tool } from 'ai'
-import { z } from 'zod'
 import chalk from 'chalk'
-import type { Ora } from 'ora'
+import { type Ora } from 'ora'
+import { z } from 'zod'
+
 import { writeLocalFile } from './write-file-tool.js'
 
 const updateStoryInputSchema = z.object({
@@ -59,4 +60,3 @@ export function createLocalUpdateStoryTool(
     },
   })
 }
-

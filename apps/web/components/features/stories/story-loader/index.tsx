@@ -1,16 +1,18 @@
 'use client'
 
-import { AppLayout } from '@/components/layout'
-import { StoryArchiveDialog } from '@/components/features/stories/story-archive-dialog'
-import { StoryTemplatesDialog } from '@/components/features/stories/story-templates-dialog'
-import { StoryCreateForm } from '@/components/features/stories/story-create-form'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useStoryLoaderState } from './hooks/useStoryLoaderState'
+
+import { StoryArchiveDialog } from '@/components/features/stories/story-archive-dialog'
+import { StoryCreateForm } from '@/components/features/stories/story-create-form'
+import { StoryTemplatesDialog } from '@/components/features/stories/story-templates-dialog'
+import { AppLayout } from '@/components/layout'
+
+import { StoryGenerationTracking } from './components/StoryGenerationTracking'
+import { StoryLoaderTabs } from './components/StoryLoaderTabs'
 import { useStoryActions } from './hooks/useStoryActions'
 import { useStoryGeneration } from './hooks/useStoryGeneration'
-import { StoryLoaderTabs } from './components/StoryLoaderTabs'
-import { StoryGenerationTracking } from './components/StoryGenerationTracking'
-import type { StoryLoaderClientProps } from './types'
+import { useStoryLoaderState } from './hooks/useStoryLoaderState'
+import { type StoryLoaderClientProps } from './types'
 
 export function StoryLoaderClient({
   orgName,
@@ -166,9 +168,7 @@ export function StoryLoaderClient({
         publicAccessToken={state.generationAccessToken}
         onComplete={generation.handleGenerationComplete}
         onError={(error) => {
-          state.setError(
-            error instanceof Error ? error.message : String(error),
-          )
+          state.setError(error instanceof Error ? error.message : String(error))
           state.setIsGenerating(false)
           state.setGenerationRunId(null)
           state.setGenerationAccessToken(null)

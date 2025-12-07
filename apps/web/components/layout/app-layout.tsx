@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
-import type { BreadcrumbItem } from '@/components/common/Breadcrumbs'
+import { type ReactNode } from 'react'
 
-import { TopNav } from './top-nav'
+import { type BreadcrumbItem } from '@/components/common/Breadcrumbs'
+
 import { AppFooter } from './app-footer'
+import { TopNav } from './top-nav'
 
 interface Props {
   children: ReactNode

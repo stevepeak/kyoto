@@ -1,4 +1,4 @@
-import type { setupDb } from '@app/db'
+import { type setupDb } from '@app/db'
 
 export interface RunCiPayload {
   orgName: string

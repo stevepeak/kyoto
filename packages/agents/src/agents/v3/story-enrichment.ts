@@ -1,14 +1,18 @@
-import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
-import type { Tracer } from '@opentelemetry/api'
+import { type DiscoveredStory, discoveredStorySchema } from '@app/schemas'
+import {
+  createLocalReadFileTool,
+  createLocalTerminalCommandTool,
+} from '@app/shell'
+import { type Tracer } from '@opentelemetry/api'
+import {
+  Experimental_Agent as Agent,
+  type LanguageModel,
+  Output,
+  stepCountIs,
+} from 'ai'
 import { dedent } from 'ts-dedent'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
-import {
-  createLocalTerminalCommandTool,
-  createLocalReadFileTool,
-} from '@app/shell'
-import type { LanguageModel } from 'ai'
-import { discoveredStorySchema, type DiscoveredStory } from '@app/schemas'
 import { agents } from '../../index.js'
 
 type StoryEnrichmentAgentOptions = {
@@ -114,15 +118,13 @@ export async function runStoryEnrichmentAgent(
     logger,
   } = options.options
 
-  const tools: Record<string, any> = {
-    terminalCommand: createLocalTerminalCommandTool(logger),
-    readFile: createLocalReadFileTool(logger),
-  }
-
   const agent = new Agent({
     model,
     system: buildSystemInstructions(),
-    tools: tools as any,
+    tools: {
+      terminalCommand: createLocalTerminalCommandTool(logger),
+      readFile: createLocalReadFileTool(logger),
+    },
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-enrichment-v3',

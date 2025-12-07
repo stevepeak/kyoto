@@ -15,7 +15,6 @@ export function useIsMac() {
     }
 
     // Check if platform is Mac
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Required for hydration fix
     setIsMac(navigator.platform.includes('Mac'))
   }, [])
 

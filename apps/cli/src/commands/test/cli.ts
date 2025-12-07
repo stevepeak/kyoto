@@ -9,4 +9,3 @@ export default class TestCli extends Command {
     // TODO: Implement test:cli logic
   }
 }
-

@@ -1,8 +1,7 @@
-import * as Sentry from '@sentry/node'
+import { trace, type Tracer } from '@opentelemetry/api'
 import { NodeSDK } from '@opentelemetry/sdk-node'
+import * as Sentry from '@sentry/node'
 import { SentrySpanProcessor } from '@sentry/opentelemetry'
-import { trace } from '@opentelemetry/api'
-import type { Tracer } from '@opentelemetry/api'
 
 let sdk: NodeSDK | undefined
 let tracer: Tracer | undefined
@@ -22,6 +21,7 @@ async function startSdk(): Promise<Tracer | undefined> {
     if (!sentryInitialized) {
       Sentry.init({
         defaultIntegrations: false,
+        // eslint-disable-next-line no-process-env
         dsn: process.env.SENTRY_DSN,
         tracesSampleRate: 1.0,
         sendDefaultPii: false,
@@ -32,10 +32,13 @@ async function startSdk(): Promise<Tracer | undefined> {
             recordOutputs: true,
           }),
         ],
+        // eslint-disable-next-line no-process-env
         ...(process.env.TRIGGER_RELEASE
-          ? { release: process.env.TRIGGER_RELEASE }
+          ? // eslint-disable-next-line no-process-env
+            { release: process.env.TRIGGER_RELEASE }
           : {}),
         environment:
+          // eslint-disable-next-line no-process-env
           process.env.NODE_ENV === 'production' ? 'production' : 'development',
       })
       sentryInitialized = true
@@ -49,6 +52,7 @@ async function startSdk(): Promise<Tracer | undefined> {
       await Promise.resolve(sdk.start())
     } catch (error) {
       initializing = undefined
+      // eslint-disable-next-line no-console
       console.warn('Failed to start OpenTelemetry SDK for Sentry', error)
       return undefined
     }

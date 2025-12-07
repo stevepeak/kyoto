@@ -1,6 +1,6 @@
+import { findGitRoot } from '@app/shell'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { findGitRoot } from '@app/shell'
 
 /**
  * Checks if .kyoto/details.json exists

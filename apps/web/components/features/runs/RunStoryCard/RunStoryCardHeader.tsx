@@ -1,6 +1,9 @@
-import ReactMarkdown from 'react-markdown'
 import { ExternalLink } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+
 import { Button } from '@/components/ui/button'
+
+import { type RunStory } from '../types'
 import {
   formatDate,
   formatDurationMs,
@@ -9,7 +12,6 @@ import {
   getStatusPillStyles,
   getStoryTimestamps,
 } from '../utils'
-import type { RunStory } from '../types'
 
 interface RunStoryCardHeaderProps {
   story: RunStory

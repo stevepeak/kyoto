@@ -1,4 +1,4 @@
-import type { BuildExtension } from '@trigger.dev/sdk'
+import { type BuildExtension } from '@trigger.dev/sdk'
 
 declare module '@trigger.dev/build/extensions' {
   export type EsbuildPluginOptions = {

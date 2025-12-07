@@ -1,8 +1,7 @@
 import { logger } from '@trigger.dev/sdk'
-import type { z } from 'zod'
+import { type z } from 'zod'
 
-import type { AccountPayload } from './schemas'
-import type { idSchema } from './schemas'
+import { type AccountPayload, type idSchema } from './schemas'
 
 export function parseId(
   value: z.infer<typeof idSchema>,

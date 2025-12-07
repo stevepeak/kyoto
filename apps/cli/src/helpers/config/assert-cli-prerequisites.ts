@@ -1,8 +1,9 @@
 import { findGitRoot, getGitHubInfo, type GitHubInfo } from '@app/shell'
 import { createIndex, ensureIndex } from '@app/vectra'
+
+import { pwdKyoto } from './find-kyoto-dir.js'
 import { getAiConfig } from './get-ai-config.js'
 import { detailsFileExists } from './kyoto-details.js'
-import { pwdKyoto } from './find-kyoto-dir.js'
 
 interface CliPrerequisites {
   gitRoot: string

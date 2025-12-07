@@ -19,3 +19,4 @@ node_modules
 temp
 dist-types
 *.tsbuildinfo
+apps/web/components/ui

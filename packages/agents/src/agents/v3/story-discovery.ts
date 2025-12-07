@@ -1,19 +1,23 @@
-import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
-import type { Tracer } from '@opentelemetry/api'
-import { readFile } from 'node:fs/promises'
-import { resolve, isAbsolute } from 'node:path'
-import { dedent } from 'ts-dedent'
-import { zodToJsonSchema } from 'zod-to-json-schema'
-
+import { type DiscoveredStory, discoveredStorySchema } from '@app/schemas'
 import {
-  createLocalTerminalCommandTool,
   createLocalReadFileTool,
+  createLocalTerminalCommandTool,
   findGitRoot,
 } from '@app/shell'
-import type { LanguageModel } from 'ai'
-import { discoveredStorySchema, type DiscoveredStory } from '@app/schemas'
-import { agents } from '../../index.js'
+import { type Tracer } from '@opentelemetry/api'
+import {
+  Experimental_Agent as Agent,
+  type LanguageModel,
+  Output,
+  stepCountIs,
+} from 'ai'
+import { readFile } from 'node:fs/promises'
+import { isAbsolute, resolve } from 'node:path'
+import { dedent } from 'ts-dedent'
 import z from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+
+import { agents } from '../../index.js'
 
 type StoryDiscoveryAgentOptions = {
   filePath: string
@@ -199,15 +203,13 @@ export async function runStoryDiscoveryAgent(
     : resolve(gitRoot, filePath)
   const content = fileContent ?? (await readFile(resolvedFilePath, 'utf-8'))
 
-  const tools: Record<string, any> = {
-    terminalCommand: createLocalTerminalCommandTool(logger),
-    readFile: createLocalReadFileTool(logger),
-  }
-
   const agent = new Agent({
     model,
     system: buildSystemInstructions(maxStories),
-    tools: tools as any,
+    tools: {
+      terminalCommand: createLocalTerminalCommandTool(logger),
+      readFile: createLocalReadFileTool(logger),
+    },
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-discovery-v3',

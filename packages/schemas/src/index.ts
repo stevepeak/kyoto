@@ -18,54 +18,51 @@
 // ============================================================================
 
 export {
-  // Raw Story
-  rawStoryInputSchema,
-  discoveredStorySchema,
-  type RawStoryInput,
-  type DiscoveredStory,
-  type DiscoveryAgentOutput,
-
+  type AssertionCacheEntry,
+  // Cache
+  assertionCacheEntrySchema,
+  type AssertionEvidence,
+  assertionEvidenceSchema,
+  type CacheData,
+  cacheDataSchema,
+  type CacheEntry,
+  cacheEntrySchema,
+  type CacheValidationResult,
+  cacheValidationResultSchema,
+  // Complete story data
+  type CompleteStoryData,
+  type ComposedStory,
   // Story Discovery
   composedStorySchema,
-  storyDiscoveryOutputSchema,
-  storyImpactOutputSchema,
-  diffEvaluatorOutputSchema,
-  type ComposedStory,
-  type StoryDiscoveryOutput,
-  type StoryImpactOutput,
-  type DiffEvaluatorOutput,
-  discoveryAgentOutputSchema,
-
-  // Composition
-  compositionStepSchema,
+  type CompositionAgentOutput,
   compositionAgentOutputSchema,
   type CompositionStep,
-  type CompositionAgentOutput,
+  // Composition
+  compositionStepSchema,
+  type DiffEvaluatorOutput,
+  diffEvaluatorOutputSchema,
+  type DiscoveredStory,
+  discoveredStorySchema,
+  type DiscoveryAgentOutput,
+  discoveryAgentOutputSchema,
+  type EvaluationInput,
+  evaluationInputSchema,
+  type EvaluationOutput,
+  evaluationOutputSchema,
+  type RawStoryInput,
+
+  // Raw Story
+  rawStoryInputSchema,
+  type StepEvaluation,
+  stepEvaluationSchema,
+  type StoryDiscoveryOutput,
+  storyDiscoveryOutputSchema,
+  type StoryImpactOutput,
+  storyImpactOutputSchema,
+  type TestStatus,
 
   // Test/Evaluation
   testStatusSchema,
-  assertionEvidenceSchema,
-  stepEvaluationSchema,
-  evaluationOutputSchema,
-  evaluationInputSchema,
-  type TestStatus,
-  type AssertionEvidence,
-  type StepEvaluation,
-  type EvaluationOutput,
-  type EvaluationInput,
-
-  // Cache
-  assertionCacheEntrySchema,
-  cacheDataSchema,
-  cacheEntrySchema,
-  cacheValidationResultSchema,
-  type AssertionCacheEntry,
-  type CacheData,
-  type CacheEntry,
-  type CacheValidationResult,
-
-  // Complete story data
-  type CompleteStoryData,
 } from './story-flow.js'
 
 // ============================================================================
@@ -74,7 +71,7 @@ export {
 
 export {
   type CacheEntry as AgentCacheEntry, // Re-exported for clarity
-  type ValidationResult,
-  type evaluationAgentOptions,
   type Commit,
+  type evaluationAgentOptions,
+  type ValidationResult,
 } from './agent-types.js'

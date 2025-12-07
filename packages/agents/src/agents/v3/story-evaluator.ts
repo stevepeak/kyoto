@@ -1,26 +1,24 @@
 import {
+  assertionCacheEntrySchema,
+  assertionEvidenceSchema,
+  type CompositionAgentOutput,
+  type CompositionStep,
+  type evaluationAgentOptions,
+  type EvaluationOutput,
+  evaluationOutputSchema,
+  type TestStatus,
+} from '@app/schemas'
+import {
   Experimental_Agent as Agent,
+  generateText,
   Output,
   stepCountIs,
-  generateText,
 } from 'ai'
 import { dedent } from 'ts-dedent'
-
-import {
-  type TestStatus,
-  evaluationOutputSchema,
-  type EvaluationOutput,
-  assertionEvidenceSchema,
-  assertionCacheEntrySchema,
-} from '@app/schemas'
-import type {
-  CompositionAgentOutput,
-  CompositionStep,
-  evaluationAgentOptions,
-} from '@app/schemas'
-import { zodToJsonSchema } from 'zod-to-json-schema'
-import { agents } from '../../index.js'
 import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+
+import { agents } from '../../index.js'
 
 /**
  * Schema for agent output (step evaluation result)
@@ -201,6 +199,7 @@ async function combineStepResults(args: {
   let explanation: string
   if (previousExplanation) {
     explanation = previousExplanation
+    // eslint-disable-next-line no-console
     console.info('Using cached explanation from previous run', {
       explanationLength: explanation.length,
     })
@@ -297,6 +296,7 @@ async function agent(args: {
 
   const result = await agent.generate({ prompt })
 
+  // eslint-disable-next-line no-console
   console.log(`🌸 Step ${stepContext.stepIndex + 1} Evaluation Result`, {
     stepContext,
     prompt,
@@ -306,6 +306,7 @@ async function agent(args: {
   // Handle case where agent hit max steps without generating output
   if (!result.experimental_output) {
     const maxStepsUsed = options?.maxSteps ?? agents.evaluation.options.maxSteps
+    // eslint-disable-next-line no-console
     console.warn(
       `Step ${stepContext.stepIndex + 1} hit max steps (${maxStepsUsed}) without generating output`,
     )
@@ -356,6 +357,7 @@ export async function main(
         assertions: [],
       }
       stepResults.push(stepResult)
+      // eslint-disable-next-line no-console
       console.info(
         `Skipping agent evaluation for given step ${stepIndex + 1} of ${steps.length}`,
         {
@@ -399,6 +401,7 @@ export async function main(
                 assertionCacheEntrySchema.safeParse(assertionCacheData)
 
               if (!parseResult.success) {
+                // eslint-disable-next-line no-console
                 console.warn(
                   `Failed to parse cache entry for assertion ${assertionIndex}`,
                   { error: parseResult.error },
@@ -452,6 +455,7 @@ export async function main(
             // Use the cached conclusion (pass or fail) instead of always 'pass'
             const cachedConclusion = stepCacheData.conclusion ?? 'pass'
 
+            // eslint-disable-next-line no-console
             console.info(
               `Using cached results for step ${stepIndex + 1} of ${steps.length}`,
               {
@@ -490,6 +494,7 @@ export async function main(
       repoOutline: outline,
     }
 
+    // eslint-disable-next-line no-console
     console.info(`Evaluating step ${stepIndex + 1} of ${steps.length}`, {
       stepContext,
     })
@@ -508,6 +513,7 @@ export async function main(
     // }
   }
 
+  // eslint-disable-next-line no-console
   console.log(allStepsCached)
   // // If everything was cached, retrieve the previous explanation from the database
   // let previousExplanation: string | null = null
@@ -559,6 +565,7 @@ export async function main(
     previousExplanation: null, // TODO: Implement this later
   })
 
+  // eslint-disable-next-line no-console
   console.debug('🤖 Evaluation Agent Final Result', {
     stepCount: stepResults.length,
     finalResult,

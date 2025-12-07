@@ -1,5 +1,5 @@
-import { PostHog as PostHogClient } from 'posthog-node'
 import { getConfig } from '@app/config'
+import { PostHog as PostHogClient } from 'posthog-node'
 
 let posthogClient: PostHogClient | null = null
 
@@ -8,6 +8,7 @@ let posthogClient: PostHogClient | null = null
  */
 function getPostHogClient(): PostHogClient | null {
   // Skip PostHog in local development
+  // eslint-disable-next-line no-process-env
   if (process.env.NODE_ENV === 'development') {
     return null
   }
@@ -24,6 +25,7 @@ function getPostHogClient(): PostHogClient | null {
     return posthogClient
   } catch (error) {
     // If config is not available or PostHog is not configured, return null
+    // eslint-disable-next-line no-console
     console.warn('PostHog client initialization failed:', error)
     return null
   }
@@ -75,6 +77,7 @@ export function capturePostHogEvent(
       })
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to capture PostHog event:', error)
   }
 }

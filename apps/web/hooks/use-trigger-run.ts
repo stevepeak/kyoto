@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { useRealtimeRun, useRealtimeStream } from '@trigger.dev/react-hooks'
+import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 interface UseTriggerRunOptions<T = unknown> {

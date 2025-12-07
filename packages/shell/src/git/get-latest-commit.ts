@@ -28,7 +28,7 @@ export async function getLatestCommit(
     const message = messageParts.join('|') // Rejoin in case message contains |
 
     return {
-      hash: hash, // Full hash
+      hash, // Full hash
       shortHash: hash.substring(0, 6), // Short hash (6 chars)
       message: message.trim(),
     }
@@ -55,4 +55,3 @@ export async function getCurrentCommitSha(
     return null
   }
 }
-

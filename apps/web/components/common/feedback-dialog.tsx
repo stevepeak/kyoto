@@ -1,9 +1,10 @@
 'use client'
 
 import { MessageSquare } from 'lucide-react'
-import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 
+import { useTRPCClient } from '@/client/trpc'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,9 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { useTRPCClient } from '@/client/trpc'
+import { Textarea } from '@/components/ui/textarea'
 
 interface FeedbackDialogProps {
   trigger?: React.ReactNode

@@ -1,16 +1,16 @@
 export {
-  getCacheKey,
+  buildEvidenceHashMap,
   extractFilesFromEvidence,
+  getCacheKey,
   getFileHashFromSandbox,
   hashFileContent,
-  buildEvidenceHashMap,
 } from './cache-evidence.js'
 
 export {
+  buildCacheDataFromEvaluation,
   getCachedEvidence,
-  saveCachedEvidence,
-  validateCacheEntry,
   invalidateCache,
   invalidateCacheForStory,
-  buildCacheDataFromEvaluation,
+  saveCachedEvidence,
+  validateCacheEntry,
 } from './cache-service.js'

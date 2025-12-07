@@ -1,4 +1,4 @@
-import type { Sandbox } from '@daytonaio/sdk'
+import { type Sandbox } from '@daytonaio/sdk'
 import { streams } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'

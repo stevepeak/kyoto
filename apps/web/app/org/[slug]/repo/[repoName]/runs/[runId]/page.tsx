@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+import { findRepoForUser, getUser } from '@app/api'
+import { setupDb } from '@app/db'
+import { type Metadata } from 'next'
 import { headers } from 'next/headers'
 
 import { RunPage as RunPageComponent } from '@/components/pages/RunPage'
-import { findRepoForUser, getUser } from '@app/api'
-import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
 // Run detail pages need fresh data (runs update in real-time)

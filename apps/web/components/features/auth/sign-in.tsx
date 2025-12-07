@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 import { signIn, useSession } from '@/client/auth-client'
-import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/common/EmptyState'
+import { Button } from '@/components/ui/button'
 
 export function SignIn() {
   const [loading, setLoading] = useState(false)

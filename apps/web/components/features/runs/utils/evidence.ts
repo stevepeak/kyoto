@@ -1,5 +1,6 @@
-import type { EvidenceConclusionDisplay } from '../types'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+
+import { type EvidenceConclusionDisplay } from '../types'
 
 export function getEvidenceConclusionDisplay(
   conclusion: 'pass' | 'fail',

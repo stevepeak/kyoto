@@ -1,7 +1,8 @@
 import { type Tool, tool } from 'ai'
-import { z } from 'zod'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { z } from 'zod'
+
 import { findGitRoot } from '../git/find-git-root.js'
 
 const readFileInputSchema = z.object({

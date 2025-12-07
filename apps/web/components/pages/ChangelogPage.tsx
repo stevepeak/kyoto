@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Copy, GitBranch, ChevronRight } from 'lucide-react'
-import { toast } from 'sonner'
+import { ChevronRight, Copy, GitBranch } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { codeToHtml } from 'shiki'
+import { toast } from 'sonner'
 
 import { AppLayout } from '@/components/layout'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { TiptapEditor } from '@/components/tiptap-editor'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 function XLogo({ className }: { className?: string }) {
   return (

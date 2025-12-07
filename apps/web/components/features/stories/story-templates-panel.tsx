@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+
 import { TiptapEditor } from '@/components/tiptap-editor'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface StoryTemplate {

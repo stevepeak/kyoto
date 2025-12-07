@@ -1,9 +1,10 @@
 import { tool } from 'ai'
-import { z } from 'zod'
+import chalk from 'chalk'
 import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import chalk from 'chalk'
-import type { Ora } from 'ora'
+import { type Ora } from 'ora'
+import { z } from 'zod'
+
 import { findGitRoot } from '../git/find-git-root.js'
 
 const createDirectoryInputSchema = z.object({
@@ -24,6 +25,7 @@ export async function createLocalDirectory(path: string): Promise<void> {
     await mkdir(absPath, { recursive: true })
   } catch (error) {
     const message = `Failed to create directory: ${path}`
+    // eslint-disable-next-line no-console
     console.error(chalk.red(`📁 ${message}`), { error })
     throw new Error(message)
   }

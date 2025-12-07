@@ -1,10 +1,10 @@
-import { initTRPC, TRPCError } from '@trpc/server'
-import { configure } from '@trigger.dev/sdk'
-import superjson from 'superjson'
-import * as Sentry from '@sentry/nextjs'
-
-import type { Context } from './context.js'
 import { getConfig } from '@app/config'
+import * as Sentry from '@sentry/nextjs'
+import { configure } from '@trigger.dev/sdk'
+import { initTRPC, TRPCError } from '@trpc/server'
+import superjson from 'superjson'
+
+import { type Context } from './context.js'
 
 /**
  * Initialization of tRPC backend
@@ -28,6 +28,7 @@ const triggerMiddleware = t.middleware(({ ctx, next }) => {
       isTriggerConfigured = true
     } catch (error) {
       // Log the actual error for debugging in Vercel logs
+      // eslint-disable-next-line no-console
       console.error('Trigger.dev configuration error:', {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -61,6 +62,7 @@ const loggingMiddleware = t.middleware(async ({ next, type, path }) => {
   if (!result.ok) {
     // Log detailed error information for Vercel logs
     const error = result.error
+    // eslint-disable-next-line no-console
     console.error(`[tRPC Error] ${type.toUpperCase()} ${path}:`, {
       code: error.code,
       message: error.message,

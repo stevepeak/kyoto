@@ -1,8 +1,9 @@
-import { logger, task } from '@trigger.dev/sdk'
-import { setupDb } from '@app/db'
 import { getConfig } from '@app/config'
-import * as Sentry from '@sentry/node'
+import { setupDb } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
+import * as Sentry from '@sentry/node'
+import { logger, task } from '@trigger.dev/sdk'
+
 import {
   getGithubBranchDetails,
   getGithubCommitAuthor,
@@ -15,6 +16,8 @@ import {
   endBecauseNoStoriesExist,
   startCheckRun,
 } from './check-runs'
+import { markRunFailure, updateRunResults } from './results'
+import { runStoriesWithSandbox } from './sandbox'
 import {
   buildInitialRunStories,
   buildRunDetailsUrl,
@@ -24,9 +27,7 @@ import {
   getRepoRecord,
   getStories,
 } from './setup'
-import { markRunFailure, updateRunResults } from './results'
-import { runStoriesWithSandbox } from './sandbox'
-import type { RunCiPayload } from './types'
+import { type RunCiPayload } from './types'
 
 export const runCiTask = task({
   id: 'run-ci',

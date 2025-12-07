@@ -3,12 +3,12 @@ export { findOrCreateLinearCustomer } from './customers.js'
 export { createLinearCustomerRequest } from './customer-requests.js'
 export { getLinearTeams } from './teams.js'
 export type {
-  CreateLinearIssueInput,
-  CreateLinearIssueResult,
   CreateLinearCustomerInput,
-  CreateLinearCustomerResult,
   CreateLinearCustomerRequestInput,
   CreateLinearCustomerRequestResult,
+  CreateLinearCustomerResult,
+  CreateLinearIssueInput,
+  CreateLinearIssueResult,
   GetLinearTeamsResult,
   LinearTeam,
 } from './types.js'

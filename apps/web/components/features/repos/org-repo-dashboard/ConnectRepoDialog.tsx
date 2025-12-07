@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { BookMarked } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+
+import { useTRPCClient } from '@/client/trpc'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -12,9 +15,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { useTRPCClient } from '@/client/trpc'
 import { cn } from '@/lib/utils'
+
 import { useRepoSearch } from './hooks/useRepoSearch'
 
 interface DialogRepoItem {

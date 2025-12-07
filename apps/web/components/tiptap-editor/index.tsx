@@ -1,9 +1,11 @@
 'use client'
 
 import { EditorContent } from '@tiptap/react'
-import { useTiptapEditor } from './hooks/useTiptapEditor'
-import { useTiptapAutoFocus } from './hooks/useTiptapAutoFocus'
+
 import { cn } from '@/lib/utils'
+
+import { useTiptapAutoFocus } from './hooks/useTiptapAutoFocus'
+import { useTiptapEditor } from './hooks/useTiptapEditor'
 
 interface TiptapEditorProps {
   value: string // Markdown string

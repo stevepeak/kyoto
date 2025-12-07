@@ -1,4 +1,4 @@
-import type { StoryState } from '@app/db/types'
+import { type StoryState } from '@app/db/types'
 
 export function getStoryStatePillStyles(state: StoryState): {
   className: string

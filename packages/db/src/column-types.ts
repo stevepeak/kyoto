@@ -1,4 +1,4 @@
-import type { ColumnType, RawBuilder } from 'kysely'
+import { type ColumnType, type RawBuilder } from 'kysely'
 
 export type JSONValue =
   | null
@@ -8,7 +8,7 @@ export type JSONValue =
   | {
       [value: string]: JSONValue
     }
-  | Array<JSONValue>
+  | JSONValue[]
 
 export interface StoryAnalysisEvidenceReference {
   step: string | null

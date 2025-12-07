@@ -88,6 +88,7 @@ export type ParsedEnv = z.infer<typeof envSchema>
 export function getConfig(
   environmentVariables?: Record<string, string>,
 ): ParsedEnv {
+  // eslint-disable-next-line no-process-env
   const env = environmentVariables ?? process.env
 
   // Normalize public env vars to secret env vars

@@ -1,12 +1,13 @@
 import { cn } from '@/lib/utils'
+
 import { StoryStatusCheck } from '../shared/StoryStatusCheck'
+import { type RunStory } from '../types'
 import {
   formatDurationMs,
   formatRelativeTime,
   getDisplayStatus,
   getStoryTimestamps,
 } from '../utils'
-import type { RunStory } from '../types'
 
 interface RunStoryListItemProps {
   story: RunStory

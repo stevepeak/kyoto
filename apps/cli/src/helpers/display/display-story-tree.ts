@@ -1,9 +1,10 @@
+import { discoveredStorySchema } from '@app/schemas'
+import chalk from 'chalk'
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import chalk from 'chalk'
 import treeify from 'object-treeify'
+
 import { pwdKyoto } from '../config/find-kyoto-dir.js'
-import { discoveredStorySchema } from '@app/schemas'
 
 interface TreeNode {
   name: string
@@ -18,10 +19,9 @@ interface TreeNode {
  */
 async function readStoryFilesRecursive(
   dirPath: string,
-  basePath: string = '',
-): Promise<Array<{ path: string; relativePath: string; title: string }>> {
-  const stories: Array<{ path: string; relativePath: string; title: string }> =
-    []
+  basePath = '',
+): Promise<{ path: string; relativePath: string; title: string }[]> {
+  const stories: { path: string; relativePath: string; title: string }[] = []
   const entries = await readdir(dirPath, { withFileTypes: true })
 
   for (const entry of entries) {
@@ -53,7 +53,7 @@ async function readStoryFilesRecursive(
  * Builds a tree structure from story file paths.
  */
 function buildTree(
-  stories: Array<{ path: string; relativePath: string; title: string }>,
+  stories: { path: string; relativePath: string; title: string }[],
   storiesDirName: string,
 ): TreeNode {
   const root: TreeNode = {
@@ -108,7 +108,9 @@ function buildTree(
  * Converts a TreeNode to the format expected by object-treeify.
  * Uses plain strings (colors applied later).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function convertToTreeifyFormat(node: TreeNode): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: Record<string, any> = {}
 
   if (node.type === 'directory') {
@@ -153,6 +155,7 @@ export async function displayStoryTree(
     const tree = buildTree(stories, '.kyoto/stories')
 
     // Convert to treeify format, skipping the root .kyoto/stories node
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const treeifyObject: Record<string, any> = {}
     if (tree.children && tree.children.length > 0) {
       // Sort children: directories first, then files
@@ -185,6 +188,7 @@ export async function displayStoryTree(
 
     // Build a set of directory names for quick lookup
     const directoryNames = new Set<string>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function collectDirectoryNames(obj: Record<string, any>): void {
       for (const [key, value] of Object.entries(obj)) {
         if (value !== null && typeof value === 'object') {
@@ -200,7 +204,9 @@ export async function displayStoryTree(
     const coloredLines = lines.map((line) => {
       // Match the tree prefix and the first word (key name)
       const match = line.match(/^([ │└├]+)(\S+)(.*)$/)
-      if (!match) {return line}
+      if (!match) {
+        return line
+      }
 
       const [, prefix, name, rest] = match
 

@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+import { findRepoForUser, getUser } from '@app/api'
+import { setupDb } from '@app/db'
+import { type Metadata } from 'next'
 import { headers } from 'next/headers'
 
 import { RepoPage as RepoPageComponent } from '@/components/pages/RepoPage'
-import { findRepoForUser, getUser } from '@app/api'
-import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
 // Repo pages are user-specific and always dynamic

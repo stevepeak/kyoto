@@ -1,9 +1,10 @@
+import { findGitRoot, getCurrentBranch, getCurrentCommitSha } from '@app/shell'
 import { Command } from '@oclif/core'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { findGitRoot, getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+
 import { updateDetailsJson } from '../helpers/config/update-details-json.js'
 
 function getDefaultModelForProvider(provider: Provider): string {

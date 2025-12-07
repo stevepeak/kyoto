@@ -1,7 +1,8 @@
+import { type CompositionAgentOutput } from '@app/schemas'
 import { Play } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
 import { EmptyState } from '@/components/common/EmptyState'
-import type { CompositionAgentOutput } from '@app/schemas'
+import { Button } from '@/components/ui/button'
 
 interface StoryDecompositionTabProps {
   decomposition: CompositionAgentOutput | null

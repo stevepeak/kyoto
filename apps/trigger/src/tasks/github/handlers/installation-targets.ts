@@ -2,9 +2,9 @@ import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
-import { parseId } from '../shared/utils'
 import { installationTargetsEventSchema } from '../shared/schemas'
-import type { WebhookHandler } from '../types'
+import { parseId } from '../shared/utils'
+import { type WebhookHandler } from '../types'
 
 export const installationTargetsHandler: WebhookHandler = async ({
   deliveryId,

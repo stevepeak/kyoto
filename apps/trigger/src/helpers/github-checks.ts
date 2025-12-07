@@ -1,5 +1,5 @@
-import type { Status } from '@app/agents'
-import type { Octokit } from '@octokit/rest'
+import { type Status } from '@app/agents'
+import { type Octokit } from '@octokit/rest'
 import { logger } from '@trigger.dev/sdk'
 
 export type AggregatedCounts = {

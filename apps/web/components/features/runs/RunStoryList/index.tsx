@@ -1,4 +1,4 @@
-import type { RunStory } from '../types'
+import { type RunStory } from '../types'
 import { RunStoryListItem } from './RunStoryListItem'
 
 interface RunStoryListProps {

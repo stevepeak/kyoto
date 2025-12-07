@@ -1,11 +1,11 @@
-import type { CompositionAgentOutput } from '@app/schemas'
+import { type CompositionAgentOutput } from '@app/schemas'
 
 // Define StoryDiscoveryOutput type locally to avoid importing from @app/agents
 export interface StoryDiscoveryOutput {
-  stories: Array<{
+  stories: {
     text: string
     title?: string
-  }>
+  }[]
 }
 
 export interface Story {

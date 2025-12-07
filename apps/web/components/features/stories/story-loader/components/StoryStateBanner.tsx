@@ -1,6 +1,8 @@
 import { Pause, Play, Sparkles } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
-import type { Story } from '../types'
+
+import { type Story } from '../types'
 
 interface StoryStateBannerProps {
   story: Story | null

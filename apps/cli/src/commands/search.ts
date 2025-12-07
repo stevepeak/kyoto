@@ -1,10 +1,11 @@
-import { Command, Args, Flags } from '@oclif/core'
+import { findGitRoot } from '@app/shell'
+import { Args, Command, Flags } from '@oclif/core'
 import chalk from 'chalk'
 import { resolve } from 'node:path'
 import terminalLink from 'terminal-link'
-import { displayHeader } from '../helpers/display/display-header.js'
+
 import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { findGitRoot } from '@app/shell'
+import { displayHeader } from '../helpers/display/display-header.js'
 import { searchStories } from '../helpers/stories/search-stories.js'
 
 export default class Search extends Command {

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { Github, Loader2 } from 'lucide-react'
+import { useState } from 'react'
 
 import { signIn } from '@/client/auth-client'
 import { Button } from '@/components/ui/button'

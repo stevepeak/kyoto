@@ -1,14 +1,15 @@
-import type { LanguageModel } from 'ai'
-import { writeLocalFile, findGitRoot, getGitHubInfo } from '@app/shell'
-import { join } from 'node:path'
-import type { DiscoveredStory, CompositionAgentOutput } from '@app/schemas'
 import { agents, runStoryCheckAgent } from '@app/agents'
+import { type CompositionAgentOutput, type DiscoveredStory } from '@app/schemas'
+import { findGitRoot, getGitHubInfo, writeLocalFile } from '@app/shell'
+import { type LanguageModel } from 'ai'
+import chalk from 'chalk'
+import { join } from 'node:path'
+import ora from 'ora'
+
+import { pwdKyoto } from '../config/find-kyoto-dir.js'
 import { generateEmbedding } from '../embeddings/generate-embedding.js'
 import { createSearchStoriesTool } from '../tools/search-stories-tool.js'
 import { saveStoryEmbedding } from './save-embedding.js'
-import { pwdKyoto } from '../config/find-kyoto-dir.js'
-import chalk from 'chalk'
-import ora from 'ora'
 
 /**
  * Generate a filename from a story title
@@ -52,6 +53,7 @@ interface ProcessCandidatesOptions {
   candidates: DiscoveredStory[]
   model: LanguageModel
   logger: (message: string) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   telemetryTracer?: any
 }
 
@@ -69,6 +71,7 @@ async function checkStoryExists(
   options: {
     model: LanguageModel
     logger?: (message: string) => void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     telemetryTracer?: any
   },
 ): Promise<boolean> {
@@ -97,6 +100,7 @@ async function enrichStory(
   options: {
     model: LanguageModel
     logger?: (message: string) => void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     telemetryTracer?: any
   },
 ): Promise<DiscoveredStory> {
@@ -120,6 +124,7 @@ async function composeStory(
   options: {
     model: LanguageModel
     logger?: (message: string) => void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     telemetryTracer?: any
   },
 ): Promise<CompositionAgentOutput> {
@@ -345,6 +350,6 @@ export {
   checkStoryExists,
   enrichStory,
   generateStoryEmbedding,
-  writeStoryFile,
   saveStoryEmbeddingToIndex,
+  writeStoryFile,
 }

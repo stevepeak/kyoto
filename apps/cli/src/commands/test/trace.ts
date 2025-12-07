@@ -9,4 +9,3 @@ export default class TestTrace extends Command {
     // TODO: Implement test:trace logic
   }
 }
-

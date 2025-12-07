@@ -1,6 +1,6 @@
+import { setupDb } from '@app/db'
 import { betterAuth } from 'better-auth'
 import { kyselyAdapter } from 'better-auth/adapters/kysely-adapter'
-import { setupDb } from '@app/db'
 
 // Lazy initialization of database to avoid errors at module load time
 let dbInstance: ReturnType<typeof setupDb> | null = null

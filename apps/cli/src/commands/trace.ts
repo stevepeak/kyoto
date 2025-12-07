@@ -1,7 +1,8 @@
-import { Command, Args } from '@oclif/core'
+import { Args, Command } from '@oclif/core'
 
 export default class Trace extends Command {
-  static override description = 'List stories that have evidence pointing to the source lines asked to trace'
+  static override description =
+    'List stories that have evidence pointing to the source lines asked to trace'
 
   static override examples = [
     '$ kyoto trace',
@@ -21,13 +22,14 @@ export default class Trace extends Command {
 
     // TODO: List stories that have evidence pointing to the source lines asked to trace.
     // This is helpful to understand "WHAT" behavior users this code
+    // eslint-disable-next-line no-console
     console.log(
       'TODO: List stories that have evidence pointing to the source lines asked to trace. This is helpful to understand "WHAT" behavior users this code',
     )
 
     if (args.source) {
+      // eslint-disable-next-line no-console
       console.log(`Source: ${args.source}`)
     }
   }
 }
-

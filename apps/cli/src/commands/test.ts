@@ -9,4 +9,3 @@ export default class Test extends Command {
     // TODO: Implement test logic
   }
 }
-

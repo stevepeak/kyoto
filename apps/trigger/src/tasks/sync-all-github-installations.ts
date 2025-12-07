@@ -1,7 +1,8 @@
-import { task, logger } from '@trigger.dev/sdk'
+import { getConfig } from '@app/config'
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
-import { getConfig } from '@app/config'
+import { logger, task } from '@trigger.dev/sdk'
+
 import { syncGithubInstallationTask } from './sync-github-installation'
 
 function createAppLevelOctokit(): Octokit {

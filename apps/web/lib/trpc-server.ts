@@ -1,11 +1,9 @@
+import { appRouter, type Context, getUser } from '@app/api'
+import { getConfig } from '@app/config'
+import { setupDb } from '@app/db'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 
-import { appRouter } from '@app/api'
-import type { Context } from '@app/api'
-import { getUser } from '@app/api'
-import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
 import { getAuth } from '@/lib/auth'
 
 /**

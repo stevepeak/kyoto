@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 
-import { getTRPCCaller } from '@/lib/trpc-server'
 import { LoadingProgress } from '@/components/ui/loading-progress'
+import { getTRPCCaller } from '@/lib/trpc-server'
 
 import { OrgRepoDashboard } from './org-repo-dashboard'
 
@@ -35,7 +35,7 @@ async function OrgRepoContent({ orgName }: { orgName: string }) {
     : { id: orgName, slug: orgName, name: orgName }
 
   const repos: RepoItem[] = (
-    reposResp.repos as Array<{
+    reposResp.repos as {
       id: string
       name: string
       defaultBranch: string | null
@@ -44,7 +44,7 @@ async function OrgRepoContent({ orgName }: { orgName: string }) {
       storyCount: number
       lastRunStatus: 'pass' | 'fail' | 'skipped' | 'running' | 'error' | null
       lastRunAt: Date | null
-    }>
+    }[]
   )
     .filter((r) => r.enabled)
     .map((r) => ({

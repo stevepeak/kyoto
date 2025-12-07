@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { Plus } from 'lucide-react'
+import { useCallback, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { SiGithub } from 'react-icons/si'
-import { Plus } from 'lucide-react'
+
 import { AppLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
-import { RepoList } from './RepoList'
+
 import { ConnectRepoDialog } from './ConnectRepoDialog'
+import { RepoList } from './RepoList'
 
 interface RepoItem {
   id: string

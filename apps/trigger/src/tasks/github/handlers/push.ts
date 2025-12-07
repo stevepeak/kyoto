@@ -11,7 +11,7 @@ import {
   extractBranchNameFromRef,
   resolveRepositoryOwnerLogin,
 } from '../shared/utils'
-import type { WebhookHandler } from '../types'
+import { type WebhookHandler } from '../types'
 
 function isRepoEnabled(
   repo: RepoLookupResult | null,

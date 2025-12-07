@@ -1,7 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 
 import { GitHubSignInButton } from '@/components/features/auth/github-sign-in-button'
 

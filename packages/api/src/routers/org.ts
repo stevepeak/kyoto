@@ -1,8 +1,8 @@
-import { TRPCError } from '@trpc/server'
 import { tasks } from '@trigger.dev/sdk'
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
-import { router, protectedProcedure } from '../trpc.js'
+import { protectedProcedure, router } from '../trpc.js'
 
 export const orgRouter = router({
   listInstalled: protectedProcedure.query(async ({ ctx }) => {
@@ -86,6 +86,7 @@ export const orgRouter = router({
         const parsed = Number.parseInt(String(row.installationId), 10)
 
         if (!Number.isFinite(parsed)) {
+          // eslint-disable-next-line no-console
           console.warn(
             `Skipping invalid installation id for owner ${row.login}: ${row.installationId}`,
           )

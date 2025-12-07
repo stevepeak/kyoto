@@ -1,5 +1,5 @@
-import { Daytona } from '@daytonaio/sdk'
 import { getConfig } from '@app/config'
+import { Daytona } from '@daytonaio/sdk'
 
 type DaytonaClient = InstanceType<typeof Daytona>
 type DaytonaSandbox = Awaited<ReturnType<DaytonaClient['get']>>
@@ -12,4 +12,3 @@ export async function getDaytonaSandbox(
   const daytona = new Daytona({ apiKey })
   return await daytona.get(sandboxId)
 }
-

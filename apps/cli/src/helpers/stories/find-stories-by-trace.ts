@@ -6,7 +6,7 @@ interface FindStoriesByTraceOptions {
 
 /**
  * Finds stories that reference at least one of the provided files in their codeReferences.
- * 
+ *
  * @param options - Options object containing array of file paths to trace
  * @returns Array of story file paths that reference any of the provided files
  */
@@ -41,9 +41,7 @@ export async function findStoriesByTrace({
       const matches = files.some((file) => {
         // Check if paths match (handle relative paths)
         return (
-          file === refFile ||
-          file.endsWith(refFile) ||
-          refFile.endsWith(file)
+          file === refFile || file.endsWith(refFile) || refFile.endsWith(file)
         )
       })
 
@@ -57,4 +55,3 @@ export async function findStoriesByTrace({
 
   return Array.from(matchedStoryPaths)
 }
-

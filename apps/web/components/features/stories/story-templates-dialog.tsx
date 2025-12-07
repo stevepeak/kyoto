@@ -1,3 +1,4 @@
+import { StoryTemplatesPanel } from '@/components/features/stories/story-templates-panel'
 import {
   Dialog,
   DialogContent,
@@ -5,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { StoryTemplatesPanel } from '@/components/features/stories/story-templates-panel'
 
 interface StoryTemplatesDialogProps {
   open: boolean

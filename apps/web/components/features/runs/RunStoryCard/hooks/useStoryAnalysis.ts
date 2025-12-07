@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import type { RunStory, StoryTestResult } from '../../types'
-import { parseDecomposition } from '../DecompositionParser'
+
+import { type RunStory, type StoryTestResult } from '../../types'
 import { getDisplayStatus } from '../../utils'
+import { parseDecomposition } from '../DecompositionParser'
 
 interface UseStoryAnalysisResult {
   analysis: StoryTestResult['analysis'] | null

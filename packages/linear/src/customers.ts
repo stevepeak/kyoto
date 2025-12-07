@@ -1,8 +1,8 @@
-import type {
-  CreateLinearCustomerInput,
-  CreateLinearCustomerResult,
-} from './types.js'
 import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
+import {
+  type CreateLinearCustomerInput,
+  type CreateLinearCustomerResult,
+} from './types.js'
 
 interface CreateCustomerResponse {
   customerCreate: {
@@ -16,10 +16,10 @@ interface CreateCustomerResponse {
 
 interface FindCustomerResponse {
   customers: {
-    nodes: Array<{
+    nodes: {
       id: string
       name: string
-    }>
+    }[]
   }
 }
 

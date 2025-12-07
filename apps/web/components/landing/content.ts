@@ -1,5 +1,10 @@
-import type { LucideIcon } from 'lucide-react'
-import { Bug, GitCommit, Languages, ShieldCheck } from 'lucide-react'
+import {
+  Bug,
+  GitCommit,
+  Languages,
+  type LucideIcon,
+  ShieldCheck,
+} from 'lucide-react'
 
 type Feature = {
   katakana: string

@@ -1,10 +1,10 @@
 declare module 'better-auth/adapters/kysely-adapter' {
-  import { Kysely } from 'kysely'
   import {
-    BetterAuthOptions,
-    DBAdapter,
-    DBAdapterDebugLogOption,
+    type BetterAuthOptions,
+    type DBAdapter,
+    type DBAdapterDebugLogOption,
   } from '@better-auth/core'
+  import { type Kysely } from 'kysely'
 
   type KyselyDatabaseType = 'postgres' | 'mysql' | 'sqlite' | 'mssql'
 

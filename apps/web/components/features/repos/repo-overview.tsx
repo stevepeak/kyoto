@@ -1,19 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useHotkeys } from 'react-hotkeys-hook'
-import type { inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '@app/api'
-import { SiGithub } from 'react-icons/si'
+import { type AppRouter } from '@app/api'
+import { type inferRouterOutputs } from '@trpc/server'
 import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { SiGithub } from 'react-icons/si'
 
 import { useTRPCClient } from '@/client/trpc'
-import { AppLayout } from '@/components/layout'
-import { Button } from '@/components/ui/button'
+import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
 import { RunList } from '@/components/features/runs/RunList'
 import { StoryList } from '@/components/features/stories/story-list'
-import { KeyboardShortcutHint } from '@/components/common/keyboard-shortcut-hint'
+import { AppLayout } from '@/components/layout'
+import { Button } from '@/components/ui/button'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>

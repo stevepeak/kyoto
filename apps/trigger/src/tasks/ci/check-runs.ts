@@ -1,14 +1,15 @@
+import { type Status } from '@app/agents'
+import { type RunStory } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
-import type { RunStory } from '@app/db'
+
 import {
+  type AggregatedCounts,
   buildCheckRunContent,
+  type CheckRunBaseParams,
   formatStoryCount,
   submitCheckRun,
-  type AggregatedCounts,
-  type CheckRunBaseParams,
 } from '../../helpers/github-checks'
-import type { RepoRecord } from './types'
-import type { Status } from '@app/agents'
+import { type RepoRecord } from './types'
 
 export function buildCheckRunBase({
   commitSha,

@@ -9,4 +9,3 @@ export default class TestBrowser extends Command {
     // TODO: Implement test:browser logic
   }
 }
-

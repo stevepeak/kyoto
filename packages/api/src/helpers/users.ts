@@ -1,10 +1,8 @@
-import type { DB } from '@app/db/types'
-import { sql } from 'kysely'
-import type { Kysely, Selectable } from 'kysely'
+import { type DB, type User } from '@app/db/types'
+import { type Kysely, type Selectable, sql } from 'kysely'
 import { z } from 'zod'
 
 import { trpcNotFoundError } from './kysely-trprc.js'
-import type { User } from '@app/db/types'
 
 /**
  * Retrieves a user by ID
@@ -88,6 +86,7 @@ export async function getUserGithubLogin({
 
     return data.login
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to resolve GitHub login via API', error)
     return null
   }

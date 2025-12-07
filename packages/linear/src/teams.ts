@@ -1,13 +1,13 @@
-import type { GetLinearTeamsResult, LinearTeam } from './types.js'
 import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
+import { type GetLinearTeamsResult, type LinearTeam } from './types.js'
 
 interface GetTeamsResponse {
   teams: {
-    nodes: Array<{
+    nodes: {
       id: string
       name: string
       key: string
-    }>
+    }[]
   }
 }
 

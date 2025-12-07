@@ -1,7 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+
+import { RunDetailHeader } from './RunDetailHeader'
+import { RunStoryCard } from './RunStoryCard'
+import { RunStoryList } from './RunStoryList'
+import {
+  type RunDetailViewProps,
+  type RunStory,
+  type StoryStatusPillStatus,
+} from './types'
 import {
   formatDate,
   formatDurationMs,
@@ -12,14 +21,6 @@ import {
   getShortSha,
   getStatusDisplay,
 } from './utils'
-import type {
-  RunDetailViewProps,
-  RunStory,
-  StoryStatusPillStatus,
-} from './types'
-import { RunDetailHeader } from './RunDetailHeader'
-import { RunStoryList } from './RunStoryList'
-import { RunStoryCard } from './RunStoryCard'
 
 export function RunDetailView({ run, orgName, repoName }: RunDetailViewProps) {
   // Console log trigger runId and accessKey when opening a new run

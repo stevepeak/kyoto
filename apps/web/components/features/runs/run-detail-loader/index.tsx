@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
+
 import { AppLayout } from '@/components/layout'
 import { LoadingProgress } from '@/components/ui/loading-progress'
+
 import { RunDetailContent } from './RunDetailContent'
 
 interface RunDetailLoaderProps {

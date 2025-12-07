@@ -1,7 +1,9 @@
-import { cn } from '@/lib/utils'
+import { type CompositionAgentOutput } from '@app/schemas'
 import { ChevronDown } from 'lucide-react'
+
+import { cn } from '@/lib/utils'
+
 import { getLoadingConclusionDisplay } from '../../utils'
-import type { CompositionAgentOutput } from '@app/schemas'
 
 interface DecompositionDisplayProps {
   decomposition: CompositionAgentOutput

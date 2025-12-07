@@ -1,6 +1,6 @@
-import { RunDetailTitle } from './RunDetailTitle'
+import { type Run, type StatusDisplay } from '../types'
 import { RunDetailCommitBlock } from './RunDetailCommitBlock'
-import type { Run, StatusDisplay } from '../types'
+import { RunDetailTitle } from './RunDetailTitle'
 
 interface RunDetailHeaderProps {
   commitTitle: string

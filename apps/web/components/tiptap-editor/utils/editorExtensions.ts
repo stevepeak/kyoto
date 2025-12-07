@@ -1,8 +1,8 @@
-import type { Extensions } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
 import { Markdown } from '@tiptap/markdown'
+import { type Extensions } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 
 export function createEditorExtensions(
   readOnly: boolean,

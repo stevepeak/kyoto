@@ -1,5 +1,6 @@
 import { useTriggerRun } from '@/hooks/use-trigger-run'
-import type { StoryDiscoveryOutput } from '../types'
+
+import { type StoryDiscoveryOutput } from '../types'
 
 interface StoryGenerationTrackingProps {
   runId: string | null

@@ -1,6 +1,6 @@
-import { logger, task } from '@trigger.dev/sdk'
 import { getConfig } from '@app/config'
 import { setupDb } from '@app/db'
+import { logger, task } from '@trigger.dev/sdk'
 
 import { createOctokit } from '../helpers/github'
 import {

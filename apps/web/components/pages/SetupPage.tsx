@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTriggerRun } from '@/hooks/use-trigger-run'
+import { useEffect, useState } from 'react'
+
 import { useTRPCClient } from '@/client/trpc'
 import { AppLayout } from '@/components/layout'
 import {
@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
 
 interface SetupInstallAppProps {
   installationId?: number
