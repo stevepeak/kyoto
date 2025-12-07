@@ -9,3 +9,4 @@ export default class Mcp extends Command {
     // TODO: Implement mcp logic
   }
 }
+

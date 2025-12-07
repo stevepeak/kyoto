@@ -229,16 +229,22 @@ export default class Vibes extends Command {
       let pollInterval: NodeJS.Timeout | null = null
       let shouldExit = false
       let isProcessing = false
+      let resolveExit: (() => void) | null = null
 
       // Handle graceful shutdown
       const cleanup = () => {
+        shouldExit = true
         if (pollInterval) {
           clearInterval(pollInterval)
           pollInterval = null
         }
-        shouldExit = true
         this.log('\n' + chalk.grey('Goodbye! 👋'))
-        process.exit(0)
+        // Resolve the exit promise to allow the process to exit
+        if (resolveExit) {
+          resolveExit()
+        } else {
+          process.exit(0)
+        }
       }
 
       process.on('SIGINT', cleanup)
@@ -269,7 +275,9 @@ export default class Vibes extends Command {
           this.handleNewCommit(latestCommit, maxLength, detailsPath)
             .then(() => {
               // Only update lastCommitHash after successful processing
-              lastCommitHash = latestCommit.shortHash
+              if (!shouldExit) {
+                lastCommitHash = latestCommit.shortHash
+              }
               isProcessing = false
             })
             .catch(() => {
@@ -280,9 +288,9 @@ export default class Vibes extends Command {
         }
       }, interval)
 
-      // Keep the process alive by waiting indefinitely
-      await new Promise<void>(() => {
-        // This promise never resolves, keeping the process alive
+      // Keep the process alive until cleanup is called
+      await new Promise<void>((resolve) => {
+        resolveExit = resolve
       })
     } catch (error) {
       if (error instanceof Error) {

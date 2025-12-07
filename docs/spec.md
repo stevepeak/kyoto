@@ -1,8 +1,14 @@
 # Work
 
+# CLI Changes
+- [ ] remove cli commands
+  - dedupe
+  - organize
+  - vibe
+  - wiki
+
 
 # New Flow
-- [ ] Discovery will also make composition
 - [ ] We still need the composition step because people can write their own stories
 
 ## Move tools

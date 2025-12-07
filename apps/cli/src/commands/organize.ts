@@ -112,7 +112,7 @@ export default class Organize extends Command {
     }
 
     try {
-      // Assert prerequisites: environment variables and git repository
+      // Assert prerequisites: AI configuration and git repository
       await assertCliPrerequisites()
 
       // Show stage header with red kanji
@@ -138,7 +138,7 @@ export default class Organize extends Command {
       )
 
       // Get model configuration
-      const { model, modelId, provider } = getModel({
+      const { model, modelId, provider } = await getModel({
         model: flags.model,
         provider: flags.provider as 'openai' | 'vercel' | 'auto' | undefined,
         logger,
@@ -270,7 +270,7 @@ export default class Organize extends Command {
               )
               logger(
                 chalk.hex('#7c6653')(
-                  'Please check your OPENAI_API_KEY or AI_GATEWAY_API_KEY environment variable.\n',
+                  'Please check your API key configuration. Run `kyoto init` to reconfigure.\n',
                 ),
               )
             } else if (
@@ -286,7 +286,7 @@ export default class Organize extends Command {
               )
               logger(
                 chalk.hex('#7c6653')(
-                  '  - Invalid or expired AI_GATEWAY_API_KEY\n',
+                  '  - Invalid or expired API key\n',
                 ),
               )
               logger(chalk.hex('#7c6653')('  - Network connectivity issues\n'))
@@ -297,7 +297,7 @@ export default class Organize extends Command {
               )
               logger(
                 chalk.hex('#7c6653')(
-                  '\nTry using --provider openai with OPENAI_API_KEY instead.\n',
+                  '\nRun `kyoto init` to reconfigure your API key, or try using --provider openai instead.\n',
                 ),
               )
             } else {

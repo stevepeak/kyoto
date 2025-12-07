@@ -33,7 +33,6 @@
       "bufferutil": "^4.0.9",
       "chalk": "^5.6.2",
       "diff": "^8.0.2",
-      "dotenv": "^17.2.3",
       "eslint": "^9.37.0",
       "execa": "^9.6.1",
       "import-in-the-middle": "^2.0.0",

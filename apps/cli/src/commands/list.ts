@@ -12,7 +12,7 @@ import { displayStoryTree } from '../helpers/display-story-tree.js'
 export default class List extends Command {
   static override description = 'List all stories'
 
-  static override aliases = ['ls']
+  static override hiddenAliases: string[] = ['ls']
 
   static override examples = ['$ kyoto list', '$ kyoto ls']
 

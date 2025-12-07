@@ -57,7 +57,7 @@ export default class Wiki extends Command {
     }
 
     try {
-      // Assert prerequisites: environment variables and git repository
+      // Assert prerequisites: AI configuration and git repository
       await assertCliPrerequisites()
 
       // Show stage header
@@ -84,7 +84,7 @@ export default class Wiki extends Command {
       }
 
       // Get model configuration
-      const { model, modelId, provider } = getModel({
+      const { model, modelId, provider } = await getModel({
         model: flags.model,
         provider: flags.provider as 'openai' | 'vercel' | 'auto' | undefined,
         logger,
@@ -242,7 +242,7 @@ export default class Wiki extends Command {
               )
               logger(
                 chalk.hex('#7c6653')(
-                  'Please check your OPENAI_API_KEY or AI_GATEWAY_API_KEY environment variable.\n',
+                  'Please check your API key configuration. Run `kyoto init` to reconfigure.\n',
                 ),
               )
             } else {

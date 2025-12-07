@@ -41,7 +41,7 @@ export default class Dedupe extends Command {
     }
 
     try {
-      // Assert prerequisites: environment variables and git repository
+      // Assert prerequisites: AI configuration and git repository
       await assertCliPrerequisites()
 
       // Show stage header
