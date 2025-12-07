@@ -199,8 +199,8 @@ export async function displayStoryTree(
     const lines = treeOutput.split('\n')
     const coloredLines = lines.map((line) => {
       // Match the tree prefix and the first word (key name)
-      const match = line.match(/^([├└│ ]+)([^\s]+)(.*)$/)
-      if (!match) return line
+      const match = line.match(/^([ │└├]+)(\S+)(.*)$/)
+      if (!match) {return line}
 
       const [, prefix, name, rest] = match
 
