@@ -8,6 +8,7 @@ interface KyotoPaths {
   root: string
   stories: string
   details: string
+  vectra: string
 }
 
 /**
@@ -22,11 +23,12 @@ export async function pwdKyoto(): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
   const stories = join(root, 'stories')
   const details = join(root, 'details.json')
+  const vectra = join(root, '.vectra', 'stories')
 
   // Verify the .kyoto directory exists
   try {
     await access(root, constants.F_OK)
-    return { root, stories, details }
+    return { root, stories, details, vectra }
   } catch {
     throw new Error(`.kyoto directory not found: ${KYOTO_DIR}`)
   }
