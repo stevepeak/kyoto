@@ -1,14 +1,11 @@
 import { Command } from '@oclif/core'
 import chalk from 'chalk'
 import { resolve } from 'node:path'
-import { readdir } from 'node:fs/promises'
 import terminalLink from 'terminal-link'
-import { readAllStoryFilesRecursively } from '../helpers/file/reader.js'
+import { readAllStoryFiles } from '../helpers/file/reader.js'
 import { displayHeader } from '../helpers/display/display-header.js'
 import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
 import { findGitRoot } from '@app/shell'
-import { pwdKyoto } from '../helpers/config/find-kyoto-dir.js'
-import { displayStoryTree } from '../helpers/display/display-story-tree.js'
 
 export default class List extends Command {
   static override description = 'List all stories'
@@ -29,8 +26,8 @@ export default class List extends Command {
       // Show stage header with red kanji
       displayHeader({ logger })
 
-      // Read all story files recursively
-      const storyFiles = await readAllStoryFilesRecursively()
+      // Read all story files
+      const storyFiles = await readAllStoryFiles()
 
       if (storyFiles.length === 0) {
         logger(
@@ -59,19 +56,6 @@ export default class List extends Command {
           logger(chalk.grey(`${storyFile.story.behavior}`))
         }
         logger('') // Empty line between stories
-      }
-
-      // Check if stories are organized (have directories) and display tree structure
-      try {
-        const { stories: storiesDir } = await pwdKyoto()
-        const entries = await readdir(storiesDir, { withFileTypes: true })
-        const hasDirectories = entries.some((entry) => entry.isDirectory())
-
-        if (hasDirectories) {
-          await displayStoryTree(logger)
-        }
-      } catch {
-        // Silently fail if we can't check for directories
       }
     } catch (error) {
       if (error instanceof Error) {
