@@ -217,7 +217,7 @@ export async function runStoryDiscoveryAgent(
       terminalCommand: createLocalTerminalCommandTool(onProgress),
       readFile: createLocalReadFileTool(),
       writeFile: createLocalWriteFileTool({
-        schema: discoveredStorySchema as unknown as z.ZodAny,
+        schema: discoveredStorySchema,
       }),
     } as any,
     experimental_telemetry: {

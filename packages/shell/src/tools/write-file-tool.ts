@@ -35,7 +35,7 @@ export async function writeLocalFile(
   }
 }
 
-export function createLocalWriteFileTool(args: { schema: z.ZodAny }) {
+export function createLocalWriteFileTool(args: { schema: z.ZodSchema }) {
   return tool({
     name: 'writeFile',
     description:
