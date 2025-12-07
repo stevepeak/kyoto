@@ -31,6 +31,7 @@ type StoryDiscoveryAgentOptions = {
     model?: LanguageModel
     telemetryTracer?: Tracer
     onProgress?: (message: string) => void
+    searchStoriesTool?: any
   }
 }
 
@@ -119,19 +120,27 @@ function buildSystemInstructions(maxStories?: number): string {
 
     If the file only contains internal logic (helpers, utilities, schemas, state management), skip file discovery.
 
-    ### Step 2 — Write a user story for each unique behavior
+    ### Step 2 — Check for existing stories
 
-    For each unique user-facing behavior discovered, write a complete user story. Each story should focus on one outcome.
+    **BEFORE writing a new story**, use the \`searchStories\` tool to check if a similar user behavior already exists in the database. 
+    
+    Search using the entire story behavior text.
+    
+    **If a story with the same user behavior already exists, SKIP writing that story.** Only write stories for behaviors that don't already exist.
+
+    ### Step 3 — Write a user story for each unique behaviors
+
+    For each unique user-facing behavior discovered that doesn't already exist, write a complete user story. Each story should focus on one outcome.
 
     **Critical**: Every story MUST include:
     - At least 3 acceptance criteria (user-visible, testable outcomes)
     - At least 1 code reference (the file being analyzed, plus any related files)
 
-    ### Step 3 — Research and enrich with external context
+    ### Step 4 — Research and enrich with external context
 
     Use the provided tools to research related files and code paths. Include any external referenced files that contribute to the story, ensuring you capture entry points, exit points, prerequisites, and side effects.
 
-    ### Step 4 — Write story files and return paths
+    ### Step 5 — Write story files and return paths
 
     For each story you discover, you MUST:
     1. Use the \`writeFile\` tool to write the story as a JSON file
@@ -210,16 +219,23 @@ export async function runStoryDiscoveryAgent(
     : resolve(gitRoot, filePath)
   const content = fileContent ?? (await readFile(resolvedFilePath, 'utf-8'))
 
+  const tools: Record<string, any> = {
+    terminalCommand: createLocalTerminalCommandTool(onProgress),
+    readFile: createLocalReadFileTool(),
+    writeFile: createLocalWriteFileTool({
+      schema: discoveredStorySchema,
+    }),
+  }
+
+  // Add searchStories tool if provided
+  if (options.options.searchStoriesTool) {
+    tools.searchStories = options.options.searchStoriesTool
+  }
+
   const agent = new Agent({
     model,
     system: buildSystemInstructions(maxStories),
-    tools: {
-      terminalCommand: createLocalTerminalCommandTool(onProgress),
-      readFile: createLocalReadFileTool(),
-      writeFile: createLocalWriteFileTool({
-        schema: discoveredStorySchema,
-      }),
-    } as any,
+    tools: tools as any,
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'story-discovery-v3',

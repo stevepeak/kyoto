@@ -19,6 +19,7 @@
     "@app/config": "workspace:*",
     "@app/schemas": "workspace:*",
     "@app/shell": "workspace:*",
+    "@app/vectra": "workspace:*",
     "@opentelemetry/api": "catalog:",
     "ai": "catalog:",
     "openai": "catalog:",
