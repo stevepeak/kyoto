@@ -57,6 +57,17 @@
       height: 0;
     }
   }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  --animate-shimmer: shimmer 2s infinite;
 }
 
 :root {
@@ -134,4 +145,21 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  .shimmer-effect {
+    animation: shimmer 2s infinite;
+  }
+}
+
+/* Tiptap editor styles */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap * {
+  font-family: var(--font-sans) !important;
 }
