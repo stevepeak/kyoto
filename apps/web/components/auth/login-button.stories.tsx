@@ -202,13 +202,13 @@ function SignedInDemo() {
   )
 }
 
-export const CheckingAuth: Story = {
-  render: () => <CheckingAuthDemo />,
+export const SignedIn: Story = {
+  render: () => <SignedInDemo />,
   parameters: {
     docs: {
       description: {
         story:
-          'Shows a loading skeleton while the authentication state is being determined.',
+          'Shows the user avatar when authenticated. Click to see the dropdown menu with account options.',
       },
     },
   },
@@ -226,13 +226,13 @@ export const SignedOut: Story = {
   },
 }
 
-export const SignedIn: Story = {
-  render: () => <SignedInDemo />,
+export const Loading: Story = {
+  render: () => <CheckingAuthDemo />,
   parameters: {
     docs: {
       description: {
         story:
-          'Shows the user avatar when authenticated. Click to see the dropdown menu with account options.',
+          'Shows a loading skeleton while the authentication state is being determined.',
       },
     },
   },
