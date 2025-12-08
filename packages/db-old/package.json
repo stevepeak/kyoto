@@ -1,5 +1,5 @@
 {
-  "name": "@app/db",
+  "name": "@app/db-old",
   "type": "module",
   "version": "0.0.1",
   "description": "Database package for the app",

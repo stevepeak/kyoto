@@ -1,5 +1,5 @@
 {
-  "name": "@app/db2",
+  "name": "@app/db",
   "type": "module",
   "version": "0.0.1",
   "description": "Drizzle ORM database package for web2 app",
