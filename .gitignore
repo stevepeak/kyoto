@@ -27,3 +27,5 @@ tmp/
 .next
 next-env.d.ts
 .kyoto
+*storybook.log
+storybook-static

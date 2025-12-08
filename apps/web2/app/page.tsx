@@ -1,4 +1,4 @@
-import { UserButton } from '@/components/auth/user-button'
+import { LoginButton } from '@/components/auth/login-button'
 
 export default function HomePage() {
   return (
@@ -7,7 +7,7 @@ export default function HomePage() {
         <h1 className="font-cormorant text-8xl font-semibold tracking-tight md:text-9xl">
           Kyoto
         </h1>
-        <UserButton />
+        <LoginButton />
       </div>
     </main>
   )
