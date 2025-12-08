@@ -18,6 +18,8 @@
     "@app/config": "workspace:*",
     "@app/db2": "workspace:*",
     "@radix-ui/react-slot": "^1.1.7",
+    "@trigger.dev/react-hooks": "4.2.0",
+    "@trigger.dev/sdk": "catalog:",
     "better-auth": "^1.3.34",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
