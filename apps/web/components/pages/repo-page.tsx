@@ -1,4 +1,4 @@
-import { type Owner, type Repo } from '@app/db2'
+import { type Owner, type Repo } from '@app/db'
 
 interface RepoPageProps {
   owner: Owner

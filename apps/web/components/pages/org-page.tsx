@@ -1,4 +1,4 @@
-import { type Owner, type Repo } from '@app/db2'
+import { type Owner, type Repo } from '@app/db'
 import Link from 'next/link'
 
 interface OrgPageProps {

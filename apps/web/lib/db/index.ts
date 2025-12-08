@@ -1,4 +1,4 @@
-import { createDb } from '@app/db2'
+import { createDb } from '@app/db'
 
 export const db = createDb()
 export type DB = typeof db

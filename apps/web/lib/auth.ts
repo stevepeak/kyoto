@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { schema } from '@app/db2'
+import { schema } from '@app/db'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 

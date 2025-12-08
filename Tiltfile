@@ -31,7 +31,7 @@ local_resource(
 local_resource(
     name='Drizzle Studio',
     labels=["Development"],
-    serve_cmd="bun run --cwd packages/db2 db:studio",
+    serve_cmd="bun run --cwd packages/db db:studio",
     links=[link("https://local.drizzle.studio", "Drizzle Studio") ],
 )
 
