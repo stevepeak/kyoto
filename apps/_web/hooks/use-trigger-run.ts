@@ -112,12 +112,11 @@ export function useTriggerRun<T = unknown>({
 
     if (newParts.length > 0) {
       streamTextRef.current = fullText
-      newParts.forEach((text: string) => {
+      newParts.forEach((text) => {
         onStreamText?.(text)
       })
 
       // KEEP THIS LOG
-      // eslint-disable-next-line no-console
       console.log('[useTriggerRun 🌊] streaming...', streamParts)
 
       if (showToast && toastIdRef.current) {

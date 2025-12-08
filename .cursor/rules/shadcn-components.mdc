@@ -1,20 +1,82 @@
 ---
 description: How to install shadcn React components
-globs:
+globs: apps/web
 alwaysApply: false
 ---
 
-The following official shadcn-ui components are available. Please check to see if they are installed under `./apps/web/components/ui` before installing them with `pnpm dlx shadcn@latest add <component-id>`.
+The following official shadcn-ui components are available. Please check to see if they are installed under `./apps/web/components/ui` before installing them.
 
-Notice that The 'shadcn-ui' package is deprecated. Please use the 'shadcn' package instead. For example:
+Notice that The 'shadcn-ui' package is deprecated. Please use the 'shadcn' package instead.
+
+## Installation Commands
+
+Use **bun** to install shadcn components:
 
 ```bash
-pnpm dlx shadcn@latest add progress --cwd apps/web
+bunx --bun shadcn@latest add progress --cwd apps/web
 ```
 
-YOU MUST use `pnpm dlx shadcn@latest` when installing shadcn packages.
+**Alternative with npx:**
+```bash
+npx shadcn@latest add progress --cwd apps/web
+```
 
 Docs for each components are available at `https://ui.shadcn.com/docs/components/<component-id>`. Fetch and read the docs before using the component so that your knowledge is up-to-date.
+
+## Namespaced Registries (Shadcn CLI v3.0.0+)
+
+The Shadcn CLI v3.0.0 introduced support for namespaced registries, allowing you to install components from third-party registries in addition to the official shadcn-ui registry.
+
+### Usage
+
+Once configured, install components from namespaced registries using:
+
+```bash
+bunx --bun shadcn@latest add @shadcnblocks/component-name --cwd apps/web
+```
+
+**Alternative with npx:**
+```bash
+npx shadcn@latest add @shadcnblocks/component-name --cwd apps/web
+```
+
+The CLI will automatically use the API key from the environment variable to authenticate with the registry.
+
+### Shadcnblocks.com - 979+ Extra Blocks
+
+[Shadcnblocks.com](https://www.shadcnblocks.com/blocks) provides 979+ pre-built blocks and components beyond the official shadcn-ui collection. These blocks are ready to install via the shadcn CLI registry.
+
+**Available Collections:**
+- **Marketing Blocks**: 866 blocks (hero sections, CTAs, features, pricing, testimonials, etc.)
+- **Portfolio Blocks**: 111 blocks (projects, galleries, case studies, etc.)
+- **Components**: 1148+ enhanced variations of shadcn components
+- **Templates**: 11 full-page templates
+- **Ecommerce**: Coming soon
+- **Backgrounds & Scalars**: Coming soon
+
+**Browse blocks by category:**
+Visit [https://www.shadcnblocks.com/blocks](https://www.shadcnblocks.com/blocks) to explore blocks by category including:
+- Hero sections (218 blocks)
+- Features (309 blocks)  
+- Pricing (36 blocks)
+- Testimonials (28 blocks)
+- Galleries (50 blocks)
+- Footers (40 blocks)
+- Navbars (28 blocks)
+- And many more...
+
+**Installation example:**
+After finding a block you like on shadcnblocks.com, use the block's ID to install it:
+
+```bash
+bunx --bun shadcn@latest add @shadcnblocks/hero-gradient-1 --cwd apps/web
+```
+
+All blocks are built with React, TypeScript, and Tailwind CSS, fully compatible with Next.js and Astro.
+
+## Official Shadcn UI Components
+
+Below is the complete list of official shadcn-ui components available from the main registry:
 
 - `accordion` - Accordion: Stack of headings that expand/collapse to reveal hidden content.
 - `alert` - Alert: Static call-out box for status or info messages.

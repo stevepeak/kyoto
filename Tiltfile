@@ -7,7 +7,7 @@ dotenv()
 local_resource(
     name='Web',
     labels=["Apps"],
-    serve_cmd="bun --cwd apps/web2 dev",
+    serve_cmd="bun --cwd apps/web dev",
     links=[ link("http://localhost:3002/", "Web") ],
 )
 
@@ -38,7 +38,7 @@ local_resource(
 local_resource(
     name='Storybook',
     labels=["Development"],
-    serve_cmd="bun run --cwd apps/web2 storybook",
+    serve_cmd="bun run --cwd apps/web storybook",
     links=[ link("http://localhost:6006/", "Storybook") ],
 )
 
