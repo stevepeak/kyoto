@@ -118,6 +118,9 @@
     position: relative;
     @apply bg-background text-foreground font-sans;
   }
+  .font-cormorant {
+    font-family: var(--font-cormorant), 'Times New Roman', serif;
+  }
 }
 
 @layer utilities {

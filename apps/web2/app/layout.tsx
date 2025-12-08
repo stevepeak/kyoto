@@ -1,6 +1,30 @@
 import { type Metadata } from 'next'
+import localFont from 'next/font/local'
 
 import './globals.css'
+
+const cormorantGaramond = localFont({
+  src: [
+    {
+      path: '../public/fonts/cormorant-garamond/CormorantGaramond-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/cormorant-garamond/CormorantGaramond-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/cormorant-garamond/CormorantGaramond-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-cormorant',
+  display: 'swap',
+  fallback: ['Times New Roman', 'serif'],
+})
 
 export const metadata: Metadata = {
   title: 'Web2 - Next.js App',
@@ -14,7 +38,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={cormorantGaramond.variable}>{children}</body>
     </html>
   )
 }
