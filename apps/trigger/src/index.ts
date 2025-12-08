@@ -9,3 +9,4 @@ export { syncAllGithubInstallationsTask } from './tasks/sync-all-github-installa
 export { discoverStoriesTask } from './tasks/discover-stories'
 export { discoverStoriesFromCommitsTask } from './tasks/discover-stories-from-commits'
 export { browserbaseTestTask } from './tasks/browserbase-test'
+export { helloWorldTask } from './tasks/hello-world'
