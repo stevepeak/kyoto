@@ -1,6 +1,8 @@
 import { type Metadata } from 'next'
 import localFont from 'next/font/local'
 
+import { Toaster } from '@/components/ui/toaster'
+
 import './globals.css'
 
 const cormorantGaramond = localFont({
@@ -38,7 +40,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={cormorantGaramond.variable}>{children}</body>
+      <body className={cormorantGaramond.variable}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   )
 }
