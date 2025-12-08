@@ -1,4 +1,3 @@
-import { getConfig } from '@app/config'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -9,12 +8,10 @@ import postgres from 'postgres'
  * This script applies all pending migrations from the migrations folder
  */
 async function runMigrations() {
-  const config = getConfig()
-
-  console.log('🔄 Running migrations...')
+  console.log('🔄 Running migrations...', process.env.DATABASE_URL)
 
   // Create connection for migrations
-  const migrationClient = postgres(config.DATABASE_URL, { max: 1 })
+  const migrationClient = postgres(process.env.DATABASE_URL ?? '', { max: 1 })
 
   try {
     await migrate(drizzle(migrationClient), {

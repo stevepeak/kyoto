@@ -1,3 +1,0 @@
-# This folder contains Drizzle migration files
-# Generate new migrations with: bun run db:generate
-
