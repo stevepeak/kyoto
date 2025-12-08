@@ -12,14 +12,14 @@ import {
 export const dynamic = 'force-dynamic'
 
 interface OrgPageRouteProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ owner: string }>
 }
 
 export async function generateMetadata(
   props: OrgPageRouteProps,
 ): Promise<Metadata> {
   const params = await props.params
-  const { slug } = params
+  const { owner } = params
 
   const session = await getSession()
   if (!session?.user?.id) {
@@ -29,39 +29,39 @@ export async function generateMetadata(
     }
   }
 
-  const owner = await checkOwnerMembership({
+  const ownerData = await checkOwnerMembership({
     userId: session.user.id,
-    orgSlug: slug,
+    orgSlug: owner,
   })
 
-  if (!owner) {
+  if (!ownerData) {
     return {
-      title: `${slug} - Kyoto`,
+      title: `${owner} - Kyoto`,
       description: 'Organization page on Kyoto',
     }
   }
 
   return {
-    title: `${owner.name ?? owner.login} - Kyoto`,
-    description: `View ${owner.name ?? owner.login} organization on Kyoto`,
+    title: `${ownerData.name ?? ownerData.login} - Kyoto`,
+    description: `View ${ownerData.name ?? ownerData.login} organization on Kyoto`,
   }
 }
 
 export default async function OrgPageRoute(props: OrgPageRouteProps) {
   const params = await props.params
-  const { slug } = params
+  const { owner } = params
 
   const session = await getSession()
   if (!session?.user?.id) {
     redirect('/api/auth/signin')
   }
 
-  const owner = await checkOwnerMembership({
+  const ownerData = await checkOwnerMembership({
     userId: session.user.id,
-    orgSlug: slug,
+    orgSlug: owner,
   })
 
-  if (!owner) {
+  if (!ownerData) {
     return (
       <div className="container mx-auto py-12">
         <h1 className="text-2xl font-semibold">Organization not found</h1>
@@ -79,12 +79,12 @@ export default async function OrgPageRoute(props: OrgPageRouteProps) {
 
   const repositories = await getOrgRepositories({
     userId: session.user.id,
-    orgSlug: slug,
+    orgSlug: owner,
   })
 
   return (
     <OrgPage
-      owner={owner}
+      owner={ownerData}
       organizations={organizations}
       repositories={repositories}
     />
