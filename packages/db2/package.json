@@ -12,7 +12,7 @@
     "clean": "rm -rf node_modules dist",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
-    "db:studio": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kyoto drizzle-kit studio",
+    "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:drop": "drizzle-kit drop",
     "typecheck": "tsc --noEmit",

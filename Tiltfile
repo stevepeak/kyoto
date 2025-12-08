@@ -1,6 +1,9 @@
 load('ext://uibutton', 'cmd_button', 'choice_input', 'location', 'text_input', 'bool_input')
 load('ext://dotenv', 'dotenv')
 
+# Load environment variables from .env file in project root
+dotenv()
+
 local_resource(
     name='Web',
     labels=["Apps"],
