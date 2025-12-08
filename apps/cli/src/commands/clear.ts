@@ -3,9 +3,9 @@ import chalk from 'chalk'
 import { rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { pwdKyoto } from '../helpers/config/find-kyoto-dir.js'
-import { displayHeader } from '../helpers/display/display-header.js'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
+import { displayHeader } from '../helpers/display/display-header'
 
 export default class Clear extends Command {
   static override description =

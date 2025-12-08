@@ -4,7 +4,7 @@ import {
   type CacheEntry,
   type CacheValidationResult,
   type ComposedStory,
-} from './story-flow.js'
+} from './story-flow'
 
 /**
  * Re-export cache types for agent usage

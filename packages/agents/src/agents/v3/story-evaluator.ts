@@ -18,7 +18,7 @@ import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
-import { agents } from '../../index.js'
+import { agents } from '../../index'
 
 /**
  * Schema for agent output (step evaluation result)

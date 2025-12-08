@@ -1,23 +1,20 @@
 // Git
-export { findGitRoot } from './git/find-git-root.js'
-export { getChangedTsFiles } from './git/get-changed-ts-files.js'
+export { findGitRoot } from './git/find-git-root'
+export { getChangedTsFiles } from './git/get-changed-ts-files'
 export {
   type CommitInfo,
   getCurrentCommitSha,
   getLatestCommit,
-} from './git/get-latest-commit.js'
-export { getCurrentBranch } from './git/get-current-branch.js'
-export { getGitHubInfo, type GitHubInfo } from './git/get-github-info.js'
+} from './git/get-latest-commit'
+export { getCurrentBranch } from './git/get-current-branch'
+export { getGitHubInfo, type GitHubInfo } from './git/get-github-info'
 
 // Tools
-export {
-  createLocalReadFileTool,
-  readLocalFile,
-} from './tools/read-file-tool.js'
-export { createLocalTerminalCommandTool } from './tools/terminal-command-tool.js'
+export { createLocalReadFileTool, readLocalFile } from './tools/read-file-tool'
+export { createLocalTerminalCommandTool } from './tools/terminal-command-tool'
 export {
   createLocalCreateDirectoryTool,
   createLocalDirectory,
-} from './tools/create-directory-tool.js'
-export { createLocalUpdateStoryTool } from './tools/update-story-tool.js'
-export { writeLocalFile } from './tools/write-file-tool.js'
+} from './tools/create-directory-tool'
+export { createLocalUpdateStoryTool } from './tools/update-story-tool'
+export { writeLocalFile } from './tools/write-file-tool'

@@ -1,6 +1,6 @@
 import { type LocalIndex, type QueryResult } from 'vectra'
 
-import { type VectraQueryOptions } from './types.js'
+import { type VectraQueryOptions } from './types'
 
 /**
  * Queries the index for similar items

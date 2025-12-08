@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 
-import { getAiConfig } from '../config/get-ai-config.js'
+import { getAiConfig } from '../config/get-ai-config'
 
 interface GenerateEmbeddingOptions {
   /** The text to generate an embedding for */

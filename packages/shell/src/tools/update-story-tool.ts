@@ -3,7 +3,7 @@ import chalk from 'chalk'
 import { type Ora } from 'ora'
 import { z } from 'zod'
 
-import { writeLocalFile } from './write-file-tool.js'
+import { writeLocalFile } from './write-file-tool'
 
 const updateStoryInputSchema = z.object({
   path: z

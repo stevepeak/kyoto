@@ -25,6 +25,7 @@
     "@app/vectra": "workspace:^",
     "@oclif/core": "catalog:",
     "@openrouter/ai-sdk-provider": "catalog:",
+    "@sentry/bun": "catalog:",
     "ai": "catalog:",
     "chalk": "catalog:",
     "execa": "catalog:",

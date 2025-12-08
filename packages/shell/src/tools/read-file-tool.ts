@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 
-import { findGitRoot } from '../git/find-git-root.js'
+import { findGitRoot } from '../git/find-git-root'
 
 const readFileInputSchema = z.object({
   path: z

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 
-import { findGitRoot } from '../git/find-git-root.js'
+import { findGitRoot } from '../git/find-git-root'
 
 export async function writeLocalFile(
   path: string,

@@ -1,6 +1,6 @@
 import { dedent } from 'ts-dedent'
 
-import { generateText } from '../../helpers/generate-text.js'
+import { generateText } from '../../helpers/generate-text'
 
 interface ExtractScopeOptions {
   changelog: string

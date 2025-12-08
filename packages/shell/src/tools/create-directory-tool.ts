@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { type Ora } from 'ora'
 import { z } from 'zod'
 
-import { findGitRoot } from '../git/find-git-root.js'
+import { findGitRoot } from '../git/find-git-root'
 
 const createDirectoryInputSchema = z.object({
   path: z

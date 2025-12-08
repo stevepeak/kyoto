@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import treeify from 'object-treeify'
 
-import { pwdKyoto } from '../config/find-kyoto-dir.js'
+import { pwdKyoto } from '../config/find-kyoto-dir'
 
 interface TreeNode {
   name: string

@@ -63,7 +63,7 @@ export {
 
   // Test/Evaluation
   testStatusSchema,
-} from './story-flow.js'
+} from './story-flow'
 
 // ============================================================================
 // AGENT TYPES (Agent-specific configuration types)
@@ -72,6 +72,6 @@ export {
 export {
   type CacheEntry as AgentCacheEntry, // Re-exported for clarity
   type Commit,
-  type evaluationAgentOptions,
+  type EvaluationAgentOptions as evaluationAgentOptions,
   type ValidationResult,
-} from './agent-types.js'
+} from './agent-types'

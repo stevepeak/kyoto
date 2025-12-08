@@ -3,7 +3,7 @@ import { findGitRoot } from '@app/shell'
 import { readdir, readFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 
-import { pwdKyoto } from '../config/find-kyoto-dir.js'
+import { pwdKyoto } from '../config/find-kyoto-dir'
 
 export interface StoryFile {
   path: string

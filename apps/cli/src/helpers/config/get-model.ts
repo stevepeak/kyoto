@@ -3,7 +3,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { type LanguageModel } from 'ai'
 import chalk from 'chalk'
 
-import { getAiConfig } from './get-ai-config.js'
+import { getAiConfig } from './get-ai-config'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'auto'
 

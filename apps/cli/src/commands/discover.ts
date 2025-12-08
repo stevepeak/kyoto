@@ -7,15 +7,15 @@ import { mkdir, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import ora from 'ora'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { getModel } from '../helpers/config/get-model.js'
-import { updateDetailsJson } from '../helpers/config/update-details-json.js'
-import { displayHeader } from '../helpers/display/display-header.js'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { getModel } from '../helpers/config/get-model'
+import { updateDetailsJson } from '../helpers/config/update-details-json'
+import { displayHeader } from '../helpers/display/display-header'
 import {
   findTypeScriptFiles,
   validateFilePath,
-} from '../helpers/file/discovery.js'
-import { processDiscoveredCandidates } from '../helpers/stories/process-candidates.js'
+} from '../helpers/file/discovery'
+import { processDiscoveredCandidates } from '../helpers/stories/process-candidates'
 
 export default class Discover extends Command {
   static override description = 'Generate behavior stories from a code file'

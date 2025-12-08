@@ -12,12 +12,12 @@ import chalk from 'chalk'
 import { mkdir } from 'node:fs/promises'
 import ora from 'ora'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { pwdKyoto } from '../helpers/config/find-kyoto-dir.js'
-import { updateDetailsJson } from '../helpers/config/update-details-json.js'
-import { displayHeader } from '../helpers/display/display-header.js'
-import { findStoriesByTrace } from '../helpers/stories/find-stories-by-trace.js'
-import { createSearchStoriesTool } from '../helpers/tools/search-stories-tool.js'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
+import { updateDetailsJson } from '../helpers/config/update-details-json'
+import { displayHeader } from '../helpers/display/display-header'
+import { findStoriesByTrace } from '../helpers/stories/find-stories-by-trace'
+import { createSearchStoriesTool } from '../helpers/tools/search-stories-tool'
 
 export default class Vibes extends Command {
   static override description =

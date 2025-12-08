@@ -1,20 +1,20 @@
 // Types
-export type { VectraItem, VectraQueryOptions } from './types.js'
+export type { VectraItem, VectraQueryOptions } from './types'
 
 // Create
-export { createDb, createIndex, ensureIndex } from './create.js'
+export { createDb, createIndex, ensureIndex } from './create'
 
 // Insert
-export { insert } from './insert.js'
+export { insert } from './insert'
 
 // Query
-export { query } from './query.js'
+export { query } from './query'
 
 // Get
-export { getItem } from './get.js'
+export { getItem } from './get'
 
 // List
-export { listItems } from './list.js'
+export { listItems } from './list'
 
 // Delete
-export { deleteAll, deleteItem } from './delete.js'
+export { deleteAll, deleteItem } from './delete'

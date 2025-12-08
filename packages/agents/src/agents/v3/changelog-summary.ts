@@ -2,7 +2,7 @@ import { type Commit } from '@app/schemas'
 import { Experimental_Agent as Agent, type LanguageModel, Output } from 'ai'
 import { dedent } from 'ts-dedent'
 
-import { agents } from '../../index.js'
+import { agents } from '../../index'
 
 interface GenerateChangelogSummaryOptions {
   repoSlug: string

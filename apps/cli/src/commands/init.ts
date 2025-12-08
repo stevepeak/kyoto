@@ -5,7 +5,7 @@ import inquirer from 'inquirer'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { updateDetailsJson } from '../helpers/config/update-details-json.js'
+import { updateDetailsJson } from '../helpers/config/update-details-json'
 
 function getDefaultModelForProvider(provider: Provider): string {
   switch (provider) {

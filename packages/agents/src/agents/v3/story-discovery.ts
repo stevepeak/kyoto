@@ -17,7 +17,7 @@ import { dedent } from 'ts-dedent'
 import z from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
-import { agents } from '../../index.js'
+import { agents } from '../../index'
 
 type StoryDiscoveryAgentOptions = {
   filePath: string

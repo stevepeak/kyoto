@@ -1,8 +1,8 @@
-import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
+import { LINEAR_API_URL, type LinearGraphQLResponse } from './common'
 import {
   type CreateLinearCustomerInput,
   type CreateLinearCustomerResult,
-} from './types.js'
+} from './types'
 
 interface CreateCustomerResponse {
   customerCreate: {

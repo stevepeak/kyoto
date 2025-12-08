@@ -1,4 +1,4 @@
-import { readAllStoryFiles } from '../file/reader.js'
+import { readAllStoryFiles } from '../file/reader'
 
 interface FindStoriesByTraceOptions {
   files: string[]

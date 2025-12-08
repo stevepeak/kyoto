@@ -4,9 +4,9 @@ import chalk from 'chalk'
 import { resolve } from 'node:path'
 import terminalLink from 'terminal-link'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { displayHeader } from '../helpers/display/display-header.js'
-import { readAllStoryFiles } from '../helpers/file/reader.js'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { displayHeader } from '../helpers/display/display-header'
+import { readAllStoryFiles } from '../helpers/file/reader'
 
 export default class List extends Command {
   static override description = 'List all stories'

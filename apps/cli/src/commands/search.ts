@@ -4,9 +4,9 @@ import chalk from 'chalk'
 import { resolve } from 'node:path'
 import terminalLink from 'terminal-link'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites.js'
-import { displayHeader } from '../helpers/display/display-header.js'
-import { searchStories } from '../helpers/stories/search-stories.js'
+import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { displayHeader } from '../helpers/display/display-header'
+import { searchStories } from '../helpers/stories/search-stories'
 
 export default class Search extends Command {
   static override description = 'Search for stories using semantic similarity'

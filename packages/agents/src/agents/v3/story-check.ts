@@ -10,7 +10,7 @@ import {
 import { dedent } from 'ts-dedent'
 import z from 'zod'
 
-import { agents } from '../../index.js'
+import { agents } from '../../index'
 
 type StoryCheckAgentOptions = {
   story: DiscoveredStory

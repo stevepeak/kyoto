@@ -7,7 +7,7 @@ import {
 } from 'ai'
 import { dedent } from 'ts-dedent'
 
-import { agents } from '../../index.js'
+import { agents } from '../../index'
 
 interface RewriteStoryForChangesOptions {
   commit: Commit

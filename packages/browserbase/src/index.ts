@@ -5,4 +5,4 @@ export {
   createExtractTool,
   createGotoTool,
   createObserveTool,
-} from './tools.js'
+} from './tools'

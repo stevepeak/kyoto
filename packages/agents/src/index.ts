@@ -6,26 +6,26 @@ import {
 } from '@app/schemas'
 import z from 'zod'
 
-import { compositionAgentOutputSchema } from '../../schemas/src/story-flow.js'
-import { generateChangelogSummary } from './agents/v3/changelog-summary.js'
-import { evaluateDiff } from './agents/v3/diff-evaluator.js'
-import { extractScope } from './agents/v3/scope-extraction.js'
-import { runStoryCheckAgent } from './agents/v3/story-check.js'
-import { runCompositionAgent } from './agents/v3/story-composition.js'
-import { runStoryDiscoveryAgent } from './agents/v3/story-discovery.js'
-import { runStoryEnrichmentAgent } from './agents/v3/story-enrichment.js'
-import { main } from './agents/v3/story-evaluator.js'
+import { compositionAgentOutputSchema } from '../../schemas/src/story-flow'
+import { generateChangelogSummary } from './agents/v3/changelog-summary'
+import { evaluateDiff } from './agents/v3/diff-evaluator'
+import { extractScope } from './agents/v3/scope-extraction'
+import { runStoryCheckAgent } from './agents/v3/story-check'
+import { runCompositionAgent } from './agents/v3/story-composition'
+import { runStoryDiscoveryAgent } from './agents/v3/story-discovery'
+import { runStoryEnrichmentAgent } from './agents/v3/story-enrichment'
+import { main } from './agents/v3/story-evaluator'
 import {
   findImpactedStories,
   storyImpactOutputSchema,
-} from './agents/v3/story-impact.js'
-import { rewriteStoryForChanges } from './agents/v3/story-rewrite.js'
+} from './agents/v3/story-impact'
+import { rewriteStoryForChanges } from './agents/v3/story-rewrite'
 
 export { type TestStatus as Status }
-export { generateText } from './helpers/generate-text.js'
-export { generateEmbedding } from './helpers/generate-embedding.js'
-export { runStoryCheckAgent } from './agents/v3/story-check.js'
-export { runStoryEnrichmentAgent } from './agents/v3/story-enrichment.js'
+export { generateText } from './helpers/generate-text'
+export { generateEmbedding } from './helpers/generate-embedding'
+export { runStoryCheckAgent } from './agents/v3/story-check'
+export { runStoryEnrichmentAgent } from './agents/v3/story-enrichment'
 
 type Agent<TSchema extends z.ZodSchema = z.ZodSchema> = {
   id: string

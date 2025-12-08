@@ -6,10 +6,10 @@ import chalk from 'chalk'
 import { join } from 'node:path'
 import ora from 'ora'
 
-import { pwdKyoto } from '../config/find-kyoto-dir.js'
-import { generateEmbedding } from '../embeddings/generate-embedding.js'
-import { createSearchStoriesTool } from '../tools/search-stories-tool.js'
-import { saveStoryEmbedding } from './save-embedding.js'
+import { pwdKyoto } from '../config/find-kyoto-dir'
+import { generateEmbedding } from '../embeddings/generate-embedding'
+import { createSearchStoriesTool } from '../tools/search-stories-tool'
+import { saveStoryEmbedding } from './save-embedding'
 
 /**
  * Generate a filename from a story title

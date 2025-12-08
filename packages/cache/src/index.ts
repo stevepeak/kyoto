@@ -4,7 +4,7 @@ export {
   getCacheKey,
   getFileHashFromSandbox,
   hashFileContent,
-} from './cache-evidence.js'
+} from './cache-evidence'
 
 export {
   buildCacheDataFromEvaluation,
@@ -13,4 +13,4 @@ export {
   invalidateCacheForStory,
   saveCachedEvidence,
   validateCacheEntry,
-} from './cache-service.js'
+} from './cache-service'

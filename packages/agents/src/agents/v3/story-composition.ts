@@ -8,7 +8,7 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
-import { agents } from '../../index.js'
+import { agents } from '../../index'
 
 type CompositionAgentOptions = {
   story: DiscoveredStory

@@ -1,6 +1,6 @@
 import { type IndexItem, type LocalIndex } from 'vectra'
 
-import { type VectraItem } from './types.js'
+import { type VectraItem } from './types'
 
 /**
  * Inserts an item into the index

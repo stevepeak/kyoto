@@ -1,5 +1,5 @@
-import { LINEAR_API_URL, type LinearGraphQLResponse } from './common.js'
-import { type GetLinearTeamsResult, type LinearTeam } from './types.js'
+import { LINEAR_API_URL, type LinearGraphQLResponse } from './common'
+import { type GetLinearTeamsResult, type LinearTeam } from './types'
 
 interface GetTeamsResponse {
   teams: {

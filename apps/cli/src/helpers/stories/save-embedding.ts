@@ -1,7 +1,7 @@
 import { type DiscoveredStory } from '@app/schemas'
 import { createIndex, ensureIndex, insert } from '@app/vectra'
 
-import { pwdKyoto } from '../config/find-kyoto-dir.js'
+import { pwdKyoto } from '../config/find-kyoto-dir'
 
 interface SaveStoryEmbeddingOptions {
   filePath: string

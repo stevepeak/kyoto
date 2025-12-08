@@ -8,10 +8,7 @@ import {
 import { type Sandbox } from '@daytonaio/sdk'
 import { type Kysely, sql } from 'kysely'
 
-import {
-  buildEvidenceHashMap,
-  getFileHashFromSandbox,
-} from './cache-evidence.js'
+import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
 
 /**
  * Retrieves cached evidence for a story at a specific commit SHA or from a list of commit SHAs.
