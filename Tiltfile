@@ -8,9 +8,7 @@ local_resource(
     name='Web',
     labels=["Apps"],
     serve_cmd="bun --cwd apps/web2 dev",
-    links=[
-        link("http://localhost:3002/", "Web"),
-    ],
+    links=[ link("http://localhost:3002/", "Web") ],
 )
 
 # Development => MCP Builder
@@ -27,15 +25,14 @@ local_resource(
     name='Drizzle Studio',
     labels=["Development"],
     serve_cmd="bun run --cwd packages/db2 db:studio",
+    links=[link("https://local.drizzle.studio", "Drizzle Studio") ],
 )
 
 local_resource(
     name='Storybook',
     labels=["Development"],
     serve_cmd="bun run --cwd apps/web2 storybook",
-    links=[
-        link("http://localhost:6006/", "Storybook"),
-    ],
+    links=[ link("http://localhost:6006/", "Storybook") ],
 )
 
 # local_resource(
