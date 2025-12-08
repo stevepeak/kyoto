@@ -80,25 +80,12 @@ function SignedOutDemo() {
 // Mock component showing the signed in state
 function SignedInDemo() {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
-        <img
-          src="https://avatars.githubusercontent.com/u/1234567?v=4"
-          alt="John Doe"
-          className="size-8 rounded-full border"
-        />
-        <span className="text-sm font-medium">John Doe</span>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={async () => {
-          // eslint-disable-next-line no-console
-          console.log('Sign out clicked')
-        }}
-      >
-        Sign Out
-      </Button>
+    <div className="flex items-center">
+      <img
+        src="https://avatars.githubusercontent.com/u/1234567?v=4"
+        alt="John Doe"
+        className="size-8 rounded-full border"
+      />
     </div>
   )
 }
@@ -132,8 +119,7 @@ export const SignedIn: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Shows the user information and sign-out button when authenticated.',
+        story: 'Shows the user avatar when authenticated.',
       },
     },
   },

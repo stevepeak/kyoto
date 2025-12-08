@@ -4,7 +4,7 @@ import { Github } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { signIn, signOut, useSession } from '@/lib/auth-client'
+import { signIn, useSession } from '@/lib/auth-client'
 
 function Spinner() {
   return (
@@ -76,28 +76,14 @@ export function LoginButton() {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
-        {session.user.image && (
-          <img
-            src={session.user.image}
-            alt={session.user.name || 'User'}
-            className="size-8 rounded-full border"
-          />
-        )}
-        <span className="text-sm font-medium">
-          {session.user.name || session.user.email}
-        </span>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={async () => {
-          await signOut()
-        }}
-      >
-        Sign Out
-      </Button>
+    <div className="flex items-center">
+      {session.user.image && (
+        <img
+          src={session.user.image}
+          alt={session.user.name || 'User'}
+          className="size-8 rounded-full border"
+        />
+      )}
     </div>
   )
 }
