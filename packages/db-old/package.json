@@ -1,0 +1,45 @@
+{
+  "name": "@app/db",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Database package for the app",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules dist",
+    "db:codegen": "kysely-codegen --config-file .kysely-codegenrc.yaml",
+    "db:migrate:create": "node-pg-migrate -m ./migrations --migration-file-language sql --template-file-name ./templates/migration-template.sql create",
+    "db:migrate:up": "node-pg-migrate -m ./migrations --migration-file-language sql up",
+    "db:migrate:down": "node-pg-migrate -m ./migrations --migration-file-language sql down",
+    "db:schema:dump": "pg_dump -s -O -x -d \"$DATABASE_URL\" | sed '/^SET /d; /set_config/d' > schema.sql",
+    "db:migrate": "bun run db:migrate:up && bun run db:codegen && bun run db:schema:dump",
+    "db:seed": "psql \"$DATABASE_URL\" -f seed.sql",
+    "db:load:schema": "psql \"$DATABASE_URL\" -f schema.sql",
+    "db:set-to-latest-migration": "node-pg-migrate -m ./migrations --migration-file-language sql up --fake",
+    "db:setup": "bun run db:load:schema && bun run db:set-to-latest-migration && bun run db:seed",
+    "db:reset": "bun run db:migrate",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "catalog:",
+    "bufferutil": "catalog:",
+    "kysely": "catalog:",
+    "pg": "catalog:",
+    "ws": "catalog:"
+  },
+  "devDependencies": {
+    "@kyoto/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.15.5",
+    "@types/ws": "^8.18.1",
+    "kysely-codegen": "^0.19.0",
+    "node-pg-migrate": "^8.0.3",
+    "tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
