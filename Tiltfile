@@ -15,6 +15,7 @@ local_resource(
     name='Trigger',
     labels=["Apps"],
     serve_cmd="bun run --cwd apps/trigger dev",
+    links=[ link("https://cloud.trigger.dev/orgs/tailz-5e0b/projects/tailz-uBK2/env/dev/runs", "Trigger") ],
 )
 
 # Development => MCP Builder
