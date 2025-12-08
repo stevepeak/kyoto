@@ -24,7 +24,7 @@ export async function generateMetadata(
   const session = await getSession()
   if (!session?.user?.id) {
     return {
-      title: `${slug} - Kyoto`,
+      title: `${owner} - Kyoto`,
       description: 'Organization page on Kyoto',
     }
   }
