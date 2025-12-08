@@ -11,6 +11,12 @@ local_resource(
     links=[ link("http://localhost:3002/", "Web") ],
 )
 
+local_resource(
+    name='Trigger',
+    labels=["Apps"],
+    serve_cmd="bun run --cwd apps/trigger dev",
+)
+
 # Development => MCP Builder
 local_resource(
     labels=["Development"],
