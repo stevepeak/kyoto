@@ -7,6 +7,12 @@ const envSchema = z.object({
     .min(1)
     .transform((value) => value.replace(/\/+$/, ''))
     .default('https://usekyoto.com'),
+  APP_URL: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((value) => value.replace(/\/+$/, ''))
+    .optional(),
 
   // GitHub
   GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
@@ -50,32 +56,32 @@ const envSchema = z.object({
     }),
 
   // Neon Database
-  DATABASE_URL: z.string().min(1),
+  DATABASE_URL: z.string().startsWith('postgres://'),
 
   // Trigger.dev
   TRIGGER_PROJECT_ID: z.string().optional(),
-  TRIGGER_SECRET_KEY: z.string().min(1),
+  TRIGGER_SECRET_KEY: z.string().min(1).startsWith('tr_'),
 
   // AI
-  OPENAI_API_KEY: z.string().min(1),
-  OPENROUTER_API_KEY: z.string().min(1),
-  AI_GATEWAY_API_KEY: z.string().min(1),
+  OPENAI_API_KEY: z.string().startsWith('sk-'),
+  OPENROUTER_API_KEY: z.string().startsWith('sk-or-v1-'),
+  AI_GATEWAY_API_KEY: z.string().startsWith('vck_'),
 
   // Daytona
-  DAYTONA_API_KEY: z.string().min(1),
+  DAYTONA_API_KEY: z.string().startsWith('dtn_'),
 
   // Sentry
-  SENTRY_DSN: z.string().min(1),
+  SENTRY_DSN: z.string().startsWith('https://'),
 
   // PostHog
   POSTHOG_API_KEY: z.string().min(1),
   POSTHOG_HOST: z.string().url().default('https://us.i.posthog.com'),
 
   // Context7
-  CONTEXT7_API_KEY: z.string().min(1),
+  CONTEXT7_API_KEY: z.string().startsWith('ctx7sk-'),
 
   // Linear
-  LINEAR_API_KEY: z.string().min(1),
+  LINEAR_API_KEY: z.string().startsWith('lin_api_'),
   LINEAR_TEAM_ID: z.string().min(1),
 
   // Browserbase
@@ -98,6 +104,7 @@ export function getConfig(
     POSTHOG_HOST: env.POSTHOG_HOST ?? env.NEXT_PUBLIC_POSTHOG_HOST,
     SENTRY_DSN: env.SENTRY_DSN ?? env.NEXT_PUBLIC_SENTRY_DSN,
     GITHUB_APP_SLUG: env.GITHUB_APP_SLUG ?? env.NEXT_PUBLIC_GITHUB_APP_SLUG,
+    APP_URL: env.APP_URL ?? env.NEXT_PUBLIC_APP_URL ?? env.SITE_BASE_URL,
   }
 
   return envSchema.parse(normalizedEnv)

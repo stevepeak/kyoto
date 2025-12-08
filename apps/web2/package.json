@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@app/config": "workspace:*",
     "@radix-ui/react-slot": "^1.1.7",
     "better-auth": "^1.3.34",
     "class-variance-authority": "^0.7.0",

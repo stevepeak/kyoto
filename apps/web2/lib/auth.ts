@@ -1,8 +1,11 @@
+import { getConfig } from '@app/config'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
 import { db } from '@/lib/db'
 import * as schema from '@/lib/db/schema'
+
+const config = getConfig()
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -11,10 +14,8 @@ export const auth = betterAuth({
   }),
   socialProviders: {
     github: {
-      // eslint-disable-next-line no-process-env
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      // eslint-disable-next-line no-process-env
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: config.GITHUB_CLIENT_ID,
+      clientSecret: config.GITHUB_CLIENT_SECRET,
     },
   },
   // Disable email/password since we're GitHub only
