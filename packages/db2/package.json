@@ -10,11 +10,11 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/migrate.ts",
-    "db:studio": "drizzle-kit studio",
-    "db:push": "drizzle-kit push",
-    "db:drop": "drizzle-kit drop",
+    "db:generate": "bun --env-file=../../.env drizzle-kit generate",
+    "db:migrate": "bun --env-file=../../.env tsx src/migrate.ts",
+    "db:studio": "bun --env-file=../../.env drizzle-kit studio",
+    "db:push": "bun --env-file=../../.env drizzle-kit push",
+    "db:drop": "bun --env-file=../../.env drizzle-kit drop",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
