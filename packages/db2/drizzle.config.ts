@@ -2,8 +2,8 @@ import { defineConfig } from 'drizzle-kit'
 
 // Only require DATABASE_URL for Drizzle operations
 // Use a placeholder for migration generation if not provided
-// eslint-disable-next-line no-process-env
 const databaseUrl =
+  // eslint-disable-next-line no-process-env
   process.env.DATABASE_URL ||
   'postgresql://placeholder:placeholder@localhost:5432/kyoto'
 

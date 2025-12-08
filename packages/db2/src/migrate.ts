@@ -8,9 +8,11 @@ import postgres from 'postgres'
  * This script applies all pending migrations from the migrations folder
  */
 async function runMigrations() {
+  // eslint-disable-next-line no-console, no-process-env
   console.log('🔄 Running migrations...', process.env.DATABASE_URL)
 
   // Create connection for migrations
+  // eslint-disable-next-line no-process-env
   const migrationClient = postgres(process.env.DATABASE_URL ?? '', { max: 1 })
 
   try {
@@ -18,8 +20,10 @@ async function runMigrations() {
       migrationsFolder: './migrations',
     })
 
+    // eslint-disable-next-line no-console
     console.log('✅ Migrations completed successfully')
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('❌ Migration failed:', error)
     throw error
   } finally {
@@ -27,4 +31,4 @@ async function runMigrations() {
   }
 }
 
-runMigrations()
+void runMigrations()
