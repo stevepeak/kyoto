@@ -32,6 +32,7 @@
     "prosemirror-markdown": "^1.13.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-hotkeys-hook": "^5.2.1",
     "sonner": "^1.7.1",
     "tailwind-merge": "^3.4.0",
     "tiptap-markdown": "^0.9.0",

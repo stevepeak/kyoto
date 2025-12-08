@@ -1,18 +1,26 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 
 import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 
 export default function HomePage() {
+  const router = useRouter()
   const [triggerHandle, setTriggerHandle] = useState<{
     runId: string
     publicAccessToken: string
   } | null>(null)
   const [isFetching, setIsFetching] = useState(false)
+
+  // Keyboard shortcut: Cmd/Ctrl+Enter to navigate to /~
+  useHotkeys('mod+enter', () => {
+    router.push('/~')
+  })
 
   const { isLoading } = useTriggerRun({
     runId: triggerHandle?.runId ?? null,
