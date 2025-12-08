@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { LoginButton } from '@/components/auth/login-button'
+import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 
@@ -88,6 +89,7 @@ export default function HomePage() {
             'Trigger Hello World Task'
           )}
         </Button>
+        <Tiptap />
       </div>
     </main>
   )
