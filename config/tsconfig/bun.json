@@ -3,6 +3,7 @@
   "display": "Bun ESM",
   "extends": "@dexaai/config/tsconfig-node",
   "compilerOptions": {
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "noFallthroughCasesInSwitch": true,
