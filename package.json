@@ -43,6 +43,7 @@
       "ora": "^9.0.0",
       "p-map": "^7.0.4",
       "pg": "^8.16.3",
+      "posthog-js": "^1.208.3",
       "posthog-node": "^5.13.2",
       "superjson": "^2.2.2",
       "terminal-link": "^5.0.0",

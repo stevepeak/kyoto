@@ -1,6 +1,7 @@
 import { type Metadata } from 'next'
 import localFont from 'next/font/local'
 
+import { PostHogProvider } from '@/components/posthog-provider'
 import { Toaster } from '@/components/ui/toaster'
 
 import './globals.css'
@@ -41,8 +42,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cormorantGaramond.variable}>
-        {children}
-        <Toaster />
+        <PostHogProvider>
+          {children}
+          <Toaster />
+        </PostHogProvider>
       </body>
     </html>
   )

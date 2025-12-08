@@ -40,6 +40,13 @@ BETTER_AUTH_URL="http://localhost:3002"
 # Authorization callback URL: http://localhost:3002/api/auth/callback/github
 GITHUB_CLIENT_ID="your_github_client_id"
 GITHUB_CLIENT_SECRET="your_github_client_secret"
+
+# PostHog Analytics (optional)
+# Set to 'true' to enable PostHog analytics (disabled by default for local development)
+NEXT_PUBLIC_POSTHOG_ENABLED="false"
+# Get these from: https://posthog.com
+NEXT_PUBLIC_POSTHOG_KEY="your_posthog_api_key"
+NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
 ```
 
 ### 3. GitHub OAuth Setup
@@ -115,6 +122,7 @@ apps/web2/
 - ✅ Automatic database migrations
 - ✅ Beautiful UI with shadcn components
 - ✅ Responsive design with Tailwind CSS
+- ✅ PostHog analytics integration (disabled for local development)
 
 ## Database Schema
 
