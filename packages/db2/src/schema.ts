@@ -50,6 +50,7 @@ export const user = pgTable('user', {
   email: text('email').unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
+  login: text('login'),
   lastInteractionAt: timestamp('last_interaction_at', { withTimezone: true }),
   timeZone: text('time_zone'),
 })
