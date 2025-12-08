@@ -1,12 +1,11 @@
 import { defineConfig } from 'drizzle-kit'
 
 // Only require DATABASE_URL for Drizzle operations
+// Use a placeholder for migration generation if not provided
 // eslint-disable-next-line no-process-env
-const databaseUrl = process.env.DATABASE_URL
-
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL environment variable is required')
-}
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  'postgresql://placeholder:placeholder@localhost:5432/kyoto'
 
 export default defineConfig({
   schema: './src/schema.ts',

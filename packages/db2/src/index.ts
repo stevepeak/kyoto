@@ -2,8 +2,9 @@ import { getConfig } from '@app/config'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import * as schema from './schema.js'
+import * as schema from './schema'
 
+// Export schema and all its contents
 export { schema }
 
 export interface CreateDbOptions {
@@ -37,3 +38,34 @@ export function createDb(options: CreateDbOptions = {}) {
 }
 
 export type DB = ReturnType<typeof createDb>
+
+/**
+ * Type helpers for table types
+ */
+export type User = typeof schema.user.$inferSelect
+export type NewUser = typeof schema.user.$inferInsert
+export type Session = typeof schema.session.$inferSelect
+export type NewSession = typeof schema.session.$inferInsert
+export type Account = typeof schema.account.$inferSelect
+export type NewAccount = typeof schema.account.$inferInsert
+export type Verification = typeof schema.verification.$inferSelect
+export type NewVerification = typeof schema.verification.$inferInsert
+export type Credential = typeof schema.credential.$inferSelect
+export type NewCredential = typeof schema.credential.$inferInsert
+export type Owner = typeof schema.owners.$inferSelect
+export type NewOwner = typeof schema.owners.$inferInsert
+export type OwnerMembership = typeof schema.ownerMemberships.$inferSelect
+export type NewOwnerMembership = typeof schema.ownerMemberships.$inferInsert
+export type Repo = typeof schema.repos.$inferSelect
+export type NewRepo = typeof schema.repos.$inferInsert
+export type RepoMembership = typeof schema.repoMemberships.$inferSelect
+export type NewRepoMembership = typeof schema.repoMemberships.$inferInsert
+export type Run = typeof schema.runs.$inferSelect
+export type NewRun = typeof schema.runs.$inferInsert
+export type Story = typeof schema.stories.$inferSelect
+export type NewStory = typeof schema.stories.$inferInsert
+export type StoryEvidenceCache = typeof schema.storyEvidenceCache.$inferSelect
+export type NewStoryEvidenceCache =
+  typeof schema.storyEvidenceCache.$inferInsert
+export type StoryTestResult = typeof schema.storyTestResults.$inferSelect
+export type NewStoryTestResult = typeof schema.storyTestResults.$inferInsert
