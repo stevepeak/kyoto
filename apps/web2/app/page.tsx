@@ -3,7 +3,6 @@
 import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { LoginButton } from '@/components/auth/login-button'
 import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
@@ -75,10 +74,6 @@ export default function HomePage() {
   return (
     <main className="container mx-auto min-h-screen py-12">
       <div className="flex flex-col items-center justify-center gap-8">
-        <h1 className="font-cormorant text-8xl font-semibold tracking-tight md:text-9xl">
-          Kyoto
-        </h1>
-        <LoginButton />
         <Button onClick={handleTriggerTask} disabled={isButtonDisabled}>
           {isButtonDisabled ? (
             <>

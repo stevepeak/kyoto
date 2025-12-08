@@ -13,14 +13,6 @@ export function OrgPage(props: OrgPageProps) {
   return (
     <div className="container mx-auto min-h-screen py-12">
       <div className="space-y-8">
-        <nav className="text-sm text-muted-foreground">
-          <Link href="/~" className="hover:text-foreground">
-            Organizations
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{owner.login}</span>
-        </nav>
-
         <div className="flex items-center gap-4">
           {owner.avatarUrl && (
             <img

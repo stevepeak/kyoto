@@ -1,5 +1,4 @@
 import { type Owner, type Repo } from '@app/db2'
-import Link from 'next/link'
 
 interface RepoPageProps {
   owner: Owner
@@ -12,18 +11,6 @@ export function RepoPage(props: RepoPageProps) {
   return (
     <div className="container mx-auto min-h-screen py-12">
       <div className="space-y-8">
-        <nav className="text-sm text-muted-foreground">
-          <Link href="/~" className="hover:text-foreground">
-            Organizations
-          </Link>
-          <span className="mx-2">/</span>
-          <Link href={`/~/${owner.login}`} className="hover:text-foreground">
-            {owner.name ?? owner.login}
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{repo.name}</span>
-        </nav>
-
         <div className="space-y-2">
           <h1 className="font-cormorant text-4xl font-semibold">{repo.name}</h1>
           {repo.description && (
