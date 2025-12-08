@@ -1,0 +1,5 @@
+{
+  "extends": "tsconfig/bun.json",
+  "include": ["src", "drizzle.config.ts"],
+  "exclude": ["**/node_modules", "**/.*/", "migrations"]
+}

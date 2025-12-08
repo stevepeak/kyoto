@@ -1,0 +1,33 @@
+import { getConfig } from '@app/config'
+import { drizzle } from 'drizzle-orm/postgres-js'
+import { migrate } from 'drizzle-orm/postgres-js/migrator'
+import postgres from 'postgres'
+
+/**
+ * Runs pending database migrations
+ *
+ * This script applies all pending migrations from the migrations folder
+ */
+async function runMigrations() {
+  const config = getConfig()
+
+  console.log('🔄 Running migrations...')
+
+  // Create connection for migrations
+  const migrationClient = postgres(config.DATABASE_URL, { max: 1 })
+
+  try {
+    await migrate(drizzle(migrationClient), {
+      migrationsFolder: './migrations',
+    })
+
+    console.log('✅ Migrations completed successfully')
+  } catch (error) {
+    console.error('❌ Migration failed:', error)
+    throw error
+  } finally {
+    await migrationClient.end()
+  }
+}
+
+runMigrations()
