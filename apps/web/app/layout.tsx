@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 
 import { Navbar } from '@/components/navbar'
 import { PostHogProvider } from '@/components/posthog-provider'
+import { TRPCProvider } from '@/components/providers/trpc-provider'
 import { Toaster } from '@/components/ui/toaster'
 
 import './globals.css'
@@ -43,11 +44,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cormorantGaramond.variable}>
-        <PostHogProvider>
-          <Navbar />
-          {children}
-          <Toaster />
-        </PostHogProvider>
+        <TRPCProvider>
+          <PostHogProvider>
+            <Navbar />
+            {children}
+            <Toaster />
+          </PostHogProvider>
+        </TRPCProvider>
       </body>
     </html>
   )
