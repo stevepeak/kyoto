@@ -9,6 +9,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ function Spinner() {
 export function LoginButton() {
   const { data: session, isPending } = useSession()
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   if (isPending) {
     return (
@@ -145,8 +147,7 @@ export function LoginButton() {
         {/* Teams */}
         <DropdownMenuItem
           onClick={() => {
-            // eslint-disable-next-line no-console
-            console.log('Teams clicked')
+            router.push('/~')
           }}
         >
           <Users className="size-4" />
