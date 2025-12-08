@@ -12,10 +12,24 @@ export const auth = betterAuth({
     provider: 'pg',
     schema,
   }),
+  user: {
+    additionalFields: {
+      login: {
+        type: 'string',
+        required: true,
+      },
+    },
+  },
   socialProviders: {
     github: {
       clientId: config.GITHUB_CLIENT_ID,
       clientSecret: config.GITHUB_CLIENT_SECRET,
+      mapProfileToUser: (profile) => ({
+        name: profile.name || profile.login,
+        email: profile.email,
+        image: profile.avatar_url,
+        login: profile.login,
+      }),
     },
   },
   // Disable email/password since we're GitHub only
