@@ -85,16 +85,19 @@ export const WithAction: Story = {
   ),
 }
 
-export const Promise: Story = {
+export const PromiseToast: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
       <Button
         onClick={() =>
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 2000)), {
-            loading: 'Processing...',
-            success: 'Done!',
-            error: 'Failed',
-          })
+          toast.promise(
+            new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+            {
+              loading: 'Processing...',
+              success: 'Done!',
+              error: 'Failed',
+            },
+          )
         }
       >
         Show Promise Toast
