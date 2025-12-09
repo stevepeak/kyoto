@@ -10,6 +10,7 @@ import Init from './commands/init'
 import List from './commands/list'
 import Mcp from './commands/mcp'
 import Search from './commands/search'
+import SetupGithub from './commands/setup/github'
 import Test from './commands/test'
 import TestApi from './commands/test/api'
 import TestBrowser from './commands/test/browser'
@@ -106,6 +107,11 @@ const commandGroups = [
         name: 'init',
         description: 'Configure AI provider & API key.',
         example: 'kyoto init',
+      },
+      {
+        name: 'setup github',
+        description: 'Create GitHub workflow for Kyoto tests.',
+        example: 'kyoto setup github',
       },
       {
         name: 'discover',
@@ -419,6 +425,17 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<Mcp />)
     })
 
+  const setupCommand = program
+    .command('setup')
+    .description('Setup commands for Kyoto')
+
+  setupCommand
+    .command('github')
+    .description('Create GitHub workflow for running Kyoto tests')
+    .action(async () => {
+      await renderCommand(<SetupGithub />)
+    })
+
   program
     .command('test')
     .description('Run tests')
@@ -528,6 +545,7 @@ export async function run(argv = process.argv): Promise<void> {
     'init',
     'craft',
     'mcp',
+    'setup',
     'test',
     'test:browser',
     'test:api',
