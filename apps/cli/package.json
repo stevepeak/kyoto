@@ -21,6 +21,8 @@
     "@app/shell": "workspace:^",
     "@app/vectra": "workspace:^",
     "@openrouter/ai-sdk-provider": "catalog:",
+    "@playwright/test": "^1.57.0",
+    "@withmantle/tracewright": "^0.1.2",
     "ai": "catalog:",
     "commander": "^14.0.2",
     "execa": "catalog:",
@@ -28,8 +30,10 @@
     "ink-select-input": "^6.2.0",
     "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
+    "playwright": "^1.57.0",
     "react": "^19.2.1",
     "terminal-link": "catalog:",
+    "ts-dedent": "^2.2.0",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -298,8 +298,9 @@ export async function run(argv = process.argv): Promise<void> {
   program
     .command('test:browser')
     .description('Run browser tests')
-    .action(async () => {
-      await renderCommand(<TestBrowser />)
+    .option('--headless', 'Run browser in headless mode')
+    .action(async (options: { headless?: boolean }) => {
+      await renderCommand(<TestBrowser headless={options.headless ?? false} />)
     })
 
   program
