@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { and, createDb, eq, inArray, schema } from '@app/db'
 import { logger, task } from '@trigger.dev/sdk'
 
 import { createOctokit } from '../helpers/github'
@@ -134,7 +134,7 @@ async function fetchGithubMemberIdentifiers(
 }
 
 async function mapGithubMembersToLocalUserIds(
-  db: ReturnType<typeof setupDb>,
+  db: ReturnType<typeof createDb>,
   githubIdentifiers: readonly string[],
 ): Promise<Set<string>> {
   const uniqueIdentifiers = Array.from(new Set(githubIdentifiers))
@@ -152,11 +152,17 @@ async function mapGithubMembersToLocalUserIds(
   })
 
   const matchedAccounts = await db
-    .selectFrom('account')
-    .select(['userId', 'accountId'])
-    .where('providerId', '=', 'github')
-    .where('accountId', 'in', accountIdVariants)
-    .execute()
+    .select({
+      userId: schema.account.userId,
+      accountId: schema.account.accountId,
+    })
+    .from(schema.account)
+    .where(
+      and(
+        eq(schema.account.providerId, 'github'),
+        inArray(schema.account.accountId, accountIdVariants),
+      ),
+    )
 
   const memberUserIds = new Set<string>()
 
@@ -188,11 +194,12 @@ function parseInstallationId(
 export const syncGithubInstallationTask = task({
   id: 'sync-github-installation',
   run: async (payload: SyncGithubInstallationPayload) => {
-    const { numeric: installationId, bigint: installationIdBigInt } =
-      parseInstallationId(payload.installationId)
+    const { numeric: installationId } = parseInstallationId(
+      payload.installationId,
+    )
 
     const env = getConfig()
-    const db = setupDb(env.DATABASE_URL)
+    const db = createDb({ databaseUrl: env.DATABASE_URL })
     const octokit = createOctokit(installationId)
 
     try {
@@ -212,7 +219,7 @@ export const syncGithubInstallationTask = task({
 
       const ownerExternalId =
         typeof account.id === 'number' || typeof account.id === 'string'
-          ? BigInt(String(account.id))
+          ? Number(account.id)
           : null
 
       const ownerValues = {
@@ -222,24 +229,26 @@ export const syncGithubInstallationTask = task({
         avatarUrl: account.avatar_url,
         htmlUrl: account.html_url,
         externalId: ownerExternalId,
-        installationId: installationIdBigInt,
+        installationId,
       }
 
-      const owner = await db
-        .insertInto('owners')
+      const ownerResult = await db
+        .insert(schema.owners)
         .values(ownerValues)
-        .onConflict((oc) =>
-          oc.column('login').doUpdateSet({
+        .onConflictDoUpdate({
+          target: schema.owners.login,
+          set: {
             name: ownerValues.name,
             type: ownerValues.type,
             avatarUrl: ownerValues.avatarUrl,
             htmlUrl: ownerValues.htmlUrl,
             externalId: ownerValues.externalId,
             installationId: ownerValues.installationId,
-          }),
-        )
-        .returning(['id', 'login'])
-        .executeTakeFirst()
+          },
+        })
+        .returning({ id: schema.owners.id, login: schema.owners.login })
+
+      const owner = ownerResult[0]
 
       if (!owner) {
         throw new Error('Failed to upsert owner record')
@@ -253,15 +262,15 @@ export const syncGithubInstallationTask = task({
         },
       )
 
-      await db.transaction().execute(async (trx) => {
+      await db.transaction(async (trx) => {
         for (const repo of repos) {
           const repoExternalId =
             typeof repo.id === 'number' || typeof repo.id === 'string'
-              ? BigInt(String(repo.id))
+              ? Number(repo.id)
               : null
 
           await trx
-            .insertInto('repos')
+            .insert(schema.repos)
             .values({
               ownerId: owner.id,
               externalId: repoExternalId,
@@ -272,17 +281,17 @@ export const syncGithubInstallationTask = task({
               htmlUrl: repo.html_url ?? null,
               private: repo.private ?? false,
             })
-            .onConflict((oc) =>
-              oc.columns(['ownerId', 'name']).doUpdateSet({
+            .onConflictDoUpdate({
+              target: [schema.repos.ownerId, schema.repos.name],
+              set: {
                 externalId: repoExternalId,
                 fullName: repo.full_name ?? null,
                 description: repo.description ?? null,
                 defaultBranch: repo.default_branch ?? null,
                 htmlUrl: repo.html_url ?? null,
                 private: repo.private ?? false,
-              }),
-            )
-            .execute()
+              },
+            })
         }
       })
 
@@ -354,7 +363,7 @@ export const syncGithubInstallationTask = task({
         ...membershipCounts,
       }
     } finally {
-      await db.destroy()
+      await db.$client.end()
     }
   },
 })

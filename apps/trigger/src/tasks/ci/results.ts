@@ -1,5 +1,5 @@
 import { type Status } from '@app/agents'
-import { json, type RunStory } from '@app/db'
+import { eq, type RunStory, schema } from '@app/db'
 
 import { type AggregatedCounts } from '../../helpers/github-checks'
 import { type TestStoryTaskResult } from '../test-story'
@@ -147,14 +147,13 @@ export async function updateRunResults({
   updatedRunStories: RunStory[]
 }): Promise<void> {
   await db
-    .updateTable('runs')
+    .update(schema.runs)
     .set({
       status: finalStatus,
       summary: summaryText,
-      stories: json(updatedRunStories),
+      stories: updatedRunStories,
     })
-    .where('id', '=', runId)
-    .execute()
+    .where(eq(schema.runs.id, runId))
 }
 
 export async function markRunFailure({
@@ -169,11 +168,10 @@ export async function markRunFailure({
   status?: 'fail' | 'error'
 }): Promise<void> {
   await db
-    .updateTable('runs')
+    .update(schema.runs)
     .set({
       status,
       summary,
     })
-    .where('id', '=', runId)
-    .execute()
+    .where(eq(schema.runs.id, runId))
 }

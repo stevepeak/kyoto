@@ -25,12 +25,6 @@ const config: KnipConfig = {
         '**/dist/**',
         '**/*.d.ts',
         '**/.eslintrc.json',
-        'hooks/use-mobile.ts',
-      ],
-      ignoreDependencies: [
-        'kysely',
-        '@radix-ui/react-separator',
-        'posthog-node',
       ],
     },
     'apps/cli': {
@@ -49,7 +43,6 @@ const config: KnipConfig = {
       ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
     },
     'packages/db': {
-      entry: ['src/db.ts'],
       project: ['src/**/*.ts'],
       ignore: [
         '**/node_modules/**',
@@ -57,6 +50,7 @@ const config: KnipConfig = {
         '**/types.gen.ts',
         '**/*.d.ts',
         '**/migrations/**',
+        '**/migrate.ts',
       ],
     },
     'packages/utils': {
@@ -82,19 +76,8 @@ const config: KnipConfig = {
     '**/*.d.ts',
     '**/types.gen.ts',
     '**/migrations/**',
-    '**/seed.sql',
-    '**/schema.sql',
   ],
-  ignoreDependencies: [
-    '@types/*',
-    '@codemirror/lang-css',
-    '@codemirror/lang-html',
-    '@codemirror/lang-javascript',
-    '@codemirror/state',
-    '@codemirror/view',
-    '@uiw/react-codemirror',
-  ],
-  ignoreBinaries: ['pg_dump', 'psql', 'sed'],
+  ignoreDependencies: ['@types/*'],
 }
 
 export default config

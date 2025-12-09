@@ -3,7 +3,7 @@ import { createDb, createIndex, query } from '@app/vectra'
 import { pwdKyoto } from '../config/find-kyoto-dir'
 import { generateEmbedding } from '../embeddings/generate-embedding'
 
-export interface StoryMetadata {
+interface StoryMetadata {
   filePath: string
   title: string
   behavior: string

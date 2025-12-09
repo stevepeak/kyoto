@@ -63,8 +63,8 @@ export async function createLinearCustomerRequest(
       }
     }
 
-    const result: LinearGraphQLResponse<CreateCustomerRequestResponse> =
-      await response.json()
+    const result =
+      (await response.json()) as LinearGraphQLResponse<CreateCustomerRequestResponse>
 
     if (result.errors && result.errors.length > 0) {
       const errorMessages = result.errors.map((e) => e.message).join(', ')

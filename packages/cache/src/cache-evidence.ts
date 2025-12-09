@@ -67,9 +67,7 @@ export async function getFileHashFromSandbox(
   filePath: string,
 ): Promise<string> {
   // TODO
-  await new Promise((resolve: (value: string) => void) =>
-    setTimeout(resolve, 1000),
-  )
+  await new Promise<void>((resolve) => setTimeout(resolve, 1000))
   // eslint-disable-next-line no-console
   console.log('getFileHashFromSandbox', filePath)
   // const contents = await getFileContentFromSandbox(sandbox, filePath)

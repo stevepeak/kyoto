@@ -4,7 +4,7 @@ import { configure } from '@trigger.dev/sdk'
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 
-import { type Context } from './context.js'
+import { type Context } from './context'
 
 /**
  * Initialization of tRPC backend
@@ -61,7 +61,7 @@ const loggingMiddleware = t.middleware(async ({ next, type, path }) => {
 
   if (!result.ok) {
     // Log detailed error information for Vercel logs
-    const error = result.error
+    const error = result.error as TRPCError
     // eslint-disable-next-line no-console
     console.error(`[tRPC Error] ${type.toUpperCase()} ${path}:`, {
       code: error.code,

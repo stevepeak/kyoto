@@ -1,9 +1,9 @@
-import { forwardRef, type ReactNode } from 'react'
+import { type VariantProps } from 'class-variance-authority'
 import { type LucideIcon } from 'lucide-react'
+import { forwardRef, type ReactNode } from 'react'
 
 import { Button, type buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { type VariantProps } from 'class-variance-authority'
 
 interface ShimmerButtonProps
   extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
@@ -16,7 +16,7 @@ interface ShimmerButtonProps
 const ShimmerButton = forwardRef<HTMLButtonElement, ShimmerButtonProps>(
   (
     {
-      icon: Icon,
+      icon,
       isLoading = false,
       loadingText,
       children,
@@ -28,6 +28,7 @@ const ShimmerButton = forwardRef<HTMLButtonElement, ShimmerButtonProps>(
     },
     ref,
   ) => {
+    const Icon = icon
     return (
       <Button
         ref={ref}

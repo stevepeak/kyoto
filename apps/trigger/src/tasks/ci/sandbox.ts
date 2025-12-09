@@ -1,7 +1,7 @@
 import { agents } from '@app/agents'
 import { buildCacheDataFromEvaluation, saveCachedEvidence } from '@app/cache'
 import { getConfig } from '@app/config'
-import { type RunStory, setupDb } from '@app/db'
+import { createDb, eq, type RunStory, schema } from '@app/db'
 import * as Sentry from '@sentry/node'
 import { logger } from '@trigger.dev/sdk'
 import pMap from 'p-map'
@@ -38,7 +38,7 @@ export async function runStoriesWithSandbox({
   extTriggerDev,
 }: RunStoriesWithSandboxParams): Promise<AggregatedRunOutcome> {
   const env = getConfig()
-  const db = setupDb(env.DATABASE_URL)
+  const db = createDb({ databaseUrl: env.DATABASE_URL })
 
   const sandbox = await createDaytonaSandbox({
     repoId: repoRecord.repoId,
@@ -55,7 +55,7 @@ export async function runStoriesWithSandbox({
         const startedAt = new Date()
 
         const inserted = await db
-          .insertInto('storyTestResults')
+          .insert(schema.storyTestResults)
           .values({
             storyId: story.id,
             runId: runId ?? null,
@@ -65,10 +65,11 @@ export async function runStoriesWithSandbox({
             analysis: null,
             extTriggerDev,
           })
-          .returning(['id'])
-          .executeTakeFirst()
+          .returning({ id: schema.storyTestResults.id })
 
-        const resultId = inserted?.id
+        const insertedResult = inserted[0]
+
+        const resultId = insertedResult?.id
 
         if (!resultId) {
           throw new Error('Failed to create story test result record')
@@ -102,16 +103,15 @@ export async function runStoriesWithSandbox({
             const evaluation = taskResult.output.evaluation
 
             await db
-              .updateTable('storyTestResults')
-              .set(() => ({
+              .update(schema.storyTestResults)
+              .set({
                 status: evaluation.status,
                 analysisVersion: evaluation.version,
-                analysis: JSON.stringify(evaluation),
+                analysis: evaluation,
                 completedAt,
                 durationMs: completedAt.getTime() - startedAt.getTime(),
-              }))
-              .where('id', '=', resultId)
-              .execute()
+              })
+              .where(eq(schema.storyTestResults.id, resultId))
 
             // Save cache for successful and failed evaluations (but not errors)
             if (
@@ -173,15 +173,14 @@ export async function runStoriesWithSandbox({
             })
 
             await db
-              .updateTable('storyTestResults')
-              .set(() => ({
+              .update(schema.storyTestResults)
+              .set({
                 status: 'error',
-                analysis: JSON.stringify(failureAnalysis),
+                analysis: failureAnalysis,
                 completedAt,
                 durationMs: completedAt.getTime() - startedAt.getTime(),
-              }))
-              .where('id', '=', resultId)
-              .execute()
+              })
+              .where(eq(schema.storyTestResults.id, resultId))
           }
 
           return { resultId, ...taskResult }
@@ -200,15 +199,14 @@ export async function runStoriesWithSandbox({
             const completedAt = new Date()
 
             await db
-              .updateTable('storyTestResults')
-              .set(() => ({
+              .update(schema.storyTestResults)
+              .set({
                 status: 'error',
-                analysis: JSON.stringify(failureAnalysis),
+                analysis: failureAnalysis,
                 completedAt,
                 durationMs: completedAt.getTime() - startedAt.getTime(),
-              }))
-              .where('id', '=', resultId)
-              .execute()
+              })
+              .where(eq(schema.storyTestResults.id, resultId))
           } catch (err) {
             Sentry.captureException(err)
           }

@@ -77,7 +77,6 @@ export async function rewriteStoryForChanges({
       },
       tracer: telemetryTracer,
     },
-    // eslint-disable-next-line @typescript-eslint/require-await
     onStepFinish: async (step) => {
       if (step.reasoningText) {
         // await streams.append('progress', step.reasoningText)

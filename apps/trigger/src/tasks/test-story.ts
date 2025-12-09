@@ -2,7 +2,7 @@ import { agents } from '@app/agents'
 import { getCachedEvidence, validateCacheEntry } from '@app/cache'
 import { getConfig } from '@app/config'
 import { getDaytonaSandbox } from '@app/daytona'
-import { setupDb } from '@app/db'
+import { and, createDb, desc, eq, schema } from '@app/db'
 import { type EvaluationOutput } from '@app/schemas'
 import * as Sentry from '@sentry/node'
 import { logger, task } from '@trigger.dev/sdk'
@@ -34,51 +34,55 @@ export const testStoryTask = task({
     params,
   ): Promise<TestStoryTaskResult> => {
     const { DATABASE_URL } = getConfig()
-    const db = setupDb(DATABASE_URL)
+    const db = createDb({ databaseUrl: DATABASE_URL })
 
     // Get trigger runId from task ctx (provided by trigger.dev)
     // Update story_test_results with trigger runId if available and if we have a runId
     if (params.ctx?.run?.id && payload.runId) {
       // Find the most recent running story_test_results for this story and runId
       const runningResult = await db
-        .selectFrom('storyTestResults')
-        .select(['id'])
-        .where('storyId', '=', payload.storyId)
-        .where('runId', '=', payload.runId)
-        .where('status', '=', 'running')
-        .orderBy('startedAt', 'desc')
+        .select({ id: schema.storyTestResults.id })
+        .from(schema.storyTestResults)
+        .where(
+          and(
+            eq(schema.storyTestResults.storyId, payload.storyId),
+            eq(schema.storyTestResults.runId, payload.runId),
+            eq(schema.storyTestResults.status, 'running'),
+          ),
+        )
+        .orderBy(desc(schema.storyTestResults.startedAt))
         .limit(1)
-        .executeTakeFirst()
 
-      if (runningResult) {
+      if (runningResult[0]) {
         await db
-          .updateTable('storyTestResults')
+          .update(schema.storyTestResults)
           .set({
             extTriggerDev: {
               runId: params.ctx.run.id,
             },
           })
-          .where('id', '=', runningResult.id)
-          .execute()
+          .where(eq(schema.storyTestResults.id, runningResult[0].id))
       }
     }
 
     // Look up the story and associated repository metadata needed for testing
-    const storyRecord = await db
-      .selectFrom('stories')
-      .innerJoin('repos', 'repos.id', 'stories.repoId')
-      .innerJoin('owners', 'owners.id', 'repos.ownerId')
-      .select([
-        'stories.id as id',
-        'stories.story as story',
-        'stories.repoId as repoId',
-        'stories.name as name',
-        'stories.composition as composition',
-        'owners.login as ownerName',
-        'repos.name as repoName',
-      ])
-      .where('stories.id', '=', payload.storyId)
-      .executeTakeFirst()
+    const storyRecords = await db
+      .select({
+        id: schema.stories.id,
+        story: schema.stories.story,
+        repoId: schema.stories.repoId,
+        name: schema.stories.name,
+        decomposition: schema.stories.decomposition,
+        ownerName: schema.owners.login,
+        repoName: schema.repos.name,
+      })
+      .from(schema.stories)
+      .innerJoin(schema.repos, eq(schema.repos.id, schema.stories.repoId))
+      .innerJoin(schema.owners, eq(schema.owners.id, schema.repos.ownerId))
+      .where(eq(schema.stories.id, payload.storyId))
+      .limit(1)
+
+    const storyRecord = storyRecords[0]
 
     if (!storyRecord) {
       throw new Error(`Story ${payload.storyId} not found`)
@@ -104,7 +108,7 @@ export const testStoryTask = task({
       payload.runId &&
       daytonaSandboxId
     ) {
-      const db = setupDb(DATABASE_URL)
+      const db = createDb({ databaseUrl: DATABASE_URL })
 
       // Get sandbox to query git log for commit SHAs
       const sandbox = await getDaytonaSandbox(daytonaSandboxId)
@@ -179,7 +183,9 @@ export const testStoryTask = task({
         id: storyRecord.id,
         name: storyRecord.name,
         text: storyRecord.story,
-        decomposition: agents.composition.schema.parse(storyRecord.composition),
+        decomposition: agents.composition.schema.parse(
+          storyRecord.decomposition,
+        ),
       },
       options: {
         daytonaSandboxId,

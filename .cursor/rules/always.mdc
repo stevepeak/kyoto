@@ -11,8 +11,6 @@ alwaysApply: true
 - If using the Linear MCP, the team is "kyoto"
 - If my prompt has any specific wisdom, write it to `.wisdom` folder in a readme as an artifact.
 - use package.json workspaces catalog for installing new dependancies
-- Always use ESM `import` and `export` (never use CJS `require`)
-  - File imports should end with `.js` (NOT `.ts` or `.tsx`). Module or subpath imports don't need the extension.
 - Do not change `tsconfig.json`, ask permission with explaination if necessary
 - used named arguments `(args: {foo: string})` over inline arguments `(foo: string)`
 - never make changes to ./components/ui files

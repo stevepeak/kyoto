@@ -39,4 +39,3 @@ export async function createContext(req: NextRequest): Promise<Context> {
 }
 
 export { appRouter }
-export type { AppRouter } from '@app/api'

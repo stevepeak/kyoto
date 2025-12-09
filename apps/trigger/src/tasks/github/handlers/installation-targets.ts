@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb, eq, schema } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
 import { installationTargetsEventSchema } from '../shared/schemas'
@@ -35,15 +35,19 @@ export const installationTargetsHandler: WebhookHandler = async ({
   }
 
   const env = getConfig()
-  const db = setupDb(env.DATABASE_URL)
+  const db = createDb({ databaseUrl: env.DATABASE_URL })
 
   try {
     // Find the owner by installation ID
-    const owner = await db
-      .selectFrom('owners')
-      .select(['id', 'login'])
-      .where('installationId', '=', installationId.toString())
-      .executeTakeFirst()
+    const ownerResult = await db
+      .select({ id: schema.owners.id, login: schema.owners.login })
+      .from(schema.owners)
+      .where(
+        eq(schema.owners.installationId, Number(installationId.toString())),
+      )
+      .limit(1)
+
+    const owner = ownerResult[0]
 
     if (!owner) {
       logger.warn('Owner not found for installation_targets event', {
@@ -69,15 +73,14 @@ export const installationTargetsHandler: WebhookHandler = async ({
 
     // Update the owner's login
     await db
-      .updateTable('owners')
+      .update(schema.owners)
       .set({
         login: newLogin,
         name: data.account.name ?? null,
         avatarUrl: data.account.avatar_url ?? null,
         htmlUrl: data.account.html_url ?? null,
       })
-      .where('id', '=', owner.id)
-      .execute()
+      .where(eq(schema.owners.id, owner.id))
 
     logger.info('Updated owner login from installation_targets rename event', {
       deliveryId,
@@ -99,6 +102,6 @@ export const installationTargetsHandler: WebhookHandler = async ({
     )
     throw error
   } finally {
-    await db.destroy()
+    await db.$client.end()
   }
 }

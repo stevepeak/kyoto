@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import * as Sentry from '@sentry/node'
 import { logger, task } from '@trigger.dev/sdk'
@@ -27,7 +27,7 @@ import {
   getRepoRecord,
   getStories,
 } from './setup'
-import { type RunCiPayload } from './types'
+import { type RunCiPayload, type StoryRow } from './types'
 
 export const runCiTask = task({
   id: 'run-ci',
@@ -37,7 +37,7 @@ export const runCiTask = task({
     })
 
     const env = getConfig()
-    const db = setupDb(env.DATABASE_URL)
+    const db = createDb({ databaseUrl: env.DATABASE_URL })
 
     const branchName = getBranchName(payload)
     const repoRecord = await getRepoRecord(db, payload)
@@ -47,7 +47,11 @@ export const runCiTask = task({
       { payload, ctx },
     )
 
-    const stories = await getStories(db, repoRecord.repoId)
+    const storiesWithoutBranch = await getStories(db, repoRecord.repoId)
+    const stories: StoryRow[] = storiesWithoutBranch.map((story) => ({
+      ...story,
+      branchName,
+    }))
     const initialRunStories = buildInitialRunStories(stories)
     const { runStatus, runSummary } = getInitialRunMeta(stories)
 

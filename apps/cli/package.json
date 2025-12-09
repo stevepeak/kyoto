@@ -5,7 +5,7 @@
   "private": true,
   "description": "Kyoto",
   "bin": {
-    "kyoto": "./bin/run.js"
+    "kyoto": "./bin/dev.js"
   },
   "exports": {
     ".": "./dist/index.js"
@@ -25,12 +25,10 @@
     "@app/vectra": "workspace:^",
     "@oclif/core": "catalog:",
     "@openrouter/ai-sdk-provider": "catalog:",
-    "@sentry/bun": "catalog:",
     "ai": "catalog:",
     "chalk": "catalog:",
     "execa": "catalog:",
     "inquirer": "^13.0.2",
-    "object-treeify": "catalog:",
     "ora": "catalog:",
     "terminal-link": "catalog:",
     "zod": "catalog:"

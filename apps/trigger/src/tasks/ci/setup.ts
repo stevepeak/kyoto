@@ -1,4 +1,4 @@
-import { type RunStory, sql } from '@app/db'
+import { and, eq, type RunStory, schema, sql } from '@app/db'
 
 import { type GitAuthor } from '../../helpers/github'
 import {
@@ -17,18 +17,24 @@ export async function getRepoRecord(
   db: DbClient,
   payload: RunCiPayload,
 ): Promise<RepoRecord> {
-  const repoRecord = await db
-    .selectFrom('repos')
-    .innerJoin('owners', 'repos.ownerId', 'owners.id')
-    .select([
-      'repos.id as repoId',
-      'repos.defaultBranch as defaultBranch',
-      'repos.name as repoName',
-      'owners.login as ownerLogin',
-    ])
-    .where('owners.login', '=', payload.orgName)
-    .where('repos.name', '=', payload.repoName)
-    .executeTakeFirst()
+  const repoRecords = await db
+    .select({
+      repoId: schema.repos.id,
+      defaultBranch: schema.repos.defaultBranch,
+      repoName: schema.repos.name,
+      ownerLogin: schema.owners.login,
+    })
+    .from(schema.repos)
+    .innerJoin(schema.owners, eq(schema.repos.ownerId, schema.owners.id))
+    .where(
+      and(
+        eq(schema.owners.login, payload.orgName),
+        eq(schema.repos.name, payload.repoName),
+      ),
+    )
+    .limit(1)
+
+  const repoRecord = repoRecords[0]
 
   if (!repoRecord) {
     throw new Error(
@@ -42,14 +48,20 @@ export async function getRepoRecord(
 export async function getStories(
   db: DbClient,
   repoId: string,
-): Promise<StoryRow[]> {
-  const storiesQuery = db
-    .selectFrom('stories')
-    .select(['id', 'name', 'story'])
-    .where('repoId', '=', repoId)
-    .where('state', '=', 'active')
-
-  return (await storiesQuery.execute()) as StoryRow[]
+): Promise<Omit<StoryRow, 'branchName'>[]> {
+  return await db
+    .select({
+      id: schema.stories.id,
+      name: schema.stories.name,
+      story: schema.stories.story,
+    })
+    .from(schema.stories)
+    .where(
+      and(
+        eq(schema.stories.repoId, repoId),
+        eq(schema.stories.state, 'active'),
+      ),
+    )
 }
 
 export function buildInitialRunStories(stories: StoryRow[]): RunStory[] {
@@ -116,34 +128,34 @@ export async function createRunRecord({
         }
       : null
 
-  const insertedRun = await sql<RunInsert>`
-      INSERT INTO public.runs (
-        repo_id,
-        branch_name,
-        status,
-        stories,
-        commit_sha,
-        commit_message,
-        pr_number,
-        summary,
-        git_author,
-        ext_trigger_dev
-      ) VALUES (
-        ${repoId},
-        ${branchName},
-        ${runStatus},
-        ${JSON.stringify(initialRunStories)}::jsonb,
-        ${commitSha},
-        ${commitMessage},
-        ${prNumber},
-        ${runSummary},
-        ${gitAuthorJson ? sql`${JSON.stringify(gitAuthorJson)}::jsonb` : sql`NULL`},
-        ${extTriggerDev ? sql`${JSON.stringify(extTriggerDev)}::jsonb` : sql`NULL`}
-      )
-      RETURNING id, number
-    `.execute(db)
+  // Calculate the next run number for this repo
+  const maxNumberResult = await db
+    .select({
+      maxNumber: sql<number>`max(${schema.runs.number})`.as('maxNumber'),
+    })
+    .from(schema.runs)
+    .where(eq(schema.runs.repoId, repoId))
 
-  const runInsert = insertedRun.rows[0]
+  const nextNumber = (maxNumberResult[0]?.maxNumber ?? 0) + 1
+
+  const insertedRuns = await db
+    .insert(schema.runs)
+    .values({
+      repoId,
+      branchName,
+      status: runStatus,
+      stories: initialRunStories,
+      commitSha,
+      commitMessage,
+      prNumber,
+      summary: runSummary,
+      gitAuthor: gitAuthorJson,
+      extTriggerDev,
+      number: nextNumber,
+    })
+    .returning({ id: schema.runs.id, number: schema.runs.number })
+
+  const runInsert = insertedRuns[0]
 
   if (!runInsert) {
     throw new Error('Failed to create run record')

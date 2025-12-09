@@ -1,52 +1,93 @@
-import { type DB, type Owner, type Repo, type Story } from '@app/db/types'
+import { and, type DB, eq, schema } from '@app/db'
 import { TRPCError } from '@trpc/server'
-import { type Kysely, type Selectable } from 'kysely'
+
+type Owner = typeof schema.owners.$inferSelect
+type Repo = typeof schema.repos.$inferSelect
+type Story = typeof schema.stories.$inferSelect
 
 interface WithUserId {
   userId: string
 }
 
 export async function findOwnerForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { orgName: string },
-): Promise<Selectable<Owner> | null> {
-  const owner = await db
-    .selectFrom('owners')
-    .innerJoin('ownerMemberships', 'ownerMemberships.ownerId', 'owners.id')
-    .selectAll('owners')
-    .where('owners.login', '=', params.orgName)
-    .where('ownerMemberships.userId', '=', params.userId)
-    .executeTakeFirst()
+): Promise<Owner | null> {
+  const results = await db
+    .select({
+      id: schema.owners.id,
+      createdAt: schema.owners.createdAt,
+      updatedAt: schema.owners.updatedAt,
+      externalId: schema.owners.externalId,
+      login: schema.owners.login,
+      name: schema.owners.name,
+      type: schema.owners.type,
+      avatarUrl: schema.owners.avatarUrl,
+      htmlUrl: schema.owners.htmlUrl,
+      installationId: schema.owners.installationId,
+    })
+    .from(schema.owners)
+    .innerJoin(
+      schema.ownerMemberships,
+      eq(schema.ownerMemberships.ownerId, schema.owners.id),
+    )
+    .where(
+      and(
+        eq(schema.owners.login, params.orgName),
+        eq(schema.ownerMemberships.userId, params.userId),
+      ),
+    )
+    .limit(1)
 
-  return owner ?? null
+  return results[0] ?? null
 }
 
 export async function findRepoForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { orgName: string; repoName: string },
-): Promise<Selectable<Repo> | null> {
-  const repo = await db
-    .selectFrom('repos')
-    .innerJoin('owners', 'owners.id', 'repos.ownerId')
-    .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
-    .innerJoin('ownerMemberships', (join) =>
-      join
-        .onRef('ownerMemberships.ownerId', '=', 'repos.ownerId')
-        .onRef('ownerMemberships.userId', '=', 'repoMemberships.userId'),
+): Promise<Repo | null> {
+  const results = await db
+    .select({
+      id: schema.repos.id,
+      ownerId: schema.repos.ownerId,
+      createdAt: schema.repos.createdAt,
+      updatedAt: schema.repos.updatedAt,
+      externalId: schema.repos.externalId,
+      name: schema.repos.name,
+      fullName: schema.repos.fullName,
+      private: schema.repos.private,
+      description: schema.repos.description,
+      defaultBranch: schema.repos.defaultBranch,
+      htmlUrl: schema.repos.htmlUrl,
+      enabled: schema.repos.enabled,
+    })
+    .from(schema.repos)
+    .innerJoin(schema.owners, eq(schema.owners.id, schema.repos.ownerId))
+    .innerJoin(
+      schema.repoMemberships,
+      eq(schema.repoMemberships.repoId, schema.repos.id),
     )
-    .selectAll('repos')
-    .where('owners.login', '=', params.orgName)
-    .where('repos.name', '=', params.repoName)
-    .where('repoMemberships.userId', '=', params.userId)
-    .executeTakeFirst()
+    .innerJoin(
+      schema.ownerMemberships,
+      eq(schema.ownerMemberships.ownerId, schema.repos.ownerId),
+    )
+    .where(
+      and(
+        eq(schema.repos.name, params.repoName),
+        eq(schema.owners.login, params.orgName),
+        eq(schema.repoMemberships.userId, params.userId),
+        eq(schema.ownerMemberships.userId, params.userId),
+      ),
+    )
+    .limit(1)
 
-  return repo ?? null
+  return results[0] ?? null
 }
 
 export async function requireRepoForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { orgName: string; repoName: string },
-): Promise<Selectable<Repo>> {
+): Promise<Repo> {
   const repo = await findRepoForUser(db, params)
 
   if (!repo) {
@@ -60,31 +101,51 @@ export async function requireRepoForUser(
 }
 
 export async function findStoryForUser(
-  db: Kysely<DB>,
+  db: DB,
   params: WithUserId & { storyId: string },
-): Promise<{ story: Selectable<Story>; repo: Selectable<Repo> } | null> {
-  const story = await db
-    .selectFrom('stories')
-    .selectAll()
-    .where('stories.id', '=', params.storyId)
-    .executeTakeFirst()
+): Promise<{ story: Story; repo: Repo } | null> {
+  const story = await db.query.stories.findFirst({
+    where: (stories, { eq }) => eq(stories.id, params.storyId),
+  })
 
   if (!story) {
     return null
   }
 
-  const repo = await db
-    .selectFrom('repos')
-    .innerJoin('repoMemberships', 'repoMemberships.repoId', 'repos.id')
-    .innerJoin('ownerMemberships', (join) =>
-      join
-        .onRef('ownerMemberships.ownerId', '=', 'repos.ownerId')
-        .onRef('ownerMemberships.userId', '=', 'repoMemberships.userId'),
+  const results = await db
+    .select({
+      id: schema.repos.id,
+      ownerId: schema.repos.ownerId,
+      createdAt: schema.repos.createdAt,
+      updatedAt: schema.repos.updatedAt,
+      externalId: schema.repos.externalId,
+      name: schema.repos.name,
+      fullName: schema.repos.fullName,
+      private: schema.repos.private,
+      description: schema.repos.description,
+      defaultBranch: schema.repos.defaultBranch,
+      htmlUrl: schema.repos.htmlUrl,
+      enabled: schema.repos.enabled,
+    })
+    .from(schema.repos)
+    .innerJoin(
+      schema.repoMemberships,
+      eq(schema.repoMemberships.repoId, schema.repos.id),
     )
-    .selectAll('repos')
-    .where('repos.id', '=', story.repoId)
-    .where('repoMemberships.userId', '=', params.userId)
-    .executeTakeFirst()
+    .innerJoin(
+      schema.ownerMemberships,
+      eq(schema.ownerMemberships.ownerId, schema.repos.ownerId),
+    )
+    .where(
+      and(
+        eq(schema.repos.id, story.repoId),
+        eq(schema.repoMemberships.userId, params.userId),
+        eq(schema.ownerMemberships.userId, params.userId),
+      ),
+    )
+    .limit(1)
+
+  const repo = results[0]
 
   if (!repo) {
     return null

@@ -1,5 +1,5 @@
-import { getUser, getUserGithubLogin } from '../helpers/users.js'
-import { protectedProcedure, router } from '../trpc.js'
+import { getUser, getUserGithubLogin } from '../helpers/users'
+import { protectedProcedure, router } from '../trpc'
 
 export const userRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {

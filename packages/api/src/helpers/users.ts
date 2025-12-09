@@ -1,8 +1,8 @@
-import { type DB, type User } from '@app/db/types'
-import { type Kysely, type Selectable, sql } from 'kysely'
+import { type DB, eq, schema } from '@app/db'
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
-import { trpcNotFoundError } from './kysely-trprc.js'
+import { type User } from '../context'
 
 /**
  * Retrieves a user by ID
@@ -15,29 +15,38 @@ export async function getUser({
   db,
   userId,
 }: {
-  db: Kysely<DB>
+  db: DB
   userId: string
-}): Promise<Selectable<User>> {
-  return await db
-    .selectFrom('user')
-    .where('id', '=', userId)
-    .selectAll()
-    .executeTakeFirstOrThrow(trpcNotFoundError)
+}): Promise<User> {
+  const user = await db.query.user.findFirst({
+    where: (user, { eq }) => eq(user.id, userId),
+  })
+
+  if (!user) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'User not found',
+    })
+  }
+
+  return user
 }
 
 export async function getUserGithubLogin({
   db,
   userId,
 }: {
-  db: Kysely<DB>
+  db: DB
   userId: string
 }): Promise<string | null> {
-  const githubAccount = await db
-    .selectFrom('account')
-    .select(['accountId', 'accessToken'])
-    .where('userId', '=', userId)
-    .where('providerId', '=', 'github')
-    .executeTakeFirst()
+  const githubAccount = await db.query.account.findFirst({
+    where: (account, { and, eq }) =>
+      and(eq(account.userId, userId), eq(account.providerId, 'github')),
+    columns: {
+      accountId: true,
+      accessToken: true,
+    },
+  })
 
   if (!githubAccount?.accountId) {
     return null
@@ -49,13 +58,18 @@ export async function getUserGithubLogin({
     return null
   }
 
-  const owner = await db
-    .selectFrom('owners')
-    .select('login')
-    .where(
-      sql<boolean>`owners.external_id = CAST(${trimmedAccountId} AS bigint)`,
-    )
-    .executeTakeFirst()
+  const externalId = Number.parseInt(trimmedAccountId, 10)
+
+  if (!Number.isFinite(externalId)) {
+    return null
+  }
+
+  const owner = await db.query.owners.findFirst({
+    where: eq(schema.owners.externalId, externalId),
+    columns: {
+      login: true,
+    },
+  })
 
   if (owner?.login) {
     return owner.login

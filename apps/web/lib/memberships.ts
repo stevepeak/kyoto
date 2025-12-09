@@ -1,5 +1,4 @@
-import { type Owner, type Repo, schema } from '@app/db'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, type Owner, type Repo, schema } from '@app/db'
 
 import { db } from '@/lib/db'
 

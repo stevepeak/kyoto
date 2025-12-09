@@ -8,8 +8,8 @@ import { TRPCError } from '@trpc/server'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { getUserGithubLogin } from '../helpers/users.js'
-import { protectedProcedure, router } from '../trpc.js'
+import { getUserGithubLogin } from '../helpers/users'
+import { protectedProcedure, router } from '../trpc'
 
 const submitFeedbackInputSchema = z.object({
   feedback: z.string().min(1, 'Feedback is required'),

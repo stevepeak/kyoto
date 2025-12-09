@@ -16,8 +16,7 @@
   "dependencies": {
     "@app/db": "workspace:*",
     "@app/schemas": "workspace:*",
-    "@daytonaio/sdk": "catalog:",
-    "kysely": "catalog:"
+    "@daytonaio/sdk": "catalog:"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",

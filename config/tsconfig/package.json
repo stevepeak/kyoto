@@ -6,6 +6,7 @@
     "bun.json"
   ],
   "devDependencies": {
+    "@dexaai/config": "^0.0.10",
     "typescript": "catalog:"
   },
   "publishConfig": {

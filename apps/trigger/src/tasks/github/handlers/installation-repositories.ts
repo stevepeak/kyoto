@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb, eq, schema } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import { logger } from '@trigger.dev/sdk'
 
@@ -26,14 +26,16 @@ export const installationRepositoriesHandler: WebhookHandler = async ({
   const installationIdValue = installationId.toString()
 
   const env = getConfig()
-  const db = setupDb(env.DATABASE_URL)
+  const db = createDb({ databaseUrl: env.DATABASE_URL })
 
   try {
-    const owner = await db
-      .selectFrom('owners')
-      .select(['id', 'login'])
-      .where('installationId', '=', installationIdValue)
-      .executeTakeFirst()
+    const ownerResult = await db
+      .select({ id: schema.owners.id, login: schema.owners.login })
+      .from(schema.owners)
+      .where(eq(schema.owners.installationId, Number(installationIdValue)))
+      .limit(1)
+
+    const owner = ownerResult[0]
 
     if (!owner) {
       logger.warn('Owner not found for installation_repositories event', {
@@ -133,6 +135,6 @@ export const installationRepositoriesHandler: WebhookHandler = async ({
       repositoriesRemoved: repositoriesRemoved.length,
     })
   } finally {
-    await db.destroy()
+    await db.$client.end()
   }
 }

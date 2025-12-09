@@ -7,7 +7,6 @@ export default class Vibe extends Command {
 
   static override examples = ['$ kyoto vibe']
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   override async run(): Promise<void> {
     await this.parse(Vibe)
 

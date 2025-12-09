@@ -1,10 +1,10 @@
-import { type setupDb } from '@app/db'
+import { and, type createDb, eq, inArray, notInArray, schema } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
 import { type AccountPayload, type RepositoryPayload } from './schemas'
 import { parseId, resolveAccountExternalId, toNullableString } from './utils'
 
-type DbClient = ReturnType<typeof setupDb>
+type DbClient = ReturnType<typeof createDb>
 
 function normalizeGithubAccountId(
   accountId: string | number | bigint | null | undefined,
@@ -39,11 +39,14 @@ export async function findUserIdsByGithubAccountId(
   ])
 
   const accounts = await db
-    .selectFrom('account')
-    .select('userId')
-    .where('providerId', '=', 'github')
-    .where('accountId', 'in', Array.from(candidateIds))
-    .execute()
+    .select({ userId: schema.account.userId })
+    .from(schema.account)
+    .where(
+      and(
+        eq(schema.account.providerId, 'github'),
+        inArray(schema.account.accountId, Array.from(candidateIds)),
+      ),
+    )
 
   return Array.from(new Set(accounts.map((account) => account.userId)))
 }
@@ -61,7 +64,7 @@ export async function ensureOwnerMemberships(
   const role = params.role ?? 'member'
 
   await db
-    .insertInto('ownerMemberships')
+    .insert(schema.ownerMemberships)
     .values(
       uniqueUserIds.map((userId) => ({
         ownerId: params.ownerId,
@@ -69,12 +72,12 @@ export async function ensureOwnerMemberships(
         role,
       })),
     )
-    .onConflict((oc) =>
-      oc.columns(['ownerId', 'userId']).doUpdateSet({
+    .onConflictDoUpdate({
+      target: [schema.ownerMemberships.ownerId, schema.ownerMemberships.userId],
+      set: {
         role,
-      }),
-    )
-    .execute()
+      },
+    })
 }
 
 export async function ensureRepoMemberships(
@@ -95,7 +98,7 @@ export async function ensureRepoMemberships(
   const role = params.role ?? 'member'
 
   await db
-    .insertInto('repoMemberships')
+    .insert(schema.repoMemberships)
     .values(
       uniqueRepoIds.flatMap((repoId) =>
         uniqueUserIds.map((userId) => ({
@@ -105,12 +108,12 @@ export async function ensureRepoMemberships(
         })),
       ),
     )
-    .onConflict((oc) =>
-      oc.columns(['repoId', 'userId']).doUpdateSet({
+    .onConflictDoUpdate({
+      target: [schema.repoMemberships.repoId, schema.repoMemberships.userId],
+      set: {
         role,
-      }),
-    )
-    .execute()
+      },
+    })
 }
 
 export async function removeRepoMemberships(
@@ -123,15 +126,18 @@ export async function removeRepoMemberships(
     return
   }
 
-  let query = db
-    .deleteFrom('repoMemberships')
-    .where('repoId', 'in', uniqueRepoIds)
+  const conditions = [inArray(schema.repoMemberships.repoId, uniqueRepoIds)]
 
   if (params.userIds && params.userIds.length > 0) {
-    query = query.where('userId', 'in', Array.from(new Set(params.userIds)))
+    conditions.push(
+      inArray(
+        schema.repoMemberships.userId,
+        Array.from(new Set(params.userIds)),
+      ),
+    )
   }
 
-  await query.execute()
+  await db.delete(schema.repoMemberships).where(and(...conditions))
 }
 
 export async function pruneRepoMemberships(
@@ -145,34 +151,37 @@ export async function pruneRepoMemberships(
     return
   }
 
-  const baseQuery = db
-    .deleteFrom('repoMemberships')
-    .where('repoId', 'in', uniqueRepoIds)
+  const conditions = [inArray(schema.repoMemberships.repoId, uniqueRepoIds)]
 
-  if (keepUserIds.length === 0) {
-    await baseQuery.execute()
-    return
+  if (keepUserIds.length > 0) {
+    conditions.push(notInArray(schema.repoMemberships.userId, keepUserIds))
   }
 
-  await baseQuery.where('userId', 'not in', keepUserIds).execute()
+  await db.delete(schema.repoMemberships).where(and(...conditions))
 }
 
 export async function removeAllMembershipsForOwner(
   db: DbClient,
   ownerId: string,
 ): Promise<void> {
-  await db.transaction().execute(async (trx) => {
-    await trx
-      .deleteFrom('repoMemberships')
-      .where('repoId', 'in', (qb) =>
-        qb.selectFrom('repos').select('id').where('ownerId', '=', ownerId),
+  await db.transaction(async (trx) => {
+    const repoIds = await trx
+      .select({ id: schema.repos.id })
+      .from(schema.repos)
+      .where(eq(schema.repos.ownerId, ownerId))
+
+    if (repoIds.length > 0) {
+      await trx.delete(schema.repoMemberships).where(
+        inArray(
+          schema.repoMemberships.repoId,
+          repoIds.map((r) => r.id),
+        ),
       )
-      .execute()
+    }
 
     await trx
-      .deleteFrom('ownerMemberships')
-      .where('ownerId', '=', ownerId)
-      .execute()
+      .delete(schema.ownerMemberships)
+      .where(eq(schema.ownerMemberships.ownerId, ownerId))
   })
 }
 
@@ -182,16 +191,13 @@ export async function pruneOwnerMemberships(
 ): Promise<void> {
   const keepUserIds = Array.from(new Set(params.keepUserIds))
 
-  const baseQuery = db
-    .deleteFrom('ownerMemberships')
-    .where('ownerId', '=', params.ownerId)
+  const conditions = [eq(schema.ownerMemberships.ownerId, params.ownerId)]
 
-  if (keepUserIds.length === 0) {
-    await baseQuery.execute()
-    return
+  if (keepUserIds.length > 0) {
+    conditions.push(notInArray(schema.ownerMemberships.userId, keepUserIds))
   }
 
-  await baseQuery.where('userId', 'not in', keepUserIds).execute()
+  await db.delete(schema.ownerMemberships).where(and(...conditions))
 }
 
 export async function listOwnerMemberUserIds(
@@ -199,10 +205,9 @@ export async function listOwnerMemberUserIds(
   ownerId: string,
 ): Promise<string[]> {
   const rows = await db
-    .selectFrom('ownerMemberships')
-    .select('userId')
-    .where('ownerId', '=', ownerId)
-    .execute()
+    .select({ userId: schema.ownerMemberships.userId })
+    .from(schema.ownerMemberships)
+    .where(eq(schema.ownerMemberships.ownerId, ownerId))
 
   return rows.map((row) => row.userId)
 }
@@ -224,11 +229,14 @@ export async function findRepoIdsByNames(
   }
 
   const rows = await db
-    .selectFrom('repos')
-    .select('id')
-    .where('ownerId', '=', params.ownerId)
-    .where('name', 'in', uniqueNames)
-    .execute()
+    .select({ id: schema.repos.id })
+    .from(schema.repos)
+    .where(
+      and(
+        eq(schema.repos.ownerId, params.ownerId),
+        inArray(schema.repos.name, uniqueNames),
+      ),
+    )
 
   return rows.map((row) => row.id)
 }
@@ -238,10 +246,9 @@ export async function findRepoIdsByOwnerId(
   ownerId: string,
 ): Promise<string[]> {
   const rows = await db
-    .selectFrom('repos')
-    .select('id')
-    .where('ownerId', '=', ownerId)
-    .execute()
+    .select({ id: schema.repos.id })
+    .from(schema.repos)
+    .where(eq(schema.repos.ownerId, ownerId))
 
   return rows.map((row) => row.id)
 }
@@ -260,36 +267,45 @@ export async function findRepoByOwnerAndName(
   params: { ownerLogin: string; repoName: string },
 ): Promise<RepoLookupResult | null> {
   const repoRecord = await db
-    .selectFrom('repos')
-    .innerJoin('owners', 'repos.ownerId', 'owners.id')
-    .select([
-      'repos.id as repoId',
-      'repos.ownerId as ownerId',
-      'repos.name as repoName',
-      'repos.defaultBranch as defaultBranch',
-      'repos.enabled as enabled',
-      'owners.login as ownerLogin',
-    ])
-    .where('owners.login', '=', params.ownerLogin)
-    .where('repos.name', '=', params.repoName)
-    .executeTakeFirst()
+    .select({
+      repoId: schema.repos.id,
+      ownerId: schema.repos.ownerId,
+      repoName: schema.repos.name,
+      defaultBranch: schema.repos.defaultBranch,
+      enabled: schema.repos.enabled,
+      ownerLogin: schema.owners.login,
+    })
+    .from(schema.repos)
+    .innerJoin(schema.owners, eq(schema.repos.ownerId, schema.owners.id))
+    .where(
+      and(
+        eq(schema.owners.login, params.ownerLogin),
+        eq(schema.repos.name, params.repoName),
+      ),
+    )
+    .limit(1)
 
-  return repoRecord ?? null
+  const result = repoRecord[0]
+  return result ?? null
 }
 
 export async function findActiveRunForPr(
   db: DbClient,
   params: { repoId: string; prNumber: string },
 ): Promise<{ id: string } | null> {
-  const run = await db
-    .selectFrom('runs')
-    .select(['id'])
-    .where('repoId', '=', params.repoId)
-    .where('prNumber', '=', params.prNumber)
-    .where('status', '=', 'running')
-    .executeTakeFirst()
+  const runs = await db
+    .select({ id: schema.runs.id })
+    .from(schema.runs)
+    .where(
+      and(
+        eq(schema.runs.repoId, params.repoId),
+        eq(schema.runs.prNumber, params.prNumber),
+        eq(schema.runs.status, 'running'),
+      ),
+    )
+    .limit(1)
 
-  return run ?? null
+  return runs[0] ?? null
 }
 
 export async function upsertOwnerRecord(
@@ -305,30 +321,35 @@ export async function upsertOwnerRecord(
   const htmlUrl = toNullableString(params.account.html_url ?? null)
   const externalId = resolveAccountExternalId(params.account)
 
-  const owner = await db
-    .insertInto('owners')
+  const owners = await db
+    .insert(schema.owners)
     .values({
       login: params.account.login,
       name: accountName,
       type: accountType,
       avatarUrl,
       htmlUrl,
-      externalId,
-      installationId: params.installationId,
+      externalId: externalId ? Number(externalId) : null,
+      installationId: params.installationId
+        ? Number(params.installationId)
+        : null,
     })
-    .onConflict((oc) =>
-      oc.column('login').doUpdateSet({
+    .onConflictDoUpdate({
+      target: schema.owners.login,
+      set: {
         name: accountName,
         type: accountType,
         avatarUrl,
         htmlUrl,
-        externalId,
-        installationId: params.installationId,
-      }),
-    )
-    .returning(['id', 'login'])
-    .executeTakeFirst()
+        externalId: externalId ? Number(externalId) : null,
+        installationId: params.installationId
+          ? Number(params.installationId)
+          : null,
+      },
+    })
+    .returning({ id: schema.owners.id, login: schema.owners.login })
 
+  const owner = owners[0]
   if (!owner) {
     throw new Error('Failed to upsert owner record')
   }
@@ -348,16 +369,16 @@ export async function upsertRepositories(
     return
   }
 
-  await db.transaction().execute(async (trx) => {
+  await db.transaction(async (trx) => {
     for (const repo of params.repositories) {
       const externalId =
         repo.id === undefined ? null : parseId(repo.id, 'repository.id')
 
       await trx
-        .insertInto('repos')
+        .insert(schema.repos)
         .values({
           ownerId: params.ownerId,
-          externalId,
+          externalId: externalId ? Number(externalId) : null,
           name: repo.name,
           fullName: repo.full_name ?? null,
           description: repo.description ?? null,
@@ -366,18 +387,18 @@ export async function upsertRepositories(
           private: repo.private ?? false,
           enabled: params.enabled,
         })
-        .onConflict((oc) =>
-          oc.columns(['ownerId', 'name']).doUpdateSet({
-            externalId,
+        .onConflictDoUpdate({
+          target: [schema.repos.ownerId, schema.repos.name],
+          set: {
+            externalId: externalId ? Number(externalId) : null,
             fullName: repo.full_name ?? null,
             description: repo.description ?? null,
             defaultBranch: repo.default_branch ?? null,
             htmlUrl: repo.html_url ?? null,
             private: repo.private ?? false,
             enabled: params.enabled,
-          }),
-        )
-        .execute()
+          },
+        })
     }
   })
 }
@@ -399,7 +420,7 @@ export async function disableRepositories(
   for (const repo of params.repositories) {
     if (repo.id !== undefined) {
       try {
-        externalIds.push(parseId(repo.id, 'repository.id').toString())
+        externalIds.push(Number(parseId(repo.id, 'repository.id')).toString())
         continue
       } catch (error) {
         logger.warn('Failed to parse repository id when disabling repo', {
@@ -413,25 +434,34 @@ export async function disableRepositories(
     names.add(repo.name)
   }
 
-  await db.transaction().execute(async (trx) => {
+  await db.transaction(async (trx) => {
     if (externalIds.length > 0) {
       await trx
-        .updateTable('repos')
+        .update(schema.repos)
         .set({ enabled: false })
-        .where('ownerId', '=', params.ownerId)
-        .where('externalId', 'in', externalIds)
-        .execute()
+        .where(
+          and(
+            eq(schema.repos.ownerId, params.ownerId),
+            inArray(
+              schema.repos.externalId,
+              externalIds.map((id) => Number(id)),
+            ),
+          ),
+        )
     }
 
     const nameList = Array.from(names)
 
     if (nameList.length > 0) {
       await trx
-        .updateTable('repos')
+        .update(schema.repos)
         .set({ enabled: false })
-        .where('ownerId', '=', params.ownerId)
-        .where('name', 'in', nameList)
-        .execute()
+        .where(
+          and(
+            eq(schema.repos.ownerId, params.ownerId),
+            inArray(schema.repos.name, nameList),
+          ),
+        )
     }
   })
 }
@@ -441,27 +471,24 @@ export async function setRepositoriesEnabledForOwner(
   params: { ownerId: string; enabled: boolean },
 ): Promise<void> {
   await db
-    .updateTable('repos')
+    .update(schema.repos)
     .set({ enabled: params.enabled })
-    .where('ownerId', '=', params.ownerId)
-    .execute()
+    .where(eq(schema.repos.ownerId, params.ownerId))
 }
 
 export async function disableAllReposAndClearInstallation(
   db: DbClient,
   ownerId: string,
 ): Promise<void> {
-  await db.transaction().execute(async (trx) => {
+  await db.transaction(async (trx) => {
     await trx
-      .updateTable('repos')
+      .update(schema.repos)
       .set({ enabled: false })
-      .where('ownerId', '=', ownerId)
-      .execute()
+      .where(eq(schema.repos.ownerId, ownerId))
 
     await trx
-      .updateTable('owners')
+      .update(schema.owners)
       .set({ installationId: null })
-      .where('id', '=', ownerId)
-      .execute()
+      .where(eq(schema.owners.id, ownerId))
   })
 }

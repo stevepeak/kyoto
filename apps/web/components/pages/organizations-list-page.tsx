@@ -1,5 +1,14 @@
+'use client'
+
 import { type Owner } from '@app/db'
+import { RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { useTriggerRun } from '@/hooks/use-trigger-run'
+import { useTRPC } from '@/lib/trpc-client'
 
 interface OrganizationsListPageProps {
   organizations: Owner[]
@@ -7,17 +16,71 @@ interface OrganizationsListPageProps {
 
 export function OrganizationsListPage(props: OrganizationsListPageProps) {
   const { organizations } = props
+  const router = useRouter()
+  const trpc = useTRPC()
+  const [triggerHandle, setTriggerHandle] = useState<{
+    runId: string
+    publicAccessToken: string
+  } | null>(null)
+
+  const { isLoading } = useTriggerRun({
+    runId: triggerHandle?.runId ?? null,
+    publicAccessToken: triggerHandle?.publicAccessToken ?? null,
+    toastMessages: {
+      onProgress: () => 'Syncing organizations from GitHub...',
+      onSuccess: 'Organizations synced successfully! 🎉',
+      onError: (error) =>
+        `Sync failed: ${error instanceof Error ? error.message : String(error)}`,
+    },
+    onComplete: () => {
+      setTriggerHandle(null)
+      router.refresh()
+    },
+    onError: () => {
+      setTriggerHandle(null)
+    },
+  })
+
+  const syncMutation = trpc.trigger.syncInstallations.useMutation({
+    onSuccess: (data) => {
+      if (data.success && data.triggerHandle) {
+        setTriggerHandle({
+          runId: data.triggerHandle.id,
+          publicAccessToken: data.triggerHandle.publicAccessToken,
+        })
+      } else {
+        router.refresh()
+      }
+    },
+  })
+
+  const handleRefresh = () => {
+    syncMutation.mutate()
+  }
+
+  const isRefreshing = syncMutation.isPending || isLoading
 
   return (
     <div className="container mx-auto min-h-screen py-12">
       <div className="space-y-8">
-        <div>
-          <h1 className="font-cormorant text-5xl font-semibold">
-            Your Organizations
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Organizations you have access to
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-cormorant text-5xl font-semibold">
+              Your Organizations
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              Organizations you have access to
+            </p>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? 'Syncing...' : 'Sync from GitHub'}
+          </Button>
         </div>
 
         {organizations.length === 0 ? (

@@ -135,7 +135,7 @@ export type RawStoryInput = z.infer<typeof rawStoryInputSchema>
  * Raw story as stored in the database.
  * This is the persisted form of the raw story.
  */
-export const storedStorySchema = rawStoryInputSchema.extend({
+const storedStorySchema = rawStoryInputSchema.extend({
   id: z.string().uuid(),
   repoId: z.string().uuid(),
   createdAt: z.date(),

@@ -14,12 +14,7 @@
     "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@app/config": "workspace:*",
-    "@app/shell": "workspace:*",
-    "ai": "catalog:",
-    "openai": "catalog:",
-    "vectra": "catalog:",
-    "zod": "catalog:"
+    "vectra": "catalog:"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",

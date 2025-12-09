@@ -21,14 +21,13 @@
   },
   "dependencies": {
     "@app/config": "workspace:*",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "catalog:",
     "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "drizzle-kit": "^0.31.8",
-    "tsx": "^4.19.2",
     "tsconfig": "workspace:*",
     "typescript": "catalog:"
   }

@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
 import { runCiTask } from '../../ci/main'
@@ -69,7 +69,7 @@ export const pullRequestHandler: WebhookHandler = async ({
 
   const prNumber = String(parsed.data.number ?? parsed.data.pull_request.number)
   const env = getConfig()
-  const db = setupDb(env.DATABASE_URL)
+  const db = createDb({ databaseUrl: env.DATABASE_URL })
 
   try {
     const repoRecord = await findRepoByOwnerAndName(db, {
@@ -153,6 +153,6 @@ export const pullRequestHandler: WebhookHandler = async ({
     })
     throw error
   } finally {
-    await db.destroy()
+    await db.$client.end()
   }
 }

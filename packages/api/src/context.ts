@@ -1,8 +1,5 @@
 import { type ParsedEnv } from '@app/config'
-import { type DB, type User } from '@app/db/types'
-// Define a placeholder Session type based on better-auth structure
-// You might need to refine this based on the actual structure
-import { type Kysely, type Selectable } from 'kysely'
+import { type DB, type schema } from '@app/db'
 
 // Placeholder: Define structure based on docs (user object within session)
 export interface SessionUser {
@@ -15,9 +12,11 @@ export interface Session {
   // Add other relevant session properties if known
 }
 
+export type User = typeof schema.user.$inferSelect
+
 export interface Context {
-  db: Kysely<DB>
+  db: DB
   env: ParsedEnv
   session: Session | null // Add session to the context
-  user: Selectable<User> | null
+  user: User | null
 }

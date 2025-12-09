@@ -10,9 +10,6 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "build": "bun run build:clean && bun run build:compile",
-    "build:clean": "rm -rf dist",
-    "build:compile": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
@@ -26,7 +23,6 @@
     "@sentry/nextjs": "catalog:",
     "@trigger.dev/sdk": "catalog:",
     "@trpc/server": "catalog:",
-    "kysely": "catalog:",
     "superjson": "catalog:",
     "ts-dedent": "catalog:",
     "zod": "catalog:"

@@ -18,11 +18,9 @@
     "@app/config": "workspace:*",
     "@app/schemas": "workspace:*",
     "@app/shell": "workspace:*",
-    "@app/vectra": "workspace:*",
     "@opentelemetry/api": "catalog:",
     "ai": "catalog:",
     "openai": "catalog:",
-    "p-map": "catalog:",
     "ts-dedent": "catalog:",
     "zod": "catalog:",
     "zod-to-json-schema": "catalog:"

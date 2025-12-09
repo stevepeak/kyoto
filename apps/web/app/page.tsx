@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 
-import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
+import { useTRPC } from '@/lib/trpc-client'
 
 export default function HomePage() {
   const router = useRouter()
+  const trpc = useTRPC()
   const [triggerHandle, setTriggerHandle] = useState<{
     runId: string
     publicAccessToken: string
   } | null>(null)
-  const [isFetching, setIsFetching] = useState(false)
 
   // Keyboard shortcut: Cmd/Ctrl+Enter to navigate to /~
   useHotkeys('mod+enter', () => {
@@ -38,46 +38,28 @@ export default function HomePage() {
       // eslint-disable-next-line no-console
       console.log('Task completed:', output)
       setTriggerHandle(null)
-      setIsFetching(false)
     },
     onError: () => {
       setTriggerHandle(null)
-      setIsFetching(false)
     },
   })
 
-  const handleTriggerTask = async () => {
-    setIsFetching(true)
-    try {
-      const response = await fetch('/api/trigger/hello-world', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: 'Web2 User' }),
-      })
-
-      const data = await response.json()
-
+  const triggerMutation = trpc.trigger.helloWorld.useMutation({
+    onSuccess: (data) => {
       if (data.success && data.triggerHandle) {
         setTriggerHandle({
           runId: data.triggerHandle.id,
           publicAccessToken: data.triggerHandle.publicAccessToken,
         })
-        // Keep isFetching true - isLoading will take over
-      } else {
-        // eslint-disable-next-line no-console
-        console.error('Failed to trigger task:', data.error)
-        setIsFetching(false)
       }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error triggering task:', error)
-      setIsFetching(false)
-    }
+    },
+  })
+
+  const handleTriggerTask = () => {
+    triggerMutation.mutate({ name: 'Web2 User' })
   }
 
-  const isButtonDisabled = isFetching || isLoading
+  const isButtonDisabled = triggerMutation.isPending || isLoading
 
   return (
     <main className="container mx-auto min-h-screen py-12">
@@ -92,7 +74,6 @@ export default function HomePage() {
             'Trigger Hello World Task'
           )}
         </Button>
-        <Tiptap />
       </div>
     </main>
   )

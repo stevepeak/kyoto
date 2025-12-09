@@ -1,6 +1,6 @@
 import { agents } from '@app/agents'
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { and, createDb, eq, inArray, schema } from '@app/db'
 import {
   type Commit,
   type DiscoveryAgentOutput,
@@ -137,7 +137,7 @@ export const discoverStoriesFromCommitsTask = task({
     { ctx },
   ) => {
     const env = getConfig()
-    const db = setupDb(env.DATABASE_URL)
+    const db = createDb({ databaseUrl: env.DATABASE_URL })
 
     const { owner: ownerLogin, name: repoName } = repo
     const repoSlug = `${ownerLogin}/${repoName}`
@@ -343,13 +343,24 @@ export const discoverStoriesFromCommitsTask = task({
 
         if (allStoryIds.size > 0) {
           const storyRecords = await db
-            .selectFrom('stories')
-            .select(['id', 'name', 'story'])
-            .where('id', 'in', Array.from(allStoryIds))
-            .where('repoId', '=', repoRecord.repoId)
-            .execute()
+            .select({
+              id: schema.stories.id,
+              name: schema.stories.name,
+              story: schema.stories.story,
+            })
+            .from(schema.stories)
+            .where(
+              and(
+                inArray(schema.stories.id, Array.from(allStoryIds)),
+                eq(schema.stories.repoId, repoRecord.repoId),
+              ),
+            )
 
-          const storyRecordsMap = new Map(storyRecords.map((r) => [r.id, r]))
+          const storyRecordsMap = new Map(
+            storyRecords.map(
+              (r: { id: string; name: string; story: string }) => [r.id, r],
+            ),
+          )
 
           for (const [storyId, scopes] of storyIdToScopes.entries()) {
             const storyRecord = storyRecordsMap.get(storyId)
@@ -546,17 +557,16 @@ export const discoverStoriesFromCommitsTask = task({
           }))
 
           const insertedStories = await db
-            .insertInto('stories')
+            .insert(schema.stories)
             .values(storiesToInsert)
-            .returningAll()
-            .execute()
+            .returning()
 
           savedStories.push(...insertedStories)
 
           logger.info('Saved new stories to database', {
             repoSlug,
             savedCount: insertedStories.length,
-            storyIds: insertedStories.map((s) => s.id),
+            storyIds: insertedStories.map((s: { id: string }) => s.id),
           })
 
           void streams.append(
@@ -636,7 +646,7 @@ export const discoverStoriesFromCommitsTask = task({
       })
       throw error
     } finally {
-      await db.destroy()
+      await db.$client.end()
     }
   },
 })

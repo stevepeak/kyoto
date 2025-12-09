@@ -19,7 +19,7 @@ function getAppUrl(): string {
   return 'http://localhost:3002'
 }
 
-export const authClient = createAuthClient({
+const authClient = createAuthClient({
   baseURL: getAppUrl(),
 })
 

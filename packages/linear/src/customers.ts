@@ -57,8 +57,8 @@ export async function findOrCreateLinearCustomer(
       })
 
       if (findResponse.ok) {
-        const findResult: LinearGraphQLResponse<FindCustomerResponse> =
-          await findResponse.json()
+        const findResult =
+          (await findResponse.json()) as LinearGraphQLResponse<FindCustomerResponse>
         if (
           findResult.data?.customers.nodes &&
           findResult.data.customers.nodes.length > 0
@@ -97,8 +97,8 @@ export async function findOrCreateLinearCustomer(
         })
 
         if (domainFindResponse.ok) {
-          const domainFindResult: LinearGraphQLResponse<FindCustomerResponse> =
-            await domainFindResponse.json()
+          const domainFindResult =
+            (await domainFindResponse.json()) as LinearGraphQLResponse<FindCustomerResponse>
           if (
             domainFindResult.data?.customers.nodes &&
             domainFindResult.data.customers.nodes.length > 0
@@ -169,8 +169,8 @@ export async function findOrCreateLinearCustomer(
       }
     }
 
-    const result: LinearGraphQLResponse<CreateCustomerResponse> =
-      await response.json()
+    const result =
+      (await response.json()) as LinearGraphQLResponse<CreateCustomerResponse>
 
     if (result.errors && result.errors.length > 0) {
       const errorMessages = result.errors.map((e) => e.message).join(', ')
@@ -215,8 +215,8 @@ export async function findOrCreateLinearCustomer(
           })
 
           if (domainFindResponse.ok) {
-            const domainFindResult: LinearGraphQLResponse<FindCustomerResponse> =
-              await domainFindResponse.json()
+            const domainFindResult =
+              (await domainFindResponse.json()) as LinearGraphQLResponse<FindCustomerResponse>
 
             // Check for GraphQL errors in the response
             if (
@@ -250,8 +250,8 @@ export async function findOrCreateLinearCustomer(
         })
 
         if (createWithoutDomainResponse.ok) {
-          const createWithoutDomainResult: LinearGraphQLResponse<CreateCustomerResponse> =
-            await createWithoutDomainResponse.json()
+          const createWithoutDomainResult =
+            (await createWithoutDomainResponse.json()) as LinearGraphQLResponse<CreateCustomerResponse>
 
           if (
             !createWithoutDomainResult.errors &&

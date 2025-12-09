@@ -1,4 +1,4 @@
-import { type DB } from '@app/db'
+import { and, type DB, eq, inArray, schema, sql } from '@app/db'
 import {
   assertionCacheEntrySchema,
   type CacheData,
@@ -6,7 +6,6 @@ import {
   type ValidationResult,
 } from '@app/schemas'
 import { type Sandbox } from '@daytonaio/sdk'
-import { type Kysely, sql } from 'kysely'
 
 import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
 
@@ -16,7 +15,7 @@ import { buildEvidenceHashMap, getFileHashFromSandbox } from './cache-evidence'
  * (first in the array, as git log returns commits in chronological order latest-first).
  */
 export async function getCachedEvidence(args: {
-  db: Kysely<DB>
+  db: DB
   storyId: string
   commitSha: string | string[]
 }): Promise<CacheEntry | null> {
@@ -24,12 +23,12 @@ export async function getCachedEvidence(args: {
 
   // Handle single commit SHA (backward compatibility)
   if (typeof commitSha === 'string') {
-    const result = await db
-      .selectFrom('storyEvidenceCache')
-      .selectAll()
-      .where('storyId', '=', storyId)
-      .where('commitSha', '=', commitSha)
-      .executeTakeFirst()
+    const result = await db.query.storyEvidenceCache.findFirst({
+      where: and(
+        eq(schema.storyEvidenceCache.storyId, storyId),
+        eq(schema.storyEvidenceCache.commitSha, commitSha),
+      ),
+    })
 
     if (!result) {
       return null
@@ -60,15 +59,19 @@ export async function getCachedEvidence(args: {
     .map((sha, index) => `WHEN '${sha.replace(/'/g, "''")}' THEN ${index}`)
     .join(' ')
 
-  const result = await db
-    .selectFrom('storyEvidenceCache')
-    .selectAll()
-    .where('storyId', '=', storyId)
-    .where('commitSha', 'in', commitSha)
+  const results = await db
+    .select()
+    .from(schema.storyEvidenceCache)
+    .where(
+      and(
+        eq(schema.storyEvidenceCache.storyId, storyId),
+        inArray(schema.storyEvidenceCache.commitSha, commitSha),
+      ),
+    )
     .orderBy(sql`CASE commit_sha ${sql.raw(orderByCases)} END`)
     .limit(1)
-    .executeTakeFirst()
 
+  const result = results[0]
   if (!result) {
     return null
   }
@@ -89,7 +92,7 @@ export async function getCachedEvidence(args: {
  * Saves cached evidence for a story at a specific commit SHA
  */
 export async function saveCachedEvidence(args: {
-  db: Kysely<DB>
+  db: DB
   branchName: string
   storyId: string
   commitSha: string
@@ -99,16 +102,20 @@ export async function saveCachedEvidence(args: {
   const { db, branchName, storyId, commitSha, cacheData, runId } = args
 
   await db
-    .insertInto('storyEvidenceCache')
+    .insert(schema.storyEvidenceCache)
     .values({
       branchName,
       storyId,
       commitSha,
-      cacheData: JSON.stringify(cacheData),
+      cacheData,
       runId,
     })
-    .onConflict((oc) => oc.columns(['storyId', 'commitSha']).doNothing())
-    .execute()
+    .onConflictDoNothing({
+      target: [
+        schema.storyEvidenceCache.storyId,
+        schema.storyEvidenceCache.commitSha,
+      ],
+    })
 }
 
 /**
@@ -221,17 +228,20 @@ export async function validateCacheEntry(args: {
  * Invalidates cache for a story at a specific commit SHA
  */
 export async function invalidateCache(args: {
-  db: Kysely<DB>
+  db: DB
   storyId: string
   commitSha: string
 }): Promise<void> {
   const { db, storyId, commitSha } = args
 
   await db
-    .deleteFrom('storyEvidenceCache')
-    .where('storyId', '=', storyId)
-    .where('commitSha', '=', commitSha)
-    .execute()
+    .delete(schema.storyEvidenceCache)
+    .where(
+      and(
+        eq(schema.storyEvidenceCache.storyId, storyId),
+        eq(schema.storyEvidenceCache.commitSha, commitSha),
+      ),
+    )
 }
 
 /**
@@ -239,15 +249,14 @@ export async function invalidateCache(args: {
  * Used when composition changes
  */
 export async function invalidateCacheForStory(args: {
-  db: Kysely<DB>
+  db: DB
   storyId: string
 }): Promise<void> {
   const { db, storyId } = args
 
   await db
-    .deleteFrom('storyEvidenceCache')
-    .where('storyId', '=', storyId)
-    .execute()
+    .delete(schema.storyEvidenceCache)
+    .where(eq(schema.storyEvidenceCache.storyId, storyId))
 }
 
 /**

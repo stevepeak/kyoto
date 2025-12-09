@@ -346,10 +346,3 @@ export async function processDiscoveredCandidates(
 }
 
 // Export individual functions for testing
-export {
-  checkStoryExists,
-  enrichStory,
-  generateStoryEmbedding,
-  saveStoryEmbeddingToIndex,
-  writeStoryFile,
-}

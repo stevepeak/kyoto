@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Sparkles, Wand2, Zap, Stars } from 'lucide-react'
+import { type Meta, type StoryObj } from '@storybook/nextjs-vite'
+import { Sparkles, Stars, Wand2, Zap } from 'lucide-react'
+
 import { ShimmerButton } from './shimmer-button.js'
 
 const meta = {
@@ -93,6 +94,9 @@ export const SecondaryVariant: Story = {
 }
 
 export const AllStates: Story = {
+  args: {
+    children: '',
+  },
   render: () => (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-4">
@@ -131,6 +135,9 @@ export const AllStates: Story = {
 }
 
 export const InteractiveDemo: Story = {
+  args: {
+    children: '',
+  },
   render: () => (
     <div className="flex flex-col gap-6 p-8">
       <div>

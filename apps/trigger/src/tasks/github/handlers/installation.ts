@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import { logger } from '@trigger.dev/sdk'
 
@@ -30,7 +30,7 @@ export const installationHandler: WebhookHandler = async ({
   const installationId = parseId(installation.id, 'installation.id')
 
   const env = getConfig()
-  const db = setupDb(env.DATABASE_URL)
+  const db = createDb({ databaseUrl: env.DATABASE_URL })
 
   try {
     const owner = await upsertOwnerRecord(db, {
@@ -159,6 +159,6 @@ export const installationHandler: WebhookHandler = async ({
       }
     }
   } finally {
-    await db.destroy()
+    await db.$client.end()
   }
 }

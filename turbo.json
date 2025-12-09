@@ -1,53 +1,16 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": [".env"],
   "tasks": {
     "build": {
       "outputs": ["dist/**", ".next/**"],
-      "dependsOn": ["^build"],
-      "env": [
-        "DATABASE_URL",
-        "DATABASE_URL_UNPOOLED",
-        "GITHUB_CLIENT_ID",
-        "GITHUB_CLIENT_SECRET",
-        "GITHUB_APP_ID",
-        "NEXT_PUBLIC_GITHUB_APP_SLUG",
-        "GITHUB_APP_PRIVATE_KEY",
-        "GITHUB_WEBHOOK_SECRET",
-        "OPENAI_API_KEY",
-        "OPENROUTER_API_KEY",
-        "AI_GATEWAY_API_KEY",
-        "SENTRY_AUTH_TOKEN",
-        "SENTRY_DSN",
-        "NEXT_PUBLIC_SENTRY_DSN",
-        "SENTRY_ORG",
-        "SENTRY_PROJECT",
-        "TRIGGER_SECRET_KEY",
-        "CONTEXT7_API_KEY",
-        "VERCEL_URL",
-        "VERCEL_BRANCH_URL",
-        "VERCEL_PROJECT_PRODUCTION_URL"
-      ]
+      "dependsOn": ["^build"]
     },
     "dev": {
       "persistent": true,
-      "cache": false,
-      "env": [
-        "DATABASE_URL",
-        "TRIGGER_SECRET_KEY",
-        "GITHUB_APP_ID",
-        "GITHUB_APP_PRIVATE_KEY",
-        "GITHUB_WEBHOOK_SECRET",
-        "CONTEXT7_API_KEY"
-      ]
-    },
-    "preview": {
-      "dependsOn": ["build"],
-      "persistent": true,
       "cache": false
     },
-    "test": {
-      "dependsOn": ["^build"]
-    },
+    "test": {},
     "lint": {},
     "fix": {},
     "typecheck": {},

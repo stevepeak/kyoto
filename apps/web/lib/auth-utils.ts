@@ -5,7 +5,7 @@ interface UserWithLogin {
   image?: string | null
 }
 
-export function hasLogin(user: unknown): user is UserWithLogin {
+function hasLogin(user: unknown): user is UserWithLogin {
   return (
     typeof user === 'object' &&
     user !== null &&

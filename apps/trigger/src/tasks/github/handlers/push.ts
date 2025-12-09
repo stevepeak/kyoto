@@ -1,5 +1,5 @@
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb, eq, schema } from '@app/db'
 import { logger } from '@trigger.dev/sdk'
 
 import { createOctokit } from '../../../helpers/github'
@@ -57,7 +57,7 @@ export const pushHandler: WebhookHandler = async ({
 
   const repoName = parsed.data.repository.name
   const env = getConfig()
-  const db = setupDb(env.DATABASE_URL)
+  const db = createDb({ databaseUrl: env.DATABASE_URL })
 
   try {
     const repoRecord = await findRepoByOwnerAndName(db, {
@@ -76,11 +76,13 @@ export const pushHandler: WebhookHandler = async ({
 
     // Check if this branch has an open pull request
     // If it does, skip this push handler - let pull_request handler handle it
-    const owner = await db
-      .selectFrom('owners')
-      .select('installationId')
-      .where('id', '=', repoRecord.ownerId)
-      .executeTakeFirst()
+    const ownerResult = await db
+      .select({ installationId: schema.owners.installationId })
+      .from(schema.owners)
+      .where(eq(schema.owners.id, repoRecord.ownerId))
+      .limit(1)
+
+    const owner = ownerResult[0]
 
     let octokit: ReturnType<typeof createOctokit> | null = null
     if (owner?.installationId) {
@@ -190,6 +192,6 @@ export const pushHandler: WebhookHandler = async ({
     })
     throw error
   } finally {
-    await db.destroy()
+    await db.$client.end()
   }
 }

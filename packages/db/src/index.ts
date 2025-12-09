@@ -1,4 +1,17 @@
 import { getConfig } from '@app/config'
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  type InferSelectModel,
+  isNotNull,
+  ne,
+  notInArray,
+  sql,
+} from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
@@ -6,6 +19,36 @@ import * as schema from './schema'
 
 // Export schema and all its contents
 export { schema }
+
+// Re-export drizzle-orm helpers to ensure single instance across monorepo
+export {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  type InferSelectModel,
+  isNotNull,
+  ne,
+  notInArray,
+  sql,
+}
+
+// Export inferred types for tables
+export type Owner = InferSelectModel<typeof schema.owners>
+export type Repo = InferSelectModel<typeof schema.repos>
+export type Run = InferSelectModel<typeof schema.runs>
+
+// RunStory type - represents a story within a run's stories JSONB field
+export interface RunStory {
+  storyId: string
+  resultId: string | null
+  status: 'pass' | 'fail' | 'running' | 'skipped' | 'error'
+  summary: string | null
+  startedAt: string | null
+  completedAt: string | null
+}
 
 export interface CreateDbOptions {
   databaseUrl?: string
@@ -20,7 +63,7 @@ export interface CreateDbOptions {
  *
  * @example
  * ```ts
- * import { createDb } from '@app/db2'
+ * import { createDb } from '@app/db'
  *
  * const db = createDb()
  *
@@ -30,42 +73,9 @@ export interface CreateDbOptions {
  */
 export function createDb(options: CreateDbOptions = {}) {
   const config = getConfig()
-  const url = options.databaseUrl ?? config.DATABASE_URL
+  const client = postgres(options.databaseUrl ?? config.DATABASE_URL)
 
-  // Disable prefetch as it's not supported for "Transaction" pool mode
-  const client = postgres(url, { prepare: false })
   return drizzle(client, { schema })
 }
 
 export type DB = ReturnType<typeof createDb>
-
-/**
- * Type helpers for table types
- */
-export type User = typeof schema.user.$inferSelect
-export type NewUser = typeof schema.user.$inferInsert
-export type Session = typeof schema.session.$inferSelect
-export type NewSession = typeof schema.session.$inferInsert
-export type Account = typeof schema.account.$inferSelect
-export type NewAccount = typeof schema.account.$inferInsert
-export type Verification = typeof schema.verification.$inferSelect
-export type NewVerification = typeof schema.verification.$inferInsert
-export type Credential = typeof schema.credential.$inferSelect
-export type NewCredential = typeof schema.credential.$inferInsert
-export type Owner = typeof schema.owners.$inferSelect
-export type NewOwner = typeof schema.owners.$inferInsert
-export type OwnerMembership = typeof schema.ownerMemberships.$inferSelect
-export type NewOwnerMembership = typeof schema.ownerMemberships.$inferInsert
-export type Repo = typeof schema.repos.$inferSelect
-export type NewRepo = typeof schema.repos.$inferInsert
-export type RepoMembership = typeof schema.repoMemberships.$inferSelect
-export type NewRepoMembership = typeof schema.repoMemberships.$inferInsert
-export type Run = typeof schema.runs.$inferSelect
-export type NewRun = typeof schema.runs.$inferInsert
-export type Story = typeof schema.stories.$inferSelect
-export type NewStory = typeof schema.stories.$inferInsert
-export type StoryEvidenceCache = typeof schema.storyEvidenceCache.$inferSelect
-export type NewStoryEvidenceCache =
-  typeof schema.storyEvidenceCache.$inferInsert
-export type StoryTestResult = typeof schema.storyTestResults.$inferSelect
-export type NewStoryTestResult = typeof schema.storyTestResults.$inferInsert

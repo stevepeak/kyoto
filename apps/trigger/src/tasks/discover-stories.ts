@@ -1,6 +1,6 @@
 import { agents } from '@app/agents'
 import { getConfig } from '@app/config'
-import { setupDb } from '@app/db'
+import { createDb, eq, inArray, schema } from '@app/db'
 import * as Sentry from '@sentry/node'
 import { logger, streams, task } from '@trigger.dev/sdk'
 
@@ -24,7 +24,7 @@ export const discoverStoriesTask = task({
     save = false,
   }: DiscoverStoriesPayload) => {
     const env = getConfig()
-    const db = setupDb(env.DATABASE_URL)
+    const db = createDb({ databaseUrl: env.DATABASE_URL })
 
     Sentry.setUser({ name: repoSlug })
 
@@ -56,23 +56,22 @@ export const discoverStoriesTask = task({
     // Insert placeholder stories with 'generated' state before discovery (only if saving)
     const placeholderStories = save
       ? await db
-          .insertInto('stories')
+          .insert(schema.stories)
           .values(
             Array.from({ length: storyCount }, (_, i) => ({
               repoId: repoRecord.repoId,
               name: `Story ${i + 1}`,
               story: 'Generating story...',
-              state: 'generated',
+              state: 'generated' as const,
             })),
           )
-          .returningAll()
-          .execute()
+          .returning()
       : []
 
     if (save) {
       logger.info(`Created ${placeholderStories.length} placeholder stories`, {
         repoId: repoRecord.repoId,
-        storyIds: placeholderStories.map((s) => s.id),
+        storyIds: placeholderStories.map((s: { id: string }) => s.id),
       })
     }
 
@@ -112,14 +111,13 @@ export const discoverStoriesTask = task({
           const placeholder = placeholderStories[i]
 
           await db
-            .updateTable('stories')
+            .update(schema.stories)
             .set({
               name: discoveredStory.title || `Story ${i + 1}`,
               story: discoveredStory.text,
               state: 'generated',
             })
-            .where('id', '=', placeholder.id)
-            .execute()
+            .where(eq(schema.stories.id, placeholder.id))
 
           logger.info('Updated placeholder story with discovered content', {
             storyId: placeholder.id,
@@ -132,9 +130,11 @@ export const discoverStoriesTask = task({
           const extraPlaceholders = placeholderStories.slice(
             discoveryResult.stories.length,
           )
-          const extraIds = extraPlaceholders.map((p) => p.id)
+          const extraIds = extraPlaceholders.map((p: { id: string }) => p.id)
 
-          await db.deleteFrom('stories').where('id', 'in', extraIds).execute()
+          await db
+            .delete(schema.stories)
+            .where(inArray(schema.stories.id, extraIds))
 
           logger.info('Deleted extra placeholder stories', {
             deletedCount: extraPlaceholders.length,
@@ -154,12 +154,13 @@ export const discoverStoriesTask = task({
 
       // On error, delete placeholder stories to avoid leaving orphaned records (only if saving)
       if (save) {
-        const placeholderIds = placeholderStories.map((s) => s.id)
+        const placeholderIds = placeholderStories.map(
+          (s: { id: string }) => s.id,
+        )
         await db
-          .deleteFrom('stories')
-          .where('id', 'in', placeholderIds)
-          .execute()
-          .catch((deleteError) => {
+          .delete(schema.stories)
+          .where(inArray(schema.stories.id, placeholderIds))
+          .catch((deleteError: unknown) => {
             logger.error('Failed to clean up placeholder stories after error', {
               error: deleteError,
               placeholderIds,

@@ -1,4 +1,4 @@
-import { type setupDb } from '@app/db'
+import { type createDb } from '@app/db'
 
 export interface RunCiPayload {
   orgName: string
@@ -44,4 +44,4 @@ export interface RunInsert {
   number: number
 }
 
-export type DbClient = ReturnType<typeof setupDb>
+export type DbClient = ReturnType<typeof createDb>

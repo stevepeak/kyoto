@@ -5,7 +5,7 @@ import { join, relative } from 'node:path'
 
 import { pwdKyoto } from '../config/find-kyoto-dir'
 
-export interface StoryFile {
+interface StoryFile {
   path: string
   filename: string
   story: DiscoveredStory
