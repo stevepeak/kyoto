@@ -62,7 +62,7 @@
     "knip": "knip",
     "knip:fix": "knip --fix",
     "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
-    "fix": "turbo run fix --concurrency 3",
+    "fix": "turbo run fix",
     "clean": "turbo run clean"
   },
   "devDependencies": {
