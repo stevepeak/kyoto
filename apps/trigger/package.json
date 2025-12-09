@@ -13,8 +13,8 @@
     "dev": "npx trigger.dev@latest dev",
     "deploy": "npx trigger.dev@latest deploy",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "lint": "eslint --ignore-pattern='.trigger' . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet --ignore-pattern='.trigger' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "@app/agents": "workspace:*",

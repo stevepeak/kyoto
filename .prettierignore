@@ -5,6 +5,7 @@ CHANGELOG.md
 __nock-fixtures__
 **/*.gen.*
 
+.trigger
 .next 
 .cache
 .DS_Store

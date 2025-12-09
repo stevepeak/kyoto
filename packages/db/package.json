@@ -16,8 +16,8 @@
     "db:push": "bun --env-file=../../.env drizzle-kit push",
     "db:drop": "bun --env-file=../../.env drizzle-kit drop",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "lint": "eslint --ignore-pattern='./migrations/' . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet --ignore-pattern='./migrations/' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "@app/config": "workspace:*",

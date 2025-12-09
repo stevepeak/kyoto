@@ -8,8 +8,8 @@
     "dev": "next dev --port 3002 --turbo",
     "build": "bun --env-file=../../.env next build --turbo",
     "start": "next start --port 3002",
-    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
+    "lint": "eslint --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet --ignore-pattern='.next' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write .",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

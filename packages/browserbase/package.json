@@ -11,7 +11,7 @@
     "clean": "rm -rf node_modules dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
-    "fix": "bunx eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
     "@browserbasehq/stagehand": "catalog:",
