@@ -114,7 +114,7 @@ export default function SetupGithub(): React.ReactElement {
     }
 
     void checkAndCreate()
-  }, [exit, step])
+  }, [exit, logger, step])
 
   const handleGitCommand = async (value: 'yes' | 'no'): Promise<void> => {
     if (value === 'no') {

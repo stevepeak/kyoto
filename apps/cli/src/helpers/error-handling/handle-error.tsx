@@ -8,7 +8,7 @@ export interface ErrorContext {
   setExitCode?: (code: number) => void
 }
 
-export interface ErrorHandler {
+interface ErrorHandler {
   canHandle: (error: unknown) => boolean
   handle: (error: unknown, context: ErrorContext) => void
 }

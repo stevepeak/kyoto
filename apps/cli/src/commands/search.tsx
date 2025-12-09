@@ -6,8 +6,8 @@ import terminalLink from 'terminal-link'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
-import { searchStories } from '../helpers/stories/search-stories'
 import { useCliLogger } from '../helpers/logging/logger'
+import { searchStories } from '../helpers/stories/search-stories'
 
 interface SearchProps {
   query: string

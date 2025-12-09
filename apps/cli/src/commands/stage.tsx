@@ -5,9 +5,9 @@ import React, { useEffect, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
+import { createLogger, useCliLogger } from '../helpers/logging/logger'
 import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
 import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
-import { createLogger, useCliLogger } from '../helpers/logging/logger'
 import { type LogEntry } from '../types/logger'
 
 interface VibeCheckProps {

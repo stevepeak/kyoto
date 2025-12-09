@@ -8,8 +8,8 @@ import React from 'react'
 
 import { type Logger } from '../../types/logger'
 import { pwdKyoto } from '../config/find-kyoto-dir'
-import { generateEmbedding } from '../embeddings/generate-embedding'
 import { type SpinnerHandle } from '../display/use-spinner'
+import { generateEmbedding } from '../embeddings/generate-embedding'
 import { createSearchStoriesTool } from '../tools/search-stories-tool'
 import { saveStoryEmbedding } from './save-embedding'
 

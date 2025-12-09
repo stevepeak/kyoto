@@ -1,5 +1,5 @@
-import { createDb, createIndex, query } from '@app/vectra'
 import { findGitRoot } from '@app/shell'
+import { createDb, createIndex, query } from '@app/vectra'
 import { tool } from 'ai'
 import { z } from 'zod'
 

@@ -29,7 +29,7 @@ const config: KnipConfig = {
     },
     'apps/cli': {
       entry: ['src/cli.tsx', 'src/commands/**/*.tsx'],
-      project: ['src/**/*.ts'],
+      project: ['src/**/*.ts', 'src/**/*.tsx'],
       ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
     },
     'apps/trigger': {

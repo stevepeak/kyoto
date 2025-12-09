@@ -11,10 +11,6 @@ import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
 import { useSpinner } from '../helpers/display/use-spinner'
 import {
-  findTypeScriptFiles,
-  validateFilePath,
-} from '../helpers/file/discovery'
-import {
   formatCommandError,
   handleCommandError,
 } from '../helpers/error-handling/command-error-boundary'
@@ -23,6 +19,10 @@ import {
   isCriticalError,
   shouldHandleInCommand,
 } from '../helpers/error-handling/handle-error'
+import {
+  findTypeScriptFiles,
+  validateFilePath,
+} from '../helpers/file/discovery'
 import { useCliLogger } from '../helpers/logging/logger'
 import { processDiscoveredCandidates } from '../helpers/stories/process-candidates'
 

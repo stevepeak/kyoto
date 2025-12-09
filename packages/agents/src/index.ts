@@ -9,8 +9,8 @@ import z from 'zod'
 import { compositionAgentOutputSchema } from '../../schemas/src/story-flow'
 import { generateChangelogSummary } from './agents/v3/changelog-summary'
 import {
-  evaluateDiff,
   type DiffEvaluationTarget,
+  evaluateDiff,
 } from './agents/v3/diff-evaluator'
 import { extractScope } from './agents/v3/scope-extraction'
 import { runStoryCheckAgent } from './agents/v3/story-check'

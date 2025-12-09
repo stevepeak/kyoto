@@ -258,7 +258,7 @@ export default function Init(): React.ReactElement {
     }
 
     void save()
-  }, [apiKey, exit, provider, providerLabel, step])
+  }, [apiKey, exit, logger, provider, providerLabel, step])
 
   const handleApiSubmit = (value: string): void => {
     if (!value.trim()) {

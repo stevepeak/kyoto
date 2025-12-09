@@ -22,8 +22,6 @@
     "@app/shell": "workspace:^",
     "@app/vectra": "workspace:^",
     "@openrouter/ai-sdk-provider": "catalog:",
-    "@playwright/test": "^1.57.0",
-    "@withmantle/tracewright": "^0.1.2",
     "ai": "catalog:",
     "commander": "^14.0.2",
     "execa": "catalog:",

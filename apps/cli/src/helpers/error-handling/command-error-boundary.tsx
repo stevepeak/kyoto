@@ -3,9 +3,9 @@ import React from 'react'
 
 import { type Logger } from '../../types/logger'
 import {
+  type ErrorContext,
   handleError,
   shouldHandleInCommand,
-  type ErrorContext,
 } from './handle-error'
 
 /**

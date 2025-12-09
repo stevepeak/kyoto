@@ -2,7 +2,7 @@ import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useCallback, useRef, useState } from 'react'
 
-export type SpinnerState = {
+type SpinnerState = {
   id: number
   title: string
   progress: string
