@@ -163,3 +163,32 @@
 .tiptap * {
   font-family: var(--font-sans) !important;
 }
+
+/* Shiki code block styles */
+.shiki-container {
+  @apply rounded-md border border-border bg-muted/30 overflow-hidden;
+}
+
+.shiki-container pre {
+  @apply m-0 p-6 overflow-x-auto;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.shiki-header {
+  @apply flex items-center justify-between gap-4 px-4 py-2 bg-muted/50 border-b border-border;
+}
+
+.shiki-file-name {
+  @apply text-xs font-mono text-muted-foreground;
+}
+
+.shiki-header-link {
+  @apply text-xs text-primary hover:underline;
+}
+
+.shiki {
+  @apply m-0 p-6 overflow-x-auto;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
