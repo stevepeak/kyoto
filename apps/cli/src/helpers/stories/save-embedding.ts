@@ -1,4 +1,5 @@
 import { type DiscoveredStory } from '@app/schemas'
+import { findGitRoot } from '@app/shell'
 import { createIndex, ensureIndex, insert } from '@app/vectra'
 
 import { pwdKyoto } from '../config/find-kyoto-dir'
@@ -17,7 +18,8 @@ export async function saveStoryEmbedding({
   story,
   embedding,
 }: SaveStoryEmbeddingOptions): Promise<void> {
-  const { vectra } = await pwdKyoto()
+  const gitRoot = await findGitRoot()
+  const { vectra } = await pwdKyoto(gitRoot)
   const index = createIndex(vectra)
   await ensureIndex(index)
 

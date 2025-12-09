@@ -8,7 +8,10 @@ import z from 'zod'
 
 import { compositionAgentOutputSchema } from '../../schemas/src/story-flow'
 import { generateChangelogSummary } from './agents/v3/changelog-summary'
-import { evaluateDiff } from './agents/v3/diff-evaluator'
+import {
+  evaluateDiff,
+  type DiffEvaluationTarget,
+} from './agents/v3/diff-evaluator'
 import { extractScope } from './agents/v3/scope-extraction'
 import { runStoryCheckAgent } from './agents/v3/story-check'
 import { runCompositionAgent } from './agents/v3/story-composition'
@@ -26,6 +29,7 @@ export { generateText } from './helpers/generate-text'
 export { generateEmbedding } from './helpers/generate-embedding'
 export { runStoryCheckAgent } from './agents/v3/story-check'
 export { runStoryEnrichmentAgent } from './agents/v3/story-enrichment'
+export type { DiffEvaluationTarget }
 
 type Agent<TSchema extends z.ZodSchema = z.ZodSchema> = {
   id: string

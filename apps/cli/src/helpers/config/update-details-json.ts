@@ -14,7 +14,7 @@ interface DetailsJson {
 }
 
 /**
- * Updates the .kyoto/details.json file with the latest branch and commit SHA
+ * Updates the .kyoto/.ignore/config.json file with the latest branch and commit SHA
  */
 export async function updateDetailsJson(
   detailsPath: string,
@@ -23,7 +23,7 @@ export async function updateDetailsJson(
 ): Promise<void> {
   let details: DetailsJson = {}
 
-  // Read existing details.json if it exists
+  // Read existing config.json if it exists
   try {
     const content = await readFile(detailsPath, 'utf-8')
     details = JSON.parse(content) as DetailsJson

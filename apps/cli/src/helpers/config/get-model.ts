@@ -14,11 +14,11 @@ interface GetModelOptions {
 }
 
 /**
- * Gets the appropriate model configuration based on details.json or CLI arguments.
+ * Gets the appropriate model configuration based on config.json or CLI arguments.
  *
  * Priority:
- * 1. CLI arguments (--model and --provider) - uses API key from details.json
- * 2. details.json configuration (.kyoto/details.json)
+ * 1. CLI arguments (--model and --provider) - uses API key from config.json
+ * 2. config.json configuration (.kyoto/.ignore/config.json)
  *
  * @param options - Configuration options
  * @returns The model configuration (either a provider instance or a string for AI Gateway)
@@ -33,7 +33,7 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
   // eslint-disable-next-line no-console
   const log: Logger = logger || ((message: string) => console.log(message))
 
-  // Get config from details.json
+  // Get config from config.json
   const aiConfig = await getAiConfig()
 
   // If CLI arguments are provided, use them
@@ -75,9 +75,9 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
     }
   }
 
-  // Get from details.json (should exist if assertCliPrerequisites was called)
+  // Get from config.json (should exist if init was called)
   if (aiConfig) {
-    // Use model from details.json, CLI argument, or default
+    // Use model from config.json, CLI argument, or default
     const modelToUse =
       cliModel ||
       aiConfig.model ||

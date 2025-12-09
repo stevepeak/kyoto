@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import terminalLink from 'terminal-link'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { searchStories } from '../helpers/stories/search-stories'
 import { type Logger } from '../types/logger'
@@ -46,7 +46,7 @@ export default function Search({
           throw new Error('Threshold must be a valid number')
         }
 
-        await assertCliPrerequisites({ requireAi: true })
+        await init({ requireAi: true })
 
         logger(`• Searching for: ${query}`, 'grey')
         if (limit) {

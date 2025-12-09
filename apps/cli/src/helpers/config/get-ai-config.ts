@@ -30,13 +30,13 @@ type AiConfig = {
 } | null
 
 /**
- * Reads AI configuration from .kyoto/details.json
+ * Reads AI configuration from .kyoto/.ignore/config.json
  * @returns AI configuration or null if not found
  */
 export async function getAiConfig(): Promise<AiConfig> {
   try {
     const gitRoot = await findGitRoot()
-    const detailsPath = join(gitRoot, '.kyoto', 'details.json')
+    const detailsPath = join(gitRoot, '.kyoto', '.ignore', 'config.json')
 
     const content = await readFile(detailsPath, 'utf-8')
     const parsed = JSON.parse(content)

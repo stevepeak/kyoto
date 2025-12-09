@@ -3,8 +3,7 @@ import { rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import React, { useCallback, useEffect, useState } from 'react'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
-import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
+import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { type Logger } from '../types/logger'
 
@@ -25,9 +24,9 @@ export default function Clear(): React.ReactElement {
   useEffect(() => {
     const run = async (): Promise<void> => {
       try {
-        await assertCliPrerequisites({ requireAi: false })
+        const { fs } = await init({ requireAi: false })
 
-        const { stories, root } = await pwdKyoto()
+        const { stories, artifacts, root } = fs
 
         try {
           await stat(stories)
@@ -41,14 +40,26 @@ export default function Clear(): React.ReactElement {
           }
         }
 
-        const vectraParentDir = join(root, '.vectra')
         try {
-          await stat(vectraParentDir)
-          await rm(vectraParentDir, { recursive: true, force: true })
-          logger('✓ Deleted vectra data directory', '#7ba179')
+          await stat(artifacts)
+          await rm(artifacts, { recursive: true, force: true })
+          logger('✓ Deleted artifacts directory', '#7ba179')
         } catch (err) {
           if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
-            logger('Vectra directory does not exist, skipping', 'grey')
+            logger('Artifacts directory does not exist, skipping', 'grey')
+          } else {
+            throw err
+          }
+        }
+
+        const vectraPath = join(root, '.ignore', 'vectra.json')
+        try {
+          await stat(vectraPath)
+          await rm(vectraPath, { recursive: true, force: true })
+          logger('✓ Deleted vectra data', '#7ba179')
+        } catch (err) {
+          if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+            logger('Vectra data does not exist, skipping', 'grey')
           } else {
             throw err
           }

@@ -12,26 +12,56 @@ interface StoryFile {
 }
 
 /**
- * Reads all story JSON files from the .kyoto/stories directory.
+ * Reads all story markdown files from the .kyoto/stories directory
+ * and merges them with their corresponding artifact JSON files.
  *
  * @returns Array of story files with their paths and parsed content
  * @throws {Error} If the .kyoto/stories directory doesn't exist or can't be read
  */
 export async function readAllStoryFiles(): Promise<StoryFile[]> {
-  const { stories: storiesDir } = await pwdKyoto()
   const gitRoot = await findGitRoot()
+  const { stories: storiesDir, artifacts: artifactsDir } =
+    await pwdKyoto(gitRoot)
   const storiesRelativePath = relative(gitRoot, storiesDir)
 
   try {
     const files = await readdir(storiesDir)
-    const jsonFiles = files.filter((file) => file.endsWith('.json'))
+    const storyMdFiles = files.filter((file) => file.endsWith('.story.md'))
 
     const storyFiles: StoryFile[] = []
 
-    for (const filename of jsonFiles) {
-      const filePath = join(storiesDir, filename)
-      const content = await readFile(filePath, 'utf-8')
-      const story = discoveredStorySchema.parse(JSON.parse(content))
+    for (const filename of storyMdFiles) {
+      const storyMdPath = join(storiesDir, filename)
+      const behaviorContent = await readFile(storyMdPath, 'utf-8')
+
+      // Extract base filename (without .story.md extension)
+      const baseFilename = filename.replace(/\.story\.md$/, '')
+      const artifactPath = join(artifactsDir, `${baseFilename}.json`)
+
+      // Try to read artifact file, but it's optional
+      let artifactData: Record<string, unknown> = {}
+      try {
+        const artifactContent = await readFile(artifactPath, 'utf-8')
+        artifactData = JSON.parse(artifactContent)
+      } catch {
+        // Artifact file doesn't exist or is invalid, continue with empty data
+      }
+
+      // Merge behavior with artifact data
+      const storyData: Record<string, unknown> = {
+        title: (artifactData.title as string) || baseFilename,
+        behavior: behaviorContent,
+        dependencies: artifactData.dependencies ?? null,
+        acceptanceCriteria: artifactData.acceptanceCriteria ?? [],
+        assumptions: artifactData.assumptions ?? [],
+        codeReferences: artifactData.codeReferences ?? [],
+      }
+
+      if (artifactData.composition !== undefined) {
+        storyData.composition = artifactData.composition
+      }
+
+      const story = discoveredStorySchema.parse(storyData)
 
       storyFiles.push({
         path: join(storiesRelativePath, filename),

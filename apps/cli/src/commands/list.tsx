@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import React, { useCallback, useEffect, useState } from 'react'
 import terminalLink from 'terminal-link'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { readAllStoryFiles } from '../helpers/file/reader'
 import { type Logger } from '../types/logger'
@@ -24,7 +24,7 @@ export default function List(): React.ReactElement {
 
     const run = async (): Promise<void> => {
       try {
-        await assertCliPrerequisites({ requireAi: false })
+        await init({ requireAi: false })
 
         const storyFiles = await readAllStoryFiles()
 

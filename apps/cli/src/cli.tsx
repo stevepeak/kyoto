@@ -36,6 +36,18 @@ const commandGroups = [
         description: 'Monitor the working project commits and log new commits',
         example: 'kyoto vibe',
       },
+      {
+        name: 'vibe check',
+        description:
+          'Evaluate staged changes for impacted stories before committing',
+        example: 'kyoto vibe check',
+      },
+      {
+        name: 'vibe check --include-unstaged',
+        description:
+          'Evaluate unstaged changes (including untracked files) for impacted stories',
+        example: 'kyoto vibe check --include-unstaged',
+      },
     ],
   },
   {
@@ -100,7 +112,7 @@ const commandGroups = [
       {
         name: 'clear',
         description:
-          'Clear all stories and vectra data, preserving details.json',
+          'Clear all stories and vectra data, preserving config.json',
         example: 'kyoto clear',
       },
       {
@@ -203,7 +215,7 @@ export async function run(argv = process.argv): Promise<void> {
 
   program
     .command('clear')
-    .description('Clear all stories and vectra data, preserving details.json')
+    .description('Clear all stories and vectra data, preserving config.json')
     .action(async () => {
       await renderCommand(<Clear />)
     })
@@ -333,7 +345,7 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<Trace source={source} />)
     })
 
-  program
+  const vibeCommand = program
     .command('vibe')
     .description('Monitor the working project commits and log new commits')
     .option(
@@ -365,6 +377,20 @@ export async function run(argv = process.argv): Promise<void> {
         )
       },
     )
+
+  vibeCommand
+    .command('check')
+    .description(
+      'Evaluate staged changes for impacted stories before committing',
+    )
+    .option(
+      '--include-unstaged',
+      'Include unstaged changes and untracked files in the evaluation',
+    )
+    .action(async (options: { includeUnstaged?: boolean }) => {
+      const Stage = (await import('./commands/stage')).default
+      await renderCommand(<Stage includeUnstaged={options.includeUnstaged} />)
+    })
 
   program.helpInformation = () => formatKyotoHelp(program)
   program.showHelpAfterError()

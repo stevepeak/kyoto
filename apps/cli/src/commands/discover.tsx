@@ -1,13 +1,12 @@
 import { agents } from '@app/agents'
 import { type DiscoveredStory } from '@app/schemas'
-import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
-import { mkdir, stat } from 'node:fs/promises'
+import { stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
+import { init } from '../helpers/config/assert-cli-prerequisites'
 import { getModel } from '../helpers/config/get-model'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
@@ -90,15 +89,13 @@ export default function Discover({
 
     const run = async (): Promise<void> => {
       try {
-        const { gitRoot } = await assertCliPrerequisites()
+        const { git, fs } = await init()
 
-        const kyotoDir = join(gitRoot, '.kyoto')
-        await mkdir(kyotoDir, { recursive: true })
-
+        const kyotoDir = fs.root
         const inputPath = folder || '.'
         await validateFilePath(inputPath)
 
-        const resolvedPath = resolve(gitRoot, inputPath)
+        const resolvedPath = resolve(fs.gitRoot, inputPath)
         const stats = await stat(resolvedPath)
         const isDirectory = stats.isDirectory()
 
@@ -241,10 +238,8 @@ export default function Discover({
           }
         }
 
-        const detailsPath = join(kyotoDir, 'details.json')
-        const branch = await getCurrentBranch(gitRoot)
-        const sha = await getCurrentCommitSha(gitRoot)
-        await updateDetailsJson(detailsPath, branch, sha)
+        const detailsPath = fs.details
+        await updateDetailsJson(detailsPath, git.branch, git.sha)
 
         if (totalProcessedStories === 0) {
           logger('\nNo stories generated\n', '#c27a52')

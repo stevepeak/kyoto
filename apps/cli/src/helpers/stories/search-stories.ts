@@ -1,4 +1,5 @@
 import { createDb, createIndex, query } from '@app/vectra'
+import { findGitRoot } from '@app/shell'
 
 import { pwdKyoto } from '../config/find-kyoto-dir'
 import { generateEmbedding } from '../embeddings/generate-embedding'

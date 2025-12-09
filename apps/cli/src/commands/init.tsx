@@ -69,7 +69,10 @@ export default function Init(): React.ReactElement {
         const kyotoDir = join(gitRoot, '.kyoto')
         await mkdir(kyotoDir, { recursive: true })
 
-        const detailsPath = join(kyotoDir, 'details.json')
+        const ignoreDir = join(kyotoDir, '.ignore')
+        await mkdir(ignoreDir, { recursive: true })
+
+        const detailsPath = join(ignoreDir, 'config.json')
         let details: DetailsJson = {}
 
         try {

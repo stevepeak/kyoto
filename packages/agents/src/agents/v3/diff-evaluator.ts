@@ -18,8 +18,13 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
 
 import { agents } from '../../index'
 
+export type DiffEvaluationTarget =
+  | { type: 'commit'; commitSha: string }
+  | { type: 'staged' }
+  | { type: 'unstaged' }
+
 interface DiffEvaluatorOptions {
-  commitSha: string
+  target: DiffEvaluationTarget
   searchStoriesTool: Tool
   options?: {
     maxSteps?: number
@@ -28,26 +33,51 @@ interface DiffEvaluatorOptions {
   }
 }
 
-function buildSystemInstructions(): string {
+function buildSystemInstructions(target: DiffEvaluationTarget): string {
+  const targetDescription =
+    target.type === 'commit'
+      ? `a git commit (${target.commitSha})`
+      : target.type === 'staged'
+        ? 'the currently staged (indexed) changes'
+        : 'unstaged changes (including untracked files)'
+
+  const retrievalGuidance =
+    target.type === 'commit'
+      ? dedent`
+          - Use \`git show <sha>\` to see the commit details and diff
+          - Use \`git show --name-only <sha>\` to see just the changed files
+          - Use \`git log -1 --format=<format> <sha>\` to get commit metadata
+          - Use \`git diff <sha>^..<sha>\` to see what changed
+        `
+      : target.type === 'staged'
+        ? dedent`
+          - Use \`git diff --cached\` to see the staged changes and diff
+          - Use \`git diff --cached --name-only\` to list staged files
+          - Use \`git status --short\` to understand what is currently staged
+        `
+        : dedent`
+          - Use \`git diff\` to see unstaged changes (modified files)
+          - Use \`git diff --name-only\` to list modified files
+          - Use \`git ls-files --others --exclude-standard\` to list untracked files
+          - Use \`git status --short\` to see all changes (staged and unstaged)
+        `
+
   return dedent`
-    You are an expert code analyst tasked with evaluating a git commit to determine if any user stories are impacted by the changes.
+    You are an expert code analyst tasked with evaluating ${targetDescription} to determine if any user stories are impacted by the changes.
 
     # Your Task
-    You must determine if any user stories are impacted by this commit by:
-    1. Retrieving the commit details using git commands (use terminalCommand)
+    You must determine if any user stories are impacted by this work by:
+    1. Retrieving the change details using git commands (use terminalCommand)
     2. Understanding what files were changed and what the changes do
     3. Searching for relevant user stories using the searchStories tool
     4. Evaluating which stories are impacted and assessing the scope overlap
     5. Returning a structured response with text explanation and impacted stories
 
     # Tools Available
-    - **terminalCommand**: Execute git commands to retrieve commit information
-      - Use \`git show <sha>\` to see the commit details and diff
-      - Use \`git show --name-only <sha>\` to see just the changed files
-      - Use \`git log -1 --format=<format> <sha>\` to get commit metadata
-      - Use \`git diff <sha>^..<sha>\` to see what changed
+    - **terminalCommand**: Execute git commands to retrieve change information
+${retrievalGuidance}
     - **searchStories**: Search through user stories in .kyoto/stories directory
-      - Use keywords from the commit message and changed files to find relevant stories
+      - Use keywords from the change summary and changed files to find relevant stories
       - Search for stories related to the functionality being changed
     - **readFile**: Read files from the repository or story files to understand context
 
@@ -58,7 +88,7 @@ function buildSystemInstructions(): string {
     \`\`\`
 
     # Important Instructions
-    - Analyze the commit changes thoroughly
+    - Analyze the changes thoroughly
     - Use searchStories to find stories that might be impacted
     - For each impacted story, assess the scope overlap:
       * 'significant': The story directly addresses or heavily overlaps with the changes
@@ -66,21 +96,55 @@ function buildSystemInstructions(): string {
       * 'low': The story has minimal or tangential relevance
     - Provide clear reasoning for why each story is impacted
     - If no stories are impacted, return an empty stories array
-    - The text field should explain what happened in the commit and summarize the story impacts
+    - The text field should explain what happened in the change and summarize the story impacts
   `
 }
 
-function buildPrompt(commitSha: string): string {
+function buildPrompt(target: DiffEvaluationTarget): string {
+  if (target.type === 'commit') {
+    return dedent`
+      Evaluate this commit: ${target.commitSha}
+
+      # Instructions
+      1. Use terminalCommand to get the commit details and see what changed
+      2. Use searchStories to find user stories that might be impacted by these changes
+      3. For each story found, read the story file if needed to understand it better
+      4. Assess the scope overlap for each impacted story (significant/moderate/low)
+      5. Return a structured response with:
+         - A text explanation of what happened in the commit
+         - An array of impacted stories with filePath, scopeOverlap, and reasoning
+
+      Focus on finding stories that are actually impacted by the code changes, not just related topics.
+    `
+  }
+
+  if (target.type === 'staged') {
+    return dedent`
+      Evaluate the currently staged changes (git index).
+
+      # Instructions
+      1. Use terminalCommand to inspect what is staged (e.g., with git diff --cached)
+      2. Use searchStories to find user stories that might be impacted by these staged changes
+      3. For each story found, read the story file if needed to understand it better
+      4. Assess the scope overlap for each impacted story (significant/moderate/low)
+      5. Return a structured response with:
+         - A text explanation of what is happening in the staged changes
+         - An array of impacted stories with filePath, scopeOverlap, and reasoning
+
+      Focus on finding stories that are actually impacted by the code changes, not just related topics.
+    `
+  }
+
   return dedent`
-    Evaluate this commit: ${commitSha}
+    Evaluate unstaged changes (working directory changes and untracked files).
 
     # Instructions
-    1. Use terminalCommand to get the commit details and see what changed
-    2. Use searchStories to find user stories that might be impacted by these changes
+    1. Use terminalCommand to inspect unstaged changes (e.g., with git diff for modified files, git ls-files --others for untracked files)
+    2. Use searchStories to find user stories that might be impacted by these unstaged changes
     3. For each story found, read the story file if needed to understand it better
     4. Assess the scope overlap for each impacted story (significant/moderate/low)
     5. Return a structured response with:
-       - A text explanation of what happened in the commit
+       - A text explanation of what is happening in the unstaged changes
        - An array of impacted stories with filePath, scopeOverlap, and reasoning
 
     Focus on finding stories that are actually impacted by the code changes, not just related topics.
@@ -88,7 +152,7 @@ function buildPrompt(commitSha: string): string {
 }
 
 export async function evaluateDiff({
-  commitSha,
+  target,
   searchStoriesTool,
   options: {
     maxSteps = 10,
@@ -98,7 +162,7 @@ export async function evaluateDiff({
 }: DiffEvaluatorOptions): Promise<DiffEvaluatorOutput> {
   const agent = new Agent({
     model,
-    system: buildSystemInstructions(),
+    system: buildSystemInstructions(target),
     tools: {
       terminalCommand: createLocalTerminalCommandTool(onProgress),
       readFile: createLocalReadFileTool(),
@@ -115,7 +179,7 @@ export async function evaluateDiff({
     }),
   })
 
-  const prompt = buildPrompt(commitSha)
+  const prompt = buildPrompt(target)
 
   const result = await agent.generate({ prompt })
 

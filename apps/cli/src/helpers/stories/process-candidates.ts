@@ -2,7 +2,7 @@ import { agents, runStoryCheckAgent } from '@app/agents'
 import { type CompositionAgentOutput, type DiscoveredStory } from '@app/schemas'
 import { findGitRoot, getGitHubInfo, writeLocalFile } from '@app/shell'
 import { type LanguageModel } from 'ai'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 
 import { type Logger } from '../../types/logger'
 import { pwdKyoto } from '../config/find-kyoto-dir'
@@ -190,26 +190,42 @@ async function generateStoryEmbedding(
 }
 
 /**
- * Write story JSON to file (without embeddings)
+ * Write story to files:
+ * - Behavior as markdown to .kyoto/stories/<name>.story.md
+ * - Other details as JSON to .kyoto/artifacts/<name>.json
+ *
+ * @returns The path to the story markdown file (relative to git root)
  */
 async function writeStoryFile(
   story: DiscoveredStory,
-  filePath: string,
+  baseFilename: string,
   composition?: CompositionAgentOutput,
-): Promise<void> {
-  // Create story object without embeddings
-  const storyToWrite = {
+): Promise<string> {
+  const gitRoot = await findGitRoot()
+  const { stories: storiesDir, artifacts: artifactsDir } =
+    await pwdKyoto(gitRoot)
+
+  // Write behavior as markdown to .kyoto/stories/<name>.story.md
+  const storyMdPathAbsolute = join(storiesDir, `${baseFilename}.story.md`)
+  const storyMdPathRelative = relative(gitRoot, storyMdPathAbsolute)
+  const behaviorContent = story.behavior
+  await writeLocalFile(storyMdPathRelative, behaviorContent)
+
+  // Write other details as JSON to .kyoto/artifacts/<name>.json
+  const artifactPathAbsolute = join(artifactsDir, `${baseFilename}.json`)
+  const artifactPathRelative = relative(gitRoot, artifactPathAbsolute)
+  const artifactData = {
     title: story.title,
-    behavior: story.behavior,
     dependencies: story.dependencies,
     acceptanceCriteria: story.acceptanceCriteria,
     assumptions: story.assumptions,
     codeReferences: story.codeReferences,
     ...(composition && { composition }),
   }
+  const artifactContent = JSON.stringify(artifactData, null, 2)
+  await writeLocalFile(artifactPathRelative, artifactContent)
 
-  const content = JSON.stringify(storyToWrite, null, 2)
-  await writeLocalFile(filePath, content)
+  return storyMdPathRelative
 }
 
 /**
@@ -301,10 +317,12 @@ export async function processDiscoveredCandidates(
       // Step 4-6: Write story file, generate embedding, and save to index
       const saveSpinner = createSpinner('Saving: Writing story file...')
 
-      const filename = `${generateStoryFilename(enrichedStory.title)}.json`
-      const { stories: storiesDir } = await pwdKyoto()
-      const filePath = join(storiesDir, filename)
-      await writeStoryFile(enrichedStory, filePath, composition)
+      const baseFilename = generateStoryFilename(enrichedStory.title)
+      const filePath = await writeStoryFile(
+        enrichedStory,
+        baseFilename,
+        composition,
+      )
 
       // Generate embedding
       saveSpinner.update('Saving: Generating embedding...')

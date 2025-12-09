@@ -1,95 +1,24 @@
-import { agents } from '@app/agents'
-import { type DiffEvaluatorOutput } from '@app/schemas'
 import {
   type CommitInfo,
-  getChangedTsFiles,
   getCurrentBranch,
   getLatestCommit,
   getRecentCommits,
 } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
-import { mkdir } from 'node:fs/promises'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import { assertCliPrerequisites } from '../helpers/config/assert-cli-prerequisites'
-import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
+import { init } from '../helpers/config/assert-cli-prerequisites'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
-import { findStoriesByTrace } from '../helpers/stories/find-stories-by-trace'
-import { createSearchStoriesTool } from '../helpers/tools/search-stories-tool'
+import { evaluateDiffTarget } from '../helpers/stories/evaluate-diff-target'
+import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
 import { type Logger } from '../types/logger'
 
 interface VibeProps {
   maxLength?: number
   interval?: number
   simulateCount?: number
-}
-
-async function deterministicCheck(
-  commitSha: string,
-  gitRoot: string,
-): Promise<DiffEvaluatorOutput | null> {
-  const changedTsFiles = await getChangedTsFiles(commitSha, gitRoot)
-
-  if (changedTsFiles.length === 0) {
-    return null
-  }
-
-  const matchedStoryPaths = await findStoriesByTrace({
-    files: changedTsFiles,
-  })
-
-  if (matchedStoryPaths.length > 0) {
-    const matchedStories: DiffEvaluatorOutput['stories'] =
-      matchedStoryPaths.map((filePath) => ({
-        filePath,
-        scopeOverlap: 'significant',
-        reasoning: `Changed file matches story code reference`,
-      }))
-
-    return {
-      text: '',
-      stories: matchedStories,
-    }
-  }
-
-  return null
-}
-
-async function processCommit(
-  commit: CommitInfo,
-  gitRoot: string,
-): Promise<DiffEvaluatorOutput> {
-  const deterministicResult = await deterministicCheck(commit.hash, gitRoot)
-
-  if (deterministicResult === null) {
-    return {
-      text: 'No relevant files changed',
-      stories: [],
-    }
-  }
-
-  const searchStoriesTool = createSearchStoriesTool()
-  const aiResult: DiffEvaluatorOutput = await agents.diffEvaluator.run({
-    commitSha: commit.hash,
-    searchStoriesTool,
-    options: {
-      maxSteps: agents.diffEvaluator.options.maxSteps,
-      onProgress: () => {
-        // Progress callback - currently unused
-      },
-    },
-  })
-
-  if (deterministicResult.stories.length > 0) {
-    return {
-      text: aiResult.text,
-      stories: [...deterministicResult.stories, ...aiResult.stories],
-    }
-  }
-
-  return aiResult
 }
 
 export default function Vibe({
@@ -105,7 +34,6 @@ export default function Vibe({
     message: string
     completed?: boolean
   } | null>(null)
-  const [status, setStatus] = useState<'idle' | 'watching' | 'stopped'>('idle')
   const shouldExitRef = useRef(false)
   const processingRef = useRef(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -126,7 +54,6 @@ export default function Vibe({
       cleanupCalled = true
       shouldExitRef.current = true
       setSpinnerMessage(null)
-      setStatus('stopped')
       if (pollRef.current) {
         clearInterval(pollRef.current)
         pollRef.current = null
@@ -137,28 +64,26 @@ export default function Vibe({
 
     const start = async (): Promise<void> => {
       try {
-        const { gitRoot: root, github } = await assertCliPrerequisites({
+        const { git, fs } = await init({
           requireAi: true,
         })
-        gitRoot = root
+        gitRoot = fs.gitRoot
 
-        const { root: kyotoRoot, details } = await pwdKyoto()
-        detailsPath = details
-        await mkdir(kyotoRoot, { recursive: true })
+        const detailsPath = fs.details
 
-        const commit = await getLatestCommit(gitRoot)
+        const commit = await getLatestCommit(fs.gitRoot)
 
         if (!commit) {
           throw new Error('No commits found in repository')
         }
 
         let lastCommitHash: string | null = commit.shortHash
-        const repoSlug = github
-          ? `${github.owner}/${github.repo}`
-          : (gitRoot.split('/').pop() ?? 'repository')
+        const repoSlug =
+          git.owner && git.repo
+            ? `${git.owner}/${git.repo}`
+            : (fs.gitRoot.split('/').pop() ?? 'repository')
         logger(`Monitoring commits in ${repoSlug}...`)
         logger('\n')
-        setStatus('watching')
 
         const handleCommit = async (
           latestCommit: CommitInfo,
@@ -174,7 +99,10 @@ export default function Vibe({
           })
 
           try {
-            const result = await processCommit(latestCommit, gitRoot)
+            const result = await evaluateDiffTarget(
+              { type: 'commit', commitSha: latestCommit.hash },
+              fs.gitRoot,
+            )
 
             setSpinnerMessage({
               sha: latestCommit.shortHash,
@@ -182,34 +110,10 @@ export default function Vibe({
               completed: true,
             })
 
-            if (result.stories.length > 0) {
-              logger('')
-              logger(
-                `${result.stories.length} ${result.stories.length === 1 ? 'story' : 'stories'} impacted:`,
-                '#7ba179',
-              )
-              logger('')
-
-              for (const story of result.stories) {
-                const overlapColor =
-                  story.scopeOverlap === 'significant'
-                    ? '#c27a52'
-                    : story.scopeOverlap === 'moderate'
-                      ? '#d4a574'
-                      : 'grey'
-
-                logger(story.scopeOverlap.toUpperCase(), overlapColor)
-                logger(`  ${story.filePath}`, 'white')
-                logger(`  ${story.reasoning}`, 'grey')
-                logger('')
-              }
-            } else {
-              logger('No stories impacted', 'grey')
-            }
+            logImpactedStories(result, logger)
             logger('TODO check for new stories', 'yellow')
 
-            const branch = await getCurrentBranch(gitRoot)
-            await updateDetailsJson(detailsPath, branch, latestCommit.hash)
+            await updateDetailsJson(detailsPath, git.branch, latestCommit.hash)
             lastCommitHash = latestCommit.shortHash
           } catch (err) {
             setSpinnerMessage(null)
@@ -241,7 +145,7 @@ export default function Vibe({
             return
           }
 
-          const latestCommit = await getLatestCommit(gitRoot)
+          const latestCommit = await getLatestCommit(fs.gitRoot)
 
           if (!latestCommit || latestCommit.shortHash === lastCommitHash) {
             return
