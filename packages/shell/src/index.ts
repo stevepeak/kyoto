@@ -1,6 +1,7 @@
 // Git
 export { findGitRoot } from './git/find-git-root'
 export { getChangedTsFiles } from './git/get-changed-ts-files'
+export { getStagedTsFiles } from './git/get-staged-ts-files'
 export {
   type CommitInfo,
   getCurrentCommitSha,
@@ -9,6 +10,11 @@ export {
 export { getRecentCommits } from './git/get-recent-commits'
 export { getCurrentBranch } from './git/get-current-branch'
 export { getGitHubInfo, type GitHubInfo } from './git/get-github-info'
+export {
+  hasChanges,
+  hasStagedChanges,
+  isBranchClean,
+} from './git/get-git-status'
 
 // Tools
 export { createLocalReadFileTool, readLocalFile } from './tools/read-file-tool'
