@@ -17,6 +17,112 @@ import TestTrace from './commands/test/trace'
 import Trace from './commands/trace'
 import Vibe from './commands/vibe'
 
+const colors = {
+  red: (text: string): string => `\x1b[31m${text}\x1b[0m`,
+  magenta: (text: string): string => `\x1b[35m${text}\x1b[0m`,
+  cyan: (text: string): string => `\x1b[36m${text}\x1b[0m`,
+  yellow: (text: string): string => `\x1b[33m${text}\x1b[0m`,
+  dim: (text: string): string => `\x1b[90m${text}\x1b[0m`,
+  bold: (text: string): string => `\x1b[1m${text}\x1b[0m`,
+}
+
+const commandGroups = [
+  {
+    title: 'Vibe',
+    accent: colors.dim,
+    commands: [
+      {
+        name: 'vibe',
+        description: 'Monitor the working project commits and log new commits',
+        example: 'kyoto vibe',
+      },
+    ],
+  },
+  {
+    title: 'Stories',
+    accent: colors.dim,
+    commands: [
+      {
+        name: 'craft',
+        description: 'Craft stories or behaviors',
+        example: 'kyoto craft',
+      },
+      {
+        name: 'list|ls',
+        description: 'List all stories',
+        example: 'kyoto list',
+      },
+      {
+        name: 'search <query>',
+        description: 'Search for stories using semantic similarity',
+        example: 'kyoto search "login timeout" --limit 5',
+      },
+      {
+        name: 'trace [source]',
+        description:
+          'List stories that have evidence pointing to the source lines asked to trace',
+        example: 'kyoto trace src/auth.ts',
+      },
+    ],
+  },
+  {
+    title: 'Test',
+    accent: colors.dim,
+    commands: [
+      {
+        name: 'test',
+        description: 'Run tests',
+        examples: [
+          'kyoto test',
+          'kyoto test:browser',
+          'kyoto test:api',
+          'kyoto test:cli',
+          'kyoto test:trace',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Setup',
+    accent: colors.dim,
+    commands: [
+      {
+        name: 'init',
+        description:
+          'Initialize Kyoto by configuring your AI provider and API key',
+        example: 'kyoto init',
+      },
+      {
+        name: 'discover [folder]',
+        description: 'Generate behavior stories from a code file',
+        example: 'kyoto discover . --limit 5',
+      },
+      {
+        name: 'clear',
+        description:
+          'Clear all stories and vectra data, preserving details.json',
+        example: 'kyoto clear',
+      },
+      {
+        name: 'mcp',
+        description: 'MCP command',
+        example: 'kyoto mcp',
+      },
+    ],
+  },
+  {
+    title: 'Help',
+    accent: colors.dim,
+    commands: [
+      {
+        name: 'help [command]',
+        description: 'Display help for a specific command',
+        example: 'kyoto help trace',
+      },
+    ],
+  },
+] as const
+
 function parseInteger(value: unknown): number | undefined {
   if (typeof value === 'number') {
     return value
@@ -31,6 +137,55 @@ function parseInteger(value: unknown): number | undefined {
 async function renderCommand(element: React.ReactElement): Promise<void> {
   const app = render(element)
   await app.waitUntilExit()
+}
+
+function formatKyotoHeader(message = 'Kyoto'): string {
+  const rows = ['入   |  ', '京   |  ', '行   |  ', '改   |  ', '善   |  ']
+  return rows
+    .map(
+      (row, index) =>
+        `${colors.red(row)}${index === 2 ? colors.bold(message) : ''}`,
+    )
+    .join('\n')
+}
+
+function formatKyotoHelp(program: Command): string {
+  const longestName = Math.max(
+    ...commandGroups.flatMap((group) =>
+      group.commands.map((command) => command.name.length),
+    ),
+  )
+  const lines: string[] = []
+
+  lines.push(formatKyotoHeader())
+  lines.push('')
+  lines.push(`${colors.bold('Kyoto CLI')} — behavior-driven stories and tests`)
+  lines.push(`Usage: ${colors.red(`${program.name()} [command]`)}`)
+  lines.push('')
+
+  for (const group of commandGroups) {
+    lines.push(group.accent(group.title))
+    for (const command of group.commands) {
+      const name = command.name.padEnd(longestName)
+      lines.push(`  ${colors.red(name)} ${command.description}`)
+      if ('examples' in command && Array.isArray(command.examples)) {
+        for (const example of command.examples) {
+          lines.push(`    ${colors.dim('e.g.')} ${colors.yellow(example)}`)
+        }
+      } else if ('example' in command) {
+        lines.push(
+          `    ${colors.dim('e.g.')} ${colors.yellow(command.example)}`,
+        )
+      }
+    }
+    lines.push('')
+  }
+
+  lines.push(colors.dim('Global options'))
+  lines.push(`  ${colors.red('-h, --help')} Show help for command`)
+  lines.push('')
+
+  return lines.join('\n')
 }
 
 export async function run(argv = process.argv): Promise<void> {
@@ -190,15 +345,27 @@ export async function run(argv = process.argv): Promise<void> {
       'Polling interval in milliseconds',
       '1000',
     )
-    .action(async (options: { maxLength?: string; interval?: string }) => {
-      await renderCommand(
-        <Vibe
-          maxLength={parseInteger(options.maxLength)}
-          interval={parseInteger(options.interval)}
-        />,
-      )
-    })
+    .option(
+      '-s, --simulate <count>',
+      'Process the last N commits immediately as if they were just made',
+    )
+    .action(
+      async (options: {
+        maxLength?: string
+        interval?: string
+        simulate?: string
+      }) => {
+        await renderCommand(
+          <Vibe
+            maxLength={parseInteger(options.maxLength)}
+            interval={parseInteger(options.interval)}
+            simulateCount={parseInteger(options.simulate)}
+          />,
+        )
+      },
+    )
 
+  program.helpInformation = () => formatKyotoHelp(program)
   program.showHelpAfterError()
 
   if (argv.length <= 2) {
