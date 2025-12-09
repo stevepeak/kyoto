@@ -27,4 +27,4 @@ jobs:
       - name: Run database migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: bun --cwd packages/db db:migrate:up
+        run: bun --cwd packages/db db:migrate
