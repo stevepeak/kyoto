@@ -5,18 +5,106 @@ alwaysApply: true
 ---
 
 # Important
+- 💋 KISS - most simple solution. It's OK to leave `// TODO ..` if scope is to large
 
-- 💋 KISS - I want to most simple solution
-- When necessary adjust types and schemas first before implementing logic.
-- If using the Linear MCP, the team is "kyoto"
-- If my prompt has any specific wisdom, write it to `.wisdom` folder in a readme as an artifact.
-- use package.json workspaces catalog for installing new dependancies
+## Development Process
+- **Type driven development** - When necessary adjust types and schemas first before implementing logic.
+- **Run typecheck** - Run typecheck after changes via `bun run --cwd <domain> typecheck` and fix issues.
+- **Named args** - use named arguments `(args: {foo: string})` over inline arguments `(foo: string)`
+- **Shadcn** - never make changes to ./components/ui files
 - Do not change `tsconfig.json`, ask permission with explaination if necessary
-- used named arguments `(args: {foo: string})` over inline arguments `(foo: string)`
-- never make changes to ./components/ui files
+
+## Packages
+- use package.json workspaces catalog for installing new dependancies
+
+## Project Management
+- If using the Linear MCP, the team is "kyoto"
 
 ## Current dev status
 
 Current status: `in development`
 
 The application is in early development with no users or deployment. Breaking changes and data migrations are not a concern. Do not leave any backwards compatibility except in database migrations.
+
+
+## Package Review Summary
+
+### Core Infrastructure Packages
+
+**`@app/config`**
+- Purpose: Centralized environment variable parsing and validation
+- Value: Type-safe config with Zod validation; single source of truth for env vars
+- Why it exists: Prevents config errors and provides consistent access across the monorepo
+
+**`@app/schemas`**
+- Purpose: Shared Zod schemas for the story evaluation flow
+- Value: Type-safe data contracts between frontend/backend; documents the story flow (raw → composition → evaluation → cache)
+- Why it exists: Ensures type safety and consistency across the app
+
+**`@app/db`**
+- Purpose: Drizzle ORM database package
+- Value: Type-safe database access, migrations, schema management
+- Why it exists: Centralizes database logic and provides a consistent DB interface
+
+**`@app/utils`**
+- Purpose: General JavaScript utilities
+- Value: Reusable helpers (type checking, noop, etc.)
+- Why it exists: Shared utilities to avoid duplication
+
+### API & Business Logic
+
+**`@app/api`**
+- Purpose: Server-side tRPC API definitions
+- Value: Type-safe API layer with routers (user, org, repo, story, run, feedback, trigger)
+- Why it exists: Centralizes all API endpoints with end-to-end type safety
+
+### AI & Agent Packages
+
+**`@app/agents`**
+- Purpose: AI agent tooling and MCP integration
+- Value: Orchestrates 10+ specialized agents (discovery, composition, evaluation, enrichment, impact analysis, etc.)
+- Why it exists: Core AI functionality for story discovery, evaluation, and management
+
+**`@app/vectra`**
+- Purpose: Vector database helpers using vectra
+- Value: Semantic search and embeddings for similarity
+- Why it exists: Enables semantic search for stories and related content
+
+### External Service Integrations
+
+**`@app/browserbase`**
+- Purpose: Browserbase tools for AI agents
+- Value: Browser automation tools (act, extract, observe, goto, agent) for web interactions
+- Why it exists: Enables agents to interact with web browsers
+
+**`@app/context7`**
+- Purpose: Context7 API integration tools
+- Value: Library documentation resolution and retrieval for agents
+- Why it exists: Provides agents with access to library documentation
+
+**`@app/daytona`**
+- Purpose: Daytona sandbox integration utilities
+- Value: Tools for interacting with sandboxed development environments (terminal, LSP, file operations)
+- Why it exists: Enables agents to work in isolated sandbox environments
+
+**`@app/linear`**
+- Purpose: Linear API integration for creating issues
+- Value: Creates Linear issues, customers, and customer requests
+- Why it exists: Integrates story management with Linear
+
+**`@app/posthog`**
+- Purpose: PostHog analytics tracking
+- Value: Server-side event tracking for product analytics
+- Why it exists: Tracks user behavior and product metrics
+
+### Specialized Services
+
+**`@app/cache`**
+- Purpose: Cache service for story evaluation evidence
+- Value: Caches evaluation evidence with file hash validation to avoid re-evaluation
+- Why it exists: Performance optimization; prevents redundant evaluations when files haven't changed
+
+**`@app/shell`**
+- Purpose: Shell tools for file system and terminal operations
+- Value: Git operations (commits, branches, changed files) and file system tools for agents
+- Why it exists: Provides agents with filesystem and git capabilities
