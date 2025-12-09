@@ -101,8 +101,9 @@ export default function Vibe({
   const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
   const [error, setError] = useState<string | null>(null)
   const [spinnerMessage, setSpinnerMessage] = useState<{
+    sha: string
     message: string
-    color?: string
+    completed?: boolean
   } | null>(null)
   const [status, setStatus] = useState<'idle' | 'watching' | 'stopped'>('idle')
   const shouldExitRef = useRef(false)
@@ -155,8 +156,8 @@ export default function Vibe({
         const repoSlug = github
           ? `${github.owner}/${github.repo}`
           : (gitRoot.split('/').pop() ?? 'repository')
-        logger(`Monitoring commits to ${repoSlug}...`, 'grey')
-        logger('')
+        logger(`Monitoring commits in ${repoSlug}...`)
+        logger('\n')
         setStatus('watching')
 
         const handleCommit = async (
@@ -168,14 +169,18 @@ export default function Vibe({
               : latestCommit.message
 
           setSpinnerMessage({
-            message: `${latestCommit.shortHash} ${truncatedMessage}`,
-            color: '#7b301f',
+            sha: latestCommit.shortHash,
+            message: truncatedMessage,
           })
 
           try {
             const result = await processCommit(latestCommit, gitRoot)
 
-            setSpinnerMessage(null)
+            setSpinnerMessage({
+              sha: latestCommit.shortHash,
+              message: truncatedMessage,
+              completed: true,
+            })
 
             if (result.stories.length > 0) {
               logger('')
@@ -199,9 +204,9 @@ export default function Vibe({
                 logger('')
               }
             } else {
-              logger('  No stories impacted', 'grey')
+              logger('No stories impacted', 'grey')
             }
-            logger('  TODO check for new stories', 'yellow')
+            logger('TODO check for new stories', 'yellow')
 
             const branch = await getCurrentBranch(gitRoot)
             await updateDetailsJson(detailsPath, branch, latestCommit.hash)
@@ -283,22 +288,29 @@ export default function Vibe({
   return (
     <Box flexDirection="column">
       <Header message="Vibe in Kyoto" />
-      {spinnerMessage ? (
-        <Box marginBottom={1} gap={1}>
-          <Text color="red">
-            <Spinner type="dots" />
-          </Text>
-          <Text color={spinnerMessage.color}>{spinnerMessage.message}</Text>
-        </Box>
-      ) : null}
-      {status === 'watching' ? (
-        <Text color="grey">Watching for new commits...</Text>
-      ) : null}
+      <Text color="grey">
+        Kyoto monitors code changes finding new/changed user behaviors. New or
+        changed user behaviors will be tested via browser automation and deep
+        trace analysis to ensure existing and new functionality remains working.
+      </Text>
       {logs.map((line, index) => (
         <Text key={`${index}-${line.message}`} color={line.color}>
           {line.message}
         </Text>
       ))}
+      {spinnerMessage ? (
+        <Box marginBottom={1} gap={1}>
+          {spinnerMessage.completed ? (
+            <Text color="green">√</Text>
+          ) : (
+            <Text color="red">
+              <Spinner type="dots" />
+            </Text>
+          )}
+          <Text color="#7b301f">{spinnerMessage.sha}</Text>
+          <Text color="grey">{spinnerMessage.message}</Text>
+        </Box>
+      ) : null}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>
   )
