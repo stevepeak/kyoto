@@ -1,7 +1,7 @@
 import { Command } from 'commander'
-import { render } from 'ink'
-import React from 'react'
-import { dedent } from 'ts-dedent'
+import { Box, render, Text, useApp } from 'ink'
+import Link from 'ink-link'
+import React, { useEffect } from 'react'
 
 import Clear from './commands/clear'
 import Craft from './commands/craft'
@@ -29,112 +29,93 @@ const colors = {
 
 const commandGroups = [
   {
-    title: 'Vibe',
-    accent: colors.dim,
+    title: 'Continuous Vibe Testing',
+    kanji: '改善',
     commands: [
       {
         name: 'vibe',
-        description: dedent`
-          Kyoto monitors code changes finding new/changed user behaviors. New or
-          changed user behaviors will be tested via browser automation and deep
-          trace analysis to ensure existing and new functionality remains working.
-        `,
+        description:
+          'Maintain and test user stories continuously upon new git commits.',
         example: 'kyoto vibe',
       },
       {
         name: 'vibe check',
         description:
-          'Evaluate staged changes for impacted stories before committing',
+          'Test and diff user stories against staged changes (not yet commited).',
         example: 'kyoto vibe check',
-      },
-      {
-        name: 'vibe check --include-unstaged',
-        description:
-          'Evaluate unstaged changes (including untracked files) for impacted stories',
-        example: 'kyoto vibe check --include-unstaged',
       },
     ],
   },
   {
     title: 'Stories',
-    accent: colors.dim,
+    kanji: '物語',
     commands: [
       {
         name: 'craft',
-        description: 'Craft stories or behaviors',
+        description: 'Create or refine a user story with AI.',
         example: 'kyoto craft',
       },
       {
-        name: 'list|ls',
-        description: 'List all stories',
+        name: 'list',
+        description: 'List stories in the current project.',
         example: 'kyoto list',
       },
       {
-        name: 'search <query>',
-        description: 'Search for stories using semantic similarity',
-        example: 'kyoto search "login timeout" --limit 5',
+        name: '<query>',
+        description: 'Search stories by natural language query.',
+        example: 'kyoto "how do customers login?"',
       },
       {
-        name: 'trace [source]',
-        description:
-          'List stories that have evidence pointing to the source lines asked to trace',
-        example: 'kyoto trace src/auth.ts',
+        name: 'trace [story]',
+        description: 'Display all the code required to fulfill a user story.',
+        example: 'kyoto trace [story]',
       },
     ],
   },
   {
     title: 'Test',
-    accent: colors.dim,
+    kanji: '試験',
     commands: [
       {
         name: 'test',
-        description: 'Run tests',
-        examples: [
-          'kyoto test',
-          'kyoto test:browser',
-          'kyoto test:api',
-          'kyoto test:cli',
-          'kyoto test:trace',
-        ],
+        description: 'Run tests for all stories.',
+        example: 'kyoto test',
+      },
+      {
+        name: 'test:browser',
+        description: 'Run browser tests.',
+        example: ['kyoto test:browser', 'kyoto test:browser --headless'],
+      },
+      {
+        name: 'test:cli',
+        description: 'Run CLI tests.',
+        example: 'kyoto test:cli',
+      },
+      {
+        name: 'test:trace',
+        description: 'Run tests with trace.',
+        example: 'kyoto test:trace',
       },
     ],
   },
   {
     title: 'Setup',
-    accent: colors.dim,
+    kanji: '設定',
     commands: [
       {
         name: 'init',
-        description:
-          'Initialize Kyoto by configuring your AI provider and API key',
+        description: 'Configure AI provider & API key.',
         example: 'kyoto init',
       },
       {
-        name: 'discover [folder]',
-        description: 'Generate behavior stories from a code file',
-        example: 'kyoto discover . --limit 5',
-      },
-      {
-        name: 'clear',
-        description:
-          'Clear all stories and vectra data, preserving config.json',
-        example: 'kyoto clear',
+        name: 'discover',
+        description: 'Generate new stories from code.',
+        example: ['kyoto discover', 'kyoto discover apps/web --limit 3'],
       },
       {
         name: 'mcp',
-        description: 'MCP command',
+        description: "Run Kyoto's MCP service for AI agent story exploration.",
         example: 'kyoto mcp',
-      },
-    ],
-  },
-  {
-    title: 'Help',
-    accent: colors.dim,
-    commands: [
-      {
-        name: 'help [command]',
-        description: 'Display help for a specific command',
-        example: 'kyoto help trace',
       },
     ],
   },
@@ -166,8 +147,114 @@ function formatKyotoHeader(message = 'Kyoto'): string {
     .join('\n')
 }
 
+function GroupHeader({
+  title,
+  kanji,
+}: {
+  title: string
+  kanji?: string
+}): React.ReactElement {
+  return (
+    <Box flexDirection="row" gap={1}>
+      {kanji && <Text color="red">{kanji}</Text>}
+      <Text>{title}</Text>
+    </Box>
+  )
+}
+
+function Help(): React.ReactElement {
+  const { exit } = useApp()
+  const columnWidth = Math.max(
+    ...commandGroups.flatMap((group) =>
+      group.commands.map((command) => command.name.length),
+    ),
+  )
+
+  useEffect(() => {
+    // Allow the render to flush before exiting
+    setTimeout(() => {
+      exit()
+    }, 0)
+  }, [exit])
+
+  return (
+    <Box flexDirection="column">
+      <Text>{formatKyotoHeader()}</Text>
+      <Text> </Text>
+      <Text color="gray" italic>
+        The way of the vibe.
+      </Text>
+      <Text> </Text>
+
+      {commandGroups.map((group) => (
+        <Box key={group.title} flexDirection="column" marginBottom={1}>
+          <GroupHeader
+            title={group.title}
+            kanji={(group as { kanji?: string }).kanji}
+          />
+
+          <Text dimColor>
+            ──────────────────────────────────────────────────
+          </Text>
+
+          {group.commands.map((command) => (
+            <Box key={command.name} flexDirection="column">
+              <Box>
+                <Text color="red">{command.name.padEnd(columnWidth)}</Text>
+                <Text> {command.description}</Text>
+              </Box>
+              {'examples' in command && Array.isArray(command.examples) ? (
+                command.examples.map((example) => (
+                  <Box key={example}>
+                    <Text>{' '.repeat(columnWidth + 1)}</Text>
+                    <Text dimColor>e.g. </Text>
+                    <Text color="yellow">{example}</Text>
+                  </Box>
+                ))
+              ) : 'example' in command ? (
+                Array.isArray(command.example) ? (
+                  command.example.map((example) => (
+                    <Box key={example}>
+                      <Text>{' '.repeat(columnWidth + 1)}</Text>
+                      <Text dimColor>e.g. </Text>
+                      <Text color="yellow">{example}</Text>
+                    </Box>
+                  ))
+                ) : (
+                  <Box>
+                    <Text>{' '.repeat(columnWidth + 1)}</Text>
+                    <Text dimColor>e.g. </Text>
+                    <Text color="yellow">{command.example}</Text>
+                  </Box>
+                )
+              ) : null}
+            </Box>
+          ))}
+
+          <Text> </Text>
+        </Box>
+      ))}
+
+      <Box>
+        <Text>
+          <Link url="https://usekyoto.com">
+            <Text color="red">Kyoto</Text>
+          </Link>{' '}
+          <Text color="grey">
+            is crafted with intention by{' '}
+            <Link url="https://x.com/iopeak">@iopeak</Link>
+          </Text>
+        </Text>
+      </Box>
+      {/* some extra space */}
+      <Text> </Text>
+      <Text> </Text>
+    </Box>
+  )
+}
+
 function formatKyotoHelp(program: Command): string {
-  const longestName = Math.max(
+  const columnWidth = Math.max(
     ...commandGroups.flatMap((group) =>
       group.commands.map((command) => command.name.length),
     ),
@@ -176,30 +263,45 @@ function formatKyotoHelp(program: Command): string {
 
   lines.push(formatKyotoHeader())
   lines.push('')
-  lines.push(`${colors.bold('Kyoto CLI')} — behavior-driven stories and tests`)
-  lines.push(`Usage: ${colors.red(`${program.name()} [command]`)}`)
+  lines.push(`Contininous vibe testing.`)
   lines.push('')
 
   for (const group of commandGroups) {
-    lines.push(group.accent(group.title))
+    const accent =
+      (group as { accent?: typeof colors.dim }).accent ?? colors.dim
+    lines.push(
+      `${accent('─'.repeat(10))}  ${group.title}  ${accent('─'.repeat(10))}`,
+    )
     for (const command of group.commands) {
-      const name = command.name.padEnd(longestName)
+      const name = command.name.padEnd(columnWidth)
       lines.push(`  ${colors.red(name)} ${command.description}`)
       if ('examples' in command && Array.isArray(command.examples)) {
         for (const example of command.examples) {
-          lines.push(`    ${colors.dim('e.g.')} ${colors.yellow(example)}`)
+          lines.push(
+            `                               ${colors.dim('e.g.')} ${colors.yellow(example)}`,
+          )
         }
       } else if ('example' in command) {
-        lines.push(
-          `    ${colors.dim('e.g.')} ${colors.yellow(command.example)}`,
-        )
+        if (Array.isArray(command.example)) {
+          for (const example of command.example) {
+            lines.push(
+              `                               ${colors.dim('e.g.')} ${colors.yellow(example)}`,
+            )
+          }
+        } else if (typeof command.example === 'string') {
+          lines.push(
+            `                               ${colors.dim('e.g.')} ${colors.yellow(command.example)}`,
+          )
+        }
       }
     }
     lines.push('')
   }
 
-  lines.push(colors.dim('Global options'))
-  lines.push(`  ${colors.red('-h, --help')} Show help for command`)
+  lines.push(
+    `${colors.dim('─'.repeat(10))}  Global Options  ${colors.dim('─'.repeat(10))}`,
+  )
+  lines.push(`  ${colors.red('-h, --help')}                 Show help.`)
   lines.push('')
 
   return lines.join('\n')
@@ -225,28 +327,40 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<Clear />)
     })
 
-  program
-    .command('search <query>')
-    .description('Search for stories using semantic similarity')
-    .option('-k, --limit <limit>', 'Maximum number of stories to return', '10')
-    .option(
-      '-t, --threshold <threshold>',
-      'Minimum similarity score threshold (0-1)',
+  // Handle unmatched commands as search queries
+  program.on('command:*', async (operands) => {
+    const query = operands[0]
+    if (!query) {
+      program.help()
+      return
+    }
+
+    // Create a temporary command to parse options
+    const searchCmd = new Command()
+    searchCmd
+      .option(
+        '-k, --limit <limit>',
+        'Maximum number of stories to return',
+        '10',
+      )
+      .option(
+        '-t, --threshold <threshold>',
+        'Minimum similarity score threshold (0-1)',
+      )
+
+    // Parse the remaining arguments as options
+    const remainingArgs = operands.slice(1)
+    const parsed = searchCmd.parse(['', '', ...remainingArgs], { from: 'user' })
+    const options = parsed.opts() as { limit?: string; threshold?: string }
+
+    await renderCommand(
+      <Search
+        query={query}
+        limit={parseInteger(options.limit)}
+        threshold={options.threshold}
+      />,
     )
-    .action(
-      async (
-        query: string,
-        options: { limit?: string; threshold?: string },
-      ) => {
-        await renderCommand(
-          <Search
-            query={query}
-            limit={parseInteger(options.limit)}
-            threshold={options.threshold}
-          />,
-        )
-      },
-    )
+  })
 
   program
     .command('discover [folder]')
@@ -401,9 +515,92 @@ export async function run(argv = process.argv): Promise<void> {
   program.showHelpAfterError()
 
   if (argv.length <= 2) {
-    program.outputHelp()
+    await renderCommand(<Help />)
     return
   }
+
+  // List of known commands
+  const knownCommands = [
+    'list',
+    'ls',
+    'clear',
+    'discover',
+    'init',
+    'craft',
+    'mcp',
+    'test',
+    'test:browser',
+    'test:api',
+    'test:cli',
+    'test:trace',
+    'trace',
+    'vibe',
+    'help',
+    '--help',
+    '-h',
+  ]
+
+  // Check if first argument is a known command
+  const firstArg = argv[2]
+  const isKnownCommand =
+    knownCommands.includes(firstArg) || firstArg?.startsWith('test:')
+
+  // Helper function to parse search options from argv
+  const parseSearchOptions = (
+    args: string[],
+  ): { limit?: string; threshold?: string } => {
+    const options: { limit?: string; threshold?: string } = {}
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i]
+      if (arg === '-k' || arg === '--limit') {
+        options.limit = args[i + 1]
+        i++
+      } else if (arg === '-t' || arg === '--threshold') {
+        options.threshold = args[i + 1]
+        i++
+      } else if (arg.startsWith('--limit=')) {
+        options.limit = arg.split('=')[1]
+      } else if (arg.startsWith('--threshold=')) {
+        options.threshold = arg.split('=')[1]
+      } else if (arg.startsWith('-k') && arg.length > 2) {
+        options.limit = arg.slice(2)
+      } else if (arg.startsWith('-t') && arg.length > 2) {
+        options.threshold = arg.slice(2)
+      }
+    }
+    return options
+  }
+
+  // If not a known command, treat it as a search query
+  if (!isKnownCommand && firstArg) {
+    const remainingArgs = argv.slice(3)
+    const options = parseSearchOptions(remainingArgs)
+    // Default limit to 10 if not provided
+    const limit = options.limit ? parseInteger(options.limit) : 10
+
+    await renderCommand(
+      <Search query={firstArg} limit={limit} threshold={options.threshold} />,
+    )
+    return
+  }
+
+  // Handle unmatched commands as search queries (fallback)
+  program.on('command:*', async (operands) => {
+    const query = operands[0]
+    if (!query) {
+      program.help()
+      return
+    }
+
+    const remainingArgs = operands.slice(1)
+    const options = parseSearchOptions(remainingArgs)
+    // Default limit to 10 if not provided
+    const limit = options.limit ? parseInteger(options.limit) : 10
+
+    await renderCommand(
+      <Search query={query} limit={limit} threshold={options.threshold} />,
+    )
+  })
 
   await program.parseAsync(argv)
 }

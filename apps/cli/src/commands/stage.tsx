@@ -48,13 +48,13 @@ export default function VibeCheck({
               setWarnings([
                 <Box flexDirection="column" key="no-staged-with-unstaged">
                   <Text color="grey">No staged changes found.</Text>
+                  <Text> </Text>
                   <Text color="grey">
-                    You have unstaged changes, do you want Kyoto to vibe check
-                    those?
+                    You can vibe check your unstaged changes via:
                   </Text>
-                  <Text color="yellow">$</Text>
-                  <Text color="green"> kyoto </Text>
-                  vibe check --include-unstaged
+                  <Text color="yellow">
+                    kyoto vibe check --include-unstaged
+                  </Text>
                 </Box>,
               ])
             } else {
@@ -199,7 +199,9 @@ export default function VibeCheck({
             <Text color="red">
               <Spinner type="squareCorners" />
             </Text>
-            <Text>Analyzing changes...</Text>
+            <Text>
+              Analyzing {includeUnstaged ? 'all' : 'staged'} changes...
+            </Text>
           </Box>
           {logs.map((line) => (
             <React.Fragment key={line.key}>

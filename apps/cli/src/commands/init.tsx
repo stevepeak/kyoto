@@ -51,7 +51,9 @@ export default function Init(): React.ReactElement {
   const [provider, setProvider] = useState<Provider | null>(null)
   const [apiKey, setApiKey] = useState('')
   const [step, setStep] = useState<Step>('check-existing')
-  const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
+  const [logs, setLogs] = useState<
+    Array<{ message: string; color?: string } | { content: React.ReactElement }>
+  >([])
   const [error, setError] = useState<string | null>(null)
   const [existingConfig, setExistingConfig] = useState<{
     provider: Provider
@@ -157,6 +159,46 @@ export default function Init(): React.ReactElement {
         const sha = await getCurrentCommitSha(gitRoot)
         await updateDetailsJson(detailsPath, branch, sha)
 
+        // Update .gitignore to include .kyoto/.ignore
+        const gitignorePath = join(gitRoot, '.gitignore')
+        const ignorePattern = '.kyoto/.ignore'
+        let gitignoreUpdated = false
+
+        try {
+          let gitignoreContent = ''
+          try {
+            gitignoreContent = await readFile(gitignorePath, 'utf-8')
+          } catch {
+            // .gitignore doesn't exist, we'll create it
+            gitignoreContent = ''
+          }
+
+          // Check if the pattern already exists
+          const lines = gitignoreContent.split('\n')
+          const patternExists = lines.some(
+            (line) => line.trim() === ignorePattern,
+          )
+
+          if (!patternExists) {
+            // Add the pattern to .gitignore
+            const newContent =
+              gitignoreContent.trim() === ''
+                ? ignorePattern
+                : gitignoreContent.trimEnd() + '\n' + ignorePattern + '\n'
+            await writeFile(gitignorePath, newContent, 'utf-8')
+            gitignoreUpdated = true
+          }
+        } catch (err) {
+          // If we can't update .gitignore, log a warning but don't fail
+          setLogs((prev) => [
+            ...prev,
+            {
+              message: `\n⚠️  Could not update .gitignore: ${err instanceof Error ? err.message : 'Unknown error'}\n`,
+              color: '#c27a52',
+            },
+          ])
+        }
+
         setLogs((prev) => [
           ...prev,
           {
@@ -167,6 +209,21 @@ export default function Init(): React.ReactElement {
             color: 'grey',
           },
         ])
+
+        if (gitignoreUpdated) {
+          setLogs((prev) => [
+            ...prev,
+            {
+              message: '✓ Added .kyoto/.ignore to .gitignore\n',
+              color: 'grey',
+            },
+            {
+              message:
+                '⚠️  Please commit the .gitignore change to keep your API key secure\n',
+              color: '#c27a52',
+            },
+          ])
+        }
         setStep('done')
 
         // Wait a moment to show the success message before exiting
@@ -265,8 +322,19 @@ export default function Init(): React.ReactElement {
                     color: 'grey',
                   },
                   {
-                    message:
-                      'Kyoto is ready to vibe.\n\nNext steps:\n  kyoto vibe    - monitor commits\n  kyoto craft  - write a story\n',
+                    message: 'Kyoto is ready to vibe.',
+                    color: 'red',
+                  },
+                  {
+                    content: (
+                      <Text>
+                        {'\nNext steps:\n  '}
+                        <Text color="yellow">kyoto vibe</Text>
+                        {'   - Continuous commit monitoring.\n  '}
+                        <Text color="yellow">kyoto craft</Text>
+                        {'  - Create a new user story.\n'}
+                      </Text>
+                    ),
                   },
                 ])
                 setStep('done')
@@ -321,11 +389,16 @@ export default function Init(): React.ReactElement {
         </Box>
       ) : null}
 
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
-      ))}
+      {logs.map((line, index) => {
+        if ('content' in line) {
+          return <React.Fragment key={index}>{line.content}</React.Fragment>
+        }
+        return (
+          <Text key={`${index}-${line.message}`} color={line.color}>
+            {line.message}
+          </Text>
+        )
+      })}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>
   )
