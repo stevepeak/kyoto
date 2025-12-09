@@ -3,13 +3,15 @@ import { Box, Text, useApp } from 'ink'
 import SelectInput from 'ink-select-input'
 import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import React, { useEffect, useMemo, useState } from 'react'
 
+import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
 import { getAiConfig } from '../helpers/config/get-ai-config'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
+import { useCliLogger } from '../helpers/logging/logger'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
 
@@ -46,14 +48,26 @@ function getDefaultModelForProvider(provider: Provider): string {
   }
 }
 
+function getReadyMessage(): React.ReactElement {
+  return (
+    <Text>
+      {'\n'}
+      <Text color="red">Kyoto is ready to vibe.</Text>
+      {'\n\nNext steps:\n  '}
+      <Text color="yellow">kyoto vibe</Text>
+      {'   - Continuous commit monitoring.\n  '}
+      <Text color="yellow">kyoto craft</Text>
+      {'  - Create a new user story.\n'}
+    </Text>
+  )
+}
+
 export default function Init(): React.ReactElement {
   const { exit } = useApp()
   const [provider, setProvider] = useState<Provider | null>(null)
   const [apiKey, setApiKey] = useState('')
   const [step, setStep] = useState<Step>('check-existing')
-  const [logs, setLogs] = useState<
-    Array<{ message: string; color?: string } | { content: React.ReactElement }>
-  >([])
+  const { logs, logger } = useCliLogger()
   const [error, setError] = useState<string | null>(null)
   const [existingConfig, setExistingConfig] = useState<{
     provider: Provider
@@ -125,13 +139,9 @@ export default function Init(): React.ReactElement {
     const save = async (): Promise<void> => {
       try {
         const gitRoot = await findGitRoot()
-        const kyotoDir = join(gitRoot, '.kyoto')
-        await mkdir(kyotoDir, { recursive: true })
+        const fsPaths = await pwdKyoto(gitRoot)
 
-        const ignoreDir = join(kyotoDir, '.ignore')
-        await mkdir(ignoreDir, { recursive: true })
-
-        const detailsPath = join(ignoreDir, 'config.json')
+        const detailsPath = fsPaths.config
         let details: DetailsJson = {}
 
         try {
@@ -159,9 +169,9 @@ export default function Init(): React.ReactElement {
         const sha = await getCurrentCommitSha(gitRoot)
         await updateDetailsJson(detailsPath, branch, sha)
 
-        // Update .gitignore to include .kyoto/.ignore
+        // Update .gitignore to include .kyoto/cache
         const gitignorePath = join(gitRoot, '.gitignore')
-        const ignorePattern = '.kyoto/.ignore'
+        const ignorePattern = '.kyoto/cache'
         let gitignoreUpdated = false
 
         try {
@@ -190,52 +200,38 @@ export default function Init(): React.ReactElement {
           }
         } catch (err) {
           // If we can't update .gitignore, log a warning but don't fail
-          setLogs((prev) => [
-            ...prev,
-            {
-              message: `\n⚠️  Could not update .gitignore: ${err instanceof Error ? err.message : 'Unknown error'}\n`,
-              color: '#c27a52',
-            },
-          ])
+          logger(
+            <Text color="#c27a52">
+              {`\n⚠️  Could not update .gitignore: ${err instanceof Error ? err.message : 'Unknown error'}\n`}
+            </Text>,
+          )
         }
 
-        setLogs((prev) => [
-          ...prev,
-          {
-            message: `\n✓ Successfully configured ${providerLabel} provider\n`,
-          },
-          {
-            message: 'Configuration saved\n',
-            color: 'grey',
-          },
-        ])
+        logger(
+          <Text>
+            <Text color="green">✓</Text> Successfully configured {providerLabel}{' '}
+            provider
+          </Text>,
+        )
 
         if (gitignoreUpdated) {
-          setLogs((prev) => [
-            ...prev,
-            {
-              message: '✓ Added .kyoto/.ignore to .gitignore\n',
-              color: 'grey',
-            },
-            {
-              message:
-                '⚠️  Please commit the .gitignore change to keep your API key secure\n',
-              color: '#c27a52',
-            },
-          ])
+          logger(
+            <Text>
+              <Text color="green">✓</Text> Added .kyoto/cache to .gitignore
+            </Text>,
+          )
+          logger(
+            <Text color="#c27a52">
+              ⚠️ Please commit the .gitignore change to keep your API key secure
+            </Text>,
+          )
         }
         setStep('done')
 
         // Wait a moment to show the success message before exiting
         await new Promise((resolve) => setTimeout(resolve, 500))
 
-        setLogs((prev) => [
-          ...prev,
-          {
-            message:
-              '\nKyoto is ready to vibe.\n\nNext steps:\n  kyoto vibe    - monitor commits\n  kyoto craft  - write a story\n',
-          },
-        ])
+        logger(getReadyMessage())
 
         // Wait a bit more to show the final message
         await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -248,13 +244,7 @@ export default function Init(): React.ReactElement {
           message.includes('Git repository') ||
           message.includes('not a git repository')
         ) {
-          setLogs((prev) => [
-            ...prev,
-            {
-              message: `\n⚠️  ${message}\n`,
-              color: '#c27a52',
-            },
-          ])
+          logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
         } else {
           setError(message)
         }
@@ -283,7 +273,7 @@ export default function Init(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header message="Initialize Kyoto" />
+      <Header />
       {step === 'check-existing' ? (
         <Box marginTop={1} gap={1}>
           <Text color="red">
@@ -316,27 +306,8 @@ export default function Init(): React.ReactElement {
                 setStep('select-provider')
                 setError(null)
               } else {
-                setLogs([
-                  {
-                    message: '\nKeeping current configuration.\n',
-                    color: 'grey',
-                  },
-                  {
-                    message: 'Kyoto is ready to vibe.',
-                    color: 'red',
-                  },
-                  {
-                    content: (
-                      <Text>
-                        {'\nNext steps:\n  '}
-                        <Text color="yellow">kyoto vibe</Text>
-                        {'   - Continuous commit monitoring.\n  '}
-                        <Text color="yellow">kyoto craft</Text>
-                        {'  - Create a new user story.\n'}
-                      </Text>
-                    ),
-                  },
-                ])
+                logger(<Text color="grey">Keeping current configuration.</Text>)
+                logger(getReadyMessage())
                 setStep('done')
                 setTimeout(() => {
                   exit()
@@ -389,15 +360,8 @@ export default function Init(): React.ReactElement {
         </Box>
       ) : null}
 
-      {logs.map((line, index) => {
-        if ('content' in line) {
-          return <React.Fragment key={index}>{line.content}</React.Fragment>
-        }
-        return (
-          <Text key={`${index}-${line.message}`} color={line.color}>
-            {line.message}
-          </Text>
-        )
+      {logs.map((line) => {
+        return <React.Fragment key={line.key}>{line.content}</React.Fragment>
       })}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>

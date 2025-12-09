@@ -1,26 +1,16 @@
 import { Box, Text, useApp } from 'ink'
 import { rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
-import { type Logger } from '../types/logger'
+import { useCliLogger } from '../helpers/logging/logger'
 
 export default function Clear(): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
-    [],
-  )
+  const { logs, logger } = useCliLogger()
   const [error, setError] = useState<string | null>(null)
-
-  const logger = useCallback<Logger>((message) => {
-    const content =
-      typeof message === 'string' ? <Text>{message}</Text> : message
-
-    const key = `${Date.now()}-${Math.random()}`
-    setLogs((prev) => [...prev, { content, key }])
-  }, [])
 
   useEffect(() => {
     const run = async (): Promise<void> => {
@@ -61,7 +51,7 @@ export default function Clear(): React.ReactElement {
           }
         }
 
-        const vectraPath = join(root, '.ignore', 'vectra.json')
+        const vectraPath = join(root, 'cache', 'vectra.json')
         try {
           await stat(vectraPath)
           await rm(vectraPath, { recursive: true, force: true })

@@ -14,7 +14,7 @@ interface DetailsJson {
 }
 
 /**
- * Updates the .kyoto/.ignore/config.json file with the latest branch and commit SHA
+ * Updates the .kyoto/cache/config.json file with the latest branch and commit SHA
  */
 export async function updateDetailsJson(
   detailsPath: string,

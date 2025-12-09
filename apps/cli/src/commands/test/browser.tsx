@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 import { getModel } from '../../helpers/config/get-model'
 import { Header } from '../../helpers/display/display-header'
+import { useCliLogger } from '../../helpers/logging/logger'
 
 // Browser tools context
 interface BrowserToolsContext {
@@ -172,9 +173,12 @@ export default function TestBrowser({
   const { exit } = useApp()
   const [status, setStatus] = useState('Starting...')
   const [error, setError] = useState<string | null>(null)
+  const { logs, logger } = useCliLogger()
 
   useEffect(() => {
     let isMounted = true
+
+    logger('Starting browser tests')
 
     const run = async (): Promise<void> => {
       let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null
@@ -200,6 +204,7 @@ export default function TestBrowser({
           onProgress: (message: string) => {
             if (isMounted) {
               setStatus(message)
+              logger(message)
             }
           },
         }
@@ -231,6 +236,7 @@ export default function TestBrowser({
 
         if (!isMounted) return
         setStatus('Starting browser automation with AI agent...')
+        logger('Starting browser automation with AI agent...')
 
         await agent.generate({
           prompt: dedent`
@@ -240,12 +246,14 @@ export default function TestBrowser({
 
         if (!isMounted) return
         setStatus('Test finished successfully')
+        logger('Test finished successfully')
         gracefulExit()
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Failed to run browser test.'
         if (isMounted) {
           setError(message)
+          logger(`Error: ${message}`)
         }
         process.exitCode = 1
         gracefulExit()
@@ -257,6 +265,10 @@ export default function TestBrowser({
           } catch (closeErr) {
             if (closeErr instanceof Error && isMounted) {
               setError(
+                closeErr.message ||
+                  'Failed to close browser after running test.',
+              )
+              logger(
                 closeErr.message ||
                   'Failed to close browser after running test.',
               )
@@ -272,7 +284,7 @@ export default function TestBrowser({
     return () => {
       isMounted = false
     }
-  }, [exit, headless])
+  }, [exit, headless, logger])
 
   return (
     <Box flexDirection="column">
@@ -280,6 +292,9 @@ export default function TestBrowser({
       <Text color={error ? 'red' : 'green'}>
         {error ? `Error: ${error}` : status}
       </Text>
+      {logs.map((line) => (
+        <React.Fragment key={line.key}>{line.content}</React.Fragment>
+      ))}
     </Box>
   )
 }

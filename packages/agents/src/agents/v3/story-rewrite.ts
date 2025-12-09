@@ -78,13 +78,8 @@ export async function rewriteStoryForChanges({
       tracer: telemetryTracer,
     },
     onStepFinish: async (step) => {
-      if (step.reasoningText) {
-        // await streams.append(
-        //   'progress',
-        //   step.reasoningText === '[REDACTED]'
-        //     ? 'Thinking...'
-        //     : step.reasoningText,
-        // )
+      if (step.reasoningText && step.reasoningText !== '[REDACTED]') {
+        // await streams.append('progress', step.reasoningText)
         // TODO: implement logger/streams
       }
     },

@@ -1,13 +1,14 @@
 import { getStagedTsFiles, getUnstagedTsFiles } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
 import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
-import { type Logger } from '../types/logger'
+import { createLogger, useCliLogger } from '../helpers/logging/logger'
+import { type LogEntry } from '../types/logger'
 
 interface VibeCheckProps {
   includeUnstaged?: boolean
@@ -17,23 +18,11 @@ export default function VibeCheck({
   includeUnstaged = false,
 }: VibeCheckProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
-    [],
-  )
+  const { logs, logger } = useCliLogger()
   const [warnings, setWarnings] = useState<React.ReactNode[]>([])
-  const [outcome, setOutcome] = useState<
-    { content: React.ReactNode; key: string }[]
-  >([])
+  const [outcome, setOutcome] = useState<LogEntry[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isRunning, setIsRunning] = useState(false)
-
-  const logger = useCallback<Logger>((message) => {
-    const content =
-      typeof message === 'string' ? <Text>{message}</Text> : message
-
-    const key = `${Date.now()}-${Math.random()}`
-    setLogs((prev) => [...prev, { content, key }])
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -105,27 +94,21 @@ export default function VibeCheck({
         }
 
         // Collect outcome messages
-        const outcomeMessages: { content: React.ReactNode; key: string }[] = []
+        const outcomeMessages: LogEntry[] = []
+        const outcomeLogger = createLogger({
+          onLog: (entry) => {
+            outcomeMessages.push(entry)
+          },
+        })
 
         // TODO show the reasoning here if in --verbose mode
         if (result.text) {
-          outcomeMessages.push({
-            content: (
-              <Box flexDirection="column">
-                <Text>Reasoning</Text>
-                <Text color="grey">{result.text}</Text>
-              </Box>
-            ),
-            key: 'reasoning',
-          })
-        }
-
-        // Collect impacted stories output
-        const outcomeLogger: Logger = (message) => {
-          const content =
-            typeof message === 'string' ? <Text>{message}</Text> : message
-          const key = `${Date.now()}-${Math.random()}`
-          outcomeMessages.push({ content, key })
+          outcomeLogger(
+            <Box flexDirection="column">
+              <Text>Reasoning</Text>
+              <Text color="grey">{result.text}</Text>
+            </Box>,
+          )
         }
 
         logImpactedStories(result, outcomeLogger)
@@ -185,7 +168,7 @@ export default function VibeCheck({
 
   return (
     <Box flexDirection="column">
-      <Header message="Kyoto" />
+      <Header message="The way of the vibe." />
       {warnings.length > 0 ? (
         <Box marginTop={1} flexDirection="column">
           {warnings.map((warning, index) => (

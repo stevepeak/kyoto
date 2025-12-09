@@ -1,29 +1,19 @@
 import { findGitRoot } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import { resolve } from 'node:path'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import terminalLink from 'terminal-link'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { readAllStoryFiles } from '../helpers/file/reader'
-import { type Logger } from '../types/logger'
+import { useCliLogger } from '../helpers/logging/logger'
 
 export default function List(): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
-    [],
-  )
+  const { logs, logger } = useCliLogger()
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
-
-  const logger = useCallback<Logger>((message) => {
-    const content =
-      typeof message === 'string' ? <Text>{message}</Text> : message
-
-    const key = `${Date.now()}-${Math.random()}`
-    setLogs((prev) => [...prev, { content, key }])
-  }, [])
 
   useEffect(() => {
     let isMounted = true

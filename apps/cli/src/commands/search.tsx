@@ -1,13 +1,13 @@
 import { findGitRoot } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import { resolve } from 'node:path'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import terminalLink from 'terminal-link'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { searchStories } from '../helpers/stories/search-stories'
-import { type Logger } from '../types/logger'
+import { useCliLogger } from '../helpers/logging/logger'
 
 interface SearchProps {
   query: string
@@ -21,18 +21,8 @@ export default function Search({
   threshold,
 }: SearchProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
-    [],
-  )
+  const { logs, logger } = useCliLogger()
   const [error, setError] = useState<string | null>(null)
-
-  const logger = useCallback<Logger>((message) => {
-    const content =
-      typeof message === 'string' ? <Text>{message}</Text> : message
-
-    const key = `${Date.now()}-${Math.random()}`
-    setLogs((prev) => [...prev, { content, key }])
-  }, [])
 
   const thresholdValue = useMemo(() => {
     if (!threshold) {

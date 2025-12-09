@@ -18,6 +18,8 @@ import TestCli from './commands/test/cli'
 import TestTrace from './commands/test/trace'
 import Trace from './commands/trace'
 import Vibe from './commands/vibe'
+import { Header } from './helpers/display/display-header'
+import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 
 const colors = {
   red: (text: string): string => `\x1b[31m${text}\x1b[0m`,
@@ -139,18 +141,24 @@ function parseInteger(value: unknown): number | undefined {
 }
 
 async function renderCommand(element: React.ReactElement): Promise<void> {
-  const app = render(element)
-  await app.waitUntilExit()
-}
+  try {
+    const app = render(element)
+    await app.waitUntilExit()
+  } catch (error) {
+    // Handle any unhandled errors at the top level
+    const { handleError } =
+      await import('./helpers/error-handling/handle-error')
+    const { createLogger } = await import('./helpers/logging/logger')
+    const logger = createLogger()
 
-function formatKyotoHeader(message = 'Kyoto'): string {
-  const rows = ['入   |  ', '京   |  ', '行   |  ', '改   |  ', '善   |  ']
-  return rows
-    .map(
-      (row, index) =>
-        `${colors.red(row)}${index === 2 ? colors.bold(message) : ''}`,
-    )
-    .join('\n')
+    handleError(error, {
+      logger,
+      setExitCode: (code) => {
+        process.exitCode = code
+      },
+    })
+    process.exit(1)
+  }
 }
 
 function GroupHeader({
@@ -185,7 +193,7 @@ function Help(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Text>{formatKyotoHeader()}</Text>
+      <Header />
       <Text> </Text>
       <Text color="gray" italic>
         The way of the vibe.
@@ -242,13 +250,14 @@ function Help(): React.ReactElement {
       ))}
 
       <Box>
+        <Text color="red">京</Text>
         <Text>
           <Link url="https://usekyoto.com">
-            <Text color="red">Kyoto</Text>
+            <Text bold>Kyoto</Text>
           </Link>{' '}
           <Text color="grey">
-            is crafted with intention by{' '}
-            <Link url="https://x.com/iopeak">@iopeak</Link>
+            is crafted with intention on{' '}
+            <Link url="https://github.com/iopeak/kyoto">GitHub</Link>
           </Text>
         </Text>
       </Box>
@@ -259,7 +268,7 @@ function Help(): React.ReactElement {
   )
 }
 
-function formatKyotoHelp(program: Command): string {
+function formatKyotoHelp(_program: Command): string {
   const columnWidth = Math.max(
     ...commandGroups.flatMap((group) =>
       group.commands.map((command) => command.name.length),
@@ -267,7 +276,22 @@ function formatKyotoHelp(program: Command): string {
   )
   const lines: string[] = []
 
-  lines.push(formatKyotoHeader())
+  // String version of header for Commander.js help output
+  const headerRows = [
+    '入   |  ',
+    '京   |  ',
+    '行   |  ',
+    '改   |  ',
+    '善   |  ',
+  ]
+  lines.push(
+    headerRows
+      .map(
+        (row, index) =>
+          `${colors.red(row)}${index === 2 ? colors.bold('Kyoto') : ''}`,
+      )
+      .join('\n'),
+  )
   lines.push('')
   lines.push(`Contininous vibe testing.`)
   lines.push('')
@@ -314,6 +338,7 @@ function formatKyotoHelp(program: Command): string {
 }
 
 export async function run(argv = process.argv): Promise<void> {
+  await initializeCliLogFile()
   const program = new Command()
 
   program.name('kyoto').description('Kyoto CLI')

@@ -26,8 +26,8 @@ apps/trigger/.trigger
 tmp/
 .next
 next-env.d.ts
-.kyoto/.ignore
 *storybook.log
 storybook-static
 
 apps/web_old
+.kyoto/cache

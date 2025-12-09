@@ -9,6 +9,7 @@ import React from 'react'
 import { type Logger } from '../../types/logger'
 import { pwdKyoto } from '../config/find-kyoto-dir'
 import { generateEmbedding } from '../embeddings/generate-embedding'
+import { type SpinnerHandle } from '../display/use-spinner'
 import { createSearchStoriesTool } from '../tools/search-stories-tool'
 import { saveStoryEmbedding } from './save-embedding'
 
@@ -50,11 +51,16 @@ function generateEmbeddingText(story: DiscoveredStory): string {
   return parts.join('\n')
 }
 
+interface CreateSpinnerOptions {
+  title: string
+  progress: string
+}
+
 interface ProcessCandidatesOptions {
   candidates: DiscoveredStory[]
   model: LanguageModel
   logger: Logger
-  createSpinner?: (text: string) => SpinnerHandle
+  createSpinner?: (options: CreateSpinnerOptions) => SpinnerHandle
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   telemetryTracer?: any
 }
@@ -65,16 +71,9 @@ interface ProcessedStory {
   embedding: number[]
 }
 
-interface SpinnerHandle {
-  update: (text: string) => void
-  succeed: (text?: string) => void
-  fail: (text?: string) => void
-  stop: () => void
-}
-
-function createNoopSpinner(_initialText: string): SpinnerHandle {
+function createNoopSpinner(_options: CreateSpinnerOptions): SpinnerHandle {
   return {
-    update: () => {
+    progress: () => {
       // noop
     },
     succeed: () => {
@@ -254,8 +253,8 @@ export async function processDiscoveredCandidates(
   const { candidates, model, logger, telemetryTracer } = options
   const createSpinner =
     options.createSpinner ??
-    ((text: string) => {
-      return createNoopSpinner(text)
+    ((options: CreateSpinnerOptions) => {
+      return createNoopSpinner(options)
     })
 
   const processedStories: ProcessedStory[] = []
@@ -270,22 +269,25 @@ export async function processDiscoveredCandidates(
     )
 
     // Step 1: Check if story already exists
-    const dedupeSpinner = createSpinner('Dedupe Agent: Starting...')
+    const dedupeSpinner = createSpinner({
+      title: 'Dedupe Agent',
+      progress: 'Starting...',
+    })
 
     try {
       const exists = await checkStoryExists(candidate, {
         model,
         logger: (msg) => {
           const text = typeof msg === 'string' ? msg : String(msg)
-          dedupeSpinner.update(`Dedupe Agent: ${text}`)
+          dedupeSpinner.progress(text)
         },
         telemetryTracer,
       })
 
       dedupeSpinner.succeed(
         exists
-          ? 'Dedupe Agent: skipping, story already exists with behavior'
-          : 'Dedupe Agent: no story found',
+          ? 'skipping, story already exists with behavior'
+          : 'no story found',
       )
 
       if (exists) {
@@ -293,37 +295,44 @@ export async function processDiscoveredCandidates(
       }
 
       // Step 2: Enrich the story
-      const enrichSpinner = createSpinner('Enrich Agent: Starting...')
+      const enrichSpinner = createSpinner({
+        title: 'Enrich Agent',
+        progress: 'Starting...',
+      })
 
       const enrichedStory = await enrichStory(candidate, {
         model,
         logger: (msg) => {
           const text = typeof msg === 'string' ? msg : String(msg)
-          enrichSpinner.update(`Enrich Agent: ${text}`)
+          enrichSpinner.progress(text)
         },
         telemetryTracer,
       })
 
-      enrichSpinner.succeed('Enrich Agent: enriched')
+      enrichSpinner.succeed('enriched')
 
       // Step 3: Run composition agent
-      const compositionSpinner = createSpinner('Composition Agent: Starting...')
+      const compositionSpinner = createSpinner({
+        title: 'Composition Agent',
+        progress: 'Starting...',
+      })
 
       const composition = await composeStory(enrichedStory, {
         model,
         logger: (msg) => {
           const text = typeof msg === 'string' ? msg : String(msg)
-          compositionSpinner.update(`Composition Agent: ${text}`)
+          compositionSpinner.progress(text)
         },
         telemetryTracer,
       })
 
-      compositionSpinner.succeed(
-        `Composition Agent: ${composition.steps.length} steps composed`,
-      )
+      compositionSpinner.succeed(`${composition.steps.length} steps composed`)
 
       // Step 4-6: Write story file, generate embedding, and save to index
-      const saveSpinner = createSpinner('Saving: Writing story file...')
+      const saveSpinner = createSpinner({
+        title: 'Saving',
+        progress: 'Writing story file...',
+      })
 
       const baseFilename = generateStoryFilename(enrichedStory.title)
       const filePath = await writeStoryFile(
@@ -333,14 +342,14 @@ export async function processDiscoveredCandidates(
       )
 
       // Generate embedding
-      saveSpinner.update('Saving: Generating embedding...')
+      saveSpinner.progress('Generating embedding...')
       const embedding = await generateStoryEmbedding(enrichedStory)
 
       // Save embedding to vectra index
-      saveSpinner.update('Saving: Saving to index...')
+      saveSpinner.progress('Saving to index...')
       await saveStoryEmbeddingToIndex(filePath, enrichedStory, embedding)
 
-      saveSpinner.succeed('Saving: saved')
+      saveSpinner.succeed('saved')
 
       processedStories.push({
         story: enrichedStory,
@@ -351,7 +360,7 @@ export async function processDiscoveredCandidates(
       logger('')
     } catch (error) {
       dedupeSpinner.fail(
-        `Dedupe Agent: failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )
       // Continue processing other stories even if one fails
     }

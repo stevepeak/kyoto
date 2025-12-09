@@ -8,8 +8,6 @@ import {
   isBranchClean,
 } from '@app/shell'
 import { createIndex, ensureIndex } from '@app/vectra'
-import { mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
 
 import { type KyotoPaths, pwdKyoto } from './find-kyoto-dir'
 import { getAiConfig } from './get-ai-config'
@@ -32,7 +30,7 @@ interface InitResult {
 
 /**
  * Asserts that the project has been initialized with AI configuration.
- * Requires that .kyoto/.ignore/config.json exists and contains AI configuration.
+ * Requires that .kyoto/cache/config.json exists and contains AI configuration.
  * Throws an error with helpful message if not initialized.
  */
 async function assertAiConfiguration(): Promise<void> {
@@ -82,15 +80,9 @@ export async function init(options?: {
   // Assert we're in a git repository and get the root first
   const gitRoot = await findGitRoot()
 
-  // Ensure .kyoto directory exists
-  const kyotoRoot = join(gitRoot, '.kyoto')
-  await mkdir(kyotoRoot, { recursive: true })
-
-  // Get Kyoto paths (directory now exists, so this will work)
-  const fs = await pwdKyoto(gitRoot)
-
-  // Get git information
-  const [github, branch, sha, clean, staged, changes] = await Promise.all([
+  // Gather remaining prerequisites
+  const [fs, github, branch, sha, clean, staged, changes] = await Promise.all([
+    pwdKyoto(gitRoot),
     getGitHubInfo(gitRoot),
     getCurrentBranch(gitRoot),
     getCurrentCommitSha(gitRoot),

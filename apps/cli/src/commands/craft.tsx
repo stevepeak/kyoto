@@ -12,7 +12,7 @@ export default function Craft(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header message="Craft" />
+      <Header message="Craft with intention." />
       <Text>TODO: Implement craft logic</Text>
     </Box>
   )

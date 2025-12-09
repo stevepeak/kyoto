@@ -1,7 +1,8 @@
 import { findGitRoot } from '@app/shell'
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { z } from 'zod'
+
+import { pwdKyoto } from './find-kyoto-dir'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
 
@@ -30,13 +31,13 @@ type AiConfig = {
 } | null
 
 /**
- * Reads AI configuration from .kyoto/.ignore/config.json
+ * Reads AI configuration from .kyoto/cache/config.json
  * @returns AI configuration or null if not found
  */
 export async function getAiConfig(): Promise<AiConfig> {
   try {
     const gitRoot = await findGitRoot()
-    const detailsPath = join(gitRoot, '.kyoto', '.ignore', 'config.json')
+    const { config: detailsPath } = await pwdKyoto(gitRoot)
 
     const content = await readFile(detailsPath, 'utf-8')
     const parsed = JSON.parse(content)

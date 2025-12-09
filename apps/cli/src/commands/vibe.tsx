@@ -6,14 +6,14 @@ import {
 } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
+import { useCliLogger } from '../helpers/logging/logger'
 import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
 import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
-import { type Logger } from '../types/logger'
 
 interface VibeProps {
   maxLength?: number
@@ -27,9 +27,7 @@ export default function Vibe({
   simulateCount,
 }: VibeProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
-    [],
-  )
+  const { logs, logger } = useCliLogger()
   const [error, setError] = useState<string | null>(null)
   const [spinnerMessage, setSpinnerMessage] = useState<{
     sha: string
@@ -39,14 +37,6 @@ export default function Vibe({
   const shouldExitRef = useRef(false)
   const processingRef = useRef(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const logger = useCallback<Logger>((message) => {
-    const content =
-      typeof message === 'string' ? <Text>{message}</Text> : message
-
-    const key = `${Date.now()}-${Math.random()}`
-    setLogs((prev) => [...prev, { content, key }])
-  }, [])
 
   useEffect(() => {
     let gitRoot: string
@@ -74,7 +64,7 @@ export default function Vibe({
         })
         gitRoot = fs.gitRoot
 
-        const detailsPath = fs.details
+        const detailsPath = fs.config
 
         const commit = await getLatestCommit(fs.gitRoot)
 
@@ -216,7 +206,7 @@ export default function Vibe({
 
   return (
     <Box flexDirection="column">
-      <Header message="Vibe in Kyoto" />
+      <Header message="The way of the vibe." />
       {logs.map((line) => (
         <React.Fragment key={line.key}>{line.content}</React.Fragment>
       ))}
