@@ -5,22 +5,22 @@ interface HeaderProps {
   message?: React.ReactNode
 }
 
-const defaultMessage = <Text bold>Kyoto</Text>
-
-export function Header({
-  message = defaultMessage,
-}: HeaderProps): React.ReactElement {
+export function Header({ message }: HeaderProps): React.ReactElement {
   const rows = ['入   |  ', '京   |  ', '行   |  ', '改   |  ', '善   |  ']
-
-  const renderedMessage =
-    typeof message === 'string' ? <Text>{message}</Text> : message
+  const hasMessage = message !== undefined && message !== null && message !== ''
 
   return (
     <Box flexDirection="column" marginBottom={1}>
       {rows.map((row, index) => (
         <Box key={row} flexDirection="row">
           <Text color="red">{row}</Text>
-          {index === 2 ? renderedMessage : null}
+          {hasMessage && index === 1 ? <Text bold>Kyoto</Text> : null}
+          {!hasMessage && index === 2 ? <Text bold>Kyoto</Text> : null}
+          {hasMessage && index === 3 ? (
+            <Text italic color="grey">
+              {message}
+            </Text>
+          ) : null}
         </Box>
       ))}
     </Box>
