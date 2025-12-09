@@ -16,7 +16,6 @@ import TestCli from './commands/test/cli'
 import TestTrace from './commands/test/trace'
 import Trace from './commands/trace'
 import Vibe from './commands/vibe'
-import Vibes from './commands/vibes'
 
 function parseInteger(value: unknown): number | undefined {
   if (typeof value === 'number') {
@@ -38,13 +37,6 @@ export async function run(argv = process.argv): Promise<void> {
   const program = new Command()
 
   program.name('kyoto').description('Kyoto CLI')
-
-  program
-    .command('vibe')
-    .description('Display the Kyoto CLI header')
-    .action(async () => {
-      await renderCommand(<Vibe />)
-    })
 
   program
     .command('list')
@@ -186,7 +178,7 @@ export async function run(argv = process.argv): Promise<void> {
     })
 
   program
-    .command('vibes')
+    .command('vibe')
     .description('Monitor the working project commits and log new commits')
     .option(
       '-m, --max-length <maxLength>',
@@ -200,7 +192,7 @@ export async function run(argv = process.argv): Promise<void> {
     )
     .action(async (options: { maxLength?: string; interval?: string }) => {
       await renderCommand(
-        <Vibes
+        <Vibe
           maxLength={parseInteger(options.maxLength)}
           interval={parseInteger(options.interval)}
         />,
