@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "ai": "catalog:",
-    "chalk": "catalog:",
     "execa": "catalog:",
     "zod": "catalog:"
   },

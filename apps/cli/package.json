@@ -7,9 +7,6 @@
   "bin": {
     "kyoto": "./bin/dev.js"
   },
-  "exports": {
-    ".": "./dist/index.js"
-  },
   "scripts": {
     "clean": "rm -rf node_modules dist",
     "build": "tsc",
@@ -23,30 +20,24 @@
     "@app/schemas": "workspace:^",
     "@app/shell": "workspace:^",
     "@app/vectra": "workspace:^",
-    "@oclif/core": "catalog:",
     "@openrouter/ai-sdk-provider": "catalog:",
     "ai": "catalog:",
-    "chalk": "catalog:",
+    "commander": "^14.0.2",
     "execa": "catalog:",
-    "inquirer": "^13.0.2",
-    "ora": "catalog:",
+    "ink": "^6.5.1",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.1",
     "terminal-link": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
+    "@types/react": "^18.3.12",
     "openai": "^6.10.0",
     "tsconfig": "workspace:*",
     "typescript": "catalog:"
-  },
-  "oclif": {
-    "bin": "kyoto",
-    "dirname": "kyoto",
-    "commands": "./src/commands",
-    "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-not-found"
-    ]
   }
 }

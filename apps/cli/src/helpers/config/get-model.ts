@@ -1,8 +1,8 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { type LanguageModel } from 'ai'
-import chalk from 'chalk'
 
+import { type Logger } from '../../types/logger'
 import { getAiConfig } from './get-ai-config'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'auto'
@@ -10,7 +10,7 @@ type Provider = 'openai' | 'vercel' | 'openrouter' | 'auto'
 interface GetModelOptions {
   model?: string
   provider?: Provider
-  logger?: (message: string) => void
+  logger?: Logger
 }
 
 /**
@@ -31,7 +31,7 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
 }> {
   const { model: cliModel, provider: cliProvider, logger } = options
   // eslint-disable-next-line no-console
-  const log = logger || ((message: string) => console.log(chalk.grey(message)))
+  const log: Logger = logger || ((message: string) => console.log(message))
 
   // Get config from details.json
   const aiConfig = await getAiConfig()
@@ -40,11 +40,10 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
   if (cliModel && cliProvider && cliProvider !== 'auto') {
     if (!aiConfig || aiConfig.provider !== cliProvider) {
       log(
-        chalk.yellow(
-          `⚠️  API key is required when using --provider ${cliProvider}\n`,
-        ),
+        `⚠️  API key is required when using --provider ${cliProvider}\n`,
+        'yellow',
       )
-      log(chalk.grey('Please run `kyoto init` to configure your API key.\n'))
+      log('Please run `kyoto init` to configure your API key.\n', 'grey')
       throw new Error(`API key is required for ${cliProvider} provider`)
     }
 
@@ -111,13 +110,10 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
 
   // No API keys found
   log(
-    chalk.yellow(
-      '\n⚠️  No AI API key found. Please configure your AI provider.\n',
-    ),
+    '\n⚠️  No AI API key found. Please configure your AI provider.\n',
+    'yellow',
   )
-  log(
-    chalk.grey('Run `kyoto init` to configure your AI provider and API key.\n'),
-  )
+  log('Run `kyoto init` to configure your AI provider and API key.\n', 'grey')
 
   throw new Error('AI API key is required. Run `kyoto init` to configure.')
 }

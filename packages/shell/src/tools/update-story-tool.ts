@@ -1,5 +1,4 @@
 import { tool } from 'ai'
-import chalk from 'chalk'
 import { type Ora } from 'ora'
 import { z } from 'zod'
 
@@ -44,7 +43,7 @@ export function createLocalUpdateStoryTool(
 
       // Update ora to show file being updated
       if (ora) {
-        ora.text = chalk.hex('#f1dab4')(`Updating: ${input.path}`)
+        ora.text = `Updating: ${input.path}`
       }
 
       // Write the validated story as JSON

@@ -2,10 +2,9 @@ import { agents, runStoryCheckAgent } from '@app/agents'
 import { type CompositionAgentOutput, type DiscoveredStory } from '@app/schemas'
 import { findGitRoot, getGitHubInfo, writeLocalFile } from '@app/shell'
 import { type LanguageModel } from 'ai'
-import chalk from 'chalk'
 import { join } from 'node:path'
-import ora from 'ora'
 
+import { type Logger } from '../../types/logger'
 import { pwdKyoto } from '../config/find-kyoto-dir'
 import { generateEmbedding } from '../embeddings/generate-embedding'
 import { createSearchStoriesTool } from '../tools/search-stories-tool'
@@ -52,7 +51,8 @@ function generateEmbeddingText(story: DiscoveredStory): string {
 interface ProcessCandidatesOptions {
   candidates: DiscoveredStory[]
   model: LanguageModel
-  logger: (message: string) => void
+  logger: Logger
+  createSpinner?: (text: string) => SpinnerHandle
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   telemetryTracer?: any
 }
@@ -63,6 +63,30 @@ interface ProcessedStory {
   embedding: number[]
 }
 
+interface SpinnerHandle {
+  update: (text: string) => void
+  succeed: (text?: string) => void
+  fail: (text?: string) => void
+  stop: () => void
+}
+
+function createNoopSpinner(_initialText: string): SpinnerHandle {
+  return {
+    update: () => {
+      // noop
+    },
+    succeed: () => {
+      // noop
+    },
+    fail: () => {
+      // noop
+    },
+    stop: () => {
+      // noop
+    },
+  }
+}
+
 /**
  * Check if a story already exists using semantic search
  */
@@ -70,7 +94,7 @@ async function checkStoryExists(
   story: DiscoveredStory,
   options: {
     model: LanguageModel
-    logger?: (message: string) => void
+    logger?: Logger
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     telemetryTracer?: any
   },
@@ -99,7 +123,7 @@ async function enrichStory(
   story: DiscoveredStory,
   options: {
     model: LanguageModel
-    logger?: (message: string) => void
+    logger?: Logger
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     telemetryTracer?: any
   },
@@ -123,7 +147,7 @@ async function composeStory(
   story: DiscoveredStory,
   options: {
     model: LanguageModel
-    logger?: (message: string) => void
+    logger?: Logger
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     telemetryTracer?: any
   },
@@ -210,39 +234,36 @@ export async function processDiscoveredCandidates(
   options: ProcessCandidatesOptions,
 ): Promise<ProcessedStory[]> {
   const { candidates, model, logger, telemetryTracer } = options
+  const createSpinner =
+    options.createSpinner ??
+    ((text: string) => {
+      return createNoopSpinner(text)
+    })
 
   const processedStories: ProcessedStory[] = []
 
   for (const [index, candidate] of candidates.entries()) {
     logger(
-      chalk.grey(`Processing ${index + 1}/${candidates.length} behavior: `) +
-        chalk.hex('#7ba179')(`${candidate.title}`),
+      `Processing ${index + 1}/${candidates.length} behavior: ${candidate.title}`,
+      'grey',
     )
 
     // Step 1: Check if story already exists
-    const dedupeSpinner = ora({
-      text: chalk.hex('#7b301f')(`Dedupe Agent: `) + chalk.grey('Starting...'),
-      spinner: 'squareCorners',
-      color: 'red',
-      indent: 2,
-    }).start()
+    const dedupeSpinner = createSpinner('Dedupe Agent: Starting...')
 
     try {
       const exists = await checkStoryExists(candidate, {
         model,
         logger: (msg: string) => {
-          dedupeSpinner.text =
-            chalk.hex('#7b301f')(`Dedupe Agent: `) + chalk.grey(msg)
+          dedupeSpinner.update(`Dedupe Agent: ${msg}`)
         },
         telemetryTracer,
       })
 
       dedupeSpinner.succeed(
         exists
-          ? chalk.hex('#7b301f')(`Dedupe Agent: `) +
-              chalk.grey('skipping, story already exists with behavior')
-          : chalk.hex('#7b301f')(`Dedupe Agent: `) +
-              chalk.grey('no story found'),
+          ? 'Dedupe Agent: skipping, story already exists with behavior'
+          : 'Dedupe Agent: no story found',
       )
 
       if (exists) {
@@ -250,60 +271,35 @@ export async function processDiscoveredCandidates(
       }
 
       // Step 2: Enrich the story
-      const enrichSpinner = ora({
-        text:
-          chalk.hex('#7b301f')(`Enrich Agent: `) + chalk.grey('Starting...'),
-        spinner: 'squareCorners',
-        color: 'red',
-        indent: 2,
-      }).start()
+      const enrichSpinner = createSpinner('Enrich Agent: Starting...')
 
       const enrichedStory = await enrichStory(candidate, {
         model,
         logger: (msg: string) => {
-          enrichSpinner.text =
-            chalk.hex('#7b301f')(`Enrich Agent: `) + chalk.grey(msg)
+          enrichSpinner.update(`Enrich Agent: ${msg}`)
         },
         telemetryTracer,
       })
 
-      enrichSpinner.succeed(
-        chalk.hex('#7b301f')(`Enrich Agent: `) + chalk.grey('enriched'),
-      )
+      enrichSpinner.succeed('Enrich Agent: enriched')
 
       // Step 3: Run composition agent
-      const compositionSpinner = ora({
-        text:
-          chalk.hex('#7b301f')(`Composition Agent: `) +
-          chalk.grey('Starting...'),
-        spinner: 'squareCorners',
-        color: 'red',
-        indent: 2,
-      }).start()
+      const compositionSpinner = createSpinner('Composition Agent: Starting...')
 
       const composition = await composeStory(enrichedStory, {
         model,
         logger: (msg: string) => {
-          compositionSpinner.text =
-            chalk.hex('#7b301f')(`Composition Agent: `) + chalk.grey(msg)
+          compositionSpinner.update(`Composition Agent: ${msg}`)
         },
         telemetryTracer,
       })
 
       compositionSpinner.succeed(
-        chalk.hex('#7b301f')(`Composition Agent: `) +
-          chalk.grey(`${composition.steps.length} steps composed`),
+        `Composition Agent: ${composition.steps.length} steps composed`,
       )
 
       // Step 4-6: Write story file, generate embedding, and save to index
-      const saveSpinner = ora({
-        text:
-          chalk.hex('#7b301f')(`Saving: `) +
-          chalk.grey('Writing story file...'),
-        spinner: 'squareCorners',
-        color: 'red',
-        indent: 2,
-      }).start()
+      const saveSpinner = createSpinner('Saving: Writing story file...')
 
       const filename = `${generateStoryFilename(enrichedStory.title)}.json`
       const { stories: storiesDir } = await pwdKyoto()
@@ -311,18 +307,14 @@ export async function processDiscoveredCandidates(
       await writeStoryFile(enrichedStory, filePath, composition)
 
       // Generate embedding
-      saveSpinner.text =
-        chalk.hex('#7b301f')(`Saving: `) + chalk.grey('Generating embedding...')
+      saveSpinner.update('Saving: Generating embedding...')
       const embedding = await generateStoryEmbedding(enrichedStory)
 
       // Save embedding to vectra index
-      saveSpinner.text =
-        chalk.hex('#7b301f')(`Saving: `) + chalk.grey('Saving to index...')
+      saveSpinner.update('Saving: Saving to index...')
       await saveStoryEmbeddingToIndex(filePath, enrichedStory, embedding)
 
-      saveSpinner.succeed(
-        chalk.hex('#7b301f')(`Saving: `) + chalk.grey('saved'),
-      )
+      saveSpinner.succeed('Saving: saved')
 
       processedStories.push({
         story: enrichedStory,
@@ -333,10 +325,7 @@ export async function processDiscoveredCandidates(
       logger('')
     } catch (error) {
       dedupeSpinner.fail(
-        chalk.hex('#7b301f')(`Dedupe Agent: `) +
-          chalk.grey(
-            `failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          ),
+        `Dedupe Agent: failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )
       // Continue processing other stories even if one fails
     }

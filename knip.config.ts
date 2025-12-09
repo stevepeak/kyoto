@@ -28,7 +28,7 @@ const config: KnipConfig = {
       ],
     },
     'apps/cli': {
-      entry: ['src/index.ts', 'src/commands/**/*.ts'],
+      entry: ['src/cli.tsx', 'src/commands/**/*.tsx'],
       project: ['src/**/*.ts'],
       ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
     },

@@ -2,6 +2,7 @@ import { createDb, createIndex, query } from '@app/vectra'
 import { tool } from 'ai'
 import { z } from 'zod'
 
+import { type Logger } from '../../types/logger'
 import { pwdKyoto } from '../config/find-kyoto-dir'
 import { generateEmbedding } from '../embeddings/generate-embedding'
 
@@ -83,7 +84,7 @@ async function searchStories({
 
 export function createSearchStoriesTool(
   args: {
-    logger?: (message: string) => void
+    logger?: Logger
   } = {},
 ) {
   return tool({
