@@ -6,6 +6,7 @@ export {
   getCurrentCommitSha,
   getLatestCommit,
 } from './git/get-latest-commit'
+export { getRecentCommits } from './git/get-recent-commits'
 export { getCurrentBranch } from './git/get-current-branch'
 export { getGitHubInfo, type GitHubInfo } from './git/get-github-info'
 

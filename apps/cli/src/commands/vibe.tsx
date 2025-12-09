@@ -5,6 +5,7 @@ import {
   getChangedTsFiles,
   getCurrentBranch,
   getLatestCommit,
+  getRecentCommits,
 } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
@@ -22,6 +23,7 @@ import { type Logger } from '../types/logger'
 interface VibeProps {
   maxLength?: number
   interval?: number
+  simulateCount?: number
 }
 
 async function deterministicCheck(
@@ -93,6 +95,7 @@ async function processCommit(
 export default function Vibe({
   maxLength = 60,
   interval = 1000,
+  simulateCount,
 }: VibeProps): React.ReactElement {
   const { exit } = useApp()
   const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
@@ -211,6 +214,23 @@ export default function Vibe({
           }
         }
 
+        if (simulateCount && simulateCount > 0) {
+          const commitsToSimulate = await getRecentCommits(
+            simulateCount,
+            gitRoot,
+          )
+          const orderedCommits = commitsToSimulate.slice().reverse()
+
+          if (orderedCommits.length === 0) {
+            throw new Error('No commits found to simulate')
+          }
+
+          for (const simulated of orderedCommits) {
+            await handleCommit(simulated)
+            lastCommitHash = simulated.shortHash
+          }
+        }
+
         pollRef.current = setInterval(async () => {
           if (shouldExitRef.current || processingRef.current) {
             return
@@ -258,7 +278,7 @@ export default function Vibe({
       process.off('SIGTERM', onSig)
       cleanup()
     }
-  }, [exit, interval, logger, maxLength])
+  }, [exit, interval, logger, maxLength, simulateCount])
 
   return (
     <Box flexDirection="column">
