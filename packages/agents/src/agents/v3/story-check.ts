@@ -108,8 +108,12 @@ export async function runStoryCheckAgent(
       tracer: telemetryTracer,
     },
     onStepFinish: (step) => {
-      if (step.reasoningText && !step.reasoningText.includes('[REDACTED]')) {
-        logger?.(step.reasoningText)
+      if (step.reasoningText) {
+        logger?.(
+          step.reasoningText === '[REDACTED]'
+            ? 'Thinking...'
+            : step.reasoningText,
+        )
       }
     },
     stopWhen: stepCountIs(maxSteps),

@@ -1,10 +1,11 @@
+import { getStagedTsFiles, getUnstagedTsFiles } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
-import { evaluateDiffTarget } from '../helpers/stories/evaluate-diff-target'
+import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
 import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
 import { type Logger } from '../types/logger'
 
@@ -16,44 +17,131 @@ export default function VibeCheck({
   includeUnstaged = false,
 }: VibeCheckProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
+  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
+    [],
+  )
+  const [warnings, setWarnings] = useState<React.ReactNode[]>([])
+  const [outcome, setOutcome] = useState<
+    { content: React.ReactNode; key: string }[]
+  >([])
   const [error, setError] = useState<string | null>(null)
-  const [isRunning, setIsRunning] = useState(true)
+  const [isRunning, setIsRunning] = useState(false)
 
-  const logger = useCallback<Logger>((message, color) => {
-    setLogs((prev) => [...prev, { message, color }])
+  const logger = useCallback<Logger>((message) => {
+    const content =
+      typeof message === 'string' ? <Text>{message}</Text> : message
+
+    const key = `${Date.now()}-${Math.random()}`
+    setLogs((prev) => [...prev, { content, key }])
   }, [])
 
   useEffect(() => {
     let cancelled = false
 
     const run = async (): Promise<void> => {
+      const { fs, git } = await init({ requireAi: true })
       try {
-        const { fs } = await init({ requireAi: true })
+        // Check for staged changes early, before expensive init
+        if (!includeUnstaged) {
+          if (!git.hasStagedChanges) {
+            if (git.hasChanges) {
+              setWarnings([
+                <Box flexDirection="column" key="no-staged-with-unstaged">
+                  <Text color="grey">No staged changes found.</Text>
+                  <Text color="grey">
+                    You have unstaged changes, do you want Kyoto to vibe check
+                    those?
+                  </Text>
+                  <Text color="yellow">$</Text>
+                  <Text color="green"> kyoto </Text>
+                  vibe check --include-unstaged
+                </Box>,
+              ])
+            } else {
+              setWarnings([
+                <Text color="grey" key="no-staged">
+                  No staged changes found.
+                </Text>,
+              ])
+            }
+            // Give React time to render the messages before exiting
+            await new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(undefined)
+              }, 100)
+            })
+            return
+          }
+        }
+
+        // Check for changed TypeScript files
+        const changedTsFiles = includeUnstaged
+          ? await getUnstagedTsFiles(fs.gitRoot)
+          : await getStagedTsFiles(fs.gitRoot)
+
+        if (changedTsFiles.length === 0) {
+          setWarnings([
+            <Text color="grey" key="no-changed-files">
+              No changed source files found.
+            </Text>,
+          ])
+          // Give React time to render the messages before exiting
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(undefined)
+            }, 100)
+          })
+          return
+        }
+
+        const targetType = includeUnstaged ? 'unstaged' : 'staged'
 
         setIsRunning(true)
-        const targetType = includeUnstaged ? 'unstaged' : 'staged'
-        logger(
-          includeUnstaged
-            ? 'Evaluating unstaged changes (including untracked files)...'
-            : 'Evaluating staged changes...',
-        )
-
-        const result = await evaluateDiffTarget(
-          { type: targetType },
-          fs.gitRoot,
-        )
+        const result = await evaluateDiff({ type: targetType }, logger)
+        setIsRunning(false)
 
         if (cancelled) {
           return
         }
 
+        // Collect outcome messages
+        const outcomeMessages: { content: React.ReactNode; key: string }[] = []
+
+        // TODO show the reasoning here if in --verbose mode
         if (result.text) {
-          logger(result.text, 'grey')
+          outcomeMessages.push({
+            content: (
+              <Box flexDirection="column">
+                <Text>Reasoning</Text>
+                <Text color="grey">{result.text}</Text>
+              </Box>
+            ),
+            key: 'reasoning',
+          })
         }
 
-        logImpactedStories(result, logger)
-        logger('TODO check for new stories', 'yellow')
+        // Collect impacted stories output
+        const outcomeLogger: Logger = (message) => {
+          const content =
+            typeof message === 'string' ? <Text>{message}</Text> : message
+          const key = `${Date.now()}-${Math.random()}`
+          outcomeMessages.push({ content, key })
+        }
+
+        logImpactedStories(result, outcomeLogger)
+
+        // TODO test stories that changed
+        // TODO check if we need to add new stoires
+        outcomeLogger(<Text color="yellow">TODO check for new stories</Text>)
+
+        setOutcome(outcomeMessages)
+
+        // Give React time to render the messages before exiting
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(undefined)
+          }, 200)
+        })
       } catch (err) {
         if (cancelled) {
           return
@@ -65,8 +153,21 @@ export default function VibeCheck({
             : includeUnstaged
               ? 'Failed to evaluate unstaged changes'
               : 'Failed to evaluate staged changes'
+        setOutcome([
+          {
+            content: <Text color="red">{`\n❌ Error: ${message}`}</Text>,
+            key: 'error',
+          },
+        ])
         setError(message)
         process.exitCode = 1
+
+        // Give React time to render the error before exiting
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(undefined)
+          }, 200)
+        })
       } finally {
         if (!cancelled) {
           setIsRunning(false)
@@ -85,26 +186,36 @@ export default function VibeCheck({
   return (
     <Box flexDirection="column">
       <Header message="Kyoto" />
-      <Text color="grey">
-        {includeUnstaged
-          ? 'Kyoto evaluates unstaged changes (including untracked files) to find impacted user stories.'
-          : 'Kyoto evaluates the currently staged changes to find impacted user stories before you commit.'}
-      </Text>
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
-      ))}
+      {warnings.length > 0 ? (
+        <Box marginTop={1} flexDirection="column">
+          {warnings.map((warning, index) => (
+            <React.Fragment key={index}>{warning}</React.Fragment>
+          ))}
+        </Box>
+      ) : null}
       {isRunning ? (
-        <Box marginTop={1} gap={1}>
-          <Text color="red">
-            <Spinner type="dots" />
-          </Text>
-          <Text color="grey">
-            {includeUnstaged
-              ? 'Analyzing unstaged changes'
-              : 'Analyzing staged changes'}
-          </Text>
+        <>
+          <Box marginTop={1} gap={1}>
+            <Text color="red">
+              <Spinner type="squareCorners" />
+            </Text>
+            <Text>Analyzing changes...</Text>
+          </Box>
+          {logs.map((line) => (
+            <React.Fragment key={line.key}>
+              <Text color="grey">
+                {'  '}
+                {line.content}
+              </Text>
+            </React.Fragment>
+          ))}
+        </>
+      ) : null}
+      {outcome.length > 0 ? (
+        <Box marginTop={1} flexDirection="column">
+          {outcome.map((line) => (
+            <React.Fragment key={line.key}>{line.content}</React.Fragment>
+          ))}
         </Box>
       ) : null}
       {error ? <Text color="red">{error}</Text> : null}

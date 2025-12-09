@@ -2,7 +2,9 @@ import { agents, runStoryCheckAgent } from '@app/agents'
 import { type CompositionAgentOutput, type DiscoveredStory } from '@app/schemas'
 import { findGitRoot, getGitHubInfo, writeLocalFile } from '@app/shell'
 import { type LanguageModel } from 'ai'
+import { Text } from 'ink'
 import { join, relative } from 'node:path'
+import React from 'react'
 
 import { type Logger } from '../../types/logger'
 import { pwdKyoto } from '../config/find-kyoto-dir'
@@ -260,8 +262,11 @@ export async function processDiscoveredCandidates(
 
   for (const [index, candidate] of candidates.entries()) {
     logger(
-      `Processing ${index + 1}/${candidates.length} behavior: ${candidate.title}`,
-      'grey',
+      React.createElement(
+        Text,
+        { color: 'grey' },
+        `Processing ${index + 1}/${candidates.length} behavior: ${candidate.title}`,
+      ),
     )
 
     // Step 1: Check if story already exists
@@ -270,8 +275,9 @@ export async function processDiscoveredCandidates(
     try {
       const exists = await checkStoryExists(candidate, {
         model,
-        logger: (msg: string) => {
-          dedupeSpinner.update(`Dedupe Agent: ${msg}`)
+        logger: (msg) => {
+          const text = typeof msg === 'string' ? msg : String(msg)
+          dedupeSpinner.update(`Dedupe Agent: ${text}`)
         },
         telemetryTracer,
       })
@@ -291,8 +297,9 @@ export async function processDiscoveredCandidates(
 
       const enrichedStory = await enrichStory(candidate, {
         model,
-        logger: (msg: string) => {
-          enrichSpinner.update(`Enrich Agent: ${msg}`)
+        logger: (msg) => {
+          const text = typeof msg === 'string' ? msg : String(msg)
+          enrichSpinner.update(`Enrich Agent: ${text}`)
         },
         telemetryTracer,
       })
@@ -304,8 +311,9 @@ export async function processDiscoveredCandidates(
 
       const composition = await composeStory(enrichedStory, {
         model,
-        logger: (msg: string) => {
-          compositionSpinner.update(`Composition Agent: ${msg}`)
+        logger: (msg) => {
+          const text = typeof msg === 'string' ? msg : String(msg)
+          compositionSpinner.update(`Composition Agent: ${text}`)
         },
         telemetryTracer,
       })

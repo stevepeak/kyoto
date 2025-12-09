@@ -3,7 +3,7 @@ import { type DiscoveredStory } from '@app/schemas'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
 import { stat } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
@@ -37,13 +37,19 @@ export default function Discover({
   limit,
 }: DiscoverProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
+  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
+    [],
+  )
   const [error, setError] = useState<string | null>(null)
   const [activeSpinner, setActiveSpinner] = useState<SpinnerState | null>(null)
   const spinnerIdRef = useRef(0)
 
-  const logger = useCallback<Logger>((message, color) => {
-    setLogs((prev) => [...prev, { message, color }])
+  const logger = useCallback<Logger>((message) => {
+    const content =
+      typeof message === 'string' ? <Text>{message}</Text> : message
+
+    const key = `${Date.now()}-${Math.random()}`
+    setLogs((prev) => [...prev, { content, key }])
   }, [])
 
   const createSpinner = useCallback((text: string) => {
@@ -91,7 +97,6 @@ export default function Discover({
       try {
         const { git, fs } = await init()
 
-        const kyotoDir = fs.root
         const inputPath = folder || '.'
         await validateFilePath(inputPath)
 
@@ -104,13 +109,16 @@ export default function Discover({
           : [inputPath]
 
         if (filesToProcess.length === 0) {
-          logger(`\n⚠️  No TypeScript files found in ${inputPath}\n`, '#c27a52')
+          logger(
+            <Text color="#c27a52">{`\n⚠️  No TypeScript files found in ${inputPath}\n`}</Text>,
+          )
           return
         }
 
         logger(
-          `• Exploring stories within ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}`,
-          'grey',
+          <Text color="grey">
+            {`• Exploring stories within ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}`}
+          </Text>,
         )
 
         let totalProcessedStories = 0
@@ -125,10 +133,14 @@ export default function Discover({
           provider,
           logger,
         })
-        logger(`• Using ${modelId} on ${selectedProvider}`, 'grey')
+        logger(
+          <Text color="grey">{`• Using ${modelId} on ${selectedProvider}`}</Text>,
+        )
 
         if (storyLimit) {
-          logger(`• Limit ${storyLimit.toString()} behaviors`, 'grey')
+          logger(
+            <Text color="grey">{`• Limit ${storyLimit.toString()} behaviors`}</Text>,
+          )
         }
 
         for (const filePath of filesToProcess) {
@@ -138,8 +150,9 @@ export default function Discover({
 
           if (storyLimit && totalProcessedStories >= storyLimit) {
             logger(
-              `\n• Reached story limit of ${storyLimit.toString()}. Stopping discovery.\n`,
-              'grey',
+              <Text color="grey">
+                {`\n• Reached story limit of ${storyLimit.toString()}. Stopping discovery.\n`}
+              </Text>,
             )
             break
           }
@@ -160,8 +173,9 @@ export default function Discover({
               options: {
                 model: selectedModel,
                 maxStories: remainingLimit,
-                logger: (msg: string) => {
-                  discoverySpinner.update(`Discovery Agent: ${msg}`)
+                logger: (msg: React.ReactNode | string) => {
+                  const text = typeof msg === 'string' ? msg : String(msg)
+                  discoverySpinner.update(`Discovery Agent: ${text}`)
                 },
               },
             })
@@ -192,8 +206,10 @@ export default function Discover({
 
             totalProcessedStories += processedStories.length
           } catch (err) {
-            logger(`✖ ${filePath}`, 'red')
-            logger(`\n⚠️  Failed to generate stories\n`, '#c27a52')
+            logger(<Text color="red">{`✖ ${filePath}`}</Text>)
+            logger(
+              <Text color="#c27a52">{`\n⚠️  Failed to generate stories\n`}</Text>,
+            )
 
             if (err instanceof Error) {
               if (
@@ -202,38 +218,52 @@ export default function Discover({
                 err.message.includes('unauthorized')
               ) {
                 logger(
-                  'The API key appears to be invalid or expired.\n',
-                  '#c27a52',
+                  <Text color="#c27a52">
+                    The API key appears to be invalid or expired.\n
+                  </Text>,
                 )
                 logger(
-                  'Please check your API key configuration. Run `kyoto init` to reconfigure.\n',
-                  '#7c6653',
+                  <Text color="#7c6653">
+                    Please check your API key configuration. Run `kyoto init` to
+                    reconfigure.\n
+                  </Text>,
                 )
               } else if (
                 err.message.includes('Vercel AI Gateway') ||
                 err.message.includes('Gateway request failed') ||
                 err.message.includes('Invalid error response format')
               ) {
-                logger('AI Gateway error detected.\n', '#c27a52')
                 logger(
-                  'The AI Gateway request failed. This could be due to:\n',
-                  '#7c6653',
-                )
-                logger('  - Invalid or expired API key\n', '#7c6653')
-                logger('  - Network connectivity issues\n', '#7c6653')
-                logger(
-                  '  - Gateway service temporarily unavailable\n',
-                  '#7c6653',
+                  <Text color="#c27a52">AI Gateway error detected.\n</Text>,
                 )
                 logger(
-                  '\nRun `kyoto init` to reconfigure your API key, or try using --provider openai instead.\n',
-                  '#7c6653',
+                  <Text color="#7c6653">
+                    The AI Gateway request failed. This could be due to:\n
+                  </Text>,
+                )
+                logger(
+                  <Text color="#7c6653"> - Invalid or expired API key\n</Text>,
+                )
+                logger(
+                  <Text color="#7c6653"> - Network connectivity issues\n</Text>,
+                )
+                logger(
+                  <Text color="#7c6653">
+                    {' '}
+                    - Gateway service temporarily unavailable\n
+                  </Text>,
+                )
+                logger(
+                  <Text color="#7c6653">
+                    \nRun `kyoto init` to reconfigure your API key, or try using
+                    --provider openai instead.\n
+                  </Text>,
                 )
               } else {
-                logger(`Error: ${err.message}\n`, '#7c6653')
+                logger(<Text color="#7c6653">{`Error: ${err.message}\n`}</Text>)
               }
             } else {
-              logger('An unknown error occurred.\n', '#7c6653')
+              logger(<Text color="#7c6653">An unknown error occurred.\n</Text>)
             }
           }
         }
@@ -242,13 +272,14 @@ export default function Discover({
         await updateDetailsJson(detailsPath, git.branch, git.sha)
 
         if (totalProcessedStories === 0) {
-          logger('\nNo stories generated\n', '#c27a52')
+          logger(<Text color="#c27a52">{'\nNo stories generated\n'}</Text>)
           return
         }
 
         logger(
-          `\n√ Processed ${totalProcessedStories} ${totalProcessedStories === 1 ? 'story' : 'stories'} from ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}:\n`,
-          '#7ba179',
+          <Text color="#7ba179">
+            {`\n√ Processed ${totalProcessedStories} ${totalProcessedStories === 1 ? 'story' : 'stories'} from ${filesToProcess.length} ${filesToProcess.length === 1 ? 'file' : 'files'}:\n`}
+          </Text>,
         )
       } catch (err) {
         const message =
@@ -258,7 +289,7 @@ export default function Discover({
           message.includes('Path is not a file') ||
           message.includes('Path is not a directory')
         ) {
-          logger(`\n⚠️  ${message}\n`, '#c27a52')
+          logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
         } else {
           setError(message)
         }
@@ -279,10 +310,8 @@ export default function Discover({
   return (
     <Box flexDirection="column">
       <Header message="Discover" />
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
+      {logs.map((line) => (
+        <React.Fragment key={line.key}>{line.content}</React.Fragment>
       ))}
       {activeSpinner ? (
         <Box marginTop={1} gap={1} flexDirection="row">

@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import { render } from 'ink'
 import React from 'react'
+import { dedent } from 'ts-dedent'
 
 import Clear from './commands/clear'
 import Craft from './commands/craft'
@@ -33,7 +34,11 @@ const commandGroups = [
     commands: [
       {
         name: 'vibe',
-        description: 'Monitor the working project commits and log new commits',
+        description: dedent`
+          Kyoto monitors code changes finding new/changed user behaviors. New or
+          changed user behaviors will be tested via browser automation and deep
+          trace analysis to ensure existing and new functionality remains working.
+        `,
         example: 'kyoto vibe',
       },
       {

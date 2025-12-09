@@ -121,8 +121,12 @@ export async function runCompositionAgent({
       options?.maxSteps ?? agents.composition.options.maxSteps,
     ),
     onStepFinish: (step) => {
-      if (step.reasoningText && !step.reasoningText.includes('[REDACTED]')) {
-        logger?.(step.reasoningText)
+      if (step.reasoningText) {
+        logger?.(
+          step.reasoningText === '[REDACTED]'
+            ? 'Thinking...'
+            : step.reasoningText,
+        )
       }
     },
     experimental_output: Output.object({

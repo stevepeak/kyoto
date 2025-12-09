@@ -21,11 +21,17 @@ export default function Search({
   threshold,
 }: SearchProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
+  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
+    [],
+  )
   const [error, setError] = useState<string | null>(null)
 
-  const logger = useCallback<Logger>((message, color) => {
-    setLogs((prev) => [...prev, { message, color }])
+  const logger = useCallback<Logger>((message) => {
+    const content =
+      typeof message === 'string' ? <Text>{message}</Text> : message
+
+    const key = `${Date.now()}-${Math.random()}`
+    setLogs((prev) => [...prev, { content, key }])
   }, [])
 
   const thresholdValue = useMemo(() => {
@@ -48,13 +54,15 @@ export default function Search({
 
         await init({ requireAi: true })
 
-        logger(`• Searching for: ${query}`, 'grey')
+        logger(<Text color="grey">{`• Searching for: ${query}`}</Text>)
         if (limit) {
-          logger(`• Limit: ${limit.toString()}`, 'grey')
+          logger(<Text color="grey">{`• Limit: ${limit.toString()}`}</Text>)
         }
 
         if (thresholdValue !== undefined) {
-          logger(`• Threshold: ${thresholdValue.toString()}`, 'grey')
+          logger(
+            <Text color="grey">{`• Threshold: ${thresholdValue.toString()}`}</Text>,
+          )
         }
         logger('')
 
@@ -65,13 +73,16 @@ export default function Search({
         })
 
         if (results.length === 0) {
-          logger(`\n⚠️  No stories found matching the query.\n`, '#c27a52')
+          logger(
+            <Text color="#c27a52">{`\n⚠️  No stories found matching the query.\n`}</Text>,
+          )
           return
         }
 
         logger(
-          `• Found ${results.length.toString()} ${results.length === 1 ? 'story' : 'stories'}:\n`,
-          'grey',
+          <Text color="grey">
+            {`• Found ${results.length.toString()} ${results.length === 1 ? 'story' : 'stories'}:\n`}
+          </Text>,
         )
 
         const gitRoot = await findGitRoot()
@@ -92,13 +103,13 @@ export default function Search({
           }
 
           const titleLink = terminalLink(titleWithScore, linkUrl)
-          logger(titleLink, scoreColor ?? '#7ba179')
+          logger(<Text color={scoreColor ?? '#7ba179'}>{titleLink}</Text>)
 
           if (story.behavior) {
-            logger(`  ${story.behavior}`, 'grey')
+            logger(<Text color="grey">{`  ${story.behavior}`}</Text>)
           }
 
-          logger(`  ${story.filePath}`, 'grey')
+          logger(<Text color="grey">{`  ${story.filePath}`}</Text>)
           logger('')
         }
       } catch (err) {
@@ -117,10 +128,8 @@ export default function Search({
   return (
     <Box flexDirection="column">
       <Header />
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
+      {logs.map((line) => (
+        <React.Fragment key={line.key}>{line.content}</React.Fragment>
       ))}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>

@@ -79,8 +79,13 @@ export async function rewriteStoryForChanges({
     },
     onStepFinish: async (step) => {
       if (step.reasoningText) {
-        // await streams.append('progress', step.reasoningText)
-        // TODO
+        // await streams.append(
+        //   'progress',
+        //   step.reasoningText === '[REDACTED]'
+        //     ? 'Thinking...'
+        //     : step.reasoningText,
+        // )
+        // TODO: implement logger/streams
       }
     },
     stopWhen: stepCountIs(maxSteps),

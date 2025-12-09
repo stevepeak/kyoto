@@ -23,13 +23,16 @@ export type DiffEvaluationTarget =
   | { type: 'staged' }
   | { type: 'unstaged' }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Logger = (message: any | string) => void
+
 interface DiffEvaluatorOptions {
   target: DiffEvaluationTarget
   searchStoriesTool: Tool
   options?: {
     maxSteps?: number
     model?: LanguageModel
-    onProgress?: (message: string) => void
+    logger?: Logger
   }
 }
 
@@ -157,20 +160,24 @@ export async function evaluateDiff({
   options: {
     maxSteps = 10,
     model = agents.discovery.options.model,
-    onProgress,
+    logger,
   } = {},
 }: DiffEvaluatorOptions): Promise<DiffEvaluatorOutput> {
   const agent = new Agent({
     model,
     system: buildSystemInstructions(target),
     tools: {
-      terminalCommand: createLocalTerminalCommandTool(onProgress),
-      readFile: createLocalReadFileTool(),
-      searchStoriesTool,
+      terminalCommand: createLocalTerminalCommandTool(logger),
+      readFile: createLocalReadFileTool(logger),
+      searchStories: searchStoriesTool,
     },
     onStepFinish: (step) => {
       if (step.reasoningText) {
-        onProgress?.(step.reasoningText)
+        logger?.(
+          step.reasoningText === '[REDACTED]'
+            ? 'Thinking...'
+            : step.reasoningText,
+        )
       }
     },
     stopWhen: stepCountIs(maxSteps),

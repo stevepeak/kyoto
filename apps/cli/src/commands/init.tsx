@@ -7,10 +7,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import React, { useEffect, useMemo, useState } from 'react'
 
+import { getAiConfig } from '../helpers/config/get-ai-config'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
 
-type Provider = 'openai' | 'vercel' | 'openrouter'
+type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
 
 interface DetailsJson {
   latest?: {
@@ -24,7 +25,13 @@ interface DetailsJson {
   }
 }
 
-type Step = 'select-provider' | 'api-key' | 'saving' | 'done'
+type Step =
+  | 'check-existing'
+  | 'confirm-change'
+  | 'select-provider'
+  | 'api-key'
+  | 'saving'
+  | 'done'
 
 function getDefaultModelForProvider(provider: Provider): string {
   switch (provider) {
@@ -34,6 +41,8 @@ function getDefaultModelForProvider(provider: Provider): string {
       return 'x-ai/grok-4.1-fast'
     case 'vercel':
       return 'openai/gpt-5-mini'
+    case 'anthropic':
+      return 'claude-3.5-sonnet'
   }
 }
 
@@ -41,9 +50,13 @@ export default function Init(): React.ReactElement {
   const { exit } = useApp()
   const [provider, setProvider] = useState<Provider | null>(null)
   const [apiKey, setApiKey] = useState('')
-  const [step, setStep] = useState<Step>('select-provider')
+  const [step, setStep] = useState<Step>('check-existing')
   const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [existingConfig, setExistingConfig] = useState<{
+    provider: Provider
+    model?: string
+  } | null>(null)
 
   const providerLabel = useMemo(() => {
     switch (provider) {
@@ -53,10 +66,54 @@ export default function Init(): React.ReactElement {
         return 'Vercel AI Gateway'
       case 'openrouter':
         return 'OpenRouter'
+      case 'anthropic':
+        return 'Anthropic'
       default:
         return ''
     }
   }, [provider])
+
+  const existingProviderLabel = useMemo(() => {
+    if (!existingConfig) return ''
+    switch (existingConfig.provider) {
+      case 'openai':
+        return 'OpenAI'
+      case 'vercel':
+        return 'Vercel AI Gateway'
+      case 'openrouter':
+        return 'OpenRouter'
+      case 'anthropic':
+        return 'Anthropic'
+      default:
+        return ''
+    }
+  }, [existingConfig])
+
+  // Check for existing configuration on mount
+  useEffect(() => {
+    if (step !== 'check-existing') {
+      return
+    }
+
+    const checkConfig = async (): Promise<void> => {
+      try {
+        const config = await getAiConfig()
+        if (config) {
+          setExistingConfig({
+            provider: config.provider,
+            model: config.model,
+          })
+          setStep('confirm-change')
+        } else {
+          setStep('select-provider')
+        }
+      } catch {
+        setStep('select-provider')
+      }
+    }
+
+    void checkConfig()
+  }, [step])
 
   useEffect(() => {
     if (step !== 'saving' || !provider || !apiKey) {
@@ -104,13 +161,28 @@ export default function Init(): React.ReactElement {
           ...prev,
           {
             message: `\n✓ Successfully configured ${providerLabel} provider\n`,
-            color: '#7ba179',
           },
           {
             message: 'Configuration saved\n',
             color: 'grey',
           },
         ])
+        setStep('done')
+
+        // Wait a moment to show the success message before exiting
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        setLogs((prev) => [
+          ...prev,
+          {
+            message:
+              '\nKyoto is ready to vibe.\n\nNext steps:\n  kyoto vibe    - monitor commits\n  kyoto craft  - write a story\n',
+          },
+        ])
+
+        // Wait a bit more to show the final message
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        exit()
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Failed to initialize Kyoto'
@@ -130,8 +202,10 @@ export default function Init(): React.ReactElement {
           setError(message)
         }
         process.exitCode = 1
-      } finally {
         setStep('done')
+
+        // Wait before exiting on error too
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         exit()
       }
     }
@@ -153,6 +227,58 @@ export default function Init(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Header message="Initialize Kyoto" />
+      {step === 'check-existing' ? (
+        <Box marginTop={1} gap={1}>
+          <Text color="red">
+            <Spinner type="dots" />
+          </Text>
+          <Text>Checking existing configuration...</Text>
+        </Box>
+      ) : null}
+
+      {step === 'confirm-change' && existingConfig ? (
+        <Box flexDirection="column">
+          <Text>
+            Current AI provider: <Text>{existingProviderLabel}</Text>
+          </Text>
+          {existingConfig.model ? (
+            <Text>
+              Current model: <Text color="grey">{existingConfig.model}</Text>
+            </Text>
+          ) : null}
+          <Box marginTop={1}>
+            <Text>Do you want to setup a different provider?</Text>
+          </Box>
+          <SelectInput
+            items={[
+              { label: 'Yes, change provider', value: 'yes' },
+              { label: 'No, keep current provider', value: 'no' },
+            ]}
+            onSelect={(item) => {
+              if (item.value === 'yes') {
+                setStep('select-provider')
+                setError(null)
+              } else {
+                setLogs([
+                  {
+                    message: '\nKeeping current configuration.\n',
+                    color: 'grey',
+                  },
+                  {
+                    message:
+                      'Kyoto is ready to vibe.\n\nNext steps:\n  kyoto vibe    - monitor commits\n  kyoto craft  - write a story\n',
+                  },
+                ])
+                setStep('done')
+                setTimeout(() => {
+                  exit()
+                }, 1500)
+              }
+            }}
+          />
+        </Box>
+      ) : null}
+
       {step === 'select-provider' ? (
         <Box flexDirection="column">
           <Text>Select your AI provider:</Text>
@@ -161,6 +287,7 @@ export default function Init(): React.ReactElement {
               { label: 'OpenAI', value: 'openai' },
               { label: 'Vercel AI Gateway', value: 'vercel' },
               { label: 'OpenRouter', value: 'openrouter' },
+              { label: 'Anthropic', value: 'anthropic' },
             ]}
             onSelect={(item) => {
               setProvider(item.value as Provider)

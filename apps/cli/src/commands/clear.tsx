@@ -7,18 +7,19 @@ import { init } from '../helpers/config/assert-cli-prerequisites'
 import { Header } from '../helpers/display/display-header'
 import { type Logger } from '../types/logger'
 
-type LogEntry = {
-  message: string
-  color?: string
-}
-
 export default function Clear(): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<LogEntry[]>([])
+  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
+    [],
+  )
   const [error, setError] = useState<string | null>(null)
 
-  const logger = useCallback<Logger>((message, color) => {
-    setLogs((prev) => [...prev, { message, color }])
+  const logger = useCallback<Logger>((message) => {
+    const content =
+      typeof message === 'string' ? <Text>{message}</Text> : message
+
+    const key = `${Date.now()}-${Math.random()}`
+    setLogs((prev) => [...prev, { content, key }])
   }, [])
 
   useEffect(() => {
@@ -31,10 +32,14 @@ export default function Clear(): React.ReactElement {
         try {
           await stat(stories)
           await rm(stories, { recursive: true, force: true })
-          logger('✓ Deleted stories directory', '#7ba179')
+          logger(<Text color="#7ba179">✓ Deleted stories directory</Text>)
         } catch (err) {
           if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
-            logger('Stories directory does not exist, skipping', 'grey')
+            logger(
+              <Text color="grey">
+                Stories directory does not exist, skipping
+              </Text>,
+            )
           } else {
             throw err
           }
@@ -43,10 +48,14 @@ export default function Clear(): React.ReactElement {
         try {
           await stat(artifacts)
           await rm(artifacts, { recursive: true, force: true })
-          logger('✓ Deleted artifacts directory', '#7ba179')
+          logger(<Text color="#7ba179">✓ Deleted artifacts directory</Text>)
         } catch (err) {
           if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
-            logger('Artifacts directory does not exist, skipping', 'grey')
+            logger(
+              <Text color="grey">
+                Artifacts directory does not exist, skipping
+              </Text>,
+            )
           } else {
             throw err
           }
@@ -56,10 +65,12 @@ export default function Clear(): React.ReactElement {
         try {
           await stat(vectraPath)
           await rm(vectraPath, { recursive: true, force: true })
-          logger('✓ Deleted vectra data', '#7ba179')
+          logger(<Text color="#7ba179">✓ Deleted vectra data</Text>)
         } catch (err) {
           if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
-            logger('Vectra data does not exist, skipping', 'grey')
+            logger(
+              <Text color="grey">Vectra data does not exist, skipping</Text>,
+            )
           } else {
             throw err
           }
@@ -74,7 +85,7 @@ export default function Clear(): React.ReactElement {
           message.includes('not found') ||
           message.includes('.kyoto directory not found')
         ) {
-          logger(`\n⚠️  ${message}\n`, '#c27a52')
+          logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
         } else {
           setError(message)
         }
@@ -90,10 +101,8 @@ export default function Clear(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Header />
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
+      {logs.map((line) => (
+        <React.Fragment key={line.key}>{line.content}</React.Fragment>
       ))}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>

@@ -1,1 +1,3 @@
-export type Logger = (message: string, color?: string) => void
+import type React from 'react'
+
+export type Logger = (message: React.ReactNode | string) => void

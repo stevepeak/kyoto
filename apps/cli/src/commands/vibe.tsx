@@ -1,6 +1,6 @@
 import {
   type CommitInfo,
-  getCurrentBranch,
+  getChangedTsFiles,
   getLatestCommit,
   getRecentCommits,
 } from '@app/shell'
@@ -11,7 +11,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { init } from '../helpers/config/assert-cli-prerequisites'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
 import { Header } from '../helpers/display/display-header'
-import { evaluateDiffTarget } from '../helpers/stories/evaluate-diff-target'
+import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
 import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
 import { type Logger } from '../types/logger'
 
@@ -27,7 +27,9 @@ export default function Vibe({
   simulateCount,
 }: VibeProps): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
+  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
+    [],
+  )
   const [error, setError] = useState<string | null>(null)
   const [spinnerMessage, setSpinnerMessage] = useState<{
     sha: string
@@ -38,13 +40,16 @@ export default function Vibe({
   const processingRef = useRef(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const logger = useCallback<Logger>((message, color) => {
-    setLogs((prev) => [...prev, { message, color }])
+  const logger = useCallback<Logger>((message) => {
+    const content =
+      typeof message === 'string' ? <Text>{message}</Text> : message
+
+    const key = `${Date.now()}-${Math.random()}`
+    setLogs((prev) => [...prev, { content, key }])
   }, [])
 
   useEffect(() => {
     let gitRoot: string
-    let detailsPath: string
     let cleanupCalled = false
 
     const cleanup = (): void => {
@@ -58,7 +63,7 @@ export default function Vibe({
         clearInterval(pollRef.current)
         pollRef.current = null
       }
-      logger('\nGoodbye! 👋', 'grey')
+      logger(<Text color="grey">{'\nGoodbye! 👋'}</Text>)
       exit()
     }
 
@@ -93,15 +98,33 @@ export default function Vibe({
               ? `${latestCommit.message.substring(0, maxLength - 3)}...`
               : latestCommit.message
 
+          // Check for changed TypeScript files
+          const changedTsFiles = await getChangedTsFiles(
+            latestCommit.hash,
+            fs.gitRoot,
+          )
+
+          if (changedTsFiles.length === 0) {
+            logger(
+              <Text color="grey">
+                No changed source files found in commit {latestCommit.shortHash}
+              </Text>,
+            )
+            return
+          }
+
           setSpinnerMessage({
             sha: latestCommit.shortHash,
             message: truncatedMessage,
           })
 
           try {
-            const result = await evaluateDiffTarget(
-              { type: 'commit', commitSha: latestCommit.hash },
-              fs.gitRoot,
+            const result = await evaluateDiff(
+              {
+                type: 'commit',
+                commitSha: latestCommit.hash,
+              },
+              logger,
             )
 
             setSpinnerMessage({
@@ -111,7 +134,7 @@ export default function Vibe({
             })
 
             logImpactedStories(result, logger)
-            logger('TODO check for new stories', 'yellow')
+            logger(<Text color="yellow">TODO check for new stories</Text>)
 
             await updateDetailsJson(detailsPath, git.branch, latestCommit.hash)
             lastCommitHash = latestCommit.shortHash
@@ -119,7 +142,9 @@ export default function Vibe({
             setSpinnerMessage(null)
             const message =
               err instanceof Error ? err.message : 'Failed to evaluate commit'
-            logger(`⚠️  Failed to evaluate commit: ${message}`, '#c27a52')
+            logger(
+              <Text color="#c27a52">{`⚠️  Failed to evaluate commit: ${message}`}</Text>,
+            )
           }
         }
 
@@ -192,15 +217,8 @@ export default function Vibe({
   return (
     <Box flexDirection="column">
       <Header message="Vibe in Kyoto" />
-      <Text color="grey">
-        Kyoto monitors code changes finding new/changed user behaviors. New or
-        changed user behaviors will be tested via browser automation and deep
-        trace analysis to ensure existing and new functionality remains working.
-      </Text>
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
+      {logs.map((line) => (
+        <React.Fragment key={line.key}>{line.content}</React.Fragment>
       ))}
       {spinnerMessage ? (
         <Box marginBottom={1} gap={1}>

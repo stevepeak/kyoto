@@ -1,11 +1,13 @@
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { type LanguageModel } from 'ai'
+import { Text } from 'ink'
 
 import { type Logger } from '../../types/logger'
 import { getAiConfig } from './get-ai-config'
 
-type Provider = 'openai' | 'vercel' | 'openrouter' | 'auto'
+type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic' | 'auto'
 
 interface GetModelOptions {
   model?: string
@@ -31,7 +33,20 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
 }> {
   const { model: cliModel, provider: cliProvider, logger } = options
   // eslint-disable-next-line no-console
-  const log: Logger = logger || ((message: string) => console.log(message))
+  const log: Logger =
+    logger ||
+    ((message) => {
+      const text =
+        typeof message === 'string'
+          ? message
+          : typeof message === 'object' &&
+              message !== null &&
+              'toString' in message
+            ? String(message)
+            : JSON.stringify(message)
+      // eslint-disable-next-line no-console
+      console.log(text)
+    })
 
   // Get config from config.json
   const aiConfig = await getAiConfig()
@@ -40,10 +55,15 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
   if (cliModel && cliProvider && cliProvider !== 'auto') {
     if (!aiConfig || aiConfig.provider !== cliProvider) {
       log(
-        `⚠️  API key is required when using --provider ${cliProvider}\n`,
-        'yellow',
+        <Text color="yellow">
+          {`⚠️  API key is required when using --provider ${cliProvider}\n`}
+        </Text>,
       )
-      log('Please run `kyoto init` to configure your API key.\n', 'grey')
+      log(
+        <Text color="grey">
+          Please run `kyoto init` to configure your API key.\n
+        </Text>,
+      )
       throw new Error(`API key is required for ${cliProvider} provider`)
     }
 
@@ -70,6 +90,15 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
         model: createOpenRouter({ apiKey: aiConfig.apiKey })(cliModel),
         modelId: cliModel,
         provider: 'openrouter',
+        apiKeySource: 'cli',
+      }
+    }
+
+    if (cliProvider === 'anthropic') {
+      return {
+        model: createAnthropic({ apiKey: aiConfig.apiKey })(cliModel),
+        modelId: cliModel,
+        provider: 'anthropic',
         apiKeySource: 'cli',
       }
     }
@@ -106,20 +135,33 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
         apiKeySource: 'details',
       }
     }
+    if (aiConfig.provider === 'anthropic') {
+      return {
+        model: createAnthropic({ apiKey: aiConfig.apiKey })(modelToUse),
+        provider: 'anthropic',
+        modelId: modelToUse,
+        apiKeySource: 'details',
+      }
+    }
   }
 
   // No API keys found
   log(
-    '\n⚠️  No AI API key found. Please configure your AI provider.\n',
-    'yellow',
+    <Text color="yellow">
+      {'\n⚠️  No AI API key found. Please configure your AI provider.\n'}
+    </Text>,
   )
-  log('Run `kyoto init` to configure your AI provider and API key.\n', 'grey')
+  log(
+    <Text color="grey">
+      Run `kyoto init` to configure your AI provider and API key.\n
+    </Text>,
+  )
 
   throw new Error('AI API key is required. Run `kyoto init` to configure.')
 }
 
 function getDefaultModelForProvider(
-  provider: 'openai' | 'vercel' | 'openrouter',
+  provider: 'openai' | 'vercel' | 'openrouter' | 'anthropic',
 ): string {
   switch (provider) {
     case 'openai':
@@ -128,5 +170,7 @@ function getDefaultModelForProvider(
       return 'x-ai/grok-4.1-fast'
     case 'vercel':
       return 'openai/gpt-5-mini'
+    case 'anthropic':
+      return 'claude-3.5-sonnet'
   }
 }

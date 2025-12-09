@@ -12,12 +12,15 @@ export function Header({
 }: HeaderProps): React.ReactElement {
   const rows = ['入   |  ', '京   |  ', '行   |  ', '改   |  ', '善   |  ']
 
+  const renderedMessage =
+    typeof message === 'string' ? <Text>{message}</Text> : message
+
   return (
     <Box flexDirection="column" marginBottom={1}>
       {rows.map((row, index) => (
         <Box key={row} flexDirection="row">
           <Text color="red">{row}</Text>
-          {index === 2 ? message : null}
+          {index === 2 ? renderedMessage : null}
         </Box>
       ))}
     </Box>

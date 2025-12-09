@@ -21,7 +21,8 @@ interface SearchStoriesOptions {
  * Gets or creates the vectra index for stories
  */
 async function getStoriesIndex(): Promise<ReturnType<typeof createIndex>> {
-  const { vectra } = await pwdKyoto()
+  const gitRoot = await findGitRoot()
+  const { vectra } = await pwdKyoto(gitRoot)
   const index = createIndex(vectra)
   await createDb(index)
   return index

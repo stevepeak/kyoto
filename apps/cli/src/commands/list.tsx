@@ -11,12 +11,18 @@ import { type Logger } from '../types/logger'
 
 export default function List(): React.ReactElement {
   const { exit } = useApp()
-  const [logs, setLogs] = useState<{ message: string; color?: string }[]>([])
+  const [logs, setLogs] = useState<{ content: React.ReactNode; key: string }[]>(
+    [],
+  )
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  const logger = useCallback<Logger>((message, color) => {
-    setLogs((prev) => [...prev, { message, color }])
+  const logger = useCallback<Logger>((message) => {
+    const content =
+      typeof message === 'string' ? <Text>{message}</Text> : message
+
+    const key = `${Date.now()}-${Math.random()}`
+    setLogs((prev) => [...prev, { content, key }])
   }, [])
 
   useEffect(() => {
@@ -30,15 +36,17 @@ export default function List(): React.ReactElement {
 
         if (storyFiles.length === 0) {
           logger(
-            `\n⚠️  No story files found in .kyoto/stories directory.\n`,
-            '#c27a52',
+            <Text color="#c27a52">
+              {`\n⚠️  No story files found in .kyoto/stories directory.\n`}
+            </Text>,
           )
           return
         }
 
         logger(
-          `• Found ${storyFiles.length.toString()} ${storyFiles.length === 1 ? 'story' : 'stories'}:\n`,
-          'grey',
+          <Text color="grey">
+            {`• Found ${storyFiles.length.toString()} ${storyFiles.length === 1 ? 'story' : 'stories'}:\n`}
+          </Text>,
         )
 
         const gitRoot = await findGitRoot()
@@ -49,9 +57,9 @@ export default function List(): React.ReactElement {
           const absolutePath = resolve(gitRoot, storyFile.path)
           const linkUrl = `vscode://file/${absolutePath}`
           const titleLink = terminalLink(storyFile.story.title, linkUrl)
-          logger(titleLink, '#7ba179')
+          logger(<Text color="#7ba179">{titleLink}</Text>)
           if (storyFile.story.behavior) {
-            logger(`${storyFile.story.behavior}`, 'grey')
+            logger(<Text color="grey">{storyFile.story.behavior}</Text>)
           }
           logger('')
         }
@@ -63,7 +71,7 @@ export default function List(): React.ReactElement {
           message.includes('not found') ||
           message.includes('.kyoto directory not found')
         ) {
-          logger(`\n⚠️  ${message}\n`, '#c27a52')
+          logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
         } else {
           setError(message)
         }
@@ -90,10 +98,8 @@ export default function List(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Header />
-      {logs.map((line, index) => (
-        <Text key={`${index}-${line.message}`} color={line.color}>
-          {line.message}
-        </Text>
+      {logs.map((line) => (
+        <React.Fragment key={line.key}>{line.content}</React.Fragment>
       ))}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>

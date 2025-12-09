@@ -22,9 +22,8 @@ export async function readLocalFile(path: string): Promise<string> {
   return content
 }
 
-export function createLocalReadFileTool(
-  logger?: (message: string) => void,
-): Tool {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createLocalReadFileTool(logger?: (message: any) => void): Tool {
   return tool({
     name: 'readFile',
     description:

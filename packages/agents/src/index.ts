@@ -163,6 +163,9 @@ export const agents: AgentsConfig = {
       model: 'openai/gpt-4o-mini',
     },
   },
+  /**
+   * Review diff for candidate stories impacted by the changes
+   */
   diffEvaluator: {
     id: 'diff-evaluator-v3',
     version: 'v3',

@@ -10,8 +10,9 @@ const terminalCommandInputSchema = z.object({
     .describe('The shell command to run in the current working directory.'),
 })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createLocalTerminalCommandTool(
-  logger?: (message: string) => void,
+  logger?: (message: any) => void,
 ): Tool {
   return tool({
     name: 'terminalCommand',

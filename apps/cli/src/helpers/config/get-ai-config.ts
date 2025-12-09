@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 
-type Provider = 'openai' | 'vercel' | 'openrouter'
+type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
 
-const providerSchema = z.enum(['openai', 'vercel', 'openrouter'])
+const providerSchema = z.enum(['openai', 'vercel', 'openrouter', 'anthropic'])
 
 const detailsJsonSchema = z.object({
   latest: z

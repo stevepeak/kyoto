@@ -12,6 +12,7 @@
       "packages/*"
     ],
     "catalog": {
+      "@ai-sdk/anthropic": "^2.0.53",
       "@ai-sdk/openai": "^2.0.77",
       "@browserbasehq/stagehand": "^3.0.5",
       "@daytonaio/sdk": "^0.121.0",
