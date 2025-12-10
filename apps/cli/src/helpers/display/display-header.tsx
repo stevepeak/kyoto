@@ -15,7 +15,15 @@ export function Header({ message }: HeaderProps): React.ReactElement {
         <Box key={row} flexDirection="row">
           <Text color="red">{row}</Text>
           {hasMessage && index === 1 ? <Text bold>Kyoto</Text> : null}
-          {!hasMessage && index === 2 ? <Text bold>Kyoto</Text> : null}
+          {!hasMessage && index === 2 ? (
+            <>
+              <Text bold>Kyoto</Text>
+              <Text> </Text>
+              <Text color="gray" italic>
+                • May the vibe be with you.
+              </Text>
+            </>
+          ) : null}
           {hasMessage && index === 3 ? (
             <Text italic color="grey">
               {message}

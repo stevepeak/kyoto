@@ -15,7 +15,7 @@ import Test from './commands/test'
 import TestApi from './commands/test/api'
 import TestBrowser from './commands/test/browser'
 import TestCli from './commands/test/cli'
-import TestTrace from './commands/test/trace'
+import TestReview from './commands/test/review'
 import Trace from './commands/trace'
 import Vibe from './commands/vibe'
 import { Header } from './helpers/display/display-header'
@@ -32,97 +32,70 @@ const colors = {
 
 const commandGroups = [
   {
-    title: 'Continuous Vibe Testing',
+    title: 'Vibing',
     kanji: '改善',
     commands: [
       {
         name: 'vibe',
         description:
-          'Maintain and test user stories continuously upon new git commits.',
+          'Maintain and test user stories continuously upon new git commits',
         example: 'kyoto vibe',
       },
       {
         name: 'vibe check',
-        description:
-          'Test and diff user stories against staged changes (not yet commited).',
+        description: 'Test and diff user stories against staged changes',
         example: 'kyoto vibe check',
+      },
+      {
+        name: 'vibe test',
+        description: 'Test user stories to ensure functionality',
+        example: 'kyoto vibe test',
       },
     ],
   },
   {
-    title: 'Stories',
+    title: 'Storytelling',
     kanji: '物語',
     commands: [
       {
         name: 'craft',
-        description: 'Create or refine a user story with AI.',
+        description: 'Create or refine a user story with AI',
         example: 'kyoto craft',
       },
       {
         name: 'list',
-        description: 'List stories in the current project.',
+        description: 'List stories in the current project',
         example: 'kyoto list',
       },
       {
         name: '<query>',
-        description: 'Search stories by natural language query.',
+        description: 'Search stories by natural language query',
         example: 'kyoto "how do customers login?"',
       },
       {
         name: 'trace [story]',
-        description: 'Display all the code required to fulfill a user story.',
+        description: 'Explore code related to a user story',
         example: 'kyoto trace [story]',
       },
     ],
   },
   {
-    title: 'Test',
-    kanji: '試験',
-    commands: [
-      {
-        name: 'test',
-        description: 'Run tests for all stories.',
-        example: 'kyoto test',
-      },
-      {
-        name: 'test:browser',
-        description: 'Run browser tests.',
-        example: ['kyoto test:browser', 'kyoto test:browser --headless'],
-      },
-      {
-        name: 'test:cli',
-        description: 'Run CLI tests.',
-        example: 'kyoto test:cli',
-      },
-      {
-        name: 'test:trace',
-        description: 'Run tests with trace.',
-        example: 'kyoto test:trace',
-      },
-    ],
-  },
-  {
-    title: 'Setup',
+    title: 'Configuring',
     kanji: '設定',
     commands: [
       {
         name: 'init',
-        description: 'Configure AI provider & API key.',
+        description: 'Design your Kyoto experience',
         example: 'kyoto init',
       },
       {
-        name: 'setup github',
-        description: 'Create GitHub workflow for Kyoto tests.',
-        example: 'kyoto setup github',
-      },
-      {
         name: 'discover',
-        description: 'Generate new stories from code.',
+        description: 'Discover new stories from code',
         example: ['kyoto discover', 'kyoto discover apps/web --limit 3'],
       },
       {
         name: 'mcp',
-        description: "Run Kyoto's MCP service for AI agent story exploration.",
+        description: "For your coding agent's story exploration needs",
         example: 'kyoto mcp',
       },
     ],
@@ -195,11 +168,6 @@ function Help(): React.ReactElement {
     <Box flexDirection="column">
       <Header />
       <Text> </Text>
-      <Text color="gray" italic>
-        The way of the vibe.
-      </Text>
-      <Text> </Text>
-
       {commandGroups.map((group) => (
         <Box key={group.title} flexDirection="column" marginBottom={1}>
           <GroupHeader
@@ -464,42 +432,6 @@ export async function run(argv = process.argv): Promise<void> {
     })
 
   program
-    .command('test')
-    .description('Run tests')
-    .action(async () => {
-      await renderCommand(<Test />)
-    })
-
-  program
-    .command('test:browser')
-    .description('Run browser tests')
-    .option('--headless', 'Run browser in headless mode')
-    .action(async (options: { headless?: boolean }) => {
-      await renderCommand(<TestBrowser headless={options.headless ?? false} />)
-    })
-
-  program
-    .command('test:api')
-    .description('Run API tests')
-    .action(async () => {
-      await renderCommand(<TestApi />)
-    })
-
-  program
-    .command('test:cli')
-    .description('Run CLI tests')
-    .action(async () => {
-      await renderCommand(<TestCli />)
-    })
-
-  program
-    .command('test:trace')
-    .description('Run tests with trace')
-    .action(async () => {
-      await renderCommand(<TestTrace />)
-    })
-
-  program
     .command('trace [source]')
     .description(
       'List stories that have evidence pointing to the source lines asked to trace',
@@ -555,6 +487,42 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<Stage includeUnstaged={options.includeUnstaged} />)
     })
 
+  vibeCommand
+    .command('test')
+    .description('Run tests for all stories')
+    .action(async () => {
+      await renderCommand(<Test />)
+    })
+
+  vibeCommand
+    .command('test:browser')
+    .description('Run browser tests')
+    .option('--headless', 'Run browser in headless mode')
+    .action(async (options: { headless?: boolean }) => {
+      await renderCommand(<TestBrowser headless={options.headless ?? false} />)
+    })
+
+  vibeCommand
+    .command('test:api')
+    .description('Run API tests')
+    .action(async () => {
+      await renderCommand(<TestApi />)
+    })
+
+  vibeCommand
+    .command('test:cli')
+    .description('Run CLI tests')
+    .action(async () => {
+      await renderCommand(<TestCli />)
+    })
+
+  vibeCommand
+    .command('test:review')
+    .description('Run tests with review')
+    .action(async () => {
+      await renderCommand(<TestReview />)
+    })
+
   program.helpInformation = () => formatKyotoHelp(program)
   program.showHelpAfterError()
 
@@ -573,11 +541,6 @@ export async function run(argv = process.argv): Promise<void> {
     'craft',
     'mcp',
     'setup',
-    'test',
-    'test:browser',
-    'test:api',
-    'test:cli',
-    'test:trace',
     'trace',
     'vibe',
     'help',
@@ -587,8 +550,16 @@ export async function run(argv = process.argv): Promise<void> {
 
   // Check if first argument is a known command
   const firstArg = argv[2]
+  const secondArg = argv[3]
   const isKnownCommand =
-    knownCommands.includes(firstArg) || firstArg?.startsWith('test:')
+    knownCommands.includes(firstArg) ||
+    (firstArg === 'vibe' &&
+      (secondArg === 'test' ||
+        secondArg === 'test:browser' ||
+        secondArg === 'test:api' ||
+        secondArg === 'test:cli' ||
+        secondArg === 'test:review' ||
+        secondArg === 'check'))
 
   // Helper function to parse search options from argv
   const parseSearchOptions = (
