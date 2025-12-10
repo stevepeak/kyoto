@@ -11,7 +11,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
 import { getAiConfig } from '../helpers/config/get-ai-config'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
-import { Header } from '../helpers/display/display-header'
+import { Jumbo } from '../ui/jumbo'
 import { useCliLogger } from '../helpers/logging/logger'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
@@ -442,7 +442,7 @@ export default function Init(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header />
+      <Jumbo />
       {step === 'check-existing' ? (
         <Box marginTop={1} gap={1}>
           <Text color="red">

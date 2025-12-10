@@ -1,15 +1,12 @@
 import { Box, Text } from 'ink'
-import React from 'react'
+import { ReactElement } from 'react'
 
-interface SectionHeaderProps {
+interface HeaderProps {
   kanji: string
   title: string
 }
 
-export function SectionHeader({
-  kanji,
-  title,
-}: SectionHeaderProps): React.ReactElement {
+export function Header({ kanji, title }: HeaderProps): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Box flexDirection="row">

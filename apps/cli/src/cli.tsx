@@ -5,7 +5,7 @@ import React, { useEffect } from 'react'
 import Init from './commands/init'
 import Mcp from './commands/mcp'
 import { isExperimentalEnabled } from './helpers/config/get-ai-config'
-import { Header } from './helpers/display/display-header'
+import { Jumbo } from './ui/jumbo'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { Footer } from './ui/footer'
 
@@ -101,7 +101,7 @@ function ComingSoon(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header />
+      <Jumbo />
       <Text> </Text>
       <Text color="yellow">⚠️ This command is coming soon.</Text>
       <Text> </Text>
@@ -138,7 +138,7 @@ function Help(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header />
+      <Jumbo />
       <Text> </Text>
       {commandGroups.map((group) => (
         <Box key={group.title} flexDirection="column" marginBottom={1}>
