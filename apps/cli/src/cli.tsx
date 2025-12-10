@@ -23,11 +23,6 @@ const commandGroups = [
           ['kyoto vibe check --staged', 'Check only staged changes'],
         ],
       },
-      {
-        name: 'vibe plan',
-        description: 'Create a plan for other agents to apply fixes',
-        example: 'kyoto vibe plan',
-      },
     ],
   },
   {
@@ -41,7 +36,7 @@ const commandGroups = [
       },
       {
         name: 'stage',
-        description: 'AI stage change',
+        description: 'Stage changes with Kyoto vibes',
         example: 'kyoto stage',
         comingSoon: true,
       },
