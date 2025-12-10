@@ -33,6 +33,7 @@ const commandGroups = [
         name: 'mcp',
         description: 'For your coding agent to vibe check themselves',
         example: 'kyoto mcp',
+        comingSoon: true,
       },
       {
         name: 'stage',
