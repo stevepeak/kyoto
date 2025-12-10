@@ -27,6 +27,7 @@
         "@app/agents": "workspace:^",
         "@app/schemas": "workspace:^",
         "@app/shell": "workspace:^",
+        "@app/types": "workspace:^",
         "@app/vectra": "workspace:^",
         "@openrouter/ai-sdk-provider": "catalog:",
         "ai": "catalog:",
@@ -173,6 +174,7 @@
         "@app/config": "workspace:*",
         "@app/schemas": "workspace:*",
         "@app/shell": "workspace:*",
+        "@app/types": "workspace:*",
         "@opentelemetry/api": "catalog:",
         "ai": "catalog:",
         "openai": "catalog:",
@@ -362,6 +364,16 @@
         "ora": "^9.0.0",
       },
     },
+    "packages/types": {
+      "name": "@app/types",
+      "version": "0.0.1",
+      "devDependencies": {
+        "@kyoto/eslint-config": "workspace:*",
+        "@types/node": "catalog:",
+        "tsconfig": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
     "packages/utils": {
       "name": "@app/utils",
       "version": "0.0.1",
@@ -497,6 +509,8 @@
     "@app/shell": ["@app/shell@workspace:packages/shell"],
 
     "@app/trigger": ["@app/trigger@workspace:apps/trigger"],
+
+    "@app/types": ["@app/types@workspace:packages/types"],
 
     "@app/utils": ["@app/utils@workspace:packages/utils"],
 

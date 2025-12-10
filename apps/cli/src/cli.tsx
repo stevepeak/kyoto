@@ -39,6 +39,12 @@ const commandGroups = [
         description: 'For your coding agent to vibe check themselves',
         example: 'kyoto mcp',
       },
+      {
+        name: 'stage',
+        description: 'AI stage change',
+        example: 'kyoto stage',
+        comingSoon: true,
+      },
     ],
   },
   {
@@ -326,6 +332,13 @@ export async function run(argv = process.argv): Promise<void> {
         return
       }
       await renderCommand(<Mcp />)
+    })
+
+  program
+    .command('stage')
+    .description('AI stage change')
+    .action(async () => {
+      await renderCommand(<ComingSoon />)
     })
 
   const vibeCommand = program.command('vibe').description('Vibe check commands')

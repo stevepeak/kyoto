@@ -20,6 +20,7 @@
     "@app/agents": "workspace:^",
     "@app/schemas": "workspace:^",
     "@app/shell": "workspace:^",
+    "@app/types": "workspace:^",
     "@app/vectra": "workspace:^",
     "@openrouter/ai-sdk-provider": "catalog:",
     "ai": "catalog:",

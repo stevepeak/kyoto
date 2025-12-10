@@ -1,3 +1,5 @@
+import { type Logger } from '../../types/logger'
+
 import {
   type AgentRunState,
   type VibeCheckAgent,
@@ -17,10 +19,12 @@ export async function runVibeCheckAgents({
   agents,
   context,
   onUpdate,
+  createLoggerForAgent,
 }: {
   agents: VibeCheckAgent[]
-  context: VibeCheckContext
+  context: Omit<VibeCheckContext, 'logger'>
   onUpdate?: (state: AgentRunState) => void
+  createLoggerForAgent?: (agentId: string) => Logger
 }): Promise<AgentRunState[]> {
   const states = agents.map(createInitialState)
 
@@ -45,8 +49,13 @@ export async function runVibeCheckAgents({
         },
       }
 
+      const agentContext: VibeCheckContext = {
+        ...context,
+        logger: createLoggerForAgent?.(agent.id),
+      }
+
       try {
-        const result = await agent.run(context, reporter)
+        const result = await agent.run(agentContext, reporter)
         const status =
           result.status === 'pass'
             ? 'success'

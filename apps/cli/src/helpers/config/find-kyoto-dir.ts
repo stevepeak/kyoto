@@ -3,10 +3,17 @@ import { join } from 'node:path'
 
 const KYOTO_DIR = '.kyoto'
 
+/**
+ * Paths related to the Kyoto project directory.
+ */
 export interface KyotoPaths {
+  /** Absolute path to the root of the git repository */
   gitRoot: string
+  /** Absolute path to the .kyoto directory inside the git repository */
   root: string
+  /** Absolute path to the .kyoto/config.json file */
   config: string
+  /** Absolute path to the .kyoto/vectra directory (for vector DB, etc.) */
   vectra: string
 }
 

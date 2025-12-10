@@ -2,7 +2,7 @@ import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
 
 import { init } from '../../helpers/config/assert-cli-prerequisites'
-import { Header } from '../../helpers/display/display-header'
+import { Jumbo } from '../../ui/jumbo'
 import { useCliLogger } from '../../helpers/logging/logger'
 
 export default function VibePlan(): React.ReactElement {
@@ -69,7 +69,7 @@ export default function VibePlan(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header />
+      <Jumbo />
       {status && <Text color="cyan">{status}</Text>}
       {logs.length > 0 ? (
         <Box marginTop={1} flexDirection="column">

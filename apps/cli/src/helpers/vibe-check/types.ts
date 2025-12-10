@@ -1,4 +1,4 @@
-import { type Logger } from '../../types/logger'
+import { type VibeCheckScope } from '@app/types'
 
 export type VibeCheckTarget = 'staged' | 'unstaged'
 
@@ -23,9 +23,7 @@ export interface VibeCheckReporter {
 
 export interface VibeCheckContext {
   gitRoot: string
-  target: VibeCheckTarget
-  changedFiles: string[]
-  logger: Logger
+  scope: VibeCheckScope
 }
 
 export interface VibeCheckAgent {
