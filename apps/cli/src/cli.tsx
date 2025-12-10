@@ -1,6 +1,5 @@
 import { Command } from 'commander'
 import { Box, render, Text, useApp, useStdout } from 'ink'
-import Link from 'ink-link'
 import React, { useEffect } from 'react'
 
 import Init from './commands/init'
@@ -8,15 +7,7 @@ import Mcp from './commands/mcp'
 import { isExperimentalEnabled } from './helpers/config/get-ai-config'
 import { Header } from './helpers/display/display-header'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
-
-const colors = {
-  red: (text: string): string => `\x1b[31m${text}\x1b[0m`,
-  magenta: (text: string): string => `\x1b[35m${text}\x1b[0m`,
-  cyan: (text: string): string => `\x1b[36m${text}\x1b[0m`,
-  yellow: (text: string): string => `\x1b[33m${text}\x1b[0m`,
-  dim: (text: string): string => `\x1b[90m${text}\x1b[0m`,
-  bold: (text: string): string => `\x1b[1m${text}\x1b[0m`,
-}
+import { Footer } from './ui/footer'
 
 const commandGroups = [
   {
@@ -28,7 +19,7 @@ const commandGroups = [
         description: 'Test and diff user stories against staged changes',
         example: [
           ['kyoto vibe check', 'Check all changes'],
-          ['kyoto vibe check --watch', 'Contininously vibe check git changes'],
+          // ['kyoto vibe check --watch', 'Contininously vibe check git changes'],
           ['kyoto vibe check --staged', 'Check only staged changes'],
         ],
       },
@@ -67,17 +58,6 @@ const commandGroups = [
     ],
   },
 ] as const
-
-function parseInteger(value: unknown): number | undefined {
-  if (typeof value === 'number') {
-    return value
-  }
-  if (typeof value === 'string') {
-    const parsed = parseInt(value, 10)
-    return Number.isNaN(parsed) ? undefined : parsed
-  }
-  return undefined
-}
 
 async function renderCommand(element: React.ReactElement): Promise<void> {
   try {
@@ -320,125 +300,12 @@ function Help(): React.ReactElement {
         </Box>
       ))}
 
-      <Box>
-        <Text>
-          <Text color="red">京</Text>
-          {/* @ts-expect-error: Link type error intentionally ignored */}
-          <Link url="https://usekyoto.com">
-            <Text bold>Kyoto</Text>
-          </Link>{' '}
-          <Text color="grey">
-            is crafted with intention on{' '}
-            {/* @ts-expect-error: Link type error intentionally ignored */}
-            <Link url="https://github.com/iopeak/kyoto">GitHub</Link>
-          </Text>
-        </Text>
-      </Box>
+      <Footer />
       {/* some extra space */}
       <Text> </Text>
       <Text> </Text>
     </Box>
   )
-}
-
-function formatKyotoHelp(_program: Command): string {
-  const columnWidth = Math.max(
-    ...commandGroups.flatMap((group) =>
-      group.commands.map((command) => command.name.length),
-    ),
-  )
-  const lines: string[] = []
-
-  // String version of header for Commander.js help output
-  const headerRows = [
-    '入   |  ',
-    '京   |  ',
-    '行   |  ',
-    '改   |  ',
-    '善   |  ',
-  ]
-  lines.push(
-    headerRows
-      .map(
-        (row, index) =>
-          `${colors.red(row)}${index === 2 ? colors.bold('Kyoto') : ''}`,
-      )
-      .join('\n'),
-  )
-  lines.push('')
-  lines.push(`Contininous vibe testing.`)
-  lines.push('')
-
-  for (const group of commandGroups) {
-    const accent =
-      (group as { accent?: typeof colors.dim }).accent ?? colors.dim
-    lines.push(
-      `${accent('─'.repeat(10))}  ${group.title}  ${accent('─'.repeat(10))}`,
-    )
-    for (const command of group.commands) {
-      const name = command.name.padEnd(columnWidth)
-      const isComingSoon = (command as { comingSoon?: boolean }).comingSoon
-      const description = isComingSoon
-        ? `${colors.dim('(Coming soon)')} ${command.description}`
-        : command.description
-      const nameColor = isComingSoon ? colors.dim : colors.red
-      lines.push(`  ${nameColor(name)} ${description}`)
-      if ('examples' in command && Array.isArray(command.examples)) {
-        for (const example of command.examples) {
-          const isTuple =
-            Array.isArray(example) &&
-            example.length === 2 &&
-            typeof example[0] === 'string' &&
-            typeof example[1] === 'string'
-          const commandText = isTuple ? example[0] : example
-          const description = isTuple ? example[1] : null
-          if (description) {
-            lines.push(
-              `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)} ${colors.dim(description)}`,
-            )
-          } else {
-            lines.push(
-              `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)}`,
-            )
-          }
-        }
-      } else if ('example' in command) {
-        if (Array.isArray(command.example)) {
-          for (const example of command.example) {
-            const isTuple =
-              Array.isArray(example) &&
-              example.length === 2 &&
-              typeof example[0] === 'string' &&
-              typeof example[1] === 'string'
-            const commandText = isTuple ? example[0] : example
-            const description = isTuple ? example[1] : null
-            if (description) {
-              lines.push(
-                `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)} ${colors.dim(description)}`,
-              )
-            } else {
-              lines.push(
-                `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)}`,
-              )
-            }
-          }
-        } else if (typeof command.example === 'string') {
-          lines.push(
-            `                               ${colors.dim('e.g.')} ${colors.yellow(command.example)}`,
-          )
-        }
-      }
-    }
-    lines.push('')
-  }
-
-  lines.push(
-    `${colors.dim('─'.repeat(10))}  Global Options  ${colors.dim('─'.repeat(10))}`,
-  )
-  lines.push(`  ${colors.red('-h, --help')}                 Show help.`)
-  lines.push('')
-
-  return lines.join('\n')
 }
 
 export async function run(argv = process.argv): Promise<void> {
@@ -472,38 +339,10 @@ export async function run(argv = process.argv): Promise<void> {
     .command('check')
     .description('Test and diff user stories against staged changes')
     .option('--staged', 'Only check staged changes')
-    .option('--watch', 'Continuously vibe check git changes')
-    .option('--watch-commits', 'Watch for new commits and evaluate them')
-    .option(
-      '-m, --max-length <maxLength>',
-      'Maximum characters for commit message (only with --watch-commits)',
-      '60',
-    )
-    .option(
-      '-i, --interval <interval>',
-      'Polling interval in milliseconds (only with --watch-commits)',
-      '1000',
-    )
-    .action(
-      async (options: {
-        staged?: boolean
-        watch?: boolean
-        watchCommits?: boolean
-        maxLength?: string
-        interval?: string
-      }) => {
-        const Stage = (await import('./commands/vibe/check')).default
-        await renderCommand(
-          <Stage
-            staged={options.staged}
-            watch={options.watch}
-            watchCommits={options.watchCommits}
-            maxLength={parseInteger(options.maxLength)}
-            interval={parseInteger(options.interval)}
-          />,
-        )
-      },
-    )
+    .action(async (options: { staged?: boolean }) => {
+      const VibeCheck = (await import('./commands/vibe/check')).default
+      await renderCommand(<VibeCheck staged={options.staged} />)
+    })
 
   vibeCommand
     .command('fix')
@@ -521,7 +360,6 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<Plan />)
     })
 
-  program.helpInformation = () => formatKyotoHelp(program)
   program.showHelpAfterError()
 
   if (argv.length <= 2) {
