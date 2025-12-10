@@ -1,12 +1,12 @@
+import { analyzeStaleCodePaths } from '@app/agents'
 import { execa } from 'execa'
+import path from 'path'
 
 import {
   type VibeCheckAgent,
   type VibeCheckFinding,
   type VibeCheckResult,
 } from '../types'
-
-const STALE_DAYS_THRESHOLD = 180
 
 async function getLastTouchedDays(
   gitRoot: string,
@@ -36,6 +36,17 @@ async function getLastTouchedDays(
   }
 }
 
+function toFindings(
+  results: Awaited<ReturnType<typeof analyzeStaleCodePaths>>['findings'],
+): VibeCheckFinding[] {
+  return results.map((finding) => ({
+    message: `${finding.file} last touched ${finding.lastTouchedDays ?? 'unknown'} days ago`,
+    path: finding.file,
+    suggestion: finding.reasoning,
+    severity: finding.severity,
+  }))
+}
+
 export const staleCodePathsAgent: VibeCheckAgent = {
   id: 'stale-code-paths',
   label: 'Stale code paths',
@@ -50,24 +61,27 @@ export const staleCodePathsAgent: VibeCheckAgent = {
     }
 
     reporter.progress('Checking git history...')
-    const findings: VibeCheckFinding[] = []
+    const files = await Promise.all(
+      context.changedFiles.map(async (file) => ({
+        path: file,
+        lastTouchedDays: await getLastTouchedDays(context.gitRoot, file),
+      })),
+    )
 
-    for (const file of context.changedFiles) {
-      const days = await getLastTouchedDays(context.gitRoot, file)
-      if (days === null) {
-        continue
-      }
+    reporter.progress('Starting agent')
+    const result = await analyzeStaleCodePaths({
+      repo: {
+        id: context.gitRoot,
+        slug: path.basename(context.gitRoot),
+      },
+      files,
+      options: {
+        maxSteps: 8,
+        progress: reporter.progress,
+      },
+    })
 
-      if (days >= STALE_DAYS_THRESHOLD) {
-        findings.push({
-          message: `${file} last touched ${days} days ago`,
-          path: file,
-          suggestion:
-            'Re-evaluate assumptions; add tests or refactors to reduce regression risk.',
-          severity: days >= STALE_DAYS_THRESHOLD * 2 ? 'error' : 'warn',
-        })
-      }
-    }
+    const findings = toFindings(result.findings ?? [])
 
     if (findings.length === 0) {
       return {
@@ -79,7 +93,9 @@ export const staleCodePathsAgent: VibeCheckAgent = {
 
     const mostSevere = findings.some((finding) => finding.severity === 'error')
       ? 'fail'
-      : 'warn'
+      : findings.some((finding) => finding.severity === 'warn')
+        ? 'warn'
+        : 'pass'
 
     return {
       status: mostSevere,

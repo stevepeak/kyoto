@@ -16,6 +16,10 @@ import {
   analyzeFunctionConsolidation,
   functionConsolidationOutputSchema,
 } from './agents/v3/function-consolidation'
+import {
+  analyzeStaleCodePaths,
+  staleCodePathsOutputSchema,
+} from './agents/v3/stale-code-paths'
 import { extractScope } from './agents/v3/scope-extraction'
 import { runStoryCheckAgent } from './agents/v3/story-check'
 import { runCompositionAgent } from './agents/v3/story-composition'
@@ -63,6 +67,7 @@ type AgentsConfig = {
   scopeExtraction: Agent
   diffEvaluator: Agent
   functionConsolidation: Agent
+  staleCodePaths: Agent
 }
 
 export const agents: AgentsConfig = {
@@ -191,9 +196,23 @@ export const agents: AgentsConfig = {
       model: 'openai/gpt-4o-mini',
     },
   },
+  staleCodePaths: {
+    id: 'stale-code-paths-v1',
+    version: 'v1',
+    schema: staleCodePathsOutputSchema,
+    run: analyzeStaleCodePaths,
+    options: {
+      maxSteps: 8,
+      model: 'openai/gpt-4o-mini',
+    },
+  },
 }
 
 export {
   analyzeFunctionConsolidation,
   functionConsolidationOutputSchema,
 } from './agents/v3/function-consolidation'
+export {
+  analyzeStaleCodePaths,
+  staleCodePathsOutputSchema,
+} from './agents/v3/stale-code-paths'
