@@ -30,4 +30,4 @@ next-env.d.ts
 storybook-static
 
 apps/web_old
-.kyoto/cache
+.kyoto

@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { pwdKyoto } from './find-kyoto-dir'
 
 /**
- * Checks if .kyoto/cache/config.json exists
+ * Checks if .kyoto/config.json exists
  * @returns true if file exists, false otherwise
  */
 export async function detailsFileExists(): Promise<boolean> {

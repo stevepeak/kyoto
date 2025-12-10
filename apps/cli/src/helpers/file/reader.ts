@@ -20,8 +20,9 @@ interface StoryFile {
  */
 export async function readAllStoryFiles(): Promise<StoryFile[]> {
   const gitRoot = await findGitRoot()
-  const { stories: storiesDir, artifacts: artifactsDir } =
-    await pwdKyoto(gitRoot)
+  const { root } = await pwdKyoto(gitRoot)
+  const storiesDir = join(root, 'stories')
+  const artifactsDir = join(root, 'artifacts')
   const storiesRelativePath = relative(gitRoot, storiesDir)
 
   try {

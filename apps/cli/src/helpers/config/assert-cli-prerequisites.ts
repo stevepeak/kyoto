@@ -30,7 +30,7 @@ interface InitResult {
 
 /**
  * Asserts that the project has been initialized with AI configuration.
- * Requires that .kyoto/cache/config.json exists and contains AI configuration.
+ * Requires that .kyoto/config.json exists and contains AI configuration.
  * Throws an error with helpful message if not initialized.
  */
 async function assertAiConfiguration(): Promise<void> {

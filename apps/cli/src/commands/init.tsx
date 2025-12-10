@@ -58,7 +58,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Kyoto tests
-        run: npx kyoto test
+        run: npx kyoto vibe check
 `
 
 function getDefaultModelForProvider(provider: Provider): string {
@@ -203,9 +203,9 @@ export default function Init(): React.ReactElement {
         const sha = await getCurrentCommitSha(gitRoot)
         await updateDetailsJson(detailsPath, branch, sha)
 
-        // Update .gitignore to include .kyoto/cache
+        // Update .gitignore to include .kyoto
         const gitignorePath = join(gitRoot, '.gitignore')
-        const ignorePattern = '.kyoto/cache'
+        const ignorePattern = '.kyoto'
         let gitignoreUpdated = false
 
         try {
@@ -251,7 +251,7 @@ export default function Init(): React.ReactElement {
         if (gitignoreUpdated) {
           logger(
             <Text>
-              <Text color="green">✓</Text> Added .kyoto/cache to .gitignore
+              <Text color="green">✓</Text> Added .kyoto to .gitignore
             </Text>,
           )
           logger(

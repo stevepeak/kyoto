@@ -20,7 +20,7 @@ interface GetModelOptions {
  *
  * Priority:
  * 1. CLI arguments (--model and --provider) - uses API key from config.json
- * 2. config.json configuration (.kyoto/cache/config.json)
+ * 2. config.json configuration (.kyoto/config.json)
  *
  * @param options - Configuration options
  * @returns The model configuration (either a provider instance or a string for AI Gateway)

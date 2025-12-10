@@ -203,8 +203,9 @@ async function writeStoryFile(
   composition?: CompositionAgentOutput,
 ): Promise<string> {
   const gitRoot = await findGitRoot()
-  const { stories: storiesDir, artifacts: artifactsDir } =
-    await pwdKyoto(gitRoot)
+  const { root } = await pwdKyoto(gitRoot)
+  const storiesDir = join(root, 'stories')
+  const artifactsDir = join(root, 'artifacts')
 
   // Write behavior as markdown to .kyoto/stories/<name>.story.md
   const storyMdPathAbsolute = join(storiesDir, `${baseFilename}.story.md`)
