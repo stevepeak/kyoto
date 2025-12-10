@@ -83,10 +83,6 @@ export const functionConsolidationAgent: VibeCheckAgent = {
 
     reporter.progress('Starting agent')
     const result = await analyzeFunctionConsolidation({
-      repo: {
-        id: context.gitRoot,
-        slug: path.basename(context.gitRoot),
-      },
       files,
       options: {
         maxSteps: 12,

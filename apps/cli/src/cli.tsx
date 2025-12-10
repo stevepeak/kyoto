@@ -474,7 +474,6 @@ export async function run(argv = process.argv): Promise<void> {
     .option('--staged', 'Only check staged changes')
     .option('--watch', 'Continuously vibe check git changes')
     .option('--watch-commits', 'Watch for new commits and evaluate them')
-    .option('--dry-run', 'Delay each stage for demo purposes')
     .option(
       '-m, --max-length <maxLength>',
       'Maximum characters for commit message (only with --watch-commits)',
@@ -494,7 +493,6 @@ export async function run(argv = process.argv): Promise<void> {
         staged?: boolean
         watch?: boolean
         watchCommits?: boolean
-        dryRun?: boolean
         maxLength?: string
         interval?: string
         simulate?: string
@@ -505,7 +503,6 @@ export async function run(argv = process.argv): Promise<void> {
             staged={options.staged}
             watch={options.watch}
             watchCommits={options.watchCommits}
-            dryRun={options.dryRun}
             maxLength={parseInteger(options.maxLength)}
             interval={parseInteger(options.interval)}
             simulateCount={parseInteger(options.simulate)}

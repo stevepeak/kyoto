@@ -25,7 +25,6 @@ interface VibeCheckProps {
   staged?: boolean
   watch?: boolean
   watchCommits?: boolean
-  dryRun?: boolean
   maxLength?: number
   interval?: number
   simulateCount?: number
@@ -35,7 +34,6 @@ export default function VibeCheck({
   staged = false,
   watch = false,
   watchCommits = false,
-  dryRun = false,
   maxLength = 60,
   interval = 1000,
   simulateCount,
@@ -192,7 +190,6 @@ export default function VibeCheck({
             changedFiles: changedTsFiles,
             logger,
           },
-          delayMs: dryRun ? 5000 : undefined,
           onUpdate: (state) => {
             if (cancelled) {
               return
@@ -318,14 +315,16 @@ export default function VibeCheck({
               logImpactedStories(result, logger)
               logger(<Text color="yellow">TODO check for new stories</Text>)
 
-              await updateDetailsJson(detailsPath, git.branch, latestCommit.hash)
+              await updateDetailsJson(
+                detailsPath,
+                git.branch,
+                latestCommit.hash,
+              )
               lastCommitHash = latestCommit.shortHash
             } catch (err) {
               setSpinnerMessage(null)
               const message =
-                err instanceof Error
-                  ? err.message
-                  : 'Failed to evaluate commit'
+                err instanceof Error ? err.message : 'Failed to evaluate commit'
               logger(
                 <Text color="#c27a52">{`⚠️  Failed to evaluate commit: ${message}`}</Text>,
               )
@@ -374,9 +373,7 @@ export default function VibeCheck({
           }, interval)
         } catch (err) {
           const message =
-            err instanceof Error
-              ? err.message
-              : 'Failed to monitor commits'
+            err instanceof Error ? err.message : 'Failed to monitor commits'
           setError(message)
           process.exitCode = 1
           cleanup()
@@ -431,7 +428,6 @@ export default function VibeCheck({
     staged,
     watch,
     watchCommits,
-    dryRun,
     maxLength,
     interval,
     simulateCount,

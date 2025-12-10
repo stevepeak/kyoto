@@ -34,10 +34,6 @@ export type FunctionConsolidationOutput = z.infer<
 >
 
 interface AnalyzeFunctionConsolidationOptions {
-  repo: {
-    id: string
-    slug?: string
-  }
   files: {
     path: string
     content: string
@@ -55,7 +51,6 @@ interface AnalyzeFunctionConsolidationOptions {
  * enough to consolidate (extract helper, deduplicate, etc.).
  */
 export async function analyzeFunctionConsolidation({
-  repo,
   files,
   options: {
     maxSteps = 12,
