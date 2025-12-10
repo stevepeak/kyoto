@@ -50,7 +50,7 @@ interface AnalyzeFunctionConsolidationOptions {
 export async function analyzeFunctionConsolidation({
   scope,
   options: {
-    maxSteps = 12,
+    maxSteps = 30,
     model: providedModel,
     telemetryTracer,
     progress,
