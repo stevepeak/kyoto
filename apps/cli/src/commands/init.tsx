@@ -11,8 +11,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
 import { getAiConfig } from '../helpers/config/get-ai-config'
 import { updateDetailsJson } from '../helpers/config/update-details-json'
-import { Jumbo } from '../ui/jumbo'
 import { useCliLogger } from '../helpers/logging/logger'
+import { Jumbo } from '../ui/jumbo'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
 

@@ -1,3 +1,5 @@
-import { config } from '@kyoto/eslint-config'
+import { config } from '@kyoto/eslint-config/bun.js'
 
-export default config
+/** @type {import("eslint").Linter.Config[]} */
+
+export default [...config]

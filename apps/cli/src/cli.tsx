@@ -5,9 +5,9 @@ import React, { useEffect } from 'react'
 import Init from './commands/init'
 import Mcp from './commands/mcp'
 import { isExperimentalEnabled } from './helpers/config/get-ai-config'
-import { Jumbo } from './ui/jumbo'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { Footer } from './ui/footer'
+import { Jumbo } from './ui/jumbo'
 
 const commandGroups = [
   {

@@ -4,7 +4,7 @@ import {
   type VibeCheckAgent,
   type VibeCheckFinding,
   type VibeCheckResult,
-} from '../types'
+} from '../helpers/vibe-check/types'
 
 function toFindings(
   suggestions: Awaited<

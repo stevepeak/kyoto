@@ -1,5 +1,4 @@
 import { Box, Text } from 'ink'
-import { ReactElement } from 'react'
 
 interface HeaderProps {
   kanji: string

@@ -2,8 +2,8 @@ import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
 
 import { init } from '../../helpers/config/assert-cli-prerequisites'
-import { Jumbo } from '../../ui/jumbo'
 import { useCliLogger } from '../../helpers/logging/logger'
+import { Jumbo } from '../../ui/jumbo'
 
 export default function VibePlan(): React.ReactElement {
   const { exit } = useApp()

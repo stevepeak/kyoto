@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink'
-import { ReactElement } from 'react'
+import { type ReactElement } from 'react'
 
 export function Jumbo(): ReactElement {
   const rows = ['入   |  ', '京   |  ', '行   |  ', '改   |  ', '善   |  ']
