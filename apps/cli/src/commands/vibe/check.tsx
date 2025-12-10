@@ -2,7 +2,6 @@ import {
   type CommitInfo,
   getChangedTsFiles,
   getLatestCommit,
-  getRecentCommits,
   getStagedTsFiles,
   getUnstagedTsFiles,
 } from '@app/shell'
@@ -27,7 +26,6 @@ interface VibeCheckProps {
   watchCommits?: boolean
   maxLength?: number
   interval?: number
-  simulateCount?: number
 }
 
 export default function VibeCheck({
@@ -36,7 +34,6 @@ export default function VibeCheck({
   watchCommits = false,
   maxLength = 60,
   interval = 1000,
-  simulateCount,
 }: VibeCheckProps): React.ReactElement {
   const { exit } = useApp()
   const { logs, logger } = useCliLogger()
@@ -331,23 +328,6 @@ export default function VibeCheck({
             }
           }
 
-          if (simulateCount && simulateCount > 0) {
-            const commitsToSimulate = await getRecentCommits(
-              simulateCount,
-              fs.gitRoot,
-            )
-            const orderedCommits = commitsToSimulate.slice().reverse()
-
-            if (orderedCommits.length === 0) {
-              throw new Error('No commits found to simulate')
-            }
-
-            for (const simulated of orderedCommits) {
-              await handleCommit(simulated)
-              lastCommitHash = simulated.shortHash
-            }
-          }
-
           pollRef.current = setInterval(async () => {
             if (shouldExitRef.current || processingRef.current || cancelled) {
               return
@@ -422,20 +402,11 @@ export default function VibeCheck({
         exit()
       }
     }
-  }, [
-    exit,
-    logger,
-    staged,
-    watch,
-    watchCommits,
-    maxLength,
-    interval,
-    simulateCount,
-  ])
+  }, [exit, logger, staged, watch, watchCommits, maxLength, interval])
 
   return (
     <Box flexDirection="column">
-      <Header message="The way of the vibe." />
+      <Header />
       {warnings.length > 0 ? (
         <Box marginTop={1} flexDirection="column">
           {warnings.map((warning, index) => (

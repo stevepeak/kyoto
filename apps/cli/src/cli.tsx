@@ -484,10 +484,6 @@ export async function run(argv = process.argv): Promise<void> {
       'Polling interval in milliseconds (only with --watch-commits)',
       '1000',
     )
-    .option(
-      '-s, --simulate <count>',
-      'Process the last N commits immediately (only with --watch-commits)',
-    )
     .action(
       async (options: {
         staged?: boolean
@@ -495,7 +491,6 @@ export async function run(argv = process.argv): Promise<void> {
         watchCommits?: boolean
         maxLength?: string
         interval?: string
-        simulate?: string
       }) => {
         const Stage = (await import('./commands/vibe/check')).default
         await renderCommand(
@@ -505,7 +500,6 @@ export async function run(argv = process.argv): Promise<void> {
             watchCommits={options.watchCommits}
             maxLength={parseInteger(options.maxLength)}
             interval={parseInteger(options.interval)}
-            simulateCount={parseInteger(options.simulate)}
           />,
         )
       },
