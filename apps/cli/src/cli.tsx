@@ -1,22 +1,11 @@
 import { Command } from 'commander'
-import { Box, render, Text, useApp } from 'ink'
+import { Box, render, Text, useApp, useStdout } from 'ink'
 import Link from 'ink-link'
 import React, { useEffect } from 'react'
 
-import Clear from './commands/clear'
-import Craft from './commands/craft'
-import Discover from './commands/discover'
 import Init from './commands/init'
-import List from './commands/list'
 import Mcp from './commands/mcp'
-import Search from './commands/search'
-import Test from './commands/test'
-import TestApi from './commands/test/api'
-import TestBrowser from './commands/test/browser'
-import TestCli from './commands/test/cli'
-import TestReview from './commands/test/review'
-import Trace from './commands/trace'
-import Vibe from './commands/vibe/watch'
+import { isExperimentalEnabled } from './helpers/config/get-ai-config'
 import { Header } from './helpers/display/display-header'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 
@@ -35,46 +24,34 @@ const commandGroups = [
     kanji: '改善',
     commands: [
       {
-        name: 'vibe',
-        description:
-          'Maintain and test user stories continuously upon new git commits',
-        example: 'kyoto vibe',
-      },
-      {
         name: 'vibe check',
         description: 'Test and diff user stories against staged changes',
-        example: 'kyoto vibe check',
+        example: [
+          ['kyoto vibe check', 'Check all changes'],
+          ['kyoto vibe check --watch', 'Contininously vibe check git changes'],
+          ['kyoto vibe check --staged', 'Check only staged changes'],
+        ],
       },
       {
-        name: 'vibe test',
-        description: 'Test user stories to ensure functionality',
-        example: 'kyoto vibe test',
+        name: 'vibe fix',
+        description: 'Apply vibe fixes to your code',
+        example: 'kyoto vibe fix',
+      },
+      {
+        name: 'vibe plan',
+        description: 'Create a plan for other agents to apply fixes',
+        example: 'kyoto vibe plan',
       },
     ],
   },
   {
-    title: 'Storytelling',
-    kanji: '物語',
+    title: 'Tooling',
+    kanji: '設定',
     commands: [
       {
-        name: 'craft',
-        description: 'Create or refine a user story with AI',
-        example: 'kyoto craft',
-      },
-      {
-        name: 'list',
-        description: 'List stories in the current project',
-        example: 'kyoto list',
-      },
-      {
-        name: '<query>',
-        description: 'Search stories by natural language query',
-        example: 'kyoto "how do customers login?"',
-      },
-      {
-        name: 'trace [story]',
-        description: 'Explore code related to a user story',
-        example: 'kyoto trace [story]',
+        name: 'mcp',
+        description: 'For your coding agent to vibe check themselves',
+        example: 'kyoto mcp',
       },
     ],
   },
@@ -86,16 +63,6 @@ const commandGroups = [
         name: 'init',
         description: 'Design your Kyoto experience',
         example: 'kyoto init',
-      },
-      {
-        name: 'discover',
-        description: 'Discover new stories from code',
-        example: ['kyoto discover', 'kyoto discover apps/web --limit 3'],
-      },
-      {
-        name: 'mcp',
-        description: "For your coding agent's story exploration needs",
-        example: 'kyoto mcp',
       },
     ],
   },
@@ -148,13 +115,44 @@ function GroupHeader({
   )
 }
 
+function ComingSoon(): React.ReactElement {
+  const { exit } = useApp()
+
+  useEffect(() => {
+    setTimeout(() => {
+      exit()
+    }, 0)
+  }, [exit])
+
+  return (
+    <Box flexDirection="column">
+      <Header />
+      <Text> </Text>
+      <Text color="yellow">⚠️ This command is coming soon.</Text>
+      <Text> </Text>
+      <Text>
+        To enable experimental features, add{' '}
+        <Text color="yellow">"experimental": true</Text> to your{' '}
+        <Text color="yellow">.kyoto/config.json</Text> file.
+      </Text>
+      <Text> </Text>
+    </Box>
+  )
+}
+
 function Help(): React.ReactElement {
   const { exit } = useApp()
+  const { stdout } = useStdout()
+  const terminalWidth = stdout.columns || 80
   const columnWidth = Math.max(
     ...commandGroups.flatMap((group) =>
       group.commands.map((command) => command.name.length),
     ),
   )
+
+  // Use vertical layout when terminal is narrow (less than 80 columns)
+  const useVerticalLayout = terminalWidth < 80
+  const minWidthForHorizontal = columnWidth + 20 // command name + description space
 
   useEffect(() => {
     // Allow the render to flush before exiting
@@ -174,43 +172,149 @@ function Help(): React.ReactElement {
             kanji={(group as { kanji?: string }).kanji}
           />
 
-          <Text dimColor>
-            ──────────────────────────────────────────────────
-          </Text>
+          <Text dimColor>{'─'.repeat(Math.min(terminalWidth - 2, 50))}</Text>
 
-          {group.commands.map((command) => (
-            <Box key={command.name} flexDirection="column">
-              <Box>
-                <Text color="red">{command.name.padEnd(columnWidth)}</Text>
-                <Text> {command.description}</Text>
-              </Box>
-              {'examples' in command && Array.isArray(command.examples) ? (
-                command.examples.map((example) => (
-                  <Box key={example}>
-                    <Text>{' '.repeat(columnWidth + 1)}</Text>
-                    <Text dimColor>e.g. </Text>
-                    <Text color="yellow">{example}</Text>
+          {group.commands.map((command) => {
+            const isComingSoon = (command as { comingSoon?: boolean })
+              .comingSoon
+            const shouldUseVertical =
+              useVerticalLayout || terminalWidth < minWidthForHorizontal
+
+            return (
+              <Box key={command.name} flexDirection="column">
+                {shouldUseVertical ? (
+                  <Box flexDirection="column">
+                    <Text color={isComingSoon ? 'grey' : 'red'}>
+                      {command.name}
+                    </Text>
+                    <Text>
+                      {isComingSoon ? (
+                        <>
+                          <Text dimColor>(Coming soon) </Text>
+                          {command.description}
+                        </>
+                      ) : (
+                        command.description
+                      )}
+                    </Text>
                   </Box>
-                ))
-              ) : 'example' in command ? (
-                Array.isArray(command.example) ? (
-                  command.example.map((example) => (
-                    <Box key={example}>
-                      <Text>{' '.repeat(columnWidth + 1)}</Text>
-                      <Text dimColor>e.g. </Text>
-                      <Text color="yellow">{example}</Text>
-                    </Box>
-                  ))
                 ) : (
                   <Box>
-                    <Text>{' '.repeat(columnWidth + 1)}</Text>
-                    <Text dimColor>e.g. </Text>
-                    <Text color="yellow">{command.example}</Text>
+                    <Text color={isComingSoon ? 'grey' : 'red'}>
+                      {command.name.padEnd(columnWidth)}
+                    </Text>
+                    <Text>
+                      {' '}
+                      {isComingSoon ? (
+                        <>
+                          <Text dimColor>(Coming soon) </Text>
+                          {command.description}
+                        </>
+                      ) : (
+                        command.description
+                      )}
+                    </Text>
                   </Box>
-                )
-              ) : null}
-            </Box>
-          ))}
+                )}
+                {'examples' in command && Array.isArray(command.examples) ? (
+                  command.examples.map((example, idx) => {
+                    const isTuple =
+                      Array.isArray(example) &&
+                      example.length === 2 &&
+                      typeof example[0] === 'string' &&
+                      typeof example[1] === 'string'
+                    const commandText = isTuple ? example[0] : example
+                    const description = isTuple ? example[1] : null
+                    return (
+                      <Box
+                        key={idx}
+                        flexDirection={shouldUseVertical ? 'column' : 'row'}
+                      >
+                        {shouldUseVertical ? (
+                          <>
+                            <Text>
+                              <Text dimColor>$ </Text>
+                              <Text color="yellow">{commandText}</Text>
+                            </Text>
+                            {description && <Text dimColor>{description}</Text>}
+                          </>
+                        ) : (
+                          <>
+                            <Text>{' '.repeat(columnWidth + 1)}</Text>
+                            <Text dimColor>$ </Text>
+                            <Text color="yellow">{commandText}</Text>
+                            {description && (
+                              <>
+                                <Text> </Text>
+                                <Text dimColor>{description}</Text>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </Box>
+                    )
+                  })
+                ) : 'example' in command ? (
+                  Array.isArray(command.example) ? (
+                    command.example.map((example, idx) => {
+                      const isTuple =
+                        Array.isArray(example) &&
+                        example.length === 2 &&
+                        typeof example[0] === 'string' &&
+                        typeof example[1] === 'string'
+                      const commandText = isTuple ? example[0] : example
+                      const description = isTuple ? example[1] : null
+                      return (
+                        <Box
+                          key={idx}
+                          flexDirection={shouldUseVertical ? 'column' : 'row'}
+                        >
+                          {shouldUseVertical ? (
+                            <>
+                              <Text>
+                                <Text dimColor>$ </Text>
+                                <Text color="yellow">{commandText}</Text>
+                              </Text>
+                              {description && (
+                                <Text dimColor>{description}</Text>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <Text>{' '.repeat(columnWidth + 1)}</Text>
+                              <Text dimColor>$ </Text>
+                              <Text color="yellow">{commandText}</Text>
+                              {description && (
+                                <>
+                                  <Text> </Text>
+                                  <Text dimColor>{description}</Text>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </Box>
+                      )
+                    })
+                  ) : typeof command.example === 'string' ? (
+                    <Box flexDirection={shouldUseVertical ? 'column' : 'row'}>
+                      {shouldUseVertical ? (
+                        <Text>
+                          <Text dimColor>$ </Text>
+                          <Text color="yellow">{command.example}</Text>
+                        </Text>
+                      ) : (
+                        <>
+                          <Text>{' '.repeat(columnWidth + 1)}</Text>
+                          <Text dimColor>$ </Text>
+                          <Text color="yellow">{command.example}</Text>
+                        </>
+                      )}
+                    </Box>
+                  ) : null
+                ) : null}
+              </Box>
+            )
+          })}
 
           <Text> </Text>
         </Box>
@@ -273,19 +377,50 @@ function formatKyotoHelp(_program: Command): string {
     )
     for (const command of group.commands) {
       const name = command.name.padEnd(columnWidth)
-      lines.push(`  ${colors.red(name)} ${command.description}`)
+      const isComingSoon = (command as { comingSoon?: boolean }).comingSoon
+      const description = isComingSoon
+        ? `${colors.dim('(Coming soon)')} ${command.description}`
+        : command.description
+      const nameColor = isComingSoon ? colors.dim : colors.red
+      lines.push(`  ${nameColor(name)} ${description}`)
       if ('examples' in command && Array.isArray(command.examples)) {
         for (const example of command.examples) {
-          lines.push(
-            `                               ${colors.dim('e.g.')} ${colors.yellow(example)}`,
-          )
+          const isTuple =
+            Array.isArray(example) &&
+            example.length === 2 &&
+            typeof example[0] === 'string' &&
+            typeof example[1] === 'string'
+          const commandText = isTuple ? example[0] : example
+          const description = isTuple ? example[1] : null
+          if (description) {
+            lines.push(
+              `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)} ${colors.dim(description)}`,
+            )
+          } else {
+            lines.push(
+              `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)}`,
+            )
+          }
         }
       } else if ('example' in command) {
         if (Array.isArray(command.example)) {
           for (const example of command.example) {
-            lines.push(
-              `                               ${colors.dim('e.g.')} ${colors.yellow(example)}`,
-            )
+            const isTuple =
+              Array.isArray(example) &&
+              example.length === 2 &&
+              typeof example[0] === 'string' &&
+              typeof example[1] === 'string'
+            const commandText = isTuple ? example[0] : example
+            const description = isTuple ? example[1] : null
+            if (description) {
+              lines.push(
+                `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)} ${colors.dim(description)}`,
+              )
+            } else {
+              lines.push(
+                `                               ${colors.dim('e.g.')} ${colors.yellow(commandText)}`,
+              )
+            }
           }
         } else if (typeof command.example === 'string') {
           lines.push(
@@ -313,92 +448,6 @@ export async function run(argv = process.argv): Promise<void> {
   program.name('kyoto').description('Kyoto CLI')
 
   program
-    .command('list')
-    .alias('ls')
-    .description('List all stories')
-    .action(async () => {
-      await renderCommand(<List />)
-    })
-
-  program
-    .command('clear')
-    .description('Clear all stories and vectra data, preserving config.json')
-    .action(async () => {
-      await renderCommand(<Clear />)
-    })
-
-  // Handle unmatched commands as search queries
-  program.on('command:*', async (operands) => {
-    const query = operands[0]
-    if (!query) {
-      program.help()
-      return
-    }
-
-    // Create a temporary command to parse options
-    const searchCmd = new Command()
-    searchCmd
-      .option(
-        '-k, --limit <limit>',
-        'Maximum number of stories to return',
-        '10',
-      )
-      .option(
-        '-t, --threshold <threshold>',
-        'Minimum similarity score threshold (0-1)',
-      )
-
-    // Parse the remaining arguments as options
-    const remainingArgs = operands.slice(1)
-    const parsed = searchCmd.parse(['', '', ...remainingArgs], { from: 'user' })
-    const options = parsed.opts() as { limit?: string; threshold?: string }
-
-    await renderCommand(
-      <Search
-        query={query}
-        limit={parseInteger(options.limit)}
-        threshold={options.threshold}
-      />,
-    )
-  })
-
-  program
-    .command('discover [folder]')
-    .description('Generate behavior stories from a code file')
-    .option(
-      '-m, --model <model>',
-      'Model to use (e.g., "gpt-4o-mini" or "openai/gpt-4o-mini")',
-    )
-    .option(
-      '-p, --provider <provider>',
-      'Provider to use: openai, vercel, or auto',
-      'auto',
-    )
-    .option(
-      '-l, --limit <limit>',
-      'Maximum number of stories to discover before stopping',
-    )
-    .action(
-      async (
-        folder: string | undefined,
-        options: {
-          model?: string
-          provider?: 'openai' | 'vercel' | 'auto'
-          limit?: string
-        },
-      ) => {
-        await renderCommand(
-          <Discover
-            folder={folder}
-            model={options.model}
-            provider={options.provider}
-            limit={parseInteger(options.limit)}
-          />,
-        )
-      },
-    )
-
-  program
     .command('init')
     .description('Initialize Kyoto by configuring your AI provider and API key')
     .action(async () => {
@@ -406,53 +455,57 @@ export async function run(argv = process.argv): Promise<void> {
     })
 
   program
-    .command('craft')
-    .description('Craft stories or behaviors')
-    .action(async () => {
-      await renderCommand(<Craft />)
-    })
-
-  program
     .command('mcp')
     .description('MCP command')
     .action(async () => {
+      const experimental = await isExperimentalEnabled()
+      if (!experimental) {
+        await renderCommand(<ComingSoon />)
+        return
+      }
       await renderCommand(<Mcp />)
     })
 
-  program
-    .command('trace [source]')
-    .description(
-      'List stories that have evidence pointing to the source lines asked to trace',
-    )
-    .action(async (source: string | undefined) => {
-      await renderCommand(<Trace source={source} />)
-    })
+  const vibeCommand = program.command('vibe').description('Vibe check commands')
 
-  const vibeCommand = program
-    .command('vibe')
-    .description('Monitor the working project commits and log new commits')
+  vibeCommand
+    .command('check')
+    .description('Test and diff user stories against staged changes')
+    .option('--staged', 'Only check staged changes')
+    .option('--watch', 'Continuously vibe check git changes')
+    .option('--watch-commits', 'Watch for new commits and evaluate them')
+    .option('--dry-run', 'Delay each stage for demo purposes')
     .option(
       '-m, --max-length <maxLength>',
-      'Maximum characters for commit message',
+      'Maximum characters for commit message (only with --watch-commits)',
       '60',
     )
     .option(
       '-i, --interval <interval>',
-      'Polling interval in milliseconds',
+      'Polling interval in milliseconds (only with --watch-commits)',
       '1000',
     )
     .option(
       '-s, --simulate <count>',
-      'Process the last N commits immediately as if they were just made',
+      'Process the last N commits immediately (only with --watch-commits)',
     )
     .action(
       async (options: {
+        staged?: boolean
+        watch?: boolean
+        watchCommits?: boolean
+        dryRun?: boolean
         maxLength?: string
         interval?: string
         simulate?: string
       }) => {
+        const Stage = (await import('./commands/vibe/check')).default
         await renderCommand(
-          <Vibe
+          <Stage
+            staged={options.staged}
+            watch={options.watch}
+            watchCommits={options.watchCommits}
+            dryRun={options.dryRun}
             maxLength={parseInteger(options.maxLength)}
             interval={parseInteger(options.interval)}
             simulateCount={parseInteger(options.simulate)}
@@ -462,61 +515,19 @@ export async function run(argv = process.argv): Promise<void> {
     )
 
   vibeCommand
-    .command('check')
-    .description(
-      'Evaluate staged changes for impacted stories before committing',
-    )
-    .option(
-      '--include-unstaged',
-      'Include unstaged changes and untracked files in the evaluation',
-    )
-    .option('--dry-run', 'Delay each stage for demo purposes')
-    .action(
-      async (options: { includeUnstaged?: boolean; dryRun?: boolean }) => {
-        const Stage = (await import('./commands/vibe/check')).default
-        await renderCommand(
-          <Stage
-            includeUnstaged={options.includeUnstaged}
-            dryRun={options.dryRun}
-          />,
-        )
-      },
-    )
-
-  vibeCommand
-    .command('test')
-    .description('Run tests for all stories')
+    .command('fix')
+    .description('Apply vibe fixes to your code')
     .action(async () => {
-      await renderCommand(<Test />)
+      const Fix = (await import('./commands/vibe/fix')).default
+      await renderCommand(<Fix />)
     })
 
   vibeCommand
-    .command('test:browser')
-    .description('Run browser tests')
-    .option('--headless', 'Run browser in headless mode')
-    .action(async (options: { headless?: boolean }) => {
-      await renderCommand(<TestBrowser headless={options.headless ?? false} />)
-    })
-
-  vibeCommand
-    .command('test:api')
-    .description('Run API tests')
+    .command('plan')
+    .description('Create a plan for other agents to apply fixes')
     .action(async () => {
-      await renderCommand(<TestApi />)
-    })
-
-  vibeCommand
-    .command('test:cli')
-    .description('Run CLI tests')
-    .action(async () => {
-      await renderCommand(<TestCli />)
-    })
-
-  vibeCommand
-    .command('test:review')
-    .description('Run tests with review')
-    .action(async () => {
-      await renderCommand(<TestReview />)
+      const Plan = (await import('./commands/vibe/plan')).default
+      await renderCommand(<Plan />)
     })
 
   program.helpInformation = () => formatKyotoHelp(program)
@@ -526,92 +537,6 @@ export async function run(argv = process.argv): Promise<void> {
     await renderCommand(<Help />)
     return
   }
-
-  // List of known commands
-  const knownCommands = [
-    'list',
-    'ls',
-    'clear',
-    'discover',
-    'init',
-    'craft',
-    'mcp',
-    'trace',
-    'vibe',
-    'help',
-    '--help',
-    '-h',
-  ]
-
-  // Check if first argument is a known command
-  const firstArg = argv[2]
-  const secondArg = argv[3]
-  const isKnownCommand =
-    knownCommands.includes(firstArg) ||
-    (firstArg === 'vibe' &&
-      (secondArg === 'test' ||
-        secondArg === 'test:browser' ||
-        secondArg === 'test:api' ||
-        secondArg === 'test:cli' ||
-        secondArg === 'test:review' ||
-        secondArg === 'check'))
-
-  // Helper function to parse search options from argv
-  const parseSearchOptions = (
-    args: string[],
-  ): { limit?: string; threshold?: string } => {
-    const options: { limit?: string; threshold?: string } = {}
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i]
-      if (arg === '-k' || arg === '--limit') {
-        options.limit = args[i + 1]
-        i++
-      } else if (arg === '-t' || arg === '--threshold') {
-        options.threshold = args[i + 1]
-        i++
-      } else if (arg.startsWith('--limit=')) {
-        options.limit = arg.split('=')[1]
-      } else if (arg.startsWith('--threshold=')) {
-        options.threshold = arg.split('=')[1]
-      } else if (arg.startsWith('-k') && arg.length > 2) {
-        options.limit = arg.slice(2)
-      } else if (arg.startsWith('-t') && arg.length > 2) {
-        options.threshold = arg.slice(2)
-      }
-    }
-    return options
-  }
-
-  // If not a known command, treat it as a search query
-  if (!isKnownCommand && firstArg) {
-    const remainingArgs = argv.slice(3)
-    const options = parseSearchOptions(remainingArgs)
-    // Default limit to 10 if not provided
-    const limit = options.limit ? parseInteger(options.limit) : 10
-
-    await renderCommand(
-      <Search query={firstArg} limit={limit} threshold={options.threshold} />,
-    )
-    return
-  }
-
-  // Handle unmatched commands as search queries (fallback)
-  program.on('command:*', async (operands) => {
-    const query = operands[0]
-    if (!query) {
-      program.help()
-      return
-    }
-
-    const remainingArgs = operands.slice(1)
-    const options = parseSearchOptions(remainingArgs)
-    // Default limit to 10 if not provided
-    const limit = options.limit ? parseInteger(options.limit) : 10
-
-    await renderCommand(
-      <Search query={query} limit={limit} threshold={options.threshold} />,
-    )
-  })
 
   await program.parseAsync(argv)
 }

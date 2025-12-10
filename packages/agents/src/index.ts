@@ -12,6 +12,10 @@ import {
   type DiffEvaluationTarget,
   evaluateDiff,
 } from './agents/v3/diff-evaluator'
+import {
+  analyzeFunctionConsolidation,
+  functionConsolidationOutputSchema,
+} from './agents/v3/function-consolidation'
 import { extractScope } from './agents/v3/scope-extraction'
 import { runStoryCheckAgent } from './agents/v3/story-check'
 import { runCompositionAgent } from './agents/v3/story-composition'
@@ -58,6 +62,7 @@ type AgentsConfig = {
   changelogSummary: Agent
   scopeExtraction: Agent
   diffEvaluator: Agent
+  functionConsolidation: Agent
 }
 
 export const agents: AgentsConfig = {
@@ -176,4 +181,19 @@ export const agents: AgentsConfig = {
       model: 'openai/gpt-5-mini',
     },
   },
+  functionConsolidation: {
+    id: 'function-consolidation-v1',
+    version: 'v1',
+    schema: functionConsolidationOutputSchema,
+    run: analyzeFunctionConsolidation,
+    options: {
+      maxSteps: 12,
+      model: 'openai/gpt-4o-mini',
+    },
+  },
 }
+
+export {
+  analyzeFunctionConsolidation,
+  functionConsolidationOutputSchema,
+} from './agents/v3/function-consolidation'

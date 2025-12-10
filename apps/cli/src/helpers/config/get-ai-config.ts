@@ -22,6 +22,7 @@ const detailsJsonSchema = z.object({
       model: z.string().optional(),
     })
     .optional(),
+  experimental: z.boolean().optional(),
 })
 
 type AiConfig = {
@@ -31,7 +32,7 @@ type AiConfig = {
 } | null
 
 /**
- * Reads AI configuration from .kyoto/cache/config.json
+ * Reads AI configuration from .kyoto/config.json
  * @returns AI configuration or null if not found
  */
 export async function getAiConfig(): Promise<AiConfig> {
@@ -55,5 +56,25 @@ export async function getAiConfig(): Promise<AiConfig> {
   } catch {
     // File doesn't exist or is invalid, return null
     return null
+  }
+}
+
+/**
+ * Checks if experimental features are enabled in config.json
+ * @returns true if experimental flag is set to true, false otherwise
+ */
+export async function isExperimentalEnabled(): Promise<boolean> {
+  try {
+    const gitRoot = await findGitRoot()
+    const { config: detailsPath } = await pwdKyoto(gitRoot)
+
+    const content = await readFile(detailsPath, 'utf-8')
+    const parsed = JSON.parse(content)
+    const details = detailsJsonSchema.parse(parsed)
+
+    return details.experimental === true
+  } catch {
+    // File doesn't exist or is invalid, return false
+    return false
   }
 }
