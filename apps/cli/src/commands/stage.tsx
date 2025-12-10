@@ -1,28 +1,29 @@
 import { getStagedTsFiles, getUnstagedTsFiles } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
-import Spinner from 'ink-spinner'
 import React, { useEffect, useState } from 'react'
 
 import { init } from '../helpers/config/assert-cli-prerequisites'
+import { AgentSpinnerList } from '../helpers/display/agent-spinner-list'
 import { Header } from '../helpers/display/display-header'
-import { createLogger, useCliLogger } from '../helpers/logging/logger'
-import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
-import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
-import { type LogEntry } from '../types/logger'
+import { useCliLogger } from '../helpers/logging/logger'
+import { defaultVibeCheckAgents } from '../helpers/vibe-check/agents'
+import { runVibeCheckAgents } from '../helpers/vibe-check/run-vibe-check-agents'
+import { type AgentRunState } from '../helpers/vibe-check/types'
 
 interface VibeCheckProps {
   includeUnstaged?: boolean
+  dryRun?: boolean
 }
 
 export default function VibeCheck({
   includeUnstaged = false,
+  dryRun = false,
 }: VibeCheckProps): React.ReactElement {
   const { exit } = useApp()
-  const { logs, logger } = useCliLogger()
+  const { logger } = useCliLogger()
   const [warnings, setWarnings] = useState<React.ReactNode[]>([])
-  const [outcome, setOutcome] = useState<LogEntry[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [isRunning, setIsRunning] = useState(false)
+  const [agentStates, setAgentStates] = useState<AgentRunState[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -85,45 +86,49 @@ export default function VibeCheck({
 
         const targetType = includeUnstaged ? 'unstaged' : 'staged'
 
-        setIsRunning(true)
-        const result = await evaluateDiff({ type: targetType }, logger)
-        setIsRunning(false)
+        setAgentStates(
+          defaultVibeCheckAgents.map((agent) => ({
+            id: agent.id,
+            label: agent.label,
+            status: 'pending' as const,
+            progress: 'Queued',
+          })),
+        )
+
+        const finalStates = await runVibeCheckAgents({
+          agents: defaultVibeCheckAgents,
+          context: {
+            gitRoot: fs.gitRoot,
+            target: targetType,
+            changedFiles: changedTsFiles,
+            logger,
+          },
+          delayMs: dryRun ? 5000 : undefined,
+          onUpdate: (state) => {
+            if (cancelled) {
+              return
+            }
+            setAgentStates((prev) => {
+              const index = prev.findIndex((item) => item.id === state.id)
+              if (index === -1) {
+                return prev
+              }
+              const next = [...prev]
+              next[index] = state
+              return next
+            })
+          },
+        })
 
         if (cancelled) {
           return
         }
 
-        // Collect outcome messages
-        const outcomeMessages: LogEntry[] = []
-        const outcomeLogger = createLogger({
-          onLog: (entry) => {
-            outcomeMessages.push(entry)
-          },
-        })
-
-        // TODO show the reasoning here if in --verbose mode
-        if (result.text) {
-          outcomeLogger(
-            <Box flexDirection="column">
-              <Text>Reasoning</Text>
-              <Text color="grey">{result.text}</Text>
-            </Box>,
-          )
-        }
-
-        logImpactedStories(result, outcomeLogger)
-
-        // TODO test stories that changed
-        // TODO check if we need to add new stoires
-        outcomeLogger(<Text color="yellow">TODO check for new stories</Text>)
-
-        setOutcome(outcomeMessages)
-
-        // Give React time to render the messages before exiting
+        setAgentStates(finalStates)
         await new Promise((resolve) => {
           setTimeout(() => {
             resolve(undefined)
-          }, 200)
+          }, 250)
         })
       } catch (err) {
         if (cancelled) {
@@ -136,12 +141,6 @@ export default function VibeCheck({
             : includeUnstaged
               ? 'Failed to evaluate unstaged changes'
               : 'Failed to evaluate staged changes'
-        setOutcome([
-          {
-            content: <Text color="red">{`\n❌ Error: ${message}`}</Text>,
-            key: 'error',
-          },
-        ])
         setError(message)
         process.exitCode = 1
 
@@ -153,7 +152,6 @@ export default function VibeCheck({
         })
       } finally {
         if (!cancelled) {
-          setIsRunning(false)
           exit()
         }
       }
@@ -176,32 +174,8 @@ export default function VibeCheck({
           ))}
         </Box>
       ) : null}
-      {isRunning ? (
-        <>
-          <Box marginTop={1} gap={1}>
-            <Text color="red">
-              <Spinner type="squareCorners" />
-            </Text>
-            <Text>
-              Analyzing {includeUnstaged ? 'all' : 'staged'} changes...
-            </Text>
-          </Box>
-          {logs.map((line) => (
-            <React.Fragment key={line.key}>
-              <Text color="grey">
-                {'  '}
-                {line.content}
-              </Text>
-            </React.Fragment>
-          ))}
-        </>
-      ) : null}
-      {outcome.length > 0 ? (
-        <Box marginTop={1} flexDirection="column">
-          {outcome.map((line) => (
-            <React.Fragment key={line.key}>{line.content}</React.Fragment>
-          ))}
-        </Box>
+      {agentStates.length > 0 ? (
+        <AgentSpinnerList states={agentStates} />
       ) : null}
       {error ? <Text color="red">{error}</Text> : null}
     </Box>

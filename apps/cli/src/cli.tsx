@@ -470,10 +470,18 @@ export async function run(argv = process.argv): Promise<void> {
       '--include-unstaged',
       'Include unstaged changes and untracked files in the evaluation',
     )
-    .action(async (options: { includeUnstaged?: boolean }) => {
-      const Stage = (await import('./commands/stage')).default
-      await renderCommand(<Stage includeUnstaged={options.includeUnstaged} />)
-    })
+    .option('--dry-run', 'Delay each stage for demo purposes')
+    .action(
+      async (options: { includeUnstaged?: boolean; dryRun?: boolean }) => {
+        const Stage = (await import('./commands/stage')).default
+        await renderCommand(
+          <Stage
+            includeUnstaged={options.includeUnstaged}
+            dryRun={options.dryRun}
+          />,
+        )
+      },
+    )
 
   vibeCommand
     .command('test')
