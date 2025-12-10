@@ -3,6 +3,7 @@ import Spinner from 'ink-spinner'
 import React from 'react'
 
 import { type AgentRunState } from '../vibe-check/types'
+import { SectionHeader } from './section-header'
 
 const statusColor: Record<AgentRunState['status'], string> = {
   pending: 'grey',
@@ -23,6 +24,7 @@ export function AgentSpinnerList({
 
   return (
     <Box flexDirection="column" marginTop={1}>
+      <SectionHeader kanji="改善" title="Vibe checks" />
       {states.map((state) => (
         <Box key={state.id} gap={1}>
           {state.status === 'running' ? (
