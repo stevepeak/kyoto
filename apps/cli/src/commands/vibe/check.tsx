@@ -2,13 +2,13 @@ import { getStagedTsFiles, getUnstagedTsFiles } from '@app/shell'
 import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
 
-import { init } from '../helpers/config/assert-cli-prerequisites'
-import { AgentSpinnerList } from '../helpers/display/agent-spinner-list'
-import { Header } from '../helpers/display/display-header'
-import { useCliLogger } from '../helpers/logging/logger'
-import { defaultVibeCheckAgents } from '../helpers/vibe-check/agents'
-import { runVibeCheckAgents } from '../helpers/vibe-check/run-vibe-check-agents'
-import { type AgentRunState } from '../helpers/vibe-check/types'
+import { init } from '../../helpers/config/assert-cli-prerequisites'
+import { AgentSpinnerList } from '../../helpers/display/agent-spinner-list'
+import { Header } from '../../helpers/display/display-header'
+import { useCliLogger } from '../../helpers/logging/logger'
+import { defaultVibeCheckAgents } from '../../helpers/vibe-check/agents'
+import { runVibeCheckAgents } from '../../helpers/vibe-check/run-vibe-check-agents'
+import { type AgentRunState } from '../../helpers/vibe-check/types'
 
 interface VibeCheckProps {
   includeUnstaged?: boolean

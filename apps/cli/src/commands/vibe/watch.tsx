@@ -8,12 +8,12 @@ import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useRef, useState } from 'react'
 
-import { init } from '../helpers/config/assert-cli-prerequisites'
-import { updateDetailsJson } from '../helpers/config/update-details-json'
-import { Header } from '../helpers/display/display-header'
-import { useCliLogger } from '../helpers/logging/logger'
-import { evaluateDiff } from '../helpers/stories/evaluate-diff-target'
-import { logImpactedStories } from '../helpers/stories/log-impacted-stories'
+import { init } from '../../helpers/config/assert-cli-prerequisites'
+import { updateDetailsJson } from '../../helpers/config/update-details-json'
+import { Header } from '../../helpers/display/display-header'
+import { useCliLogger } from '../../helpers/logging/logger'
+import { evaluateDiff } from '../../helpers/stories/evaluate-diff-target'
+import { logImpactedStories } from '../../helpers/stories/log-impacted-stories'
 
 interface VibeProps {
   maxLength?: number

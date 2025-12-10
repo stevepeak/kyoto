@@ -16,7 +16,7 @@ import TestBrowser from './commands/test/browser'
 import TestCli from './commands/test/cli'
 import TestReview from './commands/test/review'
 import Trace from './commands/trace'
-import Vibe from './commands/vibe'
+import Vibe from './commands/vibe/watch'
 import { Header } from './helpers/display/display-header'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 
@@ -473,7 +473,7 @@ export async function run(argv = process.argv): Promise<void> {
     .option('--dry-run', 'Delay each stage for demo purposes')
     .action(
       async (options: { includeUnstaged?: boolean; dryRun?: boolean }) => {
-        const Stage = (await import('./commands/stage')).default
+        const Stage = (await import('./commands/vibe/check')).default
         await renderCommand(
           <Stage
             includeUnstaged={options.includeUnstaged}
