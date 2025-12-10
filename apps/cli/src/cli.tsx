@@ -10,7 +10,6 @@ import Init from './commands/init'
 import List from './commands/list'
 import Mcp from './commands/mcp'
 import Search from './commands/search'
-import SetupGithub from './commands/setup/github'
 import Test from './commands/test'
 import TestApi from './commands/test/api'
 import TestBrowser from './commands/test/browser'
@@ -420,17 +419,6 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<Mcp />)
     })
 
-  const setupCommand = program
-    .command('setup')
-    .description('Setup commands for Kyoto')
-
-  setupCommand
-    .command('github')
-    .description('Create GitHub workflow for running Kyoto tests')
-    .action(async () => {
-      await renderCommand(<SetupGithub />)
-    })
-
   program
     .command('trace [source]')
     .description(
@@ -540,7 +528,6 @@ export async function run(argv = process.argv): Promise<void> {
     'init',
     'craft',
     'mcp',
-    'setup',
     'trace',
     'vibe',
     'help',

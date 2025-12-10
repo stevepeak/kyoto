@@ -1,11 +1,12 @@
 import { findGitRoot, getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+import { execa } from 'execa'
 import { Box, Text, useApp } from 'ink'
 import SelectInput from 'ink-select-input'
 import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { pwdKyoto } from '../helpers/config/find-kyoto-dir'
 import { getAiConfig } from '../helpers/config/get-ai-config'
@@ -33,7 +34,32 @@ type Step =
   | 'select-provider'
   | 'api-key'
   | 'saving'
+  | 'check-github'
+  | 'prompt-github'
+  | 'creating-github'
+  | 'prompt-git'
+  | 'running-git'
   | 'done'
+
+const WORKFLOW_CONTENT = `name: Kyoto
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Kyoto tests
+        run: npx kyoto test
+`
 
 function getDefaultModelForProvider(provider: Provider): string {
   switch (provider) {
@@ -73,6 +99,14 @@ export default function Init(): React.ReactElement {
     provider: Provider
     model?: string
   } | null>(null)
+  const [workflowPath, setWorkflowPath] = useState<string | null>(null)
+
+  const finishInit = useCallback(async (): Promise<void> => {
+    logger(getReadyMessage())
+    setStep('done')
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    exit()
+  }, [exit, logger])
 
   const providerLabel = useMemo(() => {
     switch (provider) {
@@ -226,16 +260,7 @@ export default function Init(): React.ReactElement {
             </Text>,
           )
         }
-        setStep('done')
-
-        // Wait a moment to show the success message before exiting
-        await new Promise((resolve) => setTimeout(resolve, 500))
-
-        logger(getReadyMessage())
-
-        // Wait a bit more to show the final message
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        exit()
+        setStep('check-github')
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Failed to initialize Kyoto'
@@ -259,6 +284,150 @@ export default function Init(): React.ReactElement {
 
     void save()
   }, [apiKey, exit, logger, provider, providerLabel, step])
+
+  useEffect(() => {
+    if (step !== 'check-github') {
+      return
+    }
+
+    const checkGithubWorkflow = async (): Promise<void> => {
+      try {
+        const gitRoot = await findGitRoot()
+        const githubDir = join(gitRoot, '.github', 'workflows')
+        const workflowFile = join(githubDir, 'kyoto.yml')
+
+        setWorkflowPath(workflowFile)
+
+        try {
+          await readFile(workflowFile, 'utf-8')
+          logger(
+            <Text color="grey">
+              {
+                '\n✓ GitHub Actions workflow already exists at .github/workflows/kyoto.yml\n'
+              }
+            </Text>,
+          )
+          await finishInit()
+          return
+        } catch {
+          setStep('prompt-github')
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Failed to check GitHub workflow setup'
+        if (
+          message.includes('git') ||
+          message.includes('Git repository') ||
+          message.includes('not a git repository')
+        ) {
+          logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
+        } else {
+          setError(message)
+        }
+        process.exitCode = 1
+        setStep('done')
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        exit()
+      }
+    }
+
+    void checkGithubWorkflow()
+  }, [exit, finishInit, logger, step])
+
+  useEffect(() => {
+    if (step !== 'creating-github') {
+      return
+    }
+
+    const createWorkflow = async (): Promise<void> => {
+      try {
+        const gitRoot = await findGitRoot()
+        const githubDir = join(gitRoot, '.github', 'workflows')
+        const workflowFile = workflowPath ?? join(githubDir, 'kyoto.yml')
+        setWorkflowPath(workflowFile)
+
+        logger('\nCreating GitHub workflow file...\n')
+
+        await mkdir(githubDir, { recursive: true })
+        await writeFile(workflowFile, WORKFLOW_CONTENT, 'utf-8')
+
+        logger('✓ Created .github/workflows/kyoto.yml\n')
+        setStep('prompt-git')
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to setup GitHub workflow'
+        if (
+          message.includes('git') ||
+          message.includes('Git repository') ||
+          message.includes('not a git repository')
+        ) {
+          logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
+        } else {
+          setError(message)
+        }
+        process.exitCode = 1
+        setStep('done')
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        exit()
+      }
+    }
+
+    void createWorkflow()
+  }, [exit, logger, step, workflowPath])
+
+  const handleGitCommand = async (value: 'yes' | 'no'): Promise<void> => {
+    if (value === 'no') {
+      logger(
+        <Text color="grey">
+          {'\nSkipping git commit. You can commit the file manually later.\n'}
+        </Text>,
+      )
+      await finishInit()
+      return
+    }
+
+    setStep('running-git')
+    logger('\nRunning git commands...\n')
+
+    try {
+      const gitRoot = await findGitRoot()
+
+      // Add the file
+      await execa('git', ['add', '.github/workflows/kyoto.yml'], {
+        cwd: gitRoot,
+      })
+
+      logger('✓ Added .github/workflows/kyoto.yml to git\n')
+
+      // Commit the file
+      await execa('git', ['commit', '-m', 'chore: add Kyoto GitHub workflow'], {
+        cwd: gitRoot,
+      })
+
+      logger('✓ Committed .github/workflows/kyoto.yml\n')
+      logger('\n✓ GitHub workflow setup complete!\n')
+
+      await finishInit()
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to run git commands'
+      setError(message)
+      logger(<Text color="#c27a52">{`\n⚠️  ${message}\n`}</Text>)
+      logger(
+        <Text color="grey">
+          {
+            'You can manually run:\n  git add .github/workflows/kyoto.yml\n  git commit -m "chore: add Kyoto GitHub workflow"\n'
+          }
+        </Text>,
+      )
+      setStep('done')
+      process.exitCode = 1
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      exit()
+    }
+  }
 
   const handleApiSubmit = (value: string): void => {
     if (!value.trim()) {
@@ -284,7 +453,7 @@ export default function Init(): React.ReactElement {
       ) : null}
 
       {step === 'confirm-change' && existingConfig ? (
-        <Box flexDirection="column">
+        <Box flexDirection="column" gap={1}>
           <Text>
             Current AI provider: <Text>{existingProviderLabel}</Text>
           </Text>
@@ -296,44 +465,47 @@ export default function Init(): React.ReactElement {
           <Box marginTop={1}>
             <Text>Do you want to setup a different provider?</Text>
           </Box>
-          <SelectInput
-            items={[
-              { label: 'Yes, change provider', value: 'yes' },
-              { label: 'No, keep current provider', value: 'no' },
-            ]}
-            onSelect={(item) => {
-              if (item.value === 'yes') {
-                setStep('select-provider')
-                setError(null)
-              } else {
-                logger(<Text color="grey">Keeping current configuration.</Text>)
-                logger(getReadyMessage())
-                setStep('done')
-                setTimeout(() => {
-                  exit()
-                }, 1500)
-              }
-            }}
-          />
+          <Box marginTop={1}>
+            <SelectInput
+              items={[
+                { label: 'Yes, change provider', value: 'yes' },
+                { label: 'No, keep current provider', value: 'no' },
+              ]}
+              onSelect={(item) => {
+                if (item.value === 'yes') {
+                  setStep('select-provider')
+                  setError(null)
+                } else {
+                  logger(
+                    <Text color="grey">Keeping current configuration.</Text>,
+                  )
+                  setError(null)
+                  setStep('check-github')
+                }
+              }}
+            />
+          </Box>
         </Box>
       ) : null}
 
       {step === 'select-provider' ? (
-        <Box flexDirection="column">
+        <Box flexDirection="column" gap={1}>
           <Text>Select your AI provider:</Text>
-          <SelectInput
-            items={[
-              { label: 'OpenAI', value: 'openai' },
-              { label: 'Vercel AI Gateway', value: 'vercel' },
-              { label: 'OpenRouter', value: 'openrouter' },
-              { label: 'Anthropic', value: 'anthropic' },
-            ]}
-            onSelect={(item) => {
-              setProvider(item.value as Provider)
-              setStep('api-key')
-              setError(null)
-            }}
-          />
+          <Box marginTop={1}>
+            <SelectInput
+              items={[
+                { label: 'OpenAI', value: 'openai' },
+                { label: 'Vercel AI Gateway', value: 'vercel' },
+                { label: 'OpenRouter', value: 'openrouter' },
+                { label: 'Anthropic', value: 'anthropic' },
+              ]}
+              onSelect={(item) => {
+                setProvider(item.value as Provider)
+                setStep('api-key')
+                setError(null)
+              }}
+            />
+          </Box>
         </Box>
       ) : null}
 
@@ -357,6 +529,88 @@ export default function Init(): React.ReactElement {
             <Spinner type="dots" />
           </Text>
           <Text>Saving configuration...</Text>
+        </Box>
+      ) : null}
+
+      {step === 'check-github' ? (
+        <Box marginTop={1} gap={1}>
+          <Text color="red">
+            <Spinner type="dots" />
+          </Text>
+          <Text>Checking for GitHub Actions workflow...</Text>
+        </Box>
+      ) : null}
+
+      {step === 'prompt-github' ? (
+        <Box flexDirection="column" marginTop={1} gap={1}>
+          <Text>No GitHub Actions workflow found.</Text>
+          <Text>
+            Would you like to create .github/workflows/kyoto.yml now? (Y/n)
+          </Text>
+          <Box marginTop={1}>
+            <SelectInput
+              items={[
+                { label: 'Yes, set it up', value: 'yes' },
+                { label: 'No, maybe later', value: 'no' },
+              ]}
+              onSelect={(item) => {
+                if (item.value === 'yes') {
+                  setError(null)
+                  setStep('creating-github')
+                } else {
+                  logger(
+                    <Text color="grey">
+                      {'\nSkipping GitHub Actions setup for now.\n'}
+                    </Text>,
+                  )
+                  setError(null)
+                  void finishInit()
+                }
+              }}
+            />
+          </Box>
+        </Box>
+      ) : null}
+
+      {step === 'creating-github' ? (
+        <Box marginTop={1} gap={1}>
+          <Text color="red">
+            <Spinner type="dots" />
+          </Text>
+          <Text>Creating GitHub workflow file...</Text>
+        </Box>
+      ) : null}
+
+      {step === 'prompt-git' && workflowPath ? (
+        <Box flexDirection="column" marginTop={1} gap={1}>
+          <Text>
+            {'\n'}Run the following command to commit the workflow file:
+          </Text>
+          <Text color="yellow">{'\n'} git add .github/workflows/kyoto.yml</Text>
+          <Text color="yellow">
+            {'  '}git commit -m "chore: add Kyoto GitHub workflow"
+          </Text>
+          <Text>{'\n'}Do you want to run this command now? (Y/n)</Text>
+          <Box marginTop={1}>
+            <SelectInput
+              items={[
+                { label: 'Yes, run the command', value: 'yes' },
+                { label: 'No, skip', value: 'no' },
+              ]}
+              onSelect={(item) => {
+                void handleGitCommand(item.value as 'yes' | 'no')
+              }}
+            />
+          </Box>
+        </Box>
+      ) : null}
+
+      {step === 'running-git' ? (
+        <Box marginTop={1} gap={1}>
+          <Text color="red">
+            <Spinner type="dots" />
+          </Text>
+          <Text>Running git commands...</Text>
         </Box>
       ) : null}
 
