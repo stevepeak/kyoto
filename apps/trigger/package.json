@@ -10,8 +10,8 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "dev": "npx trigger.dev@latest dev",
-    "deploy": "npx trigger.dev@latest deploy",
+    "dev": "bunx trigger.dev@latest dev",
+    "deploy": "bunx trigger.dev@latest deploy",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ignore-pattern='.trigger' . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet --ignore-pattern='.trigger' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."

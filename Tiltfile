@@ -23,7 +23,7 @@ local_resource(
     labels=["Development"],
     name='MCP Builder',
     auto_init=False,
-    serve_cmd="npx @modelcontextprotocol/inspector",
+    serve_cmd="bunx @modelcontextprotocol/inspector",
     # ! cannot show link, must get from logs w/ token
     # links=[ link("http://localhost:6274", "MCP Inspector") ],
 )
