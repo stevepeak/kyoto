@@ -37,7 +37,7 @@ const commandGroups = [
       },
       {
         name: 'stage',
-        description: 'Stage changes with Kyoto vibes',
+        description: 'Use Kyoto AI to stage changes incrementally',
         example: 'kyoto stage',
         comingSoon: true,
       },

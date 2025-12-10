@@ -1,10 +1,9 @@
 import { analyzeFunctionConsolidation } from '@app/agents'
-
 import {
   type VibeCheckAgent,
   type VibeCheckFinding,
   type VibeCheckResult,
-} from '../helpers/vibe-check/types'
+} from '@app/types'
 
 function toFindings(
   suggestions: Awaited<

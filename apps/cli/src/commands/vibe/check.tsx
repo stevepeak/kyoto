@@ -1,4 +1,4 @@
-import { type VibeCheckScope } from '@app/types'
+import { type AgentRunState, type VibeCheckScope } from '@app/types'
 import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
 
@@ -7,7 +7,6 @@ import { init } from '../../helpers/config/assert-cli-prerequisites'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import { writePlanFile } from '../../helpers/vibe-check/plan'
-import { type AgentRunState } from '../../helpers/vibe-check/types'
 import { Jumbo } from '../../ui/jumbo'
 
 interface VibeCheckProps {

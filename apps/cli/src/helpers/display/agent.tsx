@@ -1,12 +1,11 @@
-import { Box, Text } from 'ink'
-import Spinner from 'ink-spinner'
-import React, { useEffect, useRef, useState } from 'react'
-
 import {
   type AgentRunState,
   type VibeCheckAgent,
   type VibeCheckContext,
-} from '../vibe-check/types'
+} from '@app/types'
+import { Box, Text } from 'ink'
+import Spinner from 'ink-spinner'
+import React, { useEffect, useRef, useState } from 'react'
 
 const statusColor: Record<AgentRunState['status'], string> = {
   pending: 'grey',

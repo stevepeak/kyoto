@@ -1,12 +1,12 @@
-import { Box } from 'ink'
-import React, { useCallback, useRef, useState } from 'react'
-
-import { Header } from '../../ui/header'
 import {
   type AgentRunState,
   type VibeCheckAgent,
   type VibeCheckContext,
-} from '../vibe-check/types'
+} from '@app/types'
+import { Box } from 'ink'
+import React, { useCallback, useRef, useState } from 'react'
+
+import { Header } from '../../ui/header'
 import { Agent } from './agent'
 
 export function VibeAgents({
