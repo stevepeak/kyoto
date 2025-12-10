@@ -14,17 +14,12 @@
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@ai-sdk/openai": "catalog:",
-    "@app/config": "workspace:*",
-    "@app/schemas": "workspace:*",
     "@app/shell": "workspace:*",
     "@app/types": "workspace:*",
     "@opentelemetry/api": "catalog:",
     "ai": "catalog:",
-    "openai": "catalog:",
     "ts-dedent": "catalog:",
-    "zod": "catalog:",
-    "zod-to-json-schema": "catalog:"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",

@@ -13,29 +13,23 @@ import {
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
+import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+
 // Import agents config to avoid circular dependency
 // We only need the default model from discovery agent
 const DEFAULT_MODEL = 'openai/gpt-5-mini'
 
-export const functionConsolidationSuggestionSchema = z.object({
-  label: z.string(),
-  functions: z
-    .array(
-      z.object({
-        name: z.string(),
-        file: z.string(),
-        note: z.string().optional(),
-      }),
-    )
-    .min(2),
-  reasoning: z.string(),
-  benefit: z.string().optional(),
-})
-
 export const functionConsolidationOutputSchema = z.object({
-  suggestions: z.array(functionConsolidationSuggestionSchema),
+  findings: z.array(
+    z.object({
+      message: z.string(),
+      path: z.string().optional(),
+      suggestion: z.string().optional(),
+      severity: z.enum(['info', 'warn', 'error']),
+    }),
+  ),
 })
-export type FunctionConsolidationOutput = z.infer<
+type FunctionConsolidationOutput = z.infer<
   typeof functionConsolidationOutputSchema
 >
 
@@ -46,42 +40,6 @@ interface AnalyzeFunctionConsolidationOptions {
     model?: LanguageModel
     telemetryTracer?: Tracer
     progress?: (message: string) => void
-  }
-}
-
-function buildRetrievalGuidance(scope: VibeCheckScope): string {
-  switch (scope.type) {
-    case 'commit':
-      return dedent`
-        - Use \`git show --name-only ${scope.commit}\` to see the changed files
-        - Use \`git show ${scope.commit}\` to see the full diff
-        - Use \`git diff ${scope.commit}^..${scope.commit}\` to see what changed
-        - Filter for TypeScript files (.ts, .tsx) only
-      `
-    case 'commits':
-      return dedent`
-        - Use \`git show --name-only <sha>\` for each commit to see changed files
-        - Use \`git diff <sha1>^..<sha2>\` to see changes across commits
-        - Filter for TypeScript files (.ts, .tsx) only
-      `
-    case 'staged':
-      return dedent`
-        - Use \`git diff --cached --name-only\` to list staged files
-        - Use \`git diff --cached\` to see the staged changes
-        - Filter for TypeScript files (.ts, .tsx) only
-      `
-    case 'unstaged':
-      return dedent`
-        - Use \`git diff --name-only\` to list modified files
-        - Use \`git diff\` to see unstaged changes
-        - Use \`git ls-files --others --exclude-standard\` to list untracked files
-        - Filter for TypeScript files (.ts, .tsx) only
-      `
-    case 'paths':
-      return dedent`
-        - Read the specified files directly using the readFile tool
-        - Filter for TypeScript files (.ts, .tsx) only
-      `
   }
 }
 
@@ -122,8 +80,12 @@ export async function analyzeFunctionConsolidation({
       # Important Instructions
       - Only analyze TypeScript files (.ts, .tsx)
       - Prefer highlighting overlaps in purpose, inputs, and repeated control flow
-      - Only include suggestions where at least two functions overlap
-      - Provide short labels and reasoning for each consolidation idea
+      - Only include findings where at least two functions overlap
+      - For each finding:
+        - **message**: A concise description of the functions that could be consolidated (e.g., "validateUser ↔ validateAccount (auth.ts)")
+        - **path**: The file path where the consolidation should happen (typically the first file)
+        - **suggestion**: Detailed reasoning about why these functions should be consolidated and how
+        - **severity**: Use "warn" for consolidation opportunities
       - Keep findings concise and actionable
     `,
     experimental_telemetry: {
@@ -163,6 +125,12 @@ export async function analyzeFunctionConsolidation({
     Use the available tools to retrieve and analyze the changed TypeScript files.
     Look for functions that share similar logic, patterns, or could benefit from
     being extracted into shared helpers.
+
+    For each consolidation opportunity, create a finding with:
+    - A message describing which functions overlap (format: "function1 ↔ function2 (file.ts)")
+    - The file path where consolidation should occur
+    - A suggestion explaining the reasoning and how to consolidate
+    - Severity set to "warn"
 
     Respond with JSON matching the schema.
   `

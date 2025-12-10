@@ -348,14 +348,6 @@ export async function run(argv = process.argv): Promise<void> {
       await renderCommand(<VibeCheck staged={options.staged} />)
     })
 
-  vibeCommand
-    .command('plan')
-    .description('Create a plan for other agents to apply fixes')
-    .action(async () => {
-      const Plan = (await import('./commands/vibe/plan')).default
-      await renderCommand(<Plan />)
-    })
-
   program.showHelpAfterError()
 
   if (argv.length <= 2) {

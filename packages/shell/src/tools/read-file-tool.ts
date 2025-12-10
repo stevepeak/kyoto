@@ -31,7 +31,7 @@ export function createLocalReadFileTool(logger?: (message: any) => void): Tool {
     inputSchema: readFileInputSchema,
     execute: async (input) => {
       if (logger) {
-        logger(`Reading file (${input.path})`)
+        logger(`Reading file ${input.path}`)
       }
       const content = await readLocalFile(input.path)
       return content
