@@ -70,10 +70,6 @@ export const staleCodePathsAgent: VibeCheckAgent = {
 
     reporter.progress('Starting agent')
     const result = await analyzeStaleCodePaths({
-      repo: {
-        id: context.gitRoot,
-        slug: path.basename(context.gitRoot),
-      },
       files,
       options: {
         maxSteps: 8,

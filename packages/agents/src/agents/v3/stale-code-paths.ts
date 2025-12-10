@@ -25,14 +25,10 @@ export const staleCodePathsOutputSchema = z.object({
 export type StaleCodePathsOutput = z.infer<typeof staleCodePathsOutputSchema>
 
 interface AnalyzeStaleCodePathsOptions {
-  repo: {
-    id: string
-    slug?: string
-  }
-  files: Array<{
+  files: {
     path: string
     lastTouchedDays: number | null
-  }>
+  }[]
   options?: {
     maxSteps?: number
     model?: LanguageModel
@@ -45,7 +41,6 @@ interface AnalyzeStaleCodePathsOptions {
  * Ask an AI agent to assess which files look stale based on last-touched age.
  */
 export async function analyzeStaleCodePaths({
-  repo,
   files,
   options: {
     maxSteps = 8,
@@ -66,11 +61,6 @@ export async function analyzeStaleCodePaths({
     experimental_telemetry: {
       isEnabled: true,
       functionId: 'stale-code-paths',
-      metadata: {
-        repoId: repo.id,
-        repoSlug: repo.slug,
-        fileCount: files.length,
-      },
       tracer: telemetryTracer,
     },
     onStepFinish: (step) => {

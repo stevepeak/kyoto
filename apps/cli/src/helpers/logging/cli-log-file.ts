@@ -15,7 +15,7 @@ async function resolveLogFile(): Promise<string | null> {
       try {
         const gitRoot = await findGitRoot()
         const fsPaths = await pwdKyoto(gitRoot)
-        const filePath = join(fsPaths.cache, LOG_FILENAME)
+        const filePath = join(fsPaths.root, LOG_FILENAME)
         await writeFile(filePath, '', 'utf-8')
         logFilePath = filePath
         return filePath

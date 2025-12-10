@@ -69,7 +69,7 @@ export default function VibePlan(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header message="Planning vibe fixes." />
+      <Header />
       {status && <Text color="cyan">{status}</Text>}
       {logs.length > 0 ? (
         <Box marginTop={1} flexDirection="column">

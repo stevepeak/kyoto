@@ -68,7 +68,7 @@ export default function VibeFix(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      <Header message="Applying vibe fixes." />
+      <Header />
       {status && <Text color="cyan">{status}</Text>}
       {logs.length > 0 ? (
         <Box marginTop={1} flexDirection="column">
