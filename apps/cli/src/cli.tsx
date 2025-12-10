@@ -24,11 +24,6 @@ const commandGroups = [
         ],
       },
       {
-        name: 'vibe fix',
-        description: 'Apply vibe fixes to your code',
-        example: 'kyoto vibe fix',
-      },
-      {
         name: 'vibe plan',
         description: 'Create a plan for other agents to apply fixes',
         example: 'kyoto vibe plan',
@@ -342,14 +337,6 @@ export async function run(argv = process.argv): Promise<void> {
     .action(async (options: { staged?: boolean }) => {
       const VibeCheck = (await import('./commands/vibe/check')).default
       await renderCommand(<VibeCheck staged={options.staged} />)
-    })
-
-  vibeCommand
-    .command('fix')
-    .description('Apply vibe fixes to your code')
-    .action(async () => {
-      const Fix = (await import('./commands/vibe/fix')).default
-      await renderCommand(<Fix />)
     })
 
   vibeCommand
