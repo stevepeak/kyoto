@@ -16,10 +16,6 @@ export default function Setup(): React.ReactElement {
   const [stage, setStage] = useState<Stage>('gitignore')
 
   const handleGitIgnoreComplete = useCallback(() => {
-    setStage('ai-provider')
-  }, [])
-
-  const handleAIProviderComplete = useCallback(() => {
     setStage('mcp')
   }, [])
 
@@ -27,7 +23,11 @@ export default function Setup(): React.ReactElement {
     setStage('github-workflow')
   }, [])
 
-  const handleGitHubWorkflowComplete = useCallback(async () => {
+  const handleGitHubWorkflowComplete = useCallback(() => {
+    setStage('ai-provider')
+  }, [])
+
+  const handleAIProviderComplete = useCallback(async () => {
     setStage('done')
     await new Promise((resolve) => setTimeout(resolve, 1000))
     exit()
@@ -42,9 +42,9 @@ export default function Setup(): React.ReactElement {
     }
     const stageOrder: Stage[] = [
       'gitignore',
-      'ai-provider',
       'mcp',
       'github-workflow',
+      'ai-provider',
     ]
     const currentIndex = stageOrder.indexOf(stage)
     const componentIndex = stageOrder.indexOf(componentStage)
