@@ -54,7 +54,6 @@ interface AnalyzeStagingSuggestionsOptions {
  * how to organize them into logical, sequential commits.
  */
 export async function analyzeStagingSuggestions({
-  scope,
   options: {
     maxSteps = 40,
     model: providedModel,
@@ -129,17 +128,6 @@ export async function analyzeStagingSuggestions({
       schema: stagingSuggestionsOutputSchema,
     }),
   })
-
-  const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
-          ? 'staged changes'
-          : scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
 
   const prompt = dedent`
     Analyze all uncommitted changes (both staged and unstaged) and suggest how to organize
