@@ -3,17 +3,15 @@ import { logger, task } from '@trigger.dev/sdk'
 import { installationHandler } from './handlers/installation'
 import { installationRepositoriesHandler } from './handlers/installation-repositories'
 import { installationTargetsHandler } from './handlers/installation-targets'
-import { pullRequestHandler } from './handlers/pull-request'
-import { pushHandler } from './handlers/push'
 import { type WebhookHandler } from './types'
 
 const handlers: Record<string, WebhookHandler | null> = {
-  push: pushHandler,
-  pull_request: pullRequestHandler,
   installation: installationHandler,
   installation_repositories: installationRepositoriesHandler,
   installation_targets: installationTargetsHandler,
   // * Events we may want to listen to in the future
+  pull_request: null,
+  push: null,
   repository: null,
   check_run: null,
   check_suite: null,
