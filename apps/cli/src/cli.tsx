@@ -3,6 +3,7 @@ import { render } from 'ink'
 import React from 'react'
 
 import Commit from './commands/commit'
+import Docs from './commands/docs'
 import Help from './commands/help'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
@@ -68,6 +69,13 @@ export async function run(argv = process.argv): Promise<void> {
     .description('View the current plan')
     .action(async () => {
       await renderCommand(<Plan />)
+    })
+
+  program
+    .command('docs')
+    .description('View the Kyoto documentation')
+    .action(async () => {
+      await renderCommand(<Docs />)
     })
 
   const vibeCommand = program.command('vibe').description('Vibe check commands')

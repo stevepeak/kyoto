@@ -45,6 +45,11 @@ const commandGroups = [
         description: 'Design your Kyoto experience',
         example: 'kyoto setup',
       },
+      {
+        name: 'docs',
+        description: 'View the Kyoto documentation',
+        example: 'kyoto docs',
+      },
     ],
   },
 ] as const
