@@ -1,0 +1,37 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Kyoto",
+  "logo": {
+    "dark": "/public/kyoto-logo.png",
+    "light": "/public/kyoto-logo.png"
+  },
+  "colors": {
+    "primary": "#ff0000"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "pages": [
+      "pages/quickstart",
+      {
+        "group": "Vibing",
+        "icon": "wave",
+        "pages": ["pages/features/vibe", "pages/features/stage"]
+      },
+      {
+        "group": "Tooling",
+        "icon": "torii-gate",
+        "pages": ["pages/integrations/mcp", "pages/integrations/github"]
+      }
+    ]
+  },
+  "seo": {
+    "indexing": "all"
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/iopeak",
+      "github": "https://github.com/stevepeak/kyoto"
+    }
+  }
+}
