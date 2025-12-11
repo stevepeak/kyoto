@@ -10,39 +10,35 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Lint
-        run: bun run lint
+      - run: bun run lint
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Typecheck
-        run: bun run typecheck
+      - run: bun run typecheck
 
   knip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Run knip
-        run: bun run knip
+      - run: bun run knip
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Run tests
-        run: bun test
+      - run: bun test
+
+  kyoto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/setup
+      - run: bunx kyoto vibe check
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Run build
-        run: bun run build
+      - run: bun run build
