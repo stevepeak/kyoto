@@ -59,7 +59,8 @@ export default function HomePage() {
     triggerMutation.mutate({ name: 'Web2 User' })
   }
 
-  const isButtonDisabled = triggerMutation.isPending || isLoading
+  const isButtonDisabled =
+    triggerMutation.isPending || isLoading || triggerHandle !== null
 
   return (
     <main className="container mx-auto min-h-screen py-12">
