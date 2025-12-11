@@ -22,4 +22,8 @@ export {
   analyzeStaleCodeDetection,
   staleCodeDetectionOutputSchema,
 } from './agents/stale-code-detection'
+export {
+  analyzePlanSummarization,
+  planSummarizationOutputSchema,
+} from './agents/plan-summarization'
 export { buildRetrievalGuidance } from './helpers/build-retrieval-guidance'

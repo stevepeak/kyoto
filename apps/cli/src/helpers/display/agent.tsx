@@ -7,13 +7,7 @@ import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useRef, useState } from 'react'
 
-const statusColor: Record<AgentRunState['status'], string> = {
-  pending: 'grey',
-  running: 'red',
-  success: 'green',
-  warn: 'yellow',
-  fail: 'red',
-}
+import { statusColor } from './agent-status'
 
 export function Agent({
   agent,

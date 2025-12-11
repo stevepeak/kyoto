@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react'
 import { defaultVibeCheckAgents } from '../../agents'
 import { init } from '../../helpers/config/assert-cli-prerequisites'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
+import { SummarizationAgent } from '../../helpers/display/summarization-agent'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import { writePlanFile } from '../../helpers/vibe-check/plan'
 import { Jumbo } from '../../ui/jumbo'
@@ -24,6 +25,8 @@ export default function VibeCheck({
     kyotoRoot: string
     scope: VibeCheckScope
   } | null>(null)
+  const [finalStates, setFinalStates] = useState<AgentRunState[] | null>(null)
+  const [isSummarizing, setIsSummarizing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -130,14 +133,26 @@ export default function VibeCheck({
   }, [exit, staged])
 
   const handleAgentComplete = async (
-    finalStates: AgentRunState[],
+    states: AgentRunState[],
+  ): Promise<void> => {
+    if (!context) {
+      return
+    }
+
+    // Store states and trigger summarization
+    setFinalStates(states)
+    setIsSummarizing(true)
+  }
+
+  const handleSummarizationComplete = async (
+    markdown: string,
   ): Promise<void> => {
     if (!context) {
       return
     }
 
     try {
-      await writePlanFile(finalStates, context.kyotoRoot)
+      await writePlanFile(markdown, context.kyotoRoot)
 
       await new Promise((resolve) => {
         setTimeout(() => {
@@ -162,6 +177,11 @@ export default function VibeCheck({
     }
   }
 
+  const handleSummarizationError = (errorMessage: string): void => {
+    setError(errorMessage)
+    process.exitCode = 1
+  }
+
   return (
     <Box flexDirection="column">
       <Jumbo />
@@ -172,14 +192,23 @@ export default function VibeCheck({
           ))}
         </Box>
       )}
-      {context && (
+      {context && !isSummarizing && (
         <VibeAgents
           agents={defaultVibeCheckAgents}
           context={context}
           onComplete={handleAgentComplete}
         />
       )}
-      {/* TODO implement the next stage of showing the results */}
+      {isSummarizing && finalStates && context && (
+        <Box flexDirection="column" marginTop={1}>
+          <SummarizationAgent
+            agentStates={finalStates}
+            gitRoot={context.gitRoot}
+            onComplete={handleSummarizationComplete}
+            onError={handleSummarizationError}
+          />
+        </Box>
+      )}
       {error && <Text color="red">{error}</Text>}
     </Box>
   )

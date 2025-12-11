@@ -99,11 +99,12 @@ export function buildPlanMarkdown(states: AgentRunState[]): string {
 }
 
 export async function writePlanFile(
-  states: AgentRunState[],
+  content: string | AgentRunState[],
   kyotoRoot: string,
 ): Promise<string> {
   const planPath = path.join(kyotoRoot, 'plan.md')
-  const content = buildPlanMarkdown(states)
-  await fs.writeFile(planPath, content, 'utf8')
+  const markdown =
+    typeof content === 'string' ? content : buildPlanMarkdown(content)
+  await fs.writeFile(planPath, markdown, 'utf8')
   return planPath
 }
