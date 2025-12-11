@@ -18,6 +18,7 @@
     "@app/agents": "workspace:^",
     "@app/shell": "workspace:^",
     "@app/types": "workspace:^",
+    "@app/utils": "workspace:^",
     "@app/vectra": "workspace:^",
     "commander": "^14.0.2",
     "execa": "catalog:",

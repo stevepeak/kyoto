@@ -53,14 +53,14 @@ export async function analyzePlanSummarization({
   const model = providedModel ?? DEFAULT_MODEL
 
   // Collect all findings with their agent context
-  const allFindings: Array<{
+  const allFindings: {
     agentLabel: string
     agentId: string
     message: string
     path?: string
     suggestion?: string
     severity: 'info' | 'warn' | 'error'
-  }> = []
+  }[] = []
 
   for (const state of agentStates) {
     const findings = state.result?.findings ?? []

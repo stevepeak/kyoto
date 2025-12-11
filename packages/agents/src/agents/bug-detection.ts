@@ -48,7 +48,7 @@ interface AnalyzeBugDetectionOptions {
 export async function analyzeBugDetection({
   scope,
   options: {
-    maxSteps = 40,
+    maxSteps = 30,
     model: providedModel,
     telemetryTracer,
     progress,

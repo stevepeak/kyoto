@@ -4,6 +4,7 @@ import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useRef, useState } from 'react'
 
+import { Header } from '../../ui/header'
 import { statusColor } from './agent-status'
 
 interface SummarizationAgentProps {
@@ -67,17 +68,20 @@ export function SummarizationAgent({
   }, [agentStates, gitRoot, onComplete, onError])
 
   return (
-    <Box width="75%">
-      <Text wrap="truncate">
-        {state.status === 'running' ? (
-          <Text color="red">
-            <Spinner type="dots" />{' '}
-          </Text>
-        ) : (
-          <Text color={statusColor[state.status]}>• </Text>
-        )}
-        Plan summarization <Text color="grey">{state.progress}</Text>
-      </Text>
+    <Box flexDirection="column" marginTop={1}>
+      <Header kanji="改善" title="Planing" />
+      <Box width="75%">
+        <Text wrap="truncate">
+          {state.status === 'running' ? (
+            <Text color="red">
+              <Spinner type="dots" />{' '}
+            </Text>
+          ) : (
+            <Text color={statusColor[state.status]}>• </Text>
+          )}
+          Summarizing plan <Text color="grey">{state.progress}</Text>
+        </Text>
+      </Box>
     </Box>
   )
 }

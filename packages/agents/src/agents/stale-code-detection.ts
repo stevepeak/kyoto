@@ -49,7 +49,7 @@ interface AnalyzeStaleCodeDetectionOptions {
 export async function analyzeStaleCodeDetection({
   scope,
   options: {
-    maxSteps = 40,
+    maxSteps = 25,
     model: providedModel,
     telemetryTracer,
     progress,

@@ -13,10 +13,12 @@ export function VibeAgents({
   agents,
   context,
   onComplete,
+  timeoutMinutes = 1,
 }: {
   agents: VibeCheckAgent[]
   context: VibeCheckContext
   onComplete?: (finalStates: AgentRunState[]) => void
+  timeoutMinutes?: number
 }): React.ReactElement | null {
   const [_, setFinalStates] = useState<AgentRunState[]>([])
   const hasCalledCompleteRef = useRef(false)
@@ -51,13 +53,14 @@ export function VibeAgents({
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Header kanji="改善" title="Vibe checks" />
+      <Header kanji="改善" title="Vibe checking" />
       {agents.map((agent) => (
         <Agent
           key={agent.id}
           agent={agent}
           context={context}
           onComplete={handleAgentComplete}
+          timeoutMinutes={timeoutMinutes}
         />
       ))}
     </Box>

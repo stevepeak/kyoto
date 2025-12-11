@@ -79,8 +79,16 @@ export async function run(argv = process.argv): Promise<void> {
     .command('check')
     .description('Test and diff user stories against staged changes')
     .option('--staged', 'Only check staged changes')
-    .action(async (options: { staged?: boolean }) => {
-      await renderCommand(<VibeCheck staged={options.staged} />)
+    .option(
+      '--timeout <minutes>',
+      'Timeout for each agent in minutes (default: 1)',
+      '1',
+    )
+    .action(async (options: { staged?: boolean; timeout?: string }) => {
+      const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
+      await renderCommand(
+        <VibeCheck staged={options.staged} timeoutMinutes={timeoutMinutes} />,
+      )
     })
 
   program.showHelpAfterError()

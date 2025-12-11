@@ -3,6 +3,7 @@ import {
   type VibeCheckAgent,
   type VibeCheckContext,
 } from '@app/types'
+import { withTimeout } from '@app/utils'
 import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useRef, useState } from 'react'
@@ -13,10 +14,12 @@ export function Agent({
   agent,
   context,
   onComplete,
+  timeoutMinutes = 1,
 }: {
   agent: VibeCheckAgent
   context: VibeCheckContext
   onComplete: (state: AgentRunState) => void
+  timeoutMinutes?: number
 }): React.ReactElement {
   const [state, setState] = useState<AgentRunState>({
     id: agent.id,
@@ -50,7 +53,12 @@ export function Agent({
       }
 
       try {
-        const result = await agent.run(context, reporter)
+        const timeoutMs = timeoutMinutes * 60 * 1000
+        const result = await withTimeout(
+          agent.run(context, reporter),
+          timeoutMs,
+          `Agent "${agent.label}" timed out after ${timeoutMinutes} minute${timeoutMinutes === 1 ? '' : 's'}`,
+        )
         const status =
           result.status === 'pass'
             ? 'success'
@@ -81,7 +89,7 @@ export function Agent({
         onComplete(finalState)
       }
     })()
-  }, [agent, context, onComplete])
+  }, [agent, context, onComplete, timeoutMinutes])
 
   return (
     <Box width="75%">

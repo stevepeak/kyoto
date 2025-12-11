@@ -4,18 +4,20 @@ import React, { useEffect, useState } from 'react'
 
 import { defaultVibeCheckAgents } from '../../agents'
 import { init } from '../../helpers/config/assert-cli-prerequisites'
-import { VibeAgents } from '../../helpers/display/vibe-agents'
 import { SummarizationAgent } from '../../helpers/display/summarization-agent'
+import { VibeAgents } from '../../helpers/display/vibe-agents'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import { writePlanFile } from '../../helpers/vibe-check/plan'
 import { Jumbo } from '../../ui/jumbo'
 
 interface VibeCheckProps {
   staged?: boolean
+  timeoutMinutes?: number
 }
 
 export default function VibeCheck({
   staged = false,
+  timeoutMinutes = 1,
 }: VibeCheckProps): React.ReactElement {
   const { exit } = useApp()
   const [warnings, setWarnings] = useState<React.ReactNode[]>([])
@@ -192,22 +194,21 @@ export default function VibeCheck({
           ))}
         </Box>
       )}
-      {context && !isSummarizing && (
+      {context && (
         <VibeAgents
           agents={defaultVibeCheckAgents}
           context={context}
           onComplete={handleAgentComplete}
+          timeoutMinutes={timeoutMinutes}
         />
       )}
       {isSummarizing && finalStates && context && (
-        <Box flexDirection="column" marginTop={1}>
-          <SummarizationAgent
-            agentStates={finalStates}
-            gitRoot={context.gitRoot}
-            onComplete={handleSummarizationComplete}
-            onError={handleSummarizationError}
-          />
-        </Box>
+        <SummarizationAgent
+          agentStates={finalStates}
+          gitRoot={context.gitRoot}
+          onComplete={handleSummarizationComplete}
+          onError={handleSummarizationError}
+        />
       )}
       {error && <Text color="red">{error}</Text>}
     </Box>
