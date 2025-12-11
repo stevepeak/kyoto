@@ -18,6 +18,14 @@ local_resource(
     links=[ link("https://cloud.trigger.dev/orgs/tailz-5e0b/projects/tailz-uBK2/env/dev/runs", "Trigger") ],
 )
 
+# Apps => Firebase
+local_resource(
+    name='Docs',
+    labels=["Apps"],
+    serve_cmd="cd apps/docs && mint dev --port 3001",
+    links=[ link("http://localhost:3001", "Docs") ],
+)
+
 # Development => MCP Builder
 local_resource(
     labels=["Development"],
