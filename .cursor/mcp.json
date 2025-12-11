@@ -1,0 +1,8 @@
+{
+  "services": {
+    "kyoto": {
+      "command": "npx",
+      "args": ["kyoyo", "mcp"]
+    }
+  }
+}
