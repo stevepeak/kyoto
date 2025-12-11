@@ -253,7 +253,7 @@ export async function findRepoIdsByOwnerId(
   return rows.map((row) => row.id)
 }
 
-export interface RepoLookupResult {
+interface RepoLookupResult {
   repoId: string
   ownerId: string
   repoName: string

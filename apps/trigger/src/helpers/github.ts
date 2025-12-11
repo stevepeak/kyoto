@@ -84,7 +84,7 @@ export async function getOctokitClient(repoId: string): Promise<OctokitClient> {
   }
 }
 
-export interface GitAuthor {
+interface GitAuthor {
   id: number | string | null
   login: string | null
   name: string | null

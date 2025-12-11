@@ -4,9 +4,9 @@ import React from 'react'
 
 import Commit from './commands/commit'
 import Help from './commands/help'
-import Init from './commands/init'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
+import Setup from './commands/setup'
 import VibeCheck from './commands/vibe/check'
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
@@ -40,7 +40,7 @@ export async function run(argv = process.argv): Promise<void> {
     .command('setup')
     .description('Initialize Kyoto by configuring your AI provider and API key')
     .action(async () => {
-      await renderCommand(<Init />)
+      await renderCommand(<Setup />)
     })
 
   program

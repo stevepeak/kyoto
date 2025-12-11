@@ -15,11 +15,15 @@
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "catalog:",
+    "@ai-sdk/openai": "catalog:",
     "@app/agents": "workspace:^",
     "@app/shell": "workspace:^",
     "@app/types": "workspace:^",
     "@app/utils": "workspace:^",
     "@app/vectra": "workspace:^",
+    "@openrouter/ai-sdk-provider": "catalog:",
+    "ai": "catalog:",
     "commander": "^14.0.2",
     "execa": "catalog:",
     "ink": "^6.5.1",
@@ -27,7 +31,9 @@
     "ink-select-input": "^6.2.0",
     "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
+    "openai": "catalog:",
     "react": "^19.2.1",
+    "ts-dedent": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
