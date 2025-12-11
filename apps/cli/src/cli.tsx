@@ -8,11 +8,9 @@ import Init from './commands/init'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
 import VibeCheck from './commands/vibe/check'
-import { isExperimentalEnabled } from './helpers/config/get-ai-config'
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { createLogger } from './helpers/logging/logger'
-import { ComingSoon } from './ui/coming-soon'
 
 async function renderCommand(element: React.ReactElement): Promise<void> {
   try {
@@ -49,16 +47,11 @@ export async function run(argv = process.argv): Promise<void> {
     .command('mcp')
     .description('MCP command')
     .action(async () => {
-      const experimental = await isExperimentalEnabled()
-      if (!experimental) {
-        await renderCommand(<ComingSoon />)
-        return
-      }
       await renderCommand(<Mcp />)
     })
 
   program
-    .command('stage')
+    .command('commit')
     .description(
       'Analyze uncommitted changes and suggest how to organize them into logical commits',
     )

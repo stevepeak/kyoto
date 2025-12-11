@@ -18,6 +18,11 @@ const commandGroups = [
           ['kyoto vibe check --staged', 'Check only staged changes'],
         ],
       },
+      {
+        name: 'commit',
+        description: 'Use Kyoto AI to commit changes incrementally',
+        example: 'kyoto commit',
+      },
     ],
   },
   {
@@ -28,13 +33,6 @@ const commandGroups = [
         name: 'mcp',
         description: 'For your coding agent to vibe check themselves',
         example: 'kyoto mcp',
-        comingSoon: true,
-      },
-      {
-        name: 'stage',
-        description: 'Use Kyoto AI to stage changes incrementally',
-        example: 'kyoto stage',
-        comingSoon: true,
       },
     ],
   },
@@ -101,8 +99,6 @@ export default function Help(): React.ReactElement {
           <Text dimColor>{'─'.repeat(Math.min(terminalWidth - 2, 50))}</Text>
 
           {group.commands.map((command) => {
-            const isComingSoon = (command as { comingSoon?: boolean })
-              .comingSoon
             const shouldUseVertical =
               useVerticalLayout || terminalWidth < minWidthForHorizontal
 
@@ -110,36 +106,13 @@ export default function Help(): React.ReactElement {
               <Box key={command.name} flexDirection="column">
                 {shouldUseVertical ? (
                   <Box flexDirection="column">
-                    <Text color={isComingSoon ? 'grey' : 'red'}>
-                      {command.name}
-                    </Text>
-                    <Text>
-                      {isComingSoon ? (
-                        <>
-                          <Text dimColor>(Coming soon) </Text>
-                          {command.description}
-                        </>
-                      ) : (
-                        command.description
-                      )}
-                    </Text>
+                    <Text color="red">{command.name}</Text>
+                    <Text>{command.description}</Text>
                   </Box>
                 ) : (
                   <Box>
-                    <Text color={isComingSoon ? 'grey' : 'red'}>
-                      {command.name.padEnd(columnWidth)}
-                    </Text>
-                    <Text>
-                      {' '}
-                      {isComingSoon ? (
-                        <>
-                          <Text dimColor>(Coming soon) </Text>
-                          {command.description}
-                        </>
-                      ) : (
-                        command.description
-                      )}
-                    </Text>
+                    <Text color="red">{command.name.padEnd(columnWidth)}</Text>
+                    <Text>{command.description}</Text>
                   </Box>
                 )}
                 {'examples' in command && Array.isArray(command.examples) ? (
