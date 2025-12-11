@@ -16,6 +16,7 @@
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
+    "ai": "catalog:",
     "tsconfig": "workspace:*",
     "typescript": "catalog:"
   }

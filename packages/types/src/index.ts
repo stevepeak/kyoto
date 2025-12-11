@@ -1,3 +1,5 @@
+import { type LanguageModel } from 'ai'
+
 export type VibeCheckScope =
   | { type: 'commits'; commits: string[] }
   | { type: 'commit'; commit: string }
@@ -29,6 +31,7 @@ export interface VibeCheckReporter {
 export interface VibeCheckContext {
   gitRoot: string
   scope: VibeCheckScope
+  model: LanguageModel
 }
 
 export interface VibeCheckAgent {

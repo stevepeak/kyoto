@@ -55,8 +55,12 @@ export async function run(argv = process.argv): Promise<void> {
     .description(
       'Analyze uncommitted changes and suggest how to organize them into logical commits',
     )
-    .action(async () => {
-      await renderCommand(<Commit />)
+    .option(
+      '--dry-run',
+      'List the commit plan without making any changes (default behavior)',
+    )
+    .action(async (options: { dryRun?: boolean }) => {
+      await renderCommand(<Commit dryRun={options.dryRun ?? true} />)
     })
 
   program

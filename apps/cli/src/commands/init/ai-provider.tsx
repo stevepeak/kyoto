@@ -1,29 +1,16 @@
-import { findGitRoot, getCurrentBranch, getCurrentCommitSha } from '@app/shell'
+import { findGitRoot } from '@app/shell'
 import { Box, Text } from 'ink'
 import SelectInput from 'ink-select-input'
 import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
-import { readFile, writeFile } from 'node:fs/promises'
 import React, { useEffect, useMemo, useState } from 'react'
 
 import { pwdKyoto } from '../../helpers/config/find-kyoto-dir'
-import { getAiConfig } from '../../helpers/config/get-ai-config'
-import { updateDetailsJson } from '../../helpers/config/update-details-json'
+import { type Config, getConfig } from '../../helpers/config/get'
+import { updateConfigJson as updateConfig } from '../../helpers/config/update'
 import { useCliLogger } from '../../helpers/logging/logger'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
-
-interface DetailsJson {
-  latest?: {
-    sha: string
-    branch: string
-  }
-  ai?: {
-    provider: Provider
-    apiKey: string
-    model?: string
-  }
-}
 
 type Step =
   | 'check-existing'
@@ -63,14 +50,8 @@ export function AIProvider({
   const [inputValue, setInputValue] = useState('')
   const { logs, logger } = useCliLogger()
   const [error, setError] = useState<string | null>(null)
-  const [existingConfig, setExistingConfig] = useState<{
-    provider: Provider
-    model?: string
-  } | null>(null)
-  const [finalConfig, setFinalConfig] = useState<{
-    provider: Provider
-    model: string
-  } | null>(null)
+  const [existingConfig, setExistingConfig] = useState<Config | null>(null)
+  const [finalConfig, setFinalConfig] = useState<Config | null>(null)
 
   const providerLabel = useMemo(() => {
     switch (provider) {
@@ -89,7 +70,7 @@ export function AIProvider({
 
   const existingProviderLabel = useMemo(() => {
     if (!existingConfig) return ''
-    switch (existingConfig.provider) {
+    switch (existingConfig.ai.provider) {
       case 'openai':
         return 'OpenAI'
       case 'vercel':
@@ -111,21 +92,10 @@ export function AIProvider({
 
     const checkConfig = async (): Promise<void> => {
       try {
-        const config = await getAiConfig()
-        if (config) {
-          const configData = {
-            provider: config.provider,
-            model: config.model,
-          }
-          setExistingConfig(configData)
-          setFinalConfig({
-            provider: config.provider,
-            model: config.model || getDefaultModelForProvider(config.provider),
-          })
-          setStep('confirm-change')
-        } else {
-          setStep('select-provider')
-        }
+        const config = await getConfig()
+        setExistingConfig(config)
+        setFinalConfig(config)
+        setStep('confirm-change')
       } catch {
         setStep('select-provider')
       }
@@ -144,38 +114,25 @@ export function AIProvider({
         const gitRoot = await findGitRoot()
         const fsPaths = await pwdKyoto(gitRoot)
 
-        const detailsPath = fsPaths.config
-        let details: DetailsJson = {}
-
-        try {
-          const content = await readFile(detailsPath, 'utf-8')
-          details = JSON.parse(content) as DetailsJson
-        } catch {
-          details = {}
-        }
+        const configPath = fsPaths.config
+        const config: Partial<Config> = existingConfig
+          ? { ...existingConfig }
+          : {}
 
         const defaultModel = getDefaultModelForProvider(provider)
 
-        details.ai = {
-          provider,
-          apiKey,
-          model: defaultModel,
+        const finalConfigValue: Config = {
+          ...config,
+          ai: {
+            provider,
+            apiKey,
+            model: defaultModel,
+          },
         }
 
-        setFinalConfig({
-          provider,
-          model: defaultModel,
-        })
+        setFinalConfig(finalConfigValue)
 
-        await writeFile(
-          detailsPath,
-          JSON.stringify(details, null, 2) + '\n',
-          'utf-8',
-        )
-
-        const branch = await getCurrentBranch(gitRoot)
-        const sha = await getCurrentCommitSha(gitRoot)
-        await updateDetailsJson(detailsPath, branch, sha)
+        await updateConfig(configPath, null, null, finalConfigValue)
 
         setStep('done')
         onComplete()
@@ -197,7 +154,16 @@ export function AIProvider({
     }
 
     void save()
-  }, [apiKey, logger, onComplete, provider, providerLabel, state, step])
+  }, [
+    apiKey,
+    existingConfig,
+    logger,
+    onComplete,
+    provider,
+    providerLabel,
+    state,
+    step,
+  ])
 
   const handleApiSubmit = (value: string): void => {
     if (!value.trim()) {
@@ -220,7 +186,7 @@ export function AIProvider({
 
   if (state === 'completed') {
     const configToShow = finalConfig || existingConfig
-    const modelToShow = configToShow?.model
+    const modelToShow = configToShow?.ai.model
     const providerToShow = configToShow
       ? existingProviderLabel || providerLabel
       : providerLabel
@@ -258,7 +224,7 @@ export function AIProvider({
           </Text>
           <Text>
             <Text color="grey">- </Text>
-            <Text color="cyan"> {existingConfig.model}</Text>
+            <Text color="cyan"> {existingConfig.ai.model}</Text>
             <Text color="grey"> via </Text>
             <Text color="yellow">{existingProviderLabel}</Text>
           </Text>
@@ -280,12 +246,7 @@ export function AIProvider({
                   normalized === 'no'
                 ) {
                   if (existingConfig) {
-                    setFinalConfig({
-                      provider: existingConfig.provider,
-                      model:
-                        existingConfig.model ||
-                        getDefaultModelForProvider(existingConfig.provider),
-                    })
+                    setFinalConfig(existingConfig)
                   }
                   setError(null)
                   setStep('done')

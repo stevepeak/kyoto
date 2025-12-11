@@ -3,9 +3,10 @@ import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
 
 import { defaultVibeCheckAgents } from '../../agents'
-import { init } from '../../helpers/config/assert-cli-prerequisites'
+import { type LanguageModel } from '../../helpers/config/get-model'
 import { SummarizationAgent } from '../../helpers/display/summarization-agent'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
+import { init } from '../../helpers/init'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import { writePlanFile } from '../../helpers/vibe-check/plan'
 import { Jumbo } from '../../ui/jumbo'
@@ -26,6 +27,7 @@ export default function VibeCheck({
     gitRoot: string
     kyotoRoot: string
     scope: VibeCheckScope
+    model: LanguageModel
   } | null>(null)
   const [finalStates, setFinalStates] = useState<AgentRunState[] | null>(null)
   const [isSummarizing, setIsSummarizing] = useState(false)
@@ -35,7 +37,7 @@ export default function VibeCheck({
 
     const runCheck = async (): Promise<void> => {
       try {
-        const { fs, git } = await init({ requireAi: true })
+        const { fs, git, model } = await init()
 
         // Determine which files to check
         const changedTsFiles = await getChangedFiles({
@@ -99,6 +101,7 @@ export default function VibeCheck({
           gitRoot: fs.gitRoot,
           kyotoRoot: fs.root,
           scope: targetType,
+          model,
         })
       } catch (err) {
         if (cancelled) {
@@ -206,6 +209,7 @@ export default function VibeCheck({
         <SummarizationAgent
           agentStates={finalStates}
           gitRoot={context.gitRoot}
+          model={context.model}
           onComplete={handleSummarizationComplete}
           onError={handleSummarizationError}
         />

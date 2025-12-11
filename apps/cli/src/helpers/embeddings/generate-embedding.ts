@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 
-import { getAiConfig } from '../config/get-ai-config'
+import { getConfig } from '../config/get'
 
 interface GenerateEmbeddingOptions {
   /** The text to generate an embedding for */
@@ -16,13 +16,9 @@ interface GenerateEmbeddingOptions {
 export async function generateEmbedding({
   text,
 }: GenerateEmbeddingOptions): Promise<number[]> {
-  const aiConfig = await getAiConfig()
-
-  if (!aiConfig) {
-    throw new Error(
-      'AI configuration not found. Run `kyoto setup` to configure your AI provider.',
-    )
-  }
+  const config = await getConfig()
+  // config.ai is always present if getConfig() succeeds
+  const aiConfig = config.ai
 
   switch (aiConfig.provider) {
     case 'openai':

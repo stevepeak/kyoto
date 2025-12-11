@@ -92,7 +92,7 @@ export function Agent({
   }, [agent, context, onComplete, timeoutMinutes])
 
   return (
-    <Box width="75%">
+    <Box width="80%">
       <Text wrap="truncate">
         {state.status === 'running' ? (
           <Text color="red">

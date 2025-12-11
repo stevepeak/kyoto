@@ -2,68 +2,45 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { type LanguageModel } from 'ai'
-import { Text } from 'ink'
 
-import { type Logger } from '../../types/logger'
-import { getAiConfig } from './get-ai-config'
+import { type Config } from './get'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic' | 'auto'
 
-interface GetModelOptions {
+export { LanguageModel }
+
+interface ConstructModelOptions {
   model?: string
   provider?: Provider
-  logger?: Logger
 }
 
 /**
- * Gets the appropriate model configuration based on config.json or CLI arguments.
+ * Constructs a model instance from the provided config.
  *
  * Priority:
- * 1. CLI arguments (--model and --provider) - uses API key from config.json
+ * 1. CLI arguments (--model and --provider) - uses API key from config
  * 2. config.json configuration (.kyoto/config.json)
  *
- * @param options - Configuration options
- * @returns The model configuration (either a provider instance or a string for AI Gateway)
+ * @param config - The validated config from getConfig()
+ * @param options - Optional model and provider overrides
+ * @returns The model configuration
  */
-export async function getModel(options: GetModelOptions = {}): Promise<{
+export function constructModel(
+  config: Config,
+  options: ConstructModelOptions = {},
+): {
   model: LanguageModel
   provider: Provider
   modelId: string
-  apiKeySource: 'cli' | 'details' | 'none'
-}> {
-  const { model: cliModel, provider: cliProvider, logger } = options
-  // eslint-disable-next-line no-console
-  const log: Logger =
-    logger ||
-    ((message) => {
-      const text =
-        typeof message === 'string'
-          ? message
-          : typeof message === 'object' &&
-              message !== null &&
-              'toString' in message
-            ? String(message)
-            : JSON.stringify(message)
-      // eslint-disable-next-line no-console
-      console.log(text)
-    })
-
-  // Get config from config.json
-  const aiConfig = await getAiConfig()
+  apiKeySource: 'cli' | 'config' | 'none'
+} {
+  const { model: cliModel, provider: cliProvider } = options
+  // config.ai is always present if config is valid
+  const aiConfig = config.ai
 
   // If CLI arguments are provided, use them
   if (cliModel && cliProvider && cliProvider !== 'auto') {
-    if (!aiConfig || aiConfig.provider !== cliProvider) {
-      log(
-        <Text color="yellow">
-          {`⚠️  API key is required when using --provider ${cliProvider}\n`}
-        </Text>,
-      )
-      log(
-        <Text color="grey">
-          Please run `kyoto setup` to configure your API key.\n
-        </Text>,
-      )
+    if (aiConfig.provider !== cliProvider) {
       throw new Error(`API key is required for ${cliProvider} provider`)
     }
 
@@ -104,73 +81,41 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
     }
   }
 
-  // Get from config.json (should exist if init was called)
-  if (aiConfig) {
-    // Use model from config.json, CLI argument, or default
-    const modelToUse =
-      cliModel ||
-      aiConfig.model ||
-      getDefaultModelForProvider(aiConfig.provider)
-    if (aiConfig.provider === 'openai') {
-      return {
-        model: createOpenAI({ apiKey: aiConfig.apiKey })(modelToUse),
-        provider: 'openai',
-        modelId: modelToUse,
-        apiKeySource: 'details',
-      }
+  // Use model from CLI argument or config.json (model is required in config)
+  const modelToUse = cliModel || aiConfig.model
+
+  if (aiConfig.provider === 'openai') {
+    return {
+      model: createOpenAI({ apiKey: aiConfig.apiKey })(modelToUse),
+      provider: 'openai',
+      modelId: modelToUse,
+      apiKeySource: 'config',
     }
-    if (aiConfig.provider === 'openrouter') {
-      return {
-        model: createOpenRouter({ apiKey: aiConfig.apiKey })(modelToUse),
-        provider: 'openrouter',
-        modelId: modelToUse,
-        apiKeySource: 'details',
-      }
+  }
+  if (aiConfig.provider === 'openrouter') {
+    return {
+      model: createOpenRouter({ apiKey: aiConfig.apiKey })(modelToUse),
+      provider: 'openrouter',
+      modelId: modelToUse,
+      apiKeySource: 'config',
     }
-    if (aiConfig.provider === 'vercel') {
-      return {
-        model: createOpenAI({ apiKey: aiConfig.apiKey })(modelToUse),
-        provider: 'vercel',
-        modelId: modelToUse,
-        apiKeySource: 'details',
-      }
+  }
+  if (aiConfig.provider === 'vercel') {
+    return {
+      model: createOpenAI({ apiKey: aiConfig.apiKey })(modelToUse),
+      provider: 'vercel',
+      modelId: modelToUse,
+      apiKeySource: 'config',
     }
-    if (aiConfig.provider === 'anthropic') {
-      return {
-        model: createAnthropic({ apiKey: aiConfig.apiKey })(modelToUse),
-        provider: 'anthropic',
-        modelId: modelToUse,
-        apiKeySource: 'details',
-      }
+  }
+  if (aiConfig.provider === 'anthropic') {
+    return {
+      model: createAnthropic({ apiKey: aiConfig.apiKey })(modelToUse),
+      provider: 'anthropic',
+      modelId: modelToUse,
+      apiKeySource: 'config',
     }
   }
 
-  // No API keys found
-  log(
-    <Text color="yellow">
-      {'\n⚠️  No AI API key found. Please configure your AI provider.\n'}
-    </Text>,
-  )
-  log(
-    <Text color="grey">
-      Run `kyoto setup` to configure your AI provider and API key.\n
-    </Text>,
-  )
-
-  throw new Error('AI API key is required. Run `kyoto setup` to configure.')
-}
-
-function getDefaultModelForProvider(
-  provider: 'openai' | 'vercel' | 'openrouter' | 'anthropic',
-): string {
-  switch (provider) {
-    case 'openai':
-      return 'gpt-5-mini'
-    case 'openrouter':
-      return 'x-ai/grok-4.1-fast'
-    case 'vercel':
-      return 'openai/gpt-5-mini'
-    case 'anthropic':
-      return 'claude-3.5-sonnet'
-  }
+  throw new Error(`Unsupported provider: ${aiConfig.provider}`)
 }

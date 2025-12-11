@@ -1,5 +1,6 @@
 import { analyzePlanSummarization } from '@app/agents'
 import { type AgentRunState } from '@app/types'
+import { type LanguageModel } from 'ai'
 import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useRef, useState } from 'react'
@@ -10,6 +11,7 @@ import { statusColor } from './agent-status'
 interface SummarizationAgentProps {
   agentStates: AgentRunState[]
   gitRoot: string
+  model: LanguageModel
   onComplete: (markdown: string) => void
   onError: (error: string) => void
 }
@@ -17,6 +19,7 @@ interface SummarizationAgentProps {
 export function SummarizationAgent({
   agentStates,
   gitRoot,
+  model,
   onComplete,
   onError,
 }: SummarizationAgentProps): React.ReactElement {
@@ -48,6 +51,7 @@ export function SummarizationAgent({
           agentStates,
           gitRoot,
           options: {
+            model,
             progress: (message: string) => {
               updateState({ progress: message })
             },
@@ -65,12 +69,12 @@ export function SummarizationAgent({
         onError(message)
       }
     })()
-  }, [agentStates, gitRoot, onComplete, onError])
+  }, [agentStates, gitRoot, model, onComplete, onError])
 
   return (
     <Box flexDirection="column" marginTop={1}>
       <Header kanji="改善" title="Planing" />
-      <Box width="75%">
+      <Box width="80%">
         <Text wrap="truncate">
           {state.status === 'running' ? (
             <Text color="red">

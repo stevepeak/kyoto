@@ -3,11 +3,16 @@ import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useState } from 'react'
 
-import { init } from '../helpers/config/assert-cli-prerequisites'
-import { getModel } from '../helpers/config/get-model'
+import { init } from '../helpers/init'
 import { Jumbo } from '../ui/jumbo'
 
-export default function Commit(): React.ReactElement {
+interface CommitProps {
+  dryRun?: boolean
+}
+
+export default function Commit({
+  dryRun: _dryRun = true,
+}: CommitProps): React.ReactElement {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState<string>('Initializing...')
@@ -26,7 +31,7 @@ export default function Commit(): React.ReactElement {
 
     const runStage = async (): Promise<void> => {
       try {
-        const { git } = await init({ requireAi: true })
+        const { git, model } = await init()
 
         // Check if there are any changes
         if (!git.hasChanges) {
@@ -42,10 +47,6 @@ export default function Commit(): React.ReactElement {
           }
           return
         }
-
-        // Get model configuration
-        setProgress('Loading AI model...')
-        const { model } = await getModel()
 
         // Run the staging suggestions agent
         // Use 'unstaged' scope but the agent will analyze both staged and unstaged
