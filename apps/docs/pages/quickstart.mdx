@@ -23,11 +23,23 @@ pnpm install -g kyoto
 
 ## Setup
 
+Once the kyoto cli is installed, navigate to your
+git repository and setup kyoto via:
+
 ```sh shell
-kyoto init
+kyoto setup
 ```
 
+This command will guide you through:
+
+1. Adding `.kyoto` to your `.gitignore`
+2. Choosing your AI provider
+3. Setting up the [Kyoto MCP](/pages/integrations/mcp)
+4. Configuring a new [GitHub Action for Kyoto](/pages/integrations/github)
+
 ## Help
+
+View all the features and tooling Kyoto has to offer by calling:
 
 ```sh shell
 kyoto
@@ -58,8 +70,8 @@ stage      (Coming soon) Use Kyoto AI to stage changes incrementally
 
 設定 Configuring
 ──────────────────────────────────────────────────
-init       Design your Kyoto experience
-           $ kyoto init
+setup      Design your Kyoto experience
+           $ kyoto setup
 
 
 京Kyoto is crafted with intention on GitHub

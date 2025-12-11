@@ -1,19 +1,26 @@
 ---
 title: MCP
-description: Foobar
+description: Tools for agents to vibe check themselves.
 ---
 
-## MCP
+## Automatic Setup
 
-Kyoto helps clean up AI slop to reduce and prevent entropy in your app.
+<Tip>Use the kyoto cli to automatically setup</Tip>
 
-## Automatic
+```sh
+kyoto setup
+```
 
-<Tip>Use the `kyoto init` command to setup all the following</Tip>
+Follow the instructions to configure the MCP service which includes:
+
+- Adding Kyoto to `.cursor/mcp.json`
+- Creating a `.cursor/rules/kyoto.mdc` for agents to follow
 
 ## Manual Setup
 
-#### Register MCP
+First you need to register the MCP service, then give instructions to your agents to use them.
+
+**Register Kyoto's MCP**
 
 <CodeGroup>
 
@@ -30,7 +37,7 @@ Kyoto helps clean up AI slop to reduce and prevent entropy in your app.
 
 </CodeGroup>
 
-#### Add Rules to use MCP
+**Add agent rules**
 
 <CodeGroup>
 

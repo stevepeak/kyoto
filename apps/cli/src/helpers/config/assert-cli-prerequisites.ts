@@ -38,7 +38,7 @@ async function assertAiConfiguration(): Promise<void> {
   const fileExists = await detailsFileExists()
   if (!fileExists) {
     throw new Error(
-      'Kyoto project not initialized. Please run `kyoto init` to configure your AI provider and API key.',
+      'Kyoto project not initialized. Please run `kyoto setup` to configure your AI provider and API key.',
     )
   }
 
@@ -46,7 +46,7 @@ async function assertAiConfiguration(): Promise<void> {
   const aiConfig = await getAiConfig()
   if (!aiConfig) {
     throw new Error(
-      'AI configuration not found. Please run `kyoto init` to configure your AI provider and API key.',
+      'AI configuration not found. Please run `kyoto setup` to configure your AI provider and API key.',
     )
   }
 }

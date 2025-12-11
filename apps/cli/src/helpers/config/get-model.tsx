@@ -61,7 +61,7 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
       )
       log(
         <Text color="grey">
-          Please run `kyoto init` to configure your API key.\n
+          Please run `kyoto setup` to configure your API key.\n
         </Text>,
       )
       throw new Error(`API key is required for ${cliProvider} provider`)
@@ -153,11 +153,11 @@ export async function getModel(options: GetModelOptions = {}): Promise<{
   )
   log(
     <Text color="grey">
-      Run `kyoto init` to configure your AI provider and API key.\n
+      Run `kyoto setup` to configure your AI provider and API key.\n
     </Text>,
   )
 
-  throw new Error('AI API key is required. Run `kyoto init` to configure.')
+  throw new Error('AI API key is required. Run `kyoto setup` to configure.')
 }
 
 function getDefaultModelForProvider(

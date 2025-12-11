@@ -7,7 +7,7 @@ export const functionConsolidationAgent: VibeCheckAgent = {
   description:
     'Highlight opportunities to merge or extract shared helpers from similar functions',
   async run(context, reporter): Promise<VibeCheckResult> {
-    reporter.progress('Starting agent')
+    reporter.progress('Starting...')
 
     const result = await analyzeFunctionConsolidation({
       scope: context.scope,

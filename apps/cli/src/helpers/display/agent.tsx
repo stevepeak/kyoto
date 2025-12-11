@@ -90,16 +90,16 @@ export function Agent({
   }, [agent, context, onComplete])
 
   return (
-    <Box gap={1}>
-      {state.status === 'running' ? (
-        <Text color={statusColor[state.status]}>
-          <Spinner type="dots" />
-        </Text>
-      ) : (
-        <Text color={statusColor[state.status]}>•</Text>
-      )}
-      <Text>
-        {state.label} <Text color="grey">{state.progress ?? 'Pending...'}</Text>
+    <Box width="75%">
+      <Text wrap="truncate">
+        {state.status === 'running' ? (
+          <Text color="red">
+            <Spinner type="dots" />{' '}
+          </Text>
+        ) : (
+          <Text color={statusColor[state.status]}>• </Text>
+        )}
+        {state.label} <Text color="grey">{state.progress}</Text>
       </Text>
     </Box>
   )

@@ -7,7 +7,7 @@ import { init } from '../helpers/config/assert-cli-prerequisites'
 import { getModel } from '../helpers/config/get-model'
 import { Jumbo } from '../ui/jumbo'
 
-export default function Stage(): React.ReactElement {
+export default function Commit(): React.ReactElement {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState<string>('Initializing...')

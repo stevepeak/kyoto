@@ -115,7 +115,7 @@ export const myNewAgent: VibeCheckAgent = {
   label: 'My New Agent',
   description: 'What this agent does',
   async run(context, reporter): Promise<VibeCheckResult> {
-    reporter.progress('Starting agent')
+    reporter.progress('Starting...')
 
     const result = await analyzeMyNewAgent({
       scope: context.scope,

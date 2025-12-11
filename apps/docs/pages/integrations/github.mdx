@@ -3,4 +3,38 @@ title: GitHub Actions
 description: Foobar
 ---
 
-## GitHub Actions
+## Automatic Setup
+
+<Tip>Use the kyoto cli to automatically setup</Tip>
+
+```sh
+kyoto setup
+```
+
+Follow the instructions to configure the MCP service which includes:
+
+- Createing a GitHub Action at `.github/workflows/kyoto.yml`
+
+## Manual Setup
+
+Create your GitHub Action called `.github/workflows/kyoto.yml`
+
+```yml .github/workflows/kyoto.yml
+name: Kyoto
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npx kyoto vibe check
+```

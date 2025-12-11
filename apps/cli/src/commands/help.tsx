@@ -43,9 +43,9 @@ const commandGroups = [
     kanji: '設定',
     commands: [
       {
-        name: 'init',
+        name: 'setup',
         description: 'Design your Kyoto experience',
-        example: 'kyoto init',
+        example: 'kyoto setup',
       },
     ],
   },

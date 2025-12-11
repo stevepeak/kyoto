@@ -2,11 +2,11 @@ import { Command } from 'commander'
 import { render } from 'ink'
 import React from 'react'
 
+import Commit from './commands/commit'
 import Help from './commands/help'
 import Init from './commands/init'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
-import Stage from './commands/stage'
 import VibeCheck from './commands/vibe/check'
 import { isExperimentalEnabled } from './helpers/config/get-ai-config'
 import { handleError } from './helpers/error-handling/handle-error'
@@ -39,7 +39,7 @@ export async function run(argv = process.argv): Promise<void> {
   program.name('kyoto').description('Kyoto CLI')
 
   program
-    .command('init')
+    .command('setup')
     .description('Initialize Kyoto by configuring your AI provider and API key')
     .action(async () => {
       await renderCommand(<Init />)
@@ -63,7 +63,7 @@ export async function run(argv = process.argv): Promise<void> {
       'Analyze uncommitted changes and suggest how to organize them into logical commits',
     )
     .action(async () => {
-      await renderCommand(<Stage />)
+      await renderCommand(<Commit />)
     })
 
   program

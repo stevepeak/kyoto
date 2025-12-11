@@ -20,7 +20,7 @@ export async function generateEmbedding({
 
   if (!aiConfig) {
     throw new Error(
-      'AI configuration not found. Run `kyoto init` to configure your AI provider.',
+      'AI configuration not found. Run `kyoto setup` to configure your AI provider.',
     )
   }
 

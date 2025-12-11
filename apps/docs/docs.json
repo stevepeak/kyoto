@@ -16,7 +16,7 @@
       {
         "group": "Vibing",
         "icon": "wave",
-        "pages": ["pages/features/vibe", "pages/features/stage"]
+        "pages": ["pages/features/vibe", "pages/features/commit"]
       },
       {
         "group": "Tooling",
