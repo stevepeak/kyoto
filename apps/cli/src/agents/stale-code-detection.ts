@@ -12,6 +12,7 @@ export const staleCodeDetectionAgent: VibeCheckAgent = {
     const result = await analyzeStaleCodeDetection({
       scope: context.scope,
       options: {
+        model: context.model,
         progress: reporter.progress,
       },
     })

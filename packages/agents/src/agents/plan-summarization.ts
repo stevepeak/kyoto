@@ -13,10 +13,6 @@ import {
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-// Import agents config to avoid circular dependency
-// We only need the default model from discovery agent
-const DEFAULT_MODEL = 'openai/gpt-5-mini'
-
 export const planSummarizationOutputSchema = z.object({
   markdown: z
     .string()
@@ -27,9 +23,9 @@ type PlanSummarizationOutput = z.infer<typeof planSummarizationOutputSchema>
 interface AnalyzePlanSummarizationOptions {
   agentStates: AgentRunState[]
   gitRoot: string // Used implicitly by terminal commands (process.cwd())
-  options?: {
+  options: {
     maxSteps?: number
-    model?: LanguageModel
+    model: LanguageModel
     telemetryTracer?: Tracer
     progress?: (message: string) => void
   }
@@ -43,15 +39,8 @@ interface AnalyzePlanSummarizationOptions {
 export async function analyzePlanSummarization({
   agentStates,
   gitRoot: _gitRoot, // Terminal commands use process.cwd() which should be git root
-  options: {
-    maxSteps = 30,
-    model: providedModel,
-    telemetryTracer,
-    progress,
-  } = {},
+  options: { maxSteps = 30, model, telemetryTracer, progress },
 }: AnalyzePlanSummarizationOptions): Promise<PlanSummarizationOutput> {
-  const model = providedModel ?? DEFAULT_MODEL
-
   // Collect all findings with their agent context
   const allFindings: {
     agentLabel: string

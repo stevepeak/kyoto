@@ -12,6 +12,7 @@ export const secretDetectionAgent: VibeCheckAgent = {
     const result = await analyzeSecretDetection({
       scope: context.scope,
       options: {
+        model: context.model,
         progress: reporter.progress,
       },
     })

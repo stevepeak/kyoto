@@ -15,10 +15,6 @@ import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
 
-// Import agents config to avoid circular dependency
-// We only need the default model from discovery agent
-const DEFAULT_MODEL = 'openai/gpt-5-mini'
-
 export const staleCodeDetectionOutputSchema = z.object({
   findings: z.array(
     z.object({
@@ -33,9 +29,9 @@ type StaleCodeDetectionOutput = z.infer<typeof staleCodeDetectionOutputSchema>
 
 interface AnalyzeStaleCodeDetectionOptions {
   scope: VibeCheckScope
-  options?: {
+  options: {
     maxSteps?: number
-    model?: LanguageModel
+    model: LanguageModel
     telemetryTracer?: Tracer
     progress?: (message: string) => void
   }
@@ -48,14 +44,8 @@ interface AnalyzeStaleCodeDetectionOptions {
  */
 export async function analyzeStaleCodeDetection({
   scope,
-  options: {
-    maxSteps = 25,
-    model: providedModel,
-    telemetryTracer,
-    progress,
-  } = {},
+  options: { maxSteps = 25, model, telemetryTracer, progress },
 }: AnalyzeStaleCodeDetectionOptions): Promise<StaleCodeDetectionOutput> {
-  const model = providedModel ?? DEFAULT_MODEL
   const agent = new Agent({
     model,
     system: dedent`

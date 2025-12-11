@@ -12,6 +12,7 @@ export const functionConsolidationAgent: VibeCheckAgent = {
     const result = await analyzeFunctionConsolidation({
       scope: context.scope,
       options: {
+        model: context.model,
         progress: reporter.progress,
       },
     })

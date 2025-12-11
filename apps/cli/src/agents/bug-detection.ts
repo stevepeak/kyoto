@@ -12,6 +12,7 @@ export const bugDetectionAgent: VibeCheckAgent = {
     const result = await analyzeBugDetection({
       scope: context.scope,
       options: {
+        model: context.model,
         progress: reporter.progress,
       },
     })

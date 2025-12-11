@@ -13,9 +13,6 @@ import {
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-// Import agents config to avoid circular dependency
-const DEFAULT_MODEL = 'openai/gpt-5-mini'
-
 export const stagingSuggestionsOutputSchema = z.object({
   suggestions: z.array(
     z.object({
@@ -41,9 +38,9 @@ type StagingSuggestionsOutput = z.infer<typeof stagingSuggestionsOutputSchema>
 
 interface AnalyzeStagingSuggestionsOptions {
   scope: VibeCheckScope
-  options?: {
+  options: {
     maxSteps?: number
-    model?: LanguageModel
+    model: LanguageModel
     telemetryTracer?: Tracer
     progress?: (message: string) => void
   }
@@ -54,14 +51,8 @@ interface AnalyzeStagingSuggestionsOptions {
  * how to organize them into logical, sequential commits.
  */
 export async function analyzeStagingSuggestions({
-  options: {
-    maxSteps = 30,
-    model: providedModel,
-    telemetryTracer,
-    progress,
-  } = {},
+  options: { maxSteps = 30, model, telemetryTracer, progress },
 }: AnalyzeStagingSuggestionsOptions): Promise<StagingSuggestionsOutput> {
-  const model = providedModel ?? DEFAULT_MODEL
   const agent = new Agent({
     model,
     system: dedent`

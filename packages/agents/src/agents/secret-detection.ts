@@ -15,10 +15,6 @@ import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
 
-// Import agents config to avoid circular dependency
-// We only need the default model from discovery agent
-const DEFAULT_MODEL = 'openai/gpt-5-mini'
-
 export const secretDetectionOutputSchema = z.object({
   findings: z.array(
     z.object({
@@ -33,9 +29,9 @@ type SecretDetectionOutput = z.infer<typeof secretDetectionOutputSchema>
 
 interface AnalyzeSecretDetectionOptions {
   scope: VibeCheckScope
-  options?: {
+  options: {
     maxSteps?: number
-    model?: LanguageModel
+    model: LanguageModel
     telemetryTracer?: Tracer
     progress?: (message: string) => void
   }
@@ -47,14 +43,8 @@ interface AnalyzeSecretDetectionOptions {
  */
 export async function analyzeSecretDetection({
   scope,
-  options: {
-    maxSteps = 20,
-    model: providedModel,
-    telemetryTracer,
-    progress,
-  } = {},
+  options: { maxSteps = 20, model, telemetryTracer, progress },
 }: AnalyzeSecretDetectionOptions): Promise<SecretDetectionOutput> {
-  const model = providedModel ?? DEFAULT_MODEL
   const agent = new Agent({
     model,
     system: dedent`

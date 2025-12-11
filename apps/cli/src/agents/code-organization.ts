@@ -12,6 +12,7 @@ export const codeOrganizationAgent: VibeCheckAgent = {
     const result = await analyzeCodeOrganization({
       scope: context.scope,
       options: {
+        model: context.model,
         progress: reporter.progress,
       },
     })
