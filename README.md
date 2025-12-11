@@ -1,5 +1,3 @@
-> **ACTIVE DEVELOPMENT** Not yet released. But I'm building in public.
-
 ```sh
 入   |
 京   |
@@ -13,79 +11,28 @@
 **Kyoto is testing in the age of vibe.** Our goal is to monitor, write, test, maintain, and ensure
 your user functionalities remain working.
 
-1. **Write** user stories with `kyoto craft`
-2. (optional) **Develop** the feature with `kyoto create --using cursor`
-3. **Test** stories via `kyoto test`, or ...
+1. **Setup** Kyoto with `kyoto setup` to configure your AI provider and API key
+2. **Check** your changes with `kyoto vibe check` to test and diff user stories against staged changes
+3. **Commit** intelligently with `kyoto commit` to analyze uncommitted changes and organize them into logical commits
+4. **Plan** your work with `kyoto plan` to view the current plan
+5. **Documentation** is available via `kyoto docs`
 
-- `kyoto test --only browser` for browser simulation testing
-- `kyoto test --only mobile` for mobile simulation testing
-- `kyoto test --only tui` for terminal/cli simluation testing
-- `kyoto test --only trace` for ai deep-trace testing
+## Commands
 
-4. **Continiously** in GitHub Actions with `kyoto setup github`
-5. **Inquire** with "DeepWiki but for user stories" with `kyoto wiki`
+### Vibe Check
 
-## Vibe Coding
+Test and diff user stories against your changes:
 
-Kyoto works best with vibe coding. Enter `kyoto vibe`.
+- `kyoto vibe check` - Check all changes
+- `kyoto vibe check --staged` - Only check staged changes
+- `kyoto vibe check --timeout <minutes>` - Set timeout for each agent in minutes (default: 1)
 
-```sh
-入   |
-京   |
-行   |   Kyoto is watching file changes ...
-改   |
-善   |
-```
+### Commit
 
-Then you may add a new feature and ...
+Analyze uncommitted changes and organize them into logical commits:
 
-```sh
-か   |  + Customers can now rename their lists.
-```
-
-Or you may change one...
-
-```sh
-変   |  ~ Customer must add item before checkout button is visible.
-```
-
-Or remove a feature...
-
-```sh
-削   |  - No longer can a customer share their cart.
-```
-
-Or refactor a feature making sure it works
-
-```sh
-通   |  √ Passed: users can login
-通   |  √ Passed: users can create a new list
-```
-
-## MCP
-
-Kyoto MCP helps your IDE understand user stories.
-
-```json
-{
-  "mcpServers": {
-    "Kyoto": {
-      "command": "npx",
-      "args": ["kyoto", "mcp"]
-    }
-  }
-}
-```
-
-Then in a `.cursor/rules/...` add
-
-```
-Always use `kyoto` mcp to explore user stories and behaviors.
-```
-
-## Mission
-
-In the age of AI, many developers are vibe coding and not writing tests. We don't blame them. Instead, let's craft user stories and let AI review, simulate and test to ensure the functionality works as expected.
+- `kyoto commit` - Analyze and suggest commit organization (dry-run by default)
+- `kyoto commit --dry-run` - Explicitly run in dry-run mode (default behavior)
 
 ## Crafted with Intention
 
