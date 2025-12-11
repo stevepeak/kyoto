@@ -2,7 +2,7 @@ import { type AgentRunState, type VibeCheckSeverity } from '@app/types'
 import fs from 'fs/promises'
 import path from 'path'
 
-export interface PlanItem {
+interface PlanItem {
   id: string
   agentId: string
   agentLabel: string

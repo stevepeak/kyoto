@@ -1,7 +1,6 @@
-import { Box, Text, useApp } from 'ink'
+import { Box, useApp } from 'ink'
 import React, { useCallback, useState } from 'react'
 
-import { useCliLogger } from '../helpers/logging/logger'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
 import { AIProvider } from './init/ai-provider'
@@ -12,24 +11,9 @@ import { MCP } from './init/mcp'
 type Stage = 'gitignore' | 'ai-provider' | 'mcp' | 'github-workflow' | 'done'
 type ComponentState = 'pending' | 'active' | 'completed'
 
-function getReadyMessage(): React.ReactElement {
-  return (
-    <Text>
-      {'\n'}
-      <Text color="red">Kyoto is ready to vibe.</Text>
-      {'\n\nNext steps:\n  '}
-      <Text color="yellow">kyoto vibe</Text>
-      {'   - Continuous commit monitoring.\n  '}
-      <Text color="yellow">kyoto craft</Text>
-      {'  - Create a new user story.\n'}
-    </Text>
-  )
-}
-
-export default function Init(): React.ReactElement {
+export default function Setup(): React.ReactElement {
   const { exit } = useApp()
   const [stage, setStage] = useState<Stage>('gitignore')
-  const { logger } = useCliLogger()
 
   const handleGitIgnoreComplete = useCallback(() => {
     setStage('ai-provider')
@@ -44,11 +28,10 @@ export default function Init(): React.ReactElement {
   }, [])
 
   const handleGitHubWorkflowComplete = useCallback(async () => {
-    logger(getReadyMessage())
     setStage('done')
     await new Promise((resolve) => setTimeout(resolve, 1000))
     exit()
-  }, [exit, logger])
+  }, [exit])
 
   const getState = (componentStage: Stage): ComponentState => {
     if (stage === 'done') {
@@ -76,14 +59,14 @@ export default function Init(): React.ReactElement {
         state={getState('gitignore')}
         onComplete={handleGitIgnoreComplete}
       />
-      <AIProvider
-        state={getState('ai-provider')}
-        onComplete={handleAIProviderComplete}
-      />
       <MCP state={getState('mcp')} onComplete={handleMCPComplete} />
       <GitHubWorkflow
         state={getState('github-workflow')}
         onComplete={handleGitHubWorkflowComplete}
+      />
+      <AIProvider
+        state={getState('ai-provider')}
+        onComplete={handleAIProviderComplete}
       />
     </Box>
   )

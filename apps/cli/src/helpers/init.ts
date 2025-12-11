@@ -90,24 +90,3 @@ export async function init(): Promise<InitResult> {
     model,
   }
 }
-
-/**
- * Alias for init() that returns gitRoot and github for backward compatibility
- */
-export async function assertCliPrerequisites(): Promise<{
-  gitRoot: string
-  github?: { owner: string; repo: string } | null
-  config: Config
-  model: LanguageModel
-}> {
-  const result = await init()
-  return {
-    gitRoot: result.fs.gitRoot,
-    github:
-      result.git.owner && result.git.repo
-        ? { owner: result.git.owner, repo: result.git.repo }
-        : null,
-    config: result.config,
-    model: result.model,
-  }
-}
