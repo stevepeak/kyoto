@@ -11,6 +11,13 @@ interface ConfigJson {
     apiKey: string
     model?: string
   }
+  auth?: {
+    sessionToken: string
+    user: {
+      name: string
+      login: string
+    }
+  }
 }
 
 /**
