@@ -16,6 +16,7 @@ export {
   hasStagedChanges,
   isBranchClean,
 } from './git/get-git-status'
+export { runGit } from './git/run-git'
 
 // Tools
 export { createLocalReadFileTool, readLocalFile } from './tools/read-file-tool'
