@@ -153,7 +153,7 @@ export async function run(argv = process.argv): Promise<void> {
 
   vibeCommand
     .command('check')
-    .description('Test and diff user stories against staged changes')
+    .description('Check code for various issues before commiting to github')
     .option('--staged', 'Only check staged changes')
     .option(
       '--timeout <minutes>',
