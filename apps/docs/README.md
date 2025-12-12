@@ -17,21 +17,21 @@ The docs will be available at `http://localhost:3000`.
 ## Building
 
 ```bash
-# Build for production
+# Validate docs (broken internal links, etc.)
 bun run build
 
-# Preview production build
+# Run local preview server (same as dev, but doesn't auto-open the browser)
 bun run start
 ```
 
 ## Structure
 
-- `mint.json` - Mintlify configuration
-- `docs/` - Documentation markdown files
+- `docs.json` - Mintlify configuration
+- `pages/` - Documentation MDX files
 - `public/` - Static assets (logos, images, etc.)
 
 ## Adding Content
 
-1. Create markdown files in `docs/`
-2. Add navigation entries in `mint.json`
+1. Create MDX files in `pages/`
+2. Add navigation entries in `docs.json`
 3. Use MDX for React components if needed

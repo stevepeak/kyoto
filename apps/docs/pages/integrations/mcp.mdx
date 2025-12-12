@@ -5,7 +5,7 @@ description: Tools for agents to vibe check themselves.
 
 ## Automatic Setup
 
-<Tip>Use the kyoto cli to automatically setup</Tip>
+<Tip>Use the Kyoto CLI to automatically set this up</Tip>
 
 ```sh
 kyoto setup mcp
@@ -18,7 +18,7 @@ Follow the instructions to configure the MCP service which includes:
 
 ## Manual Setup
 
-First you need to register the MCP service, then give instructions to your agents to use them.
+First, register the MCP service, then give instructions to your agents to use it.
 
 **Register Kyoto's MCP**
 
@@ -29,7 +29,8 @@ First you need to register the MCP service, then give instructions to your agent
   "services": {
     "Kyoto": {
       "command": "npx",
-      "args": ["kyoyo", "mcp"]
+      "args": ["kyoto", "mcp"]
+    }
   }
 }
 ```

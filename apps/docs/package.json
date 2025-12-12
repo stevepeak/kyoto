@@ -5,11 +5,10 @@
   "description": "Kyoto documentation site",
   "type": "module",
   "scripts": {
-    "dev": "mintlify dev",
-    "build": "mintlify build",
-    "start": "mintlify start"
+    "dev": "mint dev"
   },
   "devDependencies": {
-    "mintlify": "^4.0.0"
+    "ajv": "catalog:",
+    "mint": "^4.0.0"
   }
 }
