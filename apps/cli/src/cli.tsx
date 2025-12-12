@@ -5,10 +5,13 @@ import React from 'react'
 import Commit from './commands/commit'
 import Docs from './commands/docs'
 import Help from './commands/help'
+import Login from './commands/login'
+import Logout from './commands/logout'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
 import Setup from './commands/setup'
 import VibeCheck from './commands/vibe/check'
+import Whoami from './commands/whoami'
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { createLogger } from './helpers/logging/logger'
@@ -42,6 +45,27 @@ export async function run(argv = process.argv): Promise<void> {
     .description('Initialize Kyoto by configuring your AI provider and API key')
     .action(async () => {
       await renderCommand(<Setup />)
+    })
+
+  program
+    .command('login')
+    .description('Authenticate with GitHub via the web app')
+    .action(async () => {
+      await renderCommand(<Login />)
+    })
+
+  program
+    .command('logout')
+    .description('Clear the current authentication session')
+    .action(async () => {
+      await renderCommand(<Logout />)
+    })
+
+  program
+    .command('whoami')
+    .description('Display information about the currently authenticated user')
+    .action(async () => {
+      await renderCommand(<Whoami />)
     })
 
   program
