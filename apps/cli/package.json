@@ -32,7 +32,7 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "build": "rm -rf dist && bun build ./src/cli.tsx --outdir dist --target bun --format esm --external react --external commander --external ink --external ink-link --external ink-select-input --external ink-spinner --external ink-text-input",
+    "build": "rm -rf dist && bun build ./src/cli.tsx --outdir dist --target bun --format esm --sourcemap --external react --external commander --external ink --external ink-link --external ink-select-input --external ink-spinner --external ink-text-input",
     "typecheck": "tsc --noEmit",
     "publish": "./scripts/publish.sh",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",

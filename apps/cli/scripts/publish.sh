@@ -43,7 +43,7 @@ echo -e "\033[0;36mPublishing version: \033[1;36m$VERSION\033[0m"
 echo ""
 echo -e "\033[0;36mBundling...\033[0m"
 echo -e "\033[0;36m─────────────────────────────────────────────────────────────\033[0m"
-rm -rf dist && bun build ./src/cli.tsx --outdir dist --target bun --format esm --external react --external commander --external ink --external ink-link --external ink-select-input --external ink-spinner --external ink-text-input
+bun run --cwd="$CLI_DIR" build
 
 # Create backup clone of package.json FIRST to recover in case of any error
 echo ""
