@@ -40,6 +40,7 @@
         "ink-spinner": "^5.0.0",
         "ink-text-input": "^6.0.0",
         "openai": "catalog:",
+        "posthog-node": "catalog:",
         "react": "^19.2.1",
         "ts-dedent": "catalog:",
         "zod": "catalog:",

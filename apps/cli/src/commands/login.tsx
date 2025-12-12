@@ -5,11 +5,6 @@ import { createServer } from 'node:http'
 import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
 
-import { getCliAnalyticsContext } from '../helpers/analytics/cli-analytics'
-import {
-  captureCliEvent,
-  shutdownCliAnalytics,
-} from '../helpers/analytics/posthog'
 import { openBrowser } from '../helpers/browser/open-browser'
 import { updateConfig } from '../helpers/config/update'
 import { ensureKyotoInGitignore } from '../helpers/git/ensure-kyoto-in-gitignore'
@@ -20,7 +15,7 @@ import { Link } from '../ui/link'
 const cliSessionResponseSchema = z.object({
   token: z.string(),
   userId: z.string(),
-  login: z.string().optional(),
+  login: z.string(),
   openrouterApiKey: z.string(),
   createdAtMs: z.number(),
 })
@@ -59,7 +54,7 @@ async function startCallbackServer(args: { expectedState: string }): Promise<{
 }> {
   const { expectedState } = args
 
-  let resolveCallback: ((v: { token: string; login?: string }) => void) | null =
+  let resolveCallback: ((v: { token: string; login: string }) => void) | null =
     null
   let rejectCallback: ((e: unknown) => void) | null = null
 
@@ -82,11 +77,17 @@ async function startCallbackServer(args: { expectedState: string }): Promise<{
 
       const state = url.searchParams.get('state') ?? ''
       const token = url.searchParams.get('token') ?? ''
-      const login = url.searchParams.get('login') ?? undefined
+      const login = url.searchParams.get('login') ?? ''
 
       if (!token) {
         res.statusCode = 400
         res.end('Missing token')
+        return
+      }
+
+      if (!login) {
+        res.statusCode = 400
+        res.end('Missing login')
         return
       }
 
@@ -205,26 +206,28 @@ export default function Login(): React.ReactElement {
 
         setStatus('saving')
         const session = await fetchCliSession({ webUrl, token: result.token })
+        const resolvedLogin = session.login ?? result.login ?? 'anonymous'
         await updateConfig({
           ai: {
             apiKey: session.openrouterApiKey,
           },
           user: {
+            login: resolvedLogin,
             sessionToken: session.token,
             userId: session.userId,
             openrouterApiKey: session.openrouterApiKey,
           },
         })
 
-        const analytics = await getCliAnalyticsContext()
-        if (analytics.enabled) {
-          captureCliEvent({
-            event: 'cli_login_succeeded',
-            distinctId: analytics.distinctId,
-            properties: {},
-          })
-          await shutdownCliAnalytics()
-        }
+        // const analytics = await getCliAnalyticsContext()
+        // if (analytics.enabled) {
+        //   captureCliEvent({
+        //     event: 'cli_login_succeeded',
+        //     distinctId: analytics.distinctId,
+        //     properties: {},
+        //   })
+        //   await shutdownCliAnalytics()
+        // }
 
         try {
           await ensureKyotoInGitignore()
@@ -232,7 +235,7 @@ export default function Login(): React.ReactElement {
           // Silent best-effort
         }
 
-        setLogin(result.login ?? null)
+        setLogin(resolvedLogin)
         setStatus('done')
         setTimeout(() => exit(), 250)
       } catch (e) {

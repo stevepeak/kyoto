@@ -13,13 +13,33 @@ import SetupAi from './commands/setup-ai'
 import SetupGithub from './commands/setup-github'
 import SetupMcp from './commands/setup-mcp'
 import VibeCheck from './commands/vibe/check'
+import { getCliAnalyticsContext } from './helpers/analytics/cli-analytics'
+import {
+  captureCliEvent,
+  shutdownCliAnalytics,
+} from './helpers/analytics/posthog'
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { createLogger } from './helpers/logging/logger'
 
-async function renderCommand(element: React.ReactElement): Promise<void> {
+async function renderCommand(args: {
+  commandName: string
+  commandOptions?: Record<string, unknown>
+  element: React.ReactElement
+}): Promise<void> {
+  const analytics = await getCliAnalyticsContext()
+
   try {
-    const app = render(element)
+    const app = render(args.element)
+    if (analytics.enabled) {
+      captureCliEvent({
+        event: args.commandName,
+        distinctId: analytics.distinctId,
+        properties: {
+          commandOptions: args.commandOptions ?? {},
+        },
+      })
+    }
     await app.waitUntilExit()
   } catch (error) {
     // Handle any unhandled errors at the top level
@@ -32,6 +52,8 @@ async function renderCommand(element: React.ReactElement): Promise<void> {
       },
     })
     process.exit(1)
+  } finally {
+    await shutdownCliAnalytics()
   }
 }
 
@@ -50,14 +72,17 @@ export async function run(argv = process.argv): Promise<void> {
     .command('mcp')
     .description('Add Kyoto to your MCP services')
     .action(async () => {
-      await renderCommand(<SetupMcp />)
+      await renderCommand({ commandName: 'setup_mcp', element: <SetupMcp /> })
     })
 
   setupCommand
     .command('github')
     .description('Add a GitHub Action for Kyoto')
     .action(async () => {
-      await renderCommand(<SetupGithub />)
+      await renderCommand({
+        commandName: 'setup_github',
+        element: <SetupGithub />,
+      })
     })
 
   // Intentionally not listed in `help.tsx`
@@ -65,50 +90,62 @@ export async function run(argv = process.argv): Promise<void> {
     .command('ai')
     .description('Configure your AI provider and API key')
     .action(async () => {
-      await renderCommand(<SetupAi />)
+      await renderCommand({ commandName: 'setup_ai', element: <SetupAi /> })
     })
 
   setupCommand.action(async () => {
-    await renderCommand(<Setup />)
+    await renderCommand({ commandName: 'setup', element: <Setup /> })
   })
 
   program
     .command('login')
     .description('Login via browser using GitHub OAuth')
     .action(async () => {
-      await renderCommand(<Login />)
+      await renderCommand({ commandName: 'login', element: <Login /> })
     })
 
   program
     .command('mcp')
     .description('MCP command')
     .action(async () => {
-      await renderCommand(<Mcp />)
+      await renderCommand({ commandName: 'mcp', element: <Mcp /> })
     })
 
   program
     .command('commit')
     .description('Plan and commit uncommitted changes into logical commits')
+    .argument(
+      '[instructions]',
+      'Optional instructions to guide how Kyoto groups changes and writes commit messages',
+    )
     .option(
       '--plan',
       'Generate and save a commit plan to .kyoto/commit-plan.json without committing',
     )
-    .action(async (options: { plan?: boolean }) => {
-      await renderCommand(<Commit plan={options.plan ?? false} />)
-    })
+    .action(
+      async (instructions: string | undefined, options: { plan?: boolean }) => {
+        await renderCommand({
+          commandName: 'commit',
+          commandOptions: options,
+          element: (
+            <Commit plan={options.plan ?? false} instructions={instructions} />
+          ),
+        })
+      },
+    )
 
   program
     .command('plan')
     .description('View the current plan')
     .action(async () => {
-      await renderCommand(<Plan />)
+      await renderCommand({ commandName: 'plan', element: <Plan /> })
     })
 
   program
     .command('docs')
     .description('View the Kyoto documentation')
     .action(async () => {
-      await renderCommand(<Docs />)
+      await renderCommand({ commandName: 'docs', element: <Docs /> })
     })
 
   const vibeCommand = program.command('vibe').description('Vibe check commands')
@@ -124,15 +161,19 @@ export async function run(argv = process.argv): Promise<void> {
     )
     .action(async (options: { staged?: boolean; timeout?: string }) => {
       const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
-      await renderCommand(
-        <VibeCheck staged={options.staged} timeoutMinutes={timeoutMinutes} />,
-      )
+      await renderCommand({
+        commandName: 'vibe_check',
+        commandOptions: options,
+        element: (
+          <VibeCheck staged={options.staged} timeoutMinutes={timeoutMinutes} />
+        ),
+      })
     })
 
   program.showHelpAfterError()
 
   if (argv.length <= 2) {
-    await renderCommand(<Help />)
+    await renderCommand({ commandName: 'help', element: <Help /> })
     return
   }
 

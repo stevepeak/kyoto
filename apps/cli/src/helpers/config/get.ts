@@ -22,6 +22,7 @@ export const schema = z.object({
     model: z.string().default('x-ai/grok-4.1-fast'),
   }),
   user: z.object({
+    login: z.string(),
     sessionToken: z.string(),
     userId: z.string(),
     openrouterApiKey: z.string(),
