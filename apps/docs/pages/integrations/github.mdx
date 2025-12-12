@@ -34,7 +34,7 @@ Run Kyoto in GitHub Actions to get vibe checks on your pull requests — ensurin
           checks: write
           contents: read
         env:
-          KYOTO_AI_TOKEN: ${{ secrets.KYOTO_AI_TOKEN }}
+          KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
         steps:
           - uses: actions/checkout@v4
           - uses: actions/setup-node@v4
@@ -48,10 +48,10 @@ Run Kyoto in GitHub Actions to get vibe checks on your pull requests — ensurin
 
 ## GitHub Actions Secrets
 
-Kyoto requires the `KYOTO_AI_TOKEN` secret to run in GitHub Actions.
+Kyoto requires the `KYOTO_TOKEN` secret to run in GitHub Actions.
 
 1. Go to your repository on [GitHub](https://github.com/)
 2. Navigate to **Settings** → **Secrets and variables** → **Actions**
 3. Click **"New repository secret"**
-4. Name: `KYOTO_AI_TOKEN`
+4. Name: `KYOTO_TOKEN`
 5. Call `kyoto setup github` to view the token value.

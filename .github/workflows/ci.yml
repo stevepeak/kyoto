@@ -41,7 +41,7 @@ jobs:
       checks: write
       contents: read
     env:
-      KYOTO_AI_TOKEN: ${{ secrets.KYOTO_AI_TOKEN }}
+      KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup

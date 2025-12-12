@@ -27,7 +27,7 @@ const createWorkflowContent = (): string => {
           checks: write
           contents: read
         env:
-          KYOTO_AI_TOKEN: \${{ secrets.KYOTO_AI_TOKEN }}
+          KYOTO_TOKEN: \${{ secrets.KYOTO_TOKEN }}
         steps:
           - uses: actions/checkout@v4
           - uses: actions/setup-node@v4
@@ -204,8 +204,8 @@ export function GitHubWorkflow({
         {apiKey ? (
           <Box flexDirection="column" marginTop={1}>
             <Text color="grey">
-              Don't forget to add <Text color="cyan">KYOTO_AI_TOKEN</Text> set
-              to <Text color="yellow">{apiKey}</Text> on your GitHub repository
+              Don't forget to add <Text color="cyan">KYOTO_TOKEN</Text> set to{' '}
+              <Text color="yellow">{apiKey}</Text> on your GitHub repository
               Actions secrets.{' '}
               {secretsUrl && (
                 <Text color="cyan">
@@ -250,7 +250,7 @@ export function GitHubWorkflow({
                   <Box width={12}>
                     <Text color="grey">2. Name:</Text>
                   </Box>
-                  <Text color="cyan">KYOTO_AI_TOKEN</Text>
+                  <Text color="cyan">KYOTO_TOKEN</Text>
                 </Box>
                 <Box flexDirection="row">
                   <Box width={12}>
@@ -271,7 +271,7 @@ export function GitHubWorkflow({
           <Box marginTop={1}>
             <Text color="grey">
               ⚠️ Could not read API key from config. You'll need to manually add
-              the <Text color="cyan">KYOTO_AI_TOKEN</Text> secret to your GitHub
+              the <Text color="cyan">KYOTO_TOKEN</Text> secret to your GitHub
               repository.
             </Text>
           </Box>

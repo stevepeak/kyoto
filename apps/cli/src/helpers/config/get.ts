@@ -33,7 +33,7 @@ export type Config = z.infer<typeof schema>
 
 /**
  * Gets the config from .kyoto/config.json and validates it.
- * Falls back to environment variables (KYOTO_AI_TOKEN) if config.json is missing.
+ * Falls back to environment variables (KYOTO_TOKEN) if config.json is missing.
  * Throws an error if the config is invalid or missing AI configuration.
  * @returns The validated config
  * @throws {Error} If config is missing or invalid
@@ -55,7 +55,7 @@ export async function getConfig(): Promise<Config> {
     // Config file doesn't exist or is invalid - check for environment variables
     // This is useful for GitHub Actions where config.json won't exist
     // eslint-disable-next-line no-process-env
-    const kyotoAiToken = process.env.KYOTO_AI_TOKEN
+    const kyotoAiToken = process.env.KYOTO_TOKEN
     if (kyotoAiToken) {
       // Create a minimal config from environment variables
       const envConfig: Config = {
