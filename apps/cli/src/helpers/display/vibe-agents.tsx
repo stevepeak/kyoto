@@ -50,7 +50,7 @@ export function VibeAgents({
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Header kanji="改善" title="Vibe checking" />
+      <Header kanji="空気を読む" title="Vibe checking" />
       {agents.map((agent) => (
         <Agent
           key={agent.id}

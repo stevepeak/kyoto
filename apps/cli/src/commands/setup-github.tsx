@@ -15,7 +15,7 @@ export default function SetupGithub(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Jumbo />
-      <Header kanji="改善" title="Setup GitHub Actions" />
+      <Header kanji="設" title="Setup GitHub Actions" />
       <GitHubWorkflow state="active" onComplete={handleComplete} />
     </Box>
   )

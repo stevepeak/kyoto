@@ -15,7 +15,7 @@ export default function SetupMcp(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Jumbo />
-      <Header kanji="改善" title="Setup MCP" />
+      <Header kanji="設" title="Setup MCP" />
       <MCP state="active" onComplete={handleComplete} />
     </Box>
   )

@@ -17,7 +17,7 @@ export default function Setup(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Jumbo />
-      <Header kanji="改善" title="Setup" />
+      <Header kanji="設" title="Setup" />
       <Box flexDirection="column" marginTop={1}>
         <Text>Run one of:</Text>
         <Text color="grey">

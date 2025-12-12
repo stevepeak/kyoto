@@ -15,7 +15,7 @@ export default function SetupAi(): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Jumbo />
-      <Header kanji="改善" title="Setup AI" />
+      <Header kanji="設" title="Setup AI" />
       <AIProvider state="active" onComplete={handleComplete} />
     </Box>
   )
