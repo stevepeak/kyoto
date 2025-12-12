@@ -1,4 +1,3 @@
-import { getConfig } from '@app/config'
 import {
   and,
   asc,
@@ -54,11 +53,24 @@ export interface CreateDbOptions {
   databaseUrl?: string
 }
 
+function resolveDatabaseUrl(options: CreateDbOptions): string {
+  // eslint-disable-next-line no-process-env
+  const url = options.databaseUrl ?? process.env.DATABASE_URL
+
+  // Allow builds/tests to import DB without requiring env.
+  // Connection is lazy until the first query, so this won't break `next build`.
+  if (!url) {
+    return 'postgresql://placeholder:placeholder@localhost:5432/kyoto'
+  }
+
+  return url
+}
+
 /**
  * Creates a Drizzle database client instance
  *
  * @param options - Optional configuration
- * @param options.databaseUrl - Database connection URL (defaults to config.DATABASE_URL)
+ * @param options.databaseUrl - Database connection URL (defaults to process.env.DATABASE_URL)
  * @returns Drizzle database client
  *
  * @example
@@ -72,8 +84,7 @@ export interface CreateDbOptions {
  * ```
  */
 export function createDb(options: CreateDbOptions = {}) {
-  const config = getConfig()
-  const client = postgres(options.databaseUrl ?? config.DATABASE_URL)
+  const client = postgres(resolveDatabaseUrl(options))
 
   return drizzle(client, { schema })
 }

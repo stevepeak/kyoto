@@ -20,7 +20,6 @@
     "fix": "eslint --fix --quiet --ignore-pattern='./migrations/' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@app/config": "workspace:*",
     "drizzle-orm": "catalog:",
     "postgres": "^3.4.5"
   },

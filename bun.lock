@@ -282,7 +282,6 @@
       "name": "@app/db",
       "version": "0.0.1",
       "dependencies": {
-        "@app/config": "workspace:*",
         "drizzle-orm": "catalog:",
         "postgres": "^3.4.5",
       },

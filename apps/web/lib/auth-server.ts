@@ -1,6 +1,6 @@
 import { headers } from 'next/headers'
 
-import { auth } from '@/lib/auth'
+import { getAuth } from '@/lib/auth'
 
 export async function getSession() {
   const headersList = await headers()
@@ -9,7 +9,7 @@ export async function getSession() {
     headersForAuth.set(key, value)
   }
 
-  const sessionResponse = await auth.api.getSession({
+  const sessionResponse = await getAuth().api.getSession({
     headers: headersForAuth,
   })
 

@@ -4,6 +4,18 @@
   "version": "0.0.0",
   "private": false,
   "description": "Kyoto",
+  "keywords": [
+    "ai",
+    "vibe-coding",
+    "vibe-check",
+    "development-tools",
+    "code-quality",
+    "code-review",
+    "code-analysis",
+    "developer-tools",
+    "mcp",
+    "ci"
+  ],
   "bin": {
     "kyoto": "./bin/kyoto.js"
   },
@@ -20,15 +32,9 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "generate:version": "bun run scripts/generate-version.ts",
-    "prebuild": "bun run scripts/generate-version.ts",
     "build": "rm -rf dist && bun build ./src/cli.tsx --outdir dist --target bun --format esm --external react --external commander --external ink --external ink-link --external ink-select-input --external ink-spinner --external ink-text-input",
-    "pretypecheck": "bun run scripts/generate-version.ts",
     "typecheck": "tsc --noEmit",
-    "prepack": "bun run build && bun run scripts/prepare-npm-package.ts",
-    "postpack": "bun run scripts/restore-package-json.ts",
-    "pack:dry": "npm pack --dry-run",
-    "publish:npm": "npm publish --access public",
+    "publish": "./scripts/publish.sh",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },

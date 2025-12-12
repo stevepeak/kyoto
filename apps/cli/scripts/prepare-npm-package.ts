@@ -53,15 +53,12 @@ async function prepareNpmPackage(): Promise<void> {
 
   const cliDir = join(scriptDirname, '..')
   const cliPackageJsonPath = join(cliDir, 'package.json')
-  const backupPath = join(cliDir, 'package.json.__prepack_backup__')
   const rootPackageJsonPath = join(cliDir, '../..', 'package.json')
 
   const [rawCliPackageJson, rawRootPackageJson] = await Promise.all([
     readFile(cliPackageJsonPath, 'utf8'),
     readFile(rootPackageJsonPath, 'utf8'),
   ])
-
-  await writeFile(backupPath, rawCliPackageJson, 'utf8')
 
   // Zod-validated JSON parsing (do not trust JSON shape at runtime)
   const rootPackageJson = RootPackageJsonSchema.parse(
