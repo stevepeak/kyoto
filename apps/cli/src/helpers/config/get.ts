@@ -33,6 +33,7 @@ export type Config = z.infer<typeof schema>
 
 /**
  * Gets the config from .kyoto/config.json and validates it.
+ * Falls back to environment variables (KYOTO_AI_TOKEN) if config.json is missing.
  * Throws an error if the config is invalid or missing AI configuration.
  * @returns The validated config
  * @throws {Error} If config is missing or invalid
@@ -50,6 +51,31 @@ export async function getConfig(): Promise<Config> {
     if (error instanceof Error && error.message.includes('not initialized')) {
       throw error
     }
+
+    // Config file doesn't exist or is invalid - check for environment variables
+    // This is useful for GitHub Actions where config.json won't exist
+    // eslint-disable-next-line no-process-env
+    const kyotoAiToken = process.env.KYOTO_AI_TOKEN
+    if (kyotoAiToken) {
+      // Create a minimal config from environment variables
+      const envConfig: Config = {
+        analytics: false,
+        experimental: false,
+        ai: {
+          provider: 'openrouter',
+          apiKey: kyotoAiToken,
+          model: 'x-ai/grok-4.1-fast',
+        },
+        user: {
+          login: 'github-actions',
+          sessionToken: '',
+          userId: '',
+          openrouterApiKey: kyotoAiToken,
+        },
+      }
+      return schema.parse(envConfig)
+    }
+
     // Config file doesn't exist or is invalid
     throw new Error(
       'Kyoto config is invalid. Please run `kyoto setup ai` to configure your AI provider and API key.',
