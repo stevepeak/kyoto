@@ -2,57 +2,6 @@ import { type AgentRunState, type VibeCheckSeverity } from '@app/types'
 import fs from 'fs/promises'
 import path from 'path'
 
-interface PlanItem {
-  id: string
-  agentId: string
-  agentLabel: string
-  severity: VibeCheckSeverity
-  message: string
-  path?: string
-  checked: boolean
-}
-
-const DEFAULT_TRUNCATION = 96
-
-export function truncate(
-  text: string,
-  maxLength: number = DEFAULT_TRUNCATION,
-): string {
-  if (text.length <= maxLength) {
-    return text
-  }
-  return `${text.slice(0, maxLength - 3)}...`
-}
-
-function formatFindingMessage(
-  findingMessage: string,
-  filePath?: string,
-): string {
-  const prefix = filePath ? `${filePath}: ` : ''
-  return truncate(`${prefix}${findingMessage}`)
-}
-
-export function collectPlanItems(states: AgentRunState[]): PlanItem[] {
-  const items: PlanItem[] = []
-
-  for (const state of states) {
-    const findings = state.result?.findings ?? []
-    findings.forEach((finding, index) => {
-      items.push({
-        id: `${state.id}-${index}`,
-        agentId: state.id,
-        agentLabel: state.label,
-        severity: finding.severity,
-        path: finding.path,
-        message: formatFindingMessage(finding.message, finding.path),
-        checked: true,
-      })
-    })
-  }
-
-  return items
-}
-
 function formatSeverity(severity: VibeCheckSeverity): string {
   return severity.toUpperCase()
 }
@@ -94,7 +43,7 @@ function formatAgentSection(state: AgentRunState): string {
   return lines.join('\n')
 }
 
-export function buildPlanMarkdown(states: AgentRunState[]): string {
+function buildPlanMarkdown(states: AgentRunState[]): string {
   return states.map(formatAgentSection).join('\n\n').trimEnd() + '\n'
 }
 

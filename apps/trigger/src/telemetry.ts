@@ -69,7 +69,3 @@ async function startSdk(): Promise<Tracer | undefined> {
 export async function setupTelemetry(): Promise<Tracer | undefined> {
   return await startSdk()
 }
-
-export function getTelemetryTracer(): Tracer | undefined {
-  return tracer
-}

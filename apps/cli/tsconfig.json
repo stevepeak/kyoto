@@ -1,7 +1,7 @@
 {
   "extends": "tsconfig/bun.json",
   "include": ["src"],
-  "exclude": ["**/node_modules", "**/.*/"],
+  "exclude": ["**/node_modules", "**/.*/", "scripts"],
   "compilerOptions": {
     "noImplicitOverride": false
   }

@@ -17,16 +17,9 @@
     "fix": "eslint --fix --quiet --ignore-pattern='.trigger' . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@app/agents": "workspace:*",
-    "@app/browserbase": "workspace:*",
-    "@app/cache": "workspace:*",
     "@app/config": "workspace:*",
-    "@app/daytona": "workspace:*",
     "@app/db": "workspace:*",
     "@app/posthog": "workspace:^",
-    "@app/schemas": "workspace:*",
-    "@browserbasehq/stagehand": "catalog:",
-    "@daytonaio/sdk": "catalog:",
     "@octokit/auth-app": "catalog:",
     "@octokit/rest": "catalog:",
     "@opentelemetry/api": "catalog:",
@@ -35,10 +28,7 @@
     "@sentry/opentelemetry": "catalog:",
     "@trigger.dev/sdk": "catalog:",
     "ai": "catalog:",
-    "diff": "catalog:",
     "import-in-the-middle": "catalog:",
-    "p-map": "catalog:",
-    "ts-dedent": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

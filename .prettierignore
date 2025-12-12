@@ -21,3 +21,4 @@ temp
 dist-types
 *.tsbuildinfo
 apps/web/components/ui
+apps/cli/src/generated

@@ -1,4 +1,4 @@
-export type AIProvider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
+type AIProvider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
 
 /**
  * Returns the default model for a given AI provider.

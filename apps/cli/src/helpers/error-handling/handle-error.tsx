@@ -3,7 +3,7 @@ import React from 'react'
 
 import { type Logger } from '../../types/logger'
 
-export interface ErrorContext {
+interface ErrorContext {
   logger: Logger
   setExitCode?: (code: number) => void
 }
@@ -130,28 +130,4 @@ export function handleError(error: unknown, context: ErrorContext): void {
       return
     }
   }
-}
-
-/**
- * Determines if an error should be handled at the command level
- * (e.g., file not found errors that are specific to a command)
- */
-export function shouldHandleInCommand(error: unknown): boolean {
-  if (!(error instanceof Error)) {
-    return false
-  }
-  const message = error.message.toLowerCase()
-  return (
-    message.includes('not found') ||
-    message.includes('path is not a file') ||
-    message.includes('path is not a directory')
-  )
-}
-
-/**
- * Determines if an error is critical and should stop processing
- * (e.g., API key errors, gateway errors that affect all operations)
- */
-export function isCriticalError(error: unknown): boolean {
-  return isApiKeyError(error) || isGatewayError(error)
 }

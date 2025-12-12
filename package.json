@@ -31,22 +31,17 @@
       "@trpc/server": "11.6.0",
       "@sindresorhus/is": "^7.1.1",
       "ai": "^5.0.107",
-      "diff": "^8.0.2",
       "drizzle-orm": "^0.45.0",
       "eslint": "^9.37.0",
       "execa": "^9.6.1",
       "import-in-the-middle": "^2.0.0",
-      "openai": "^6.9.1",
-      "p-map": "^7.0.4",
       "posthog-js": "^1.208.3",
       "posthog-node": "^5.13.2",
       "superjson": "^2.2.2",
-      "terminal-link": "^5.0.0",
       "ts-dedent": "^2.2.0",
       "typescript": "^5.9.3",
       "vectra": "^0.2.0",
-      "zod": "^3.24.1",
-      "zod-to-json-schema": "^3.24.6"
+      "zod": "^3.24.1"
     }
   },
   "bin": {

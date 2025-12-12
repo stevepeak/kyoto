@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const CommitPlanStepSchema = z.object({
+const CommitPlanStepSchema = z.object({
   order: z.number().int().positive(),
   commitMessage: z.string().min(1),
   files: z.array(z.string().min(1)),
@@ -14,4 +14,3 @@ export const CommitPlanSchema = z.object({
 })
 
 export type CommitPlan = z.infer<typeof CommitPlanSchema>
-export type CommitPlanStep = z.infer<typeof CommitPlanStepSchema>

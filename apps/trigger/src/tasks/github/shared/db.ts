@@ -253,61 +253,6 @@ export async function findRepoIdsByOwnerId(
   return rows.map((row) => row.id)
 }
 
-interface RepoLookupResult {
-  repoId: string
-  ownerId: string
-  repoName: string
-  ownerLogin: string
-  defaultBranch: string | null
-  enabled: boolean
-}
-
-export async function findRepoByOwnerAndName(
-  db: DbClient,
-  params: { ownerLogin: string; repoName: string },
-): Promise<RepoLookupResult | null> {
-  const repoRecord = await db
-    .select({
-      repoId: schema.repos.id,
-      ownerId: schema.repos.ownerId,
-      repoName: schema.repos.name,
-      defaultBranch: schema.repos.defaultBranch,
-      enabled: schema.repos.enabled,
-      ownerLogin: schema.owners.login,
-    })
-    .from(schema.repos)
-    .innerJoin(schema.owners, eq(schema.repos.ownerId, schema.owners.id))
-    .where(
-      and(
-        eq(schema.owners.login, params.ownerLogin),
-        eq(schema.repos.name, params.repoName),
-      ),
-    )
-    .limit(1)
-
-  const result = repoRecord[0]
-  return result ?? null
-}
-
-export async function findActiveRunForPr(
-  db: DbClient,
-  params: { repoId: string; prNumber: string },
-): Promise<{ id: string } | null> {
-  const runs = await db
-    .select({ id: schema.runs.id })
-    .from(schema.runs)
-    .where(
-      and(
-        eq(schema.runs.repoId, params.repoId),
-        eq(schema.runs.prNumber, params.prNumber),
-        eq(schema.runs.status, 'running'),
-      ),
-    )
-    .limit(1)
-
-  return runs[0] ?? null
-}
-
 export async function upsertOwnerRecord(
   db: DbClient,
   params: {

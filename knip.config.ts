@@ -30,7 +30,12 @@ const config: KnipConfig = {
     'apps/cli': {
       entry: ['src/cli.tsx', 'src/commands/**/*.tsx'],
       project: ['src/**/*.ts', 'src/**/*.tsx'],
-      ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts'],
+      ignore: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/*.d.ts',
+        'src/generated/**',
+      ],
     },
     'apps/trigger': {
       entry: ['trigger.config.ts'],

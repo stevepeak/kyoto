@@ -1,6 +1,6 @@
 import { getConfig } from '../config/get'
 
-export type CliAnalyticsContext =
+type CliAnalyticsContext =
   | { enabled: true; distinctId: string }
   | { enabled: false; distinctId: null }
 

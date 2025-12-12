@@ -53,66 +53,6 @@ export const installationRepositoriesEventSchema = z.object({
   sender: senderSchema,
 })
 
-const pushRepositoryOwnerSchema = z
-  .object({
-    login: z.string().optional(),
-    name: z.string().optional(),
-  })
-  .passthrough()
-
-const commitAuthorSchema = z
-  .object({
-    id: idSchema.optional(),
-    login: z.string().optional(),
-    name: z.string().optional(),
-    email: z.string().optional(),
-  })
-  .passthrough()
-
-const commitSchema = z
-  .object({
-    id: z.string().optional(),
-    message: z.string().optional(),
-    author: commitAuthorSchema.optional(),
-  })
-  .passthrough()
-
-export const pushEventSchema = z.object({
-  ref: z.string(),
-  before: z.string().describe('The SHA of the commit before the push'),
-  after: z.string().describe('The SHA of the commit after the push'),
-  repository: repositorySchema.extend({
-    owner: pushRepositoryOwnerSchema.optional(),
-  }),
-  commits: z.array(commitSchema).optional(),
-  head_commit: commitSchema,
-})
-
-const pullRequestUserSchema = z
-  .object({
-    login: z.string(),
-  })
-  .passthrough()
-
-export const pullRequestEventSchema = z.object({
-  action: z.string(),
-  number: z.number().int(),
-  repository: repositorySchema.extend({
-    owner: pushRepositoryOwnerSchema.optional(),
-  }),
-  pull_request: z.object({
-    number: z.number().int(),
-    head: z.object({
-      ref: z.string(),
-      sha: z.string().optional(),
-      repo: repositorySchema.extend({
-        owner: pushRepositoryOwnerSchema.optional(),
-      }),
-    }),
-    user: pullRequestUserSchema.optional(),
-  }),
-})
-
 export const installationTargetsEventSchema = z.object({
   action: z.enum(['renamed']),
   account: accountSchema,
