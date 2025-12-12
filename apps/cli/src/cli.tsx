@@ -5,6 +5,7 @@ import React from 'react'
 import Commit from './commands/commit'
 import Docs from './commands/docs'
 import Help from './commands/help'
+import Login from './commands/login'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
 import Setup from './commands/setup'
@@ -42,6 +43,17 @@ export async function run(argv = process.argv): Promise<void> {
     .description('Initialize Kyoto by configuring your AI provider and API key')
     .action(async () => {
       await renderCommand(<Setup />)
+    })
+
+  program
+    .command('login')
+    .description('Login via browser using GitHub OAuth')
+    .option(
+      '--web-url <url>',
+      'Kyoto web URL (default: KYOTO_WEB_URL or http://localhost:3002)',
+    )
+    .action(async (options: { webUrl?: string }) => {
+      await renderCommand(<Login webUrl={options.webUrl} />)
     })
 
   program

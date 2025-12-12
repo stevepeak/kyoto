@@ -46,7 +46,7 @@ export default function Docs(): React.ReactElement {
       }
     }
 
-    openDocs()
+    void openDocs()
   }, [exit])
 
   return (
