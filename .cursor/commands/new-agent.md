@@ -63,7 +63,7 @@ export async function analyzeMyNewAgent({
   }
 }) {
   const agent = new Agent({
-    model: model ?? 'openai/gpt-5-mini',
+    model,
     system: dedent`
       Your agent's system prompt here...
       ${buildRetrievalGuidance(scope)}
