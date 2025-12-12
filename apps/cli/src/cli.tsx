@@ -21,6 +21,7 @@ import {
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { createLogger } from './helpers/logging/logger'
+import { CLI_VERSION } from './generated/version'
 
 async function renderCommand(args: {
   commandName: string
@@ -61,7 +62,7 @@ export async function run(argv = process.argv): Promise<void> {
   await initializeCliLogFile()
   const program = new Command()
 
-  program.name('kyoto').description('Kyoto CLI')
+  program.name('kyoto').description('Kyoto CLI').version(CLI_VERSION)
 
   const setupCommand = program
     // TODO finish these later

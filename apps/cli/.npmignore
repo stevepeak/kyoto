@@ -1,0 +1,7 @@
+# Dev-only / source-only
+src
+scripts
+**/*.tsbuildinfo
+tsconfig.json
+
+

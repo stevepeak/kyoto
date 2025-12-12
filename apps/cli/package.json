@@ -1,16 +1,33 @@
 {
-  "name": "@app/cli",
+  "name": "@usekyoto/cli",
   "type": "module",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "description": "Kyoto",
   "bin": {
-    "kyoto": "./bin/dev.js"
+    "kyoto": "./bin/kyoto.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin/kyoto.js",
+    "dist/**",
+    "README.md"
+  ],
+  "engines": {
+    "bun": ">=1"
   },
   "scripts": {
     "clean": "rm -rf node_modules dist",
-    "build": "tsc",
+    "generate:version": "bun run scripts/generate-version.ts",
+    "prebuild": "bun run scripts/generate-version.ts",
+    "build": "rm -rf dist && tsc --noEmit false --outDir dist --rootDir src",
+    "pretypecheck": "bun run scripts/generate-version.ts",
     "typecheck": "tsc --noEmit",
+    "prepack": "bun run build",
+    "pack:dry": "npm pack --dry-run",
+    "publish:npm": "npm publish --access public",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
