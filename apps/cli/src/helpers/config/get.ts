@@ -1,13 +1,15 @@
 import { findGitRoot } from '@app/shell'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 
 import { pwdKyoto } from './find-kyoto-dir'
 
 const providerSchema = z.enum(['openai', 'vercel', 'openrouter', 'anthropic'])
 
+// * Do not exit this.
 export const schema = z.object({
-  experimental: z.boolean().optional(),
+  analytics: z.boolean().default(true),
+  experimental: z.boolean().default(false),
   latest: z
     .object({
       sha: z.string(),
@@ -15,9 +17,9 @@ export const schema = z.object({
     })
     .optional(),
   ai: z.object({
-    provider: providerSchema,
+    provider: providerSchema.default('openrouter'),
     apiKey: z.string(),
-    model: z.string(),
+    model: z.string().default('x-ai/grok-4.1-fast'),
   }),
   user: z.object({
     sessionToken: z.string(),
@@ -52,49 +54,4 @@ export async function getConfig(): Promise<Config> {
       'Kyoto config is invalid. Please run `kyoto setup ai` to configure your AI provider and API key.',
     )
   }
-}
-
-/**
- * Updates the user session token in the config (preserving other user fields).
- */
-export async function updateUserSessionToken(args: {
-  sessionToken: string
-}): Promise<void> {
-  const gitRoot = await findGitRoot()
-  const { config: configPath } = await pwdKyoto(gitRoot)
-  const content = await readFile(configPath, 'utf-8')
-  const config = schema.parse(JSON.parse(content))
-
-  config.user = {
-    sessionToken: args.sessionToken,
-    userId: config.user.userId,
-    openrouterApiKey: config.user.openrouterApiKey,
-  }
-
-  await writeFile(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
-}
-
-export async function updateUserAuth(args: {
-  sessionToken: string
-  userId: string
-  openrouterApiKey: string
-}): Promise<void> {
-  const gitRoot = await findGitRoot()
-  const { config: configPath } = await pwdKyoto(gitRoot)
-
-  const config = schema.parse({
-    experimental: false,
-    ai: {
-      provider: 'openrouter',
-      apiKey: args.openrouterApiKey,
-      model: 'x-ai/grok-4.1-fast',
-    },
-    user: {
-      sessionToken: args.sessionToken,
-      userId: args.userId,
-      openrouterApiKey: args.openrouterApiKey,
-    },
-  })
-
-  await writeFile(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
 }

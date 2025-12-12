@@ -1,14 +1,12 @@
-import { findGitRoot } from '@app/shell'
 import { Box, Text } from 'ink'
 import SelectInput from 'ink-select-input'
 import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import { pwdKyoto } from '../../helpers/config/find-kyoto-dir'
 import { type Config, getConfig } from '../../helpers/config/get'
 import { getDefaultModelForProvider } from '../../helpers/config/get-default-model'
-import { updateConfigJson as updateConfig } from '../../helpers/config/update'
+import { updateConfig } from '../../helpers/config/update'
 import { useCliLogger } from '../../helpers/logging/logger'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic'
@@ -136,26 +134,16 @@ export function AIProvider({
 
     const save = async (): Promise<void> => {
       try {
-        const gitRoot = await findGitRoot()
-        const fsPaths = await pwdKyoto(gitRoot)
-
-        const configPath = fsPaths.config
-
         const defaultModel = getDefaultModelForProvider(provider)
-
-        const finalConfigValue: Config = {
-          // TODO not assert this, but we do for now
-          ...existingConfig,
+        const config = await updateConfig({
           ai: {
             provider,
             apiKey,
             model: defaultModel,
           },
-        }
+        })
 
-        setFinalConfig(finalConfigValue)
-
-        await updateConfig(configPath, null, null, finalConfigValue)
+        setFinalConfig(config)
 
         setStep('done')
         onComplete()

@@ -5,8 +5,13 @@ import { createServer } from 'node:http'
 import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
 
+import { getCliAnalyticsContext } from '../helpers/analytics/cli-analytics'
+import {
+  captureCliEvent,
+  shutdownCliAnalytics,
+} from '../helpers/analytics/posthog'
 import { openBrowser } from '../helpers/browser/open-browser'
-import { updateUserAuth } from '../helpers/config/get'
+import { updateConfig } from '../helpers/config/update'
 import { ensureKyotoInGitignore } from '../helpers/git/ensure-kyoto-in-gitignore'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
@@ -200,11 +205,26 @@ export default function Login(): React.ReactElement {
 
         setStatus('saving')
         const session = await fetchCliSession({ webUrl, token: result.token })
-        await updateUserAuth({
-          sessionToken: session.token,
-          userId: session.userId,
-          openrouterApiKey: session.openrouterApiKey,
+        await updateConfig({
+          ai: {
+            apiKey: session.openrouterApiKey,
+          },
+          user: {
+            sessionToken: session.token,
+            userId: session.userId,
+            openrouterApiKey: session.openrouterApiKey,
+          },
         })
+
+        const analytics = await getCliAnalyticsContext()
+        if (analytics.enabled) {
+          captureCliEvent({
+            event: 'cli_login_succeeded',
+            distinctId: analytics.distinctId,
+            properties: {},
+          })
+          await shutdownCliAnalytics()
+        }
 
         try {
           await ensureKyotoInGitignore()

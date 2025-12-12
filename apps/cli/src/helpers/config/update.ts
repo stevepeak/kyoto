@@ -1,61 +1,56 @@
+import { findGitRoot } from '@app/shell'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
+import { type z } from 'zod'
 
-interface ConfigJson {
-  latest?: {
-    sha: string
-    branch: string
-  }
-  ai?: {
-    provider: string
-    apiKey: string
-    model?: string
-  }
-  user?: {
-    sessionToken: string
-    userId: string
-    openrouterApiKey: string
-  }
+import { pwdKyoto } from './find-kyoto-dir'
+import { type Config, schema } from './get'
+
+const patchSchema = schema.deepPartial()
+type ConfigPatch = z.input<typeof patchSchema>
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-/**
- * Updates the .kyoto/config.json file with the latest branch and commit SHA
- */
-export async function updateConfigJson(
-  configPath: string,
-  branch: string | null,
-  sha: string | null,
-  config?: ConfigJson,
-): Promise<void> {
-  let configToWrite: ConfigJson = config ?? {}
+function deepMerge(base: unknown, patch: unknown): unknown {
+  if (patch === undefined) return base
+  if (!isRecord(base) || !isRecord(patch)) return patch
 
-  // If config not provided, read existing config.json if it exists
-  if (!config) {
+  const out: Record<string, unknown> = { ...base }
+  for (const [key, value] of Object.entries(patch)) {
+    out[key] = deepMerge(base[key], value)
+  }
+  return out
+}
+
+export async function updateConfig(update: ConfigPatch): Promise<Config> {
+  const gitRoot = await findGitRoot()
+  const { config: configPath } = await pwdKyoto(gitRoot)
+
+  // Load current config.json (best effort) and validate it
+  let existing: unknown = {}
+  try {
+    const content = await readFile(configPath, 'utf-8')
+    let json: unknown = null
     try {
-      const content = await readFile(configPath, 'utf-8')
-      configToWrite = JSON.parse(content) as ConfigJson
+      json = JSON.parse(content)
     } catch {
-      // File doesn't exist or is invalid, start with empty object
-      configToWrite = {}
+      json = null
     }
+    const parsed = schema.safeParse(json)
+    existing = parsed.success ? parsed.data : {}
+  } catch {
+    existing = {}
   }
 
-  // Update the latest field
-  if (branch && sha) {
-    configToWrite.latest = {
-      sha,
-      branch,
-    }
-  }
+  const patch = patchSchema.parse(update)
+  const updatedConfig = deepMerge(existing, patch)
+  const config = schema.parse(updatedConfig)
 
   // Ensure .kyoto directory exists
-  const kyotoDir = dirname(configPath)
-  await mkdir(kyotoDir, { recursive: true })
+  await mkdir(dirname(configPath), { recursive: true })
 
-  // Write the config
-  await writeFile(
-    configPath,
-    JSON.stringify(configToWrite, null, 2) + '\n',
-    'utf-8',
-  )
+  await writeFile(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8')
+  return config
 }
