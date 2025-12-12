@@ -88,15 +88,13 @@ export async function run(argv = process.argv): Promise<void> {
 
   program
     .command('commit')
-    .description(
-      'Analyze uncommitted changes and suggest how to organize them into logical commits',
-    )
+    .description('Plan and commit uncommitted changes into logical commits')
     .option(
-      '--dry-run',
-      'List the commit plan without making any changes (default behavior)',
+      '--plan',
+      'Generate and save a commit plan to .kyoto/commit-plan.json without committing',
     )
-    .action(async (options: { dryRun?: boolean }) => {
-      await renderCommand(<Commit dryRun={options.dryRun ?? true} />)
+    .action(async (options: { plan?: boolean }) => {
+      await renderCommand(<Commit plan={options.plan ?? false} />)
     })
 
   program
