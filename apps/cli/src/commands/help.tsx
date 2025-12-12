@@ -37,6 +37,14 @@ const commandGroups = [
           ],
         ],
       },
+      {
+        name: 'diff',
+        description:
+          'Analyze and summarize staged and unstaged git changes to understand what you are working on',
+        example: [
+          ['kyoto diff', 'Get a concise summary of your current changes'],
+        ],
+      },
     ],
   },
   // TODO finish these later

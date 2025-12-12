@@ -1,0 +1,33 @@
+---
+title: Diff
+description: Analyze and summarize your staged and unstaged git changes to understand what you're working on.
+---
+
+Get a quick summary of what you're currently working on by analyzing both staged and unstaged changes.
+
+## Usage
+
+```sh
+kyoto diff
+```
+
+This command analyzes your git changes and provides a concise summary of your work in progress.
+
+## Example output
+
+```sh
+入   |
+京   |
+行   |  Kyoto • The way of the vibe.
+改   |
+善   |
+
+
+Summary:
+
+The developer is integrating GitHub Checks API support into CLI agents for bug detection, code organization, function consolidation,
+secret detection, and stale code detection to enable inline annotations and check runs in GitHub Actions. Key changes include adding
+GitHub context (owner/repo/sha/token) to agent options and VibeCheck, implementing `createGitHubChecksTool` for creating check runs,
+updating agent prompts to use it, and adding GitHub env detection. A new 'diff' CLI command is also added to analyze staged/unstaged git
+changes, enhancing CI/CD feedback in PRs.
+```

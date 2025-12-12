@@ -4,6 +4,7 @@ import { render } from 'ink'
 import React from 'react'
 
 import Commit from './commands/commit'
+import Diff from './commands/diff'
 import Docs from './commands/docs'
 import Help from './commands/help'
 import Login from './commands/login'
@@ -163,6 +164,13 @@ export async function run(argv = process.argv): Promise<void> {
     .description('View the Kyoto documentation')
     .action(async () => {
       await renderCommand({ commandName: 'docs', element: <Docs /> })
+    })
+
+  program
+    .command('diff')
+    .description('Analyze and summarize staged and unstaged git changes')
+    .action(async () => {
+      await renderCommand({ commandName: 'diff', element: <Diff /> })
     })
 
   const vibeCommand = program.command('vibe').description('Vibe check commands')

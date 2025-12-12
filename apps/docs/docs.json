@@ -17,7 +17,11 @@
       {
         "group": "Vibing",
         "icon": "wave",
-        "pages": ["pages/features/vibe", "pages/features/commit"]
+        "pages": [
+          "pages/features/vibe",
+          "pages/features/commit",
+          "pages/features/diff"
+        ]
       },
       {
         "group": "Tooling",
