@@ -1,3 +1,4 @@
+import { findGitRoot, getGitHubInfo } from '@app/shell'
 import { Command } from 'commander'
 import { render } from 'ink'
 import React from 'react'
@@ -33,11 +34,24 @@ async function renderCommand(args: {
   try {
     const app = render(args.element)
     if (analytics.enabled) {
+      // Get GitHub slug for tracking (best effort, don't fail if unavailable)
+      let repo: string | undefined
+      try {
+        const gitRoot = await findGitRoot()
+        const githubInfo = await getGitHubInfo(gitRoot)
+        if (githubInfo) {
+          repo = `${githubInfo.owner}/${githubInfo.repo}`
+        }
+      } catch {
+        // Ignore errors - GitHub info is optional for tracking
+      }
+
       captureCliEvent({
         event: args.commandName,
         distinctId: analytics.distinctId,
         properties: {
           commandOptions: args.commandOptions ?? {},
+          repo,
         },
       })
     }
@@ -162,6 +176,11 @@ export async function run(argv = process.argv): Promise<void> {
     )
     .action(async (options: { staged?: boolean; timeout?: string }) => {
       const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
+      // Print headers before Ink renders to prevent duplication on resize
+      const { printJumboHeader, printSectionHeader } =
+        await import('./ui/jumbo-print')
+      printJumboHeader()
+      printSectionHeader({ kanji: 'ノリ', title: 'Vibe checking' })
       await renderCommand({
         commandName: 'vibe_check',
         commandOptions: options,
