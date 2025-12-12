@@ -8,7 +8,6 @@
     "dev": "mint dev"
   },
   "devDependencies": {
-    "ajv": "catalog:",
     "mint": "^4.0.0"
   }
 }
