@@ -18,6 +18,9 @@ export const schema = z.object({
     apiKey: z.string(),
     model: z.string(),
   }),
+  auth: z.object({
+    sessionToken: z.string(),
+  }).optional(),
   experimental: z.boolean().optional(),
 })
 
