@@ -20,6 +20,7 @@ export async function ensureOpenRouterApiKey({
     where: eq(schema.user.id, userId),
     columns: {
       id: true,
+      login: true,
       openrouterApiKey: true,
     },
   })
@@ -53,11 +54,10 @@ export async function ensureOpenRouterApiKey({
       apiKey: provisioningKey,
     })
 
-    // Create new API key with $1/month budget
-    // Assuming 1 credit = $0.01, so $1 = 100 credits
+    // Create new API key
     const newKey = await openRouter.apiKeys.create({
-      name: `User-${userId}-Key`,
-      limit: 100, // $1 budget
+      name: `User-${user.login}-${userId}`,
+      limit: 1, // $1 budget
       limitReset: 'monthly',
     })
 
