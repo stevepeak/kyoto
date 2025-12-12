@@ -1,9 +1,9 @@
 import { Box, useApp } from 'ink'
 import React, { useCallback } from 'react'
 
-import { MCP } from './init/mcp'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
+import { MCP } from './init/mcp'
 
 export default function SetupMcp(): React.ReactElement {
   const { exit } = useApp()

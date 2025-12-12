@@ -1,9 +1,9 @@
 import { Box, useApp } from 'ink'
 import React, { useCallback } from 'react'
 
-import { AIProvider } from './init/ai-provider'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
+import { AIProvider } from './init/ai-provider'
 
 export default function SetupAi(): React.ReactElement {
   const { exit } = useApp()

@@ -1,9 +1,9 @@
 import { Box, useApp } from 'ink'
 import React, { useCallback } from 'react'
 
-import { GitHubWorkflow } from './init/github-workflow'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
+import { GitHubWorkflow } from './init/github-workflow'
 
 export default function SetupGithub(): React.ReactElement {
   const { exit } = useApp()
