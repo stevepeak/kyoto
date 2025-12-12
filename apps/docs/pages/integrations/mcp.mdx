@@ -8,7 +8,7 @@ description: Tools for agents to vibe check themselves.
 <Tip>Use the kyoto cli to automatically setup</Tip>
 
 ```sh
-kyoto setup
+kyoto setup mcp
 ```
 
 Follow the instructions to configure the MCP service which includes:
@@ -24,8 +24,7 @@ First you need to register the MCP service, then give instructions to your agent
 
 <CodeGroup>
 
-```json Cursor
-// .cursor/mcp.json
+```json .cursor/mcp.json
 {
   "services": {
     "Kyoto": {
@@ -41,8 +40,13 @@ First you need to register the MCP service, then give instructions to your agent
 
 <CodeGroup>
 
-```md Cursor
+```md .cursor/rules/kyoto.mdc
+---
+description: Kyoto MCP rules for vibe checking AI code
+alwaysApply: true
+---
 
+Use the Kyoto MCP tool once your work is complete to ensure it aligns with best coding practices.
 ```
 
 </CodeGroup>

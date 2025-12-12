@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: bunx kyoto vibe check
+      - run: bunx @usekyoto/cli vibe check
 
   build:
     runs-on: ubuntu-latest

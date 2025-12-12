@@ -111,13 +111,13 @@ export function MCP({ state, onComplete }: MCPProps): React.ReactElement {
 
           const kyotoMdcPath = join(cursorRulesPath, 'kyoto.mdc')
           const kyotoMdcContent = dedent`
-                ---
-                description: Kyoto MCP rules for vibe checking AI code
-                alwaysApply: true
-                ---
+            ---
+            description: Kyoto MCP rules for vibe checking AI code
+            alwaysApply: true
+            ---
 
-                Use the Kyoto MCP tool once your work is complete to ensure it aligns with best coding practices.
-            `
+            Use the Kyoto MCP tool once your work is complete to ensure it aligns with best coding practices.
+          `
           await writeFile(kyotoMdcPath, kyotoMdcContent, 'utf-8')
 
           setConfiguredFiles((prev) => {

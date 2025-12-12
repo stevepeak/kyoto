@@ -13,6 +13,7 @@
   "navigation": {
     "pages": [
       "pages/quickstart",
+      "pages/roadmap",
       {
         "group": "Vibing",
         "icon": "wave",

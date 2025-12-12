@@ -8,7 +8,7 @@ description: Foobar
 <Tip>Use the kyoto cli to automatically setup</Tip>
 
 ```sh
-kyoto setup
+kyoto setup github
 ```
 
 Follow the instructions to configure the MCP service which includes:
@@ -36,5 +36,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npx kyoto vibe check
+      - run: npx @usekyoto/cli vibe check
 ```

@@ -1,41 +1,71 @@
 ---
 title: Quick Start
-description: Get started with Kyoto
+description: Getting started with Kyoto
 ---
 
-## Install
-
-<CodeGroup>
-
-```sh bun
-bun install -g kyoto
+```sh
+入   |
+京   |
+行   |  Kyoto • May the vibe be with you.
+改   |
+善   |
 ```
 
-```sh npm
-npm install -g kyoto
-```
+<p align="center">
+  <sub>
+    `入` Enter `京` Kyoto to `行` take action towards `改 善` cotininous
+    improvement.
+  </sub>
+</p>
 
-```sh pnpm
-pnpm install -g kyoto
-```
+We are crafting **Kyoto** to be the missing vibe coding tool. Today, we offer
+the `vibe check` tool that runs several agents focused on fixing ai generated slop
+and prevent entropy in your code base so you can remain productive
+with vibe coding.
 
-</CodeGroup>
+<Info>
+  Kyoto is **free** with special thanks to `x-ai/grok-4.1-fast` via
+  [OpenRouter](https://openrouter.ai/).
+</Info>
 
-## Setup
+Get started quickly with Kyoto simply by installing the CLI and logging in.
 
-Once the kyoto cli is installed, navigate to your
-git repository and setup kyoto via:
+<Steps>
+  <Step title="Install">
+    <CodeGroup>
 
-```sh shell
-kyoto setup
-```
+    ```sh npm
+    npm install -g @usekyoto/cli
+    ```
 
-This command will guide you through:
+    ```sh bun
+    bun install -g @usekyoto/cli
+    ```
 
-1. Adding `.kyoto` to your `.gitignore`
-2. Choosing your AI provider
-3. Setting up the [Kyoto MCP](/pages/integrations/mcp)
-4. Configuring a new [GitHub Action for Kyoto](/pages/integrations/github)
+    ```sh pnpm
+    pnpm install -g @usekyoto/cli
+    ```
+
+    </CodeGroup>
+
+  </Step>
+  <Step title="Login">
+    From within your git repository, login to Kyoto via:
+
+    ```sh
+    kyoto login
+    ```
+
+  </Step>
+  <Step title="Vibe">
+    You are ready to vibe check your code.
+
+    ```sh
+    kyoto vibe check
+    ```
+
+  </Step>
+</Steps>
 
 ## Help
 
