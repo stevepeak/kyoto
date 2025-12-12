@@ -8,6 +8,8 @@ import { db } from '@/lib/db'
 const config = getConfig()
 
 export const auth = betterAuth({
+  baseURL: config.APP_URL,
+  secret: config.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,
