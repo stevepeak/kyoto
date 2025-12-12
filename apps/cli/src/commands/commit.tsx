@@ -1,37 +1,41 @@
-import { analyzeStagingSuggestions } from '@app/agents'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useState } from 'react'
 
+import { type CommitPlan } from '../helpers/commit/commit-plan'
+import {
+  readCommitPlanFile,
+  writeCommitPlanFile,
+} from '../helpers/commit/commit-plan-file'
+import { createCommitPlan } from '../helpers/commit/create-commit-plan'
+import { executeCommitPlan } from '../helpers/commit/execute-commit-plan'
 import { init } from '../helpers/init'
 import { Jumbo } from '../ui/jumbo'
 
 interface CommitProps {
-  dryRun?: boolean
+  plan?: boolean
 }
 
 export default function Commit({
-  dryRun: _dryRun = true,
+  plan: shouldOnlyPlan = false,
 }: CommitProps): React.ReactElement {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState<string>('Initializing...')
   const [error, setError] = useState<string | null>(null)
-  const [suggestions, setSuggestions] = useState<
-    {
-      order: number
-      commitMessage: string
-      files: string[]
-      reasoning?: string
-    }[]
-  >([])
+  const [commitPlanPath, setCommitPlanPath] = useState<string | null>(null)
+  const [plan, setPlan] = useState<CommitPlan | null>(null)
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [currentOrder, setCurrentOrder] = useState<number | null>(null)
+  const [completedOrders, setCompletedOrders] = useState<number[]>([])
 
   useEffect(() => {
     let cancelled = false
 
     const runStage = async (): Promise<void> => {
       try {
-        const { git, model } = await init()
+        const { git, model, fs } = await init()
+        setCommitPlanPath(fs.commitPlan)
 
         // Check if there are any changes
         if (!git.hasChanges) {
@@ -48,34 +52,100 @@ export default function Commit({
           return
         }
 
-        // Run the staging suggestions agent
-        // Use 'unstaged' scope but the agent will analyze both staged and unstaged
-        setProgress('Analyzing uncommitted changes...')
-        const result = await analyzeStagingSuggestions({
-          scope: { type: 'unstaged' },
-          options: {
+        if (shouldOnlyPlan) {
+          setProgress('Analyzing uncommitted changes...')
+          const newPlan = await createCommitPlan({
             model,
-            progress: (message) => {
+            onProgress: (message) => {
               if (!cancelled) {
                 setProgress(message)
               }
             },
+          })
+
+          await writeCommitPlanFile({
+            commitPlanPath: fs.commitPlan,
+            plan: newPlan,
+          })
+
+          if (!cancelled) {
+            setPlan(newPlan)
+            setLoading(false)
+
+            // Auto-exit after showing results
+            await new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(undefined)
+              }, 150)
+            })
+            if (!cancelled) {
+              exit()
+            }
+          }
+          return
+        }
+
+        setProgress('Loading commit plan...')
+        let loadedPlan = await readCommitPlanFile({
+          commitPlanPath: fs.commitPlan,
+        })
+
+        if (!loadedPlan) {
+          setProgress('No commit plan found; creating one...')
+          loadedPlan = await createCommitPlan({
+            model,
+            onProgress: (message) => {
+              if (!cancelled) {
+                setProgress(message)
+              }
+            },
+          })
+          await writeCommitPlanFile({
+            commitPlanPath: fs.commitPlan,
+            plan: loadedPlan,
+          })
+        }
+
+        if (cancelled) {
+          return
+        }
+
+        setPlan(loadedPlan)
+        setLoading(false)
+        setIsExecuting(true)
+
+        await executeCommitPlan({
+          gitRoot: fs.gitRoot,
+          plan: loadedPlan,
+          onProgress: (message) => {
+            if (!cancelled) {
+              setProgress(message)
+            }
+          },
+          onStepStart: ({ order }) => {
+            if (!cancelled) {
+              setCurrentOrder(order)
+            }
+          },
+          onStepComplete: ({ order }) => {
+            if (!cancelled) {
+              setCompletedOrders((prev) => [...prev, order])
+            }
           },
         })
 
         if (!cancelled) {
-          setSuggestions(result.suggestions)
-          setLoading(false)
+          setIsExecuting(false)
+          setCurrentOrder(null)
+          setProgress('Done.')
 
-          // Auto-exit after showing results
           await new Promise((resolve) => {
             setTimeout(() => {
               resolve(undefined)
-            }, 100)
+            }, 250)
           })
-          if (!cancelled) {
-            exit()
-          }
+
+          exit()
         }
       } catch (err) {
         if (cancelled) {
@@ -107,7 +177,7 @@ export default function Commit({
     return () => {
       cancelled = true
     }
-  }, [exit])
+  }, [exit, shouldOnlyPlan])
 
   if (loading) {
     return (
@@ -134,12 +204,12 @@ export default function Commit({
     )
   }
 
-  if (suggestions.length === 0) {
+  if (!plan || plan.steps.length === 0) {
     return (
       <Box flexDirection="column">
         <Jumbo />
         <Box marginTop={1}>
-          <Text color="grey">No staging suggestions available.</Text>
+          <Text color="grey">No commit plan available.</Text>
         </Box>
       </Box>
     )
@@ -148,49 +218,75 @@ export default function Commit({
   return (
     <Box flexDirection="column">
       <Jumbo />
+      {commitPlanPath && (
+        <Box marginTop={1}>
+          <Text color="gray">Plan file: {commitPlanPath}</Text>
+        </Box>
+      )}
+      {isExecuting && (
+        <Box marginTop={1} gap={1}>
+          <Text color="red">
+            <Spinner type="dots" />
+          </Text>
+          <Text>{progress}</Text>
+        </Box>
+      )}
       <Box marginTop={1} flexDirection="column">
-        <Text bold>Staging Suggestions</Text>
-        <Text color="gray">Suggested commit groups in sequential order:</Text>
+        <Text bold>
+          {shouldOnlyPlan ? 'Commit Plan' : 'Commit Plan (executing)'}
+        </Text>
+        <Text color="gray">
+          {shouldOnlyPlan
+            ? 'Saved to .kyoto/commit-plan.json. Run kyoto commit to execute.'
+            : 'Executing commits in sequential order:'}
+        </Text>
       </Box>
       <Box marginTop={1} flexDirection="column">
-        {suggestions
+        {plan.steps
           .sort((a, b) => a.order - b.order)
-          .map((suggestion, index) => (
-            <Box
-              key={index}
-              marginTop={index > 0 ? 1 : 0}
-              flexDirection="column"
-              paddingX={1}
-              borderStyle="round"
-              borderColor="blue"
-            >
-              <Box marginBottom={1}>
-                <Text bold color="cyan">
-                  Commit {suggestion.order}: {suggestion.commitMessage}
-                </Text>
-              </Box>
-              {suggestion.reasoning && (
+          .map((step, index) => {
+            const isComplete = completedOrders.includes(step.order)
+            const isCurrent = currentOrder === step.order
+            const badge = isComplete ? '✓' : isCurrent ? '→' : ' '
+            const badgeColor: 'green' | 'yellow' | 'gray' = isComplete
+              ? 'green'
+              : isCurrent
+                ? 'yellow'
+                : 'gray'
+
+            return (
+              <Box
+                key={index}
+                marginTop={index > 0 ? 1 : 0}
+                flexDirection="column"
+                paddingX={1}
+                borderStyle="round"
+                borderColor="blue"
+              >
                 <Box marginBottom={1}>
-                  <Text color="gray">{suggestion.reasoning}</Text>
+                  <Text color={badgeColor}>{badge} </Text>
+                  <Text bold color="cyan">
+                    Commit {step.order}: {step.commitMessage}
+                  </Text>
                 </Box>
-              )}
-              <Box flexDirection="column" marginTop={1}>
-                <Text color="yellow" bold>
-                  Files to stage:
-                </Text>
-                {suggestion.files.map((file, fileIndex) => (
-                  <Box key={fileIndex} marginLeft={2}>
-                    <Text> • {file}</Text>
+                {step.reasoning && (
+                  <Box marginBottom={1}>
+                    <Text color="gray">{step.reasoning}</Text>
                   </Box>
-                ))}
+                )}
+                <Box flexDirection="column" marginTop={1}>
+                  <Text color="yellow" bold>
+                    Files to stage:
+                  </Text>
+                  {step.files.map((file, fileIndex) => (
+                    <Box key={fileIndex} marginLeft={2}>
+                      <Text> • {file}</Text>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
-              <Box marginTop={1}>
-                <Text color="gray" dimColor>
-                  Run: git add {suggestion.files.join(' ')}
-                </Text>
-              </Box>
-            </Box>
-          ))}
+            )
+          })}
       </Box>
     </Box>
   )
