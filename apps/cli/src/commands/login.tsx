@@ -1,4 +1,5 @@
 import { Box, Text, useApp } from 'ink'
+import Spinner from 'ink-spinner'
 import { randomBytes } from 'node:crypto'
 import { createServer } from 'node:http'
 import React, { useEffect, useState } from 'react'
@@ -8,6 +9,7 @@ import { openBrowser } from '../helpers/browser/open-browser'
 import { updateUserAuth } from '../helpers/config/get'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
+import { Link } from '../ui/link'
 
 const cliSessionResponseSchema = z.object({
   token: z.string(),
@@ -95,9 +97,14 @@ async function startCallbackServer(args: { expectedState: string }): Promise<{
           '<!doctype html>',
           '<html>',
           '<head><meta charset="utf-8"><title>Kyoto CLI Login</title></head>',
-          '<body style="font-family: ui-sans-serif, system-ui; padding: 24px;">',
-          '<h1>Login complete</h1>',
-          '<p>You can close this window and return to your terminal.</p>',
+          '<body style="font-family: ui-sans-serif, system-ui; padding: 24px; text-align: center;">',
+          '<h1 style="color: #22c55e;">✓ Login complete</h1>',
+          '<p style="font-size: 16px; margin-top: 24px;">You can close this window and return to your terminal.</p>',
+          '<script>',
+          'setTimeout(function() {',
+          '  try { window.close(); } catch(e) {}',
+          '}, 1000);',
+          '</script>',
           '</body>',
           '</html>',
         ].join(''),
@@ -220,29 +227,42 @@ export default function Login(): React.ReactElement {
       <Header kanji="認証" title="Login" />
 
       <Box flexDirection="column" marginTop={1}>
-        <Text>
-          <Text bold>Web:</Text> {webUrl}
-        </Text>
-
-        {loginUrl ? (
-          <Text>
-            If your browser didn’t open automatically, open:
-            <Text> </Text>
-            <Text underline>{loginUrl}</Text>
-          </Text>
-        ) : null}
-
         {status === 'starting' ? <Text>Starting local callback…</Text> : null}
         {status === 'opened' ? (
           <Text>Opening browser for GitHub login…</Text>
         ) : null}
-        {status === 'waiting' ? (
-          <Text>Waiting for browser callback…</Text>
+        {status === 'waiting' && loginUrl ? (
+          <Box flexDirection="column">
+            <Text color="grey">
+              If your browser didn't open automatically,
+              <Text> </Text>
+              <Link url={loginUrl}>
+                <Text italic underline>
+                  click here
+                </Text>
+              </Link>
+            </Text>
+            <Text>
+              <Text color="red">
+                <Spinner type="dots" />
+              </Text>{' '}
+              Waiting for login via{' '}
+              <Link url={loginUrl}>
+                <Text italic underline>
+                  https://usekyoto.com
+                </Text>
+              </Link>
+              …
+            </Text>
+          </Box>
         ) : null}
         {status === 'saving' ? <Text>Saving session token…</Text> : null}
 
         {status === 'done' ? (
-          <Text>Logged in{login ? ` as @${login}` : ''}.</Text>
+          <Text>
+            <Text color="green">✓</Text> Logged in as{' '}
+            <Text bold>{login ? `@${login}` : 'anonymous'}</Text>
+          </Text>
         ) : null}
 
         {status === 'error' ? (

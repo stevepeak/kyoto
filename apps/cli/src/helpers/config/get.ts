@@ -3,7 +3,6 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { z } from 'zod'
 
 import { pwdKyoto } from './find-kyoto-dir'
-import { getDefaultModelForProvider } from './get-default-model'
 
 const providerSchema = z.enum(['openai', 'vercel', 'openrouter', 'anthropic'])
 
@@ -84,7 +83,6 @@ export async function updateUserAuth(args: {
   const { config: configPath } = await pwdKyoto(gitRoot)
 
   const config = schema.parse({
-    latest: {},
     experimental: false,
     ai: {
       provider: 'openrouter',
