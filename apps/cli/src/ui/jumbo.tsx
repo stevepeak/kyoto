@@ -1,8 +1,24 @@
 import { Box, Text } from 'ink'
-import { type ReactElement } from 'react'
+import { type ReactElement, useMemo } from 'react'
+
+const vibePhrases = [
+  'May the vibe be with you.',
+  'The way of the vibe.',
+  "It's all in the vibe.",
+  'Never stop vibing.',
+  'Be the vibe.',
+]
 
 export function Jumbo(): ReactElement {
   const rows = ['入   |  ', '京   |  ', '行   |  ', '改   |  ', '善   |  ']
+
+  // Select a random phrase once per render
+  const selectedPhrase = useMemo(
+    () =>
+      vibePhrases[Math.floor(Math.random() * vibePhrases.length)] ??
+      vibePhrases[0],
+    [],
+  )
 
   return (
     <Box flexDirection="column" marginBottom={1}>
@@ -13,8 +29,8 @@ export function Jumbo(): ReactElement {
             <>
               <Text bold>Kyoto</Text>
               <Text> </Text>
-              <Text color="gray" italic>
-                • May the vibe be with you.
+              <Text color="gray" italic wrap="truncate">
+                • {selectedPhrase}
               </Text>
             </>
           ) : null}

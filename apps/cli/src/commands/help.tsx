@@ -11,17 +11,24 @@ const commandGroups = [
     commands: [
       {
         name: 'vibe check',
-        description: 'Test and diff user stories against staged changes',
+        description: 'Run several agents to ensure your code is in good shape',
         example: [
           ['kyoto vibe check', 'Check all changes'],
-          // ['kyoto vibe check --watch', 'Contininously vibe check git changes'],
           ['kyoto vibe check --staged', 'Check only staged changes'],
+          [
+            'kyoto vibe check --watch',
+            '(Coming soon) Contininously vibe check new git changes',
+          ],
         ],
       },
       {
         name: 'commit',
-        description: 'Use Kyoto AI to commit changes incrementally',
-        example: 'kyoto commit',
+        description:
+          'Use Kyoto AI to commit unstaged changes into logical commits',
+        example: [
+          'kyoto commit',
+          ['kyoto commit --dry-run', 'Just list the commit plan'],
+        ],
       },
     ],
   },
@@ -42,8 +49,11 @@ const commandGroups = [
     commands: [
       {
         name: 'setup',
-        description: 'Design your Kyoto experience',
-        example: 'kyoto setup',
+        description: 'Configure your Kyoto experience',
+        example: [
+          ['kyoto setup github', 'Add a GitHub Action for Kyoto'],
+          ['kyoto setup mcp', 'Add Kyoto to your MCP services'],
+        ],
       },
       {
         name: 'docs',
