@@ -13,6 +13,7 @@ import SetupAi from './commands/setup-ai'
 import SetupGithub from './commands/setup-github'
 import SetupMcp from './commands/setup-mcp'
 import VibeCheck from './commands/vibe/check'
+import { CLI_VERSION } from './generated/version'
 import { getCliAnalyticsContext } from './helpers/analytics/cli-analytics'
 import {
   captureCliEvent,
@@ -21,7 +22,6 @@ import {
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { createLogger } from './helpers/logging/logger'
-import { CLI_VERSION } from './generated/version'
 
 async function renderCommand(args: {
   commandName: string

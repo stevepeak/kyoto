@@ -1,9 +1,9 @@
 import { Box, Text } from 'ink'
 
-import { Link } from './link'
 import { CLI_VERSION } from '../generated/version'
+import { Link } from './link'
 
-export function Footer(): JSX.Element {
+export function Footer() {
   return (
     <Box>
       <Text>
