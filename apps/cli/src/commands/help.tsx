@@ -28,6 +28,10 @@ const commandGroups = [
         example: [
           ['kyoto commit', 'Use commit plan (or create one) and commit to it'],
           [
+            'kyoto commit "group by feature, use conventional commits"',
+            'Create a new commit plan using the provided instructions, then commit',
+          ],
+          [
             'kyoto commit --plan',
             'Generate a commit plan without committing to it',
           ],

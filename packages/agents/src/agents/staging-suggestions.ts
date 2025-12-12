@@ -38,6 +38,7 @@ type StagingSuggestionsOutput = z.infer<typeof stagingSuggestionsOutputSchema>
 
 interface AnalyzeStagingSuggestionsOptions {
   scope: VibeCheckScope
+  instructions?: string
   options: {
     maxSteps?: number
     model: LanguageModel
@@ -51,6 +52,8 @@ interface AnalyzeStagingSuggestionsOptions {
  * how to organize them into logical, sequential commits.
  */
 export async function analyzeStagingSuggestions({
+  scope: _scope,
+  instructions,
   options: { maxSteps = 30, model, telemetryTracer, progress },
 }: AnalyzeStagingSuggestionsOptions): Promise<StagingSuggestionsOutput> {
   const agent = new Agent({
@@ -59,6 +62,16 @@ export async function analyzeStagingSuggestions({
       You are a senior engineer who helps organize code changes into logical, sequential commits.
       Your goal is to analyze uncommitted changes (both staged and unstaged) and suggest how to
       organize them into smaller, focused commits that tell a clear story.
+
+      ${
+        instructions
+          ? dedent`
+            # User Instructions
+            The user provided additional instructions. Follow them when grouping changes and writing commit messages:
+            ${instructions}
+          `
+          : ''
+      }
 
       # Your Task
       1. Retrieve all uncommitted changes (both staged and unstaged files)
@@ -123,6 +136,8 @@ export async function analyzeStagingSuggestions({
   const prompt = dedent`
     Analyze all uncommitted changes (both staged and unstaged) and suggest how to organize
     them into logical, sequential commits.
+
+    ${instructions ? `User instructions: ${instructions}` : ''}
 
     Use the available tools to:
     1. Get a complete list of all uncommitted files (staged + unstaged + untracked)

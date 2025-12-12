@@ -14,10 +14,12 @@ import { Jumbo } from '../ui/jumbo'
 
 interface CommitProps {
   plan?: boolean
+  instructions?: string
 }
 
 export default function Commit({
   plan: shouldOnlyPlan = false,
+  instructions,
 }: CommitProps): React.ReactElement {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
@@ -56,6 +58,7 @@ export default function Commit({
           setProgress('Analyzing uncommitted changes...')
           const newPlan = await createCommitPlan({
             model,
+            instructions,
             onProgress: (message) => {
               if (!cancelled) {
                 setProgress(message)
@@ -85,15 +88,13 @@ export default function Commit({
           return
         }
 
-        setProgress('Loading commit plan...')
-        let loadedPlan = await readCommitPlanFile({
-          commitPlanPath: fs.commitPlan,
-        })
+        let loadedPlan: CommitPlan | null = null
 
-        if (!loadedPlan) {
-          setProgress('No commit plan found; creating one...')
+        if (instructions) {
+          setProgress('Instructions provided; creating a new commit plan...')
           loadedPlan = await createCommitPlan({
             model,
+            instructions,
             onProgress: (message) => {
               if (!cancelled) {
                 setProgress(message)
@@ -104,6 +105,27 @@ export default function Commit({
             commitPlanPath: fs.commitPlan,
             plan: loadedPlan,
           })
+        } else {
+          setProgress('Loading commit plan...')
+          loadedPlan = await readCommitPlanFile({
+            commitPlanPath: fs.commitPlan,
+          })
+
+          if (!loadedPlan) {
+            setProgress('No commit plan found; creating one...')
+            loadedPlan = await createCommitPlan({
+              model,
+              onProgress: (message) => {
+                if (!cancelled) {
+                  setProgress(message)
+                }
+              },
+            })
+            await writeCommitPlanFile({
+              commitPlanPath: fs.commitPlan,
+              plan: loadedPlan,
+            })
+          }
         }
 
         if (cancelled) {
@@ -177,7 +199,7 @@ export default function Commit({
     return () => {
       cancelled = true
     }
-  }, [exit, shouldOnlyPlan])
+  }, [exit, instructions, shouldOnlyPlan])
 
   if (loading) {
     return (

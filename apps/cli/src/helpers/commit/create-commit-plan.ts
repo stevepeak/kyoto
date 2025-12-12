@@ -5,12 +5,14 @@ import { type CommitPlan } from './commit-plan'
 
 export async function createCommitPlan(args: {
   model: LanguageModel
+  instructions?: string
   onProgress?: (message: string) => void
 }): Promise<CommitPlan> {
-  const { model, onProgress } = args
+  const { model, instructions, onProgress } = args
 
   const result = await analyzeStagingSuggestions({
     scope: { type: 'unstaged' },
+    instructions,
     options: {
       model,
       progress: (message) => {
