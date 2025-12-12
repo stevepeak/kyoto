@@ -4,9 +4,8 @@ import { type ReactElement, useMemo } from 'react'
 const vibePhrases = [
   'May the vibe be with you.',
   'The way of the vibe.',
-  "It's all in the vibe.",
-  'Never stop vibing.',
   'Be the vibe.',
+  'Vibe on.',
 ]
 
 export function Jumbo(): ReactElement {
