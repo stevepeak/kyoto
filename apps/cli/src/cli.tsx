@@ -5,6 +5,7 @@ import React from 'react'
 import Commit from './commands/commit'
 import Docs from './commands/docs'
 import Help from './commands/help'
+import Login from './commands/login'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
 import Setup from './commands/setup'
@@ -36,6 +37,13 @@ export async function run(argv = process.argv): Promise<void> {
   const program = new Command()
 
   program.name('kyoto').description('Kyoto CLI')
+
+  program
+    .command('login')
+    .description('Login to Kyoto via the website')
+    .action(async () => {
+      await renderCommand(<Login />)
+    })
 
   program
     .command('setup')

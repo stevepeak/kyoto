@@ -13,6 +13,11 @@ export const schema = z.object({
       branch: z.string(),
     })
     .optional(),
+  auth: z
+    .object({
+      token: z.string(),
+    })
+    .optional(),
   ai: z.object({
     provider: providerSchema,
     apiKey: z.string(),

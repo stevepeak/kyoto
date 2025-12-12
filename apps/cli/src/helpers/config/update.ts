@@ -6,6 +6,9 @@ interface ConfigJson {
     sha: string
     branch: string
   }
+  auth?: {
+    token: string
+  }
   ai?: {
     provider: string
     apiKey: string
@@ -41,6 +44,11 @@ export async function updateConfigJson(
       sha,
       branch,
     }
+  }
+
+  // Update the auth field
+  if (config?.auth) {
+    configToWrite.auth = config.auth
   }
 
   // Ensure .kyoto directory exists
