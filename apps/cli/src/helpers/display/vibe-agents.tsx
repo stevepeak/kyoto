@@ -6,7 +6,6 @@ import {
 import { Box } from 'ink'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import { Header } from '../../ui/header'
 import { Agent } from './agent'
 
 export function VibeAgents({
