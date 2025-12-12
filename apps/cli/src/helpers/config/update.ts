@@ -11,6 +11,11 @@ interface ConfigJson {
     apiKey: string
     model?: string
   }
+  user?: {
+    sessionToken: string
+    userId: string
+    openrouterApiKey: string
+  }
 }
 
 /**

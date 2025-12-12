@@ -19,6 +19,11 @@ export const schema = z.object({
     model: z.string(),
   }),
   experimental: z.boolean().optional(),
+  user: z.object({
+    sessionToken: z.string(),
+    userId: z.string(),
+    openrouterApiKey: z.string(),
+  }),
 })
 
 export type Config = z.infer<typeof schema>
