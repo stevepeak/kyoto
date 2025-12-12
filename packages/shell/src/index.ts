@@ -1,6 +1,7 @@
 // Git
 export { findGitRoot } from './git/find-git-root'
 export { getChangedTsFiles } from './git/get-changed-ts-files'
+export { getChangedTsFilesFromCommits } from './git/get-changed-ts-files-from-commits'
 export { getStagedTsFiles } from './git/get-staged-ts-files'
 export { getUnstagedTsFiles } from './git/get-unstaged-ts-files'
 export {
@@ -9,6 +10,8 @@ export {
   getLatestCommit,
 } from './git/get-latest-commit'
 export { getRecentCommits } from './git/get-recent-commits'
+export { getPrCommits } from './git/get-pr-commits'
+export { getCommitsRange } from './git/get-commits-range'
 export { getCurrentBranch } from './git/get-current-branch'
 export { getGitHubInfo, type GitHubInfo } from './git/get-github-info'
 export {

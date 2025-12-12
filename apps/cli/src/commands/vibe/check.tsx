@@ -1,3 +1,4 @@
+import { getLatestCommit, getPrCommits, getRecentCommits } from '@app/shell'
 import { type AgentRunState, type VibeCheckScope } from '@app/types'
 import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
@@ -8,6 +9,12 @@ import { SummarizationAgent } from '../../helpers/display/summarization-agent'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
 import { init } from '../../helpers/init'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
+import {
+  getGitHubBaseRef,
+  getGitHubEventName,
+  getGitHubHeadRef,
+  isGitHubActions,
+} from '../../helpers/vibe-check/github-actions'
 import { writePlanFile } from '../../helpers/vibe-check/plan'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
@@ -15,11 +22,15 @@ import { Jumbo } from '../../ui/jumbo'
 interface VibeCheckProps {
   staged?: boolean
   timeoutMinutes?: number
+  commitCount?: number
+  commitSha?: string
 }
 
 export default function VibeCheck({
   staged = false,
   timeoutMinutes = 1,
+  commitCount,
+  commitSha,
 }: VibeCheckProps): React.ReactElement {
   const { exit } = useApp()
   const [warnings, setWarnings] = useState<React.ReactNode[]>([])
@@ -40,42 +51,158 @@ export default function VibeCheck({
       try {
         const { fs, git, model } = await init()
 
-        // Determine which files to check
-        const changedTsFiles = await getChangedFiles({
-          staged,
-          gitRoot: fs.gitRoot,
-        })
+        // Determine scope based on flags or GitHub Actions environment
+        let scope: VibeCheckScope
 
-        // Check for staged changes early
-        if (staged && !git.hasStagedChanges) {
-          if (git.hasChanges) {
+        // Priority: explicit commit flags > GitHub Actions auto-detection > staged/unstaged
+        if (commitSha) {
+          // Specific commit SHA provided
+          scope = { type: 'commit', commit: commitSha }
+        } else if (commitCount !== undefined && commitCount > 0) {
+          // Number of commits provided (e.g., -1, -4)
+          const commits = await getRecentCommits(commitCount, fs.gitRoot)
+          if (commits.length === 0) {
             setWarnings([
-              <Box flexDirection="column" key="no-staged-with-unstaged">
-                <Text color="grey">No staged changes found.</Text>
-                <Text> </Text>
-                <Text color="grey">
-                  You can vibe check all changes (including unstaged) via:
-                </Text>
-                <Text color="yellow">kyoto vibe check</Text>
-              </Box>,
-            ])
-          } else {
-            setWarnings([
-              <Text color="grey" key="no-staged">
-                No staged changes found.
+              <Text color="grey" key="no-commits">
+                No commits found.
               </Text>,
             ])
+            await new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(undefined)
+              }, 500)
+            })
+            if (!cancelled) {
+              exit()
+            }
+            return
           }
-          await new Promise((resolve) => {
-            setTimeout(() => {
-              resolve(undefined)
-            }, 500)
-          })
-          if (!cancelled) {
-            exit()
+          if (commits.length === 1) {
+            scope = { type: 'commit', commit: commits[0]!.hash }
+          } else {
+            scope = {
+              type: 'commits',
+              commits: commits.map((c) => c.hash),
+            }
           }
-          return
+        } else if (isGitHubActions()) {
+          // Auto-detect scope in GitHub Actions
+          const eventName = getGitHubEventName()
+          if (eventName === 'pull_request') {
+            // For PR events, check all commits in the PR
+            const baseRef = getGitHubBaseRef()
+            const headRef = getGitHubHeadRef()
+            if (baseRef && headRef) {
+              const prCommits = await getPrCommits(baseRef, headRef, fs.gitRoot)
+              if (prCommits.length === 0) {
+                setWarnings([
+                  <Text color="grey" key="no-pr-commits">
+                    No commits found in pull request.
+                  </Text>,
+                ])
+                await new Promise((resolve) => {
+                  setTimeout(() => {
+                    resolve(undefined)
+                  }, 500)
+                })
+                if (!cancelled) {
+                  exit()
+                }
+                return
+              }
+              if (prCommits.length === 1) {
+                scope = { type: 'commit', commit: prCommits[0]!.hash }
+              } else {
+                scope = {
+                  type: 'commits',
+                  commits: prCommits.map((c) => c.hash),
+                }
+              }
+            } else {
+              // Fallback to latest commit if base/head refs not available
+              const latestCommit = await getLatestCommit(fs.gitRoot)
+              if (!latestCommit) {
+                setWarnings([
+                  <Text color="grey" key="no-commit">
+                    No commit found.
+                  </Text>,
+                ])
+                await new Promise((resolve) => {
+                  setTimeout(() => {
+                    resolve(undefined)
+                  }, 500)
+                })
+                if (!cancelled) {
+                  exit()
+                }
+                return
+              }
+              scope = { type: 'commit', commit: latestCommit.hash }
+            }
+          } else {
+            // For push events, check the last commit
+            const latestCommit = await getLatestCommit(fs.gitRoot)
+            if (!latestCommit) {
+              setWarnings([
+                <Text color="grey" key="no-commit">
+                  No commit found.
+                </Text>,
+              ])
+              await new Promise((resolve) => {
+                setTimeout(() => {
+                  resolve(undefined)
+                }, 500)
+              })
+              if (!cancelled) {
+                exit()
+              }
+              return
+            }
+            scope = { type: 'commit', commit: latestCommit.hash }
+          }
+        } else {
+          // Local development: use staged/unstaged
+          scope = staged
+            ? ({ type: 'staged' as const } as const)
+            : ({ type: 'unstaged' as const } as const)
+
+          // Check for staged changes early (only for local staged checks)
+          if (staged && !git.hasStagedChanges) {
+            if (git.hasChanges) {
+              setWarnings([
+                <Box flexDirection="column" key="no-staged-with-unstaged">
+                  <Text color="grey">No staged changes found.</Text>
+                  <Text> </Text>
+                  <Text color="grey">
+                    You can vibe check all changes (including unstaged) via:
+                  </Text>
+                  <Text color="yellow">kyoto vibe check</Text>
+                </Box>,
+              ])
+            } else {
+              setWarnings([
+                <Text color="grey" key="no-staged">
+                  No staged changes found.
+                </Text>,
+              ])
+            }
+            await new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(undefined)
+              }, 500)
+            })
+            if (!cancelled) {
+              exit()
+            }
+            return
+          }
         }
+
+        // Determine which files to check based on scope
+        const changedTsFiles = await getChangedFiles({
+          scope,
+          gitRoot: fs.gitRoot,
+        })
 
         if (changedTsFiles.length === 0) {
           setWarnings([
@@ -94,14 +221,10 @@ export default function VibeCheck({
           return
         }
 
-        const targetType = staged
-          ? ({ type: 'staged' as const } as const)
-          : ({ type: 'unstaged' as const } as const)
-
         setContext({
           gitRoot: fs.gitRoot,
           kyotoRoot: fs.root,
-          scope: targetType,
+          scope,
           model,
         })
       } catch (err) {
@@ -136,7 +259,7 @@ export default function VibeCheck({
     return () => {
       cancelled = true
     }
-  }, [exit, staged])
+  }, [exit, staged, commitCount, commitSha])
 
   const handleAgentComplete = async (
     states: AgentRunState[],

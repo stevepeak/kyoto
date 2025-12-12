@@ -170,22 +170,69 @@ export async function run(argv = process.argv): Promise<void> {
   vibeCommand
     .command('check')
     .description('Check code for various issues before commiting to github')
+    .argument(
+      '[commit-spec]',
+      'Commit specification: negative number for last N commits (e.g., -1, -4) or commit SHA',
+    )
     .option('--staged', 'Only check staged changes')
     .option(
       '--timeout <minutes>',
       'Timeout for each agent in minutes (default: 1)',
       '1',
     )
-    .action(async (options: { staged?: boolean; timeout?: string }) => {
-      const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
-      await renderCommand({
-        commandName: 'vibe_check',
-        commandOptions: options,
-        element: (
-          <VibeCheck staged={options.staged} timeoutMinutes={timeoutMinutes} />
-        ),
-      })
-    })
+    .option('--commits <count>', 'Check the last N commits (e.g., --commits 4)')
+    .option('--commit <sha>', 'Check a specific commit by SHA')
+    .action(
+      async (
+        commitSpec: string | undefined,
+        options: {
+          staged?: boolean
+          timeout?: string
+          commits?: string
+          commit?: string
+        },
+      ) => {
+        const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
+
+        let commitCount: number | undefined
+        let commitSha: string | undefined = options.commit
+
+        // Parse commit specification from argument (e.g., -1, -4, or SHA)
+        if (commitSpec) {
+          // Check if it's a negative number (commit count)
+          if (commitSpec.startsWith('-')) {
+            const num = Number.parseInt(commitSpec, 10)
+            if (!Number.isNaN(num) && num < 0) {
+              commitCount = Math.abs(num)
+            }
+          } else {
+            // Assume it's a commit SHA
+            commitSha = commitSpec
+          }
+        }
+
+        // Override with --commits flag if provided
+        if (options.commits) {
+          const count = Number.parseInt(options.commits, 10)
+          if (!Number.isNaN(count) && count > 0) {
+            commitCount = count
+          }
+        }
+
+        await renderCommand({
+          commandName: 'vibe_check',
+          commandOptions: { ...options, commitCount, commitSha },
+          element: (
+            <VibeCheck
+              staged={options.staged}
+              timeoutMinutes={timeoutMinutes}
+              commitCount={commitCount}
+              commitSha={commitSha}
+            />
+          ),
+        })
+      },
+    )
 
   // In MCP mode, don't show help on error - just exit silently
   if (!isMcpMode) {
