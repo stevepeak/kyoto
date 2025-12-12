@@ -11,6 +11,7 @@ interface ConfigJson {
     apiKey: string
     model?: string
   }
+  sessionToken?: string
 }
 
 /**
@@ -41,6 +42,11 @@ export async function updateConfigJson(
       sha,
       branch,
     }
+  }
+
+  // If config is provided, merge it (for sessionToken updates)
+  if (config) {
+    configToWrite = { ...configToWrite, ...config }
   }
 
   // Ensure .kyoto directory exists

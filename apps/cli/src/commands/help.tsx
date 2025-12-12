@@ -46,6 +46,11 @@ const commandGroups = [
         example: 'kyoto setup',
       },
       {
+        name: 'login',
+        description: 'Login to Kyoto via GitHub OAuth',
+        example: 'kyoto login',
+      },
+      {
         name: 'docs',
         description: 'View the Kyoto documentation',
         example: 'kyoto docs',

@@ -19,6 +19,7 @@ export const schema = z.object({
     model: z.string(),
   }),
   experimental: z.boolean().optional(),
+  sessionToken: z.string().optional(),
 })
 
 export type Config = z.infer<typeof schema>
