@@ -37,7 +37,7 @@ export default async function CliCallbackPage(props: {
 
   let pending: { redirectUri: string }
   try {
-    pending = consumePendingCliLogin({ state })
+    pending = await consumePendingCliLogin({ state })
   } catch (e) {
     return (
       <div className="container mx-auto py-16">
