@@ -57,7 +57,12 @@ const envSchema = z.object({
     }),
 
   // Neon Database
-  DATABASE_URL: z.string().startsWith('postgres://'),
+  DATABASE_URL: z
+    .string()
+    .regex(
+      /^postgres(ql)?:\/\//,
+      'DATABASE_URL must start with postgres:// or postgresql://',
+    ),
 
   // Trigger.dev
   TRIGGER_PROJECT_ID: z.string().optional(),
