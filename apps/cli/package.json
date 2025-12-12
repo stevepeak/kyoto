@@ -39,7 +39,7 @@
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
-    "@types/react": "^18.3.12",
+    "@types/react": "^19.2.2",
     "tsconfig": "workspace:*",
     "typescript": "catalog:"
   }

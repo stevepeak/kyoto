@@ -22,7 +22,8 @@ function reactNodeToText(node: React.ReactNode): string {
   }
 
   if (React.isValidElement(node)) {
-    return reactNodeToText(node.props.children)
+    const props = node.props as { children?: React.ReactNode }
+    return reactNodeToText(props.children)
   }
 
   return String(node)
