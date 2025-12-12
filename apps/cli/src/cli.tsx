@@ -5,6 +5,7 @@ import React from 'react'
 import Commit from './commands/commit'
 import Docs from './commands/docs'
 import Help from './commands/help'
+import Login from './commands/login'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
 import Setup from './commands/setup'
@@ -76,6 +77,17 @@ export async function run(argv = process.argv): Promise<void> {
     .description('View the Kyoto documentation')
     .action(async () => {
       await renderCommand(<Docs />)
+    })
+
+  program
+    .command('login')
+    .description('Log in to Kyoto via the web (GitHub OAuth)')
+    .option(
+      '--app-url <url>',
+      'Kyoto web app URL (default: $KYOTO_WEB_URL or http://localhost:3002)',
+    )
+    .action(async (options: { appUrl?: string }) => {
+      await renderCommand(<Login appUrl={options.appUrl} />)
     })
 
   const vibeCommand = program.command('vibe').description('Vibe check commands')

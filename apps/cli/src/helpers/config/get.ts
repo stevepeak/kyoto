@@ -13,6 +13,14 @@ export const schema = z.object({
       branch: z.string(),
     })
     .optional(),
+  auth: z
+    .object({
+      sessionToken: z.string(),
+      userLogin: z.string().optional(),
+      appUrl: z.string().optional(),
+      createdAt: z.string().optional(),
+    })
+    .optional(),
   ai: z.object({
     provider: providerSchema,
     apiKey: z.string(),
