@@ -3,8 +3,8 @@
   "theme": "maple",
   "name": "Kyoto",
   "logo": {
-    "dark": "/public/kyoto-logo.png",
-    "light": "/public/kyoto-logo.png"
+    "dark": "/public/kyoto-logo-dark.png",
+    "light": "/public/kyoto-logo-light.png"
   },
   "colors": {
     "primary": "#ff0000"
