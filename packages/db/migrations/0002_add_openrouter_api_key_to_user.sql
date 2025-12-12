@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "openrouter_api_key" text;

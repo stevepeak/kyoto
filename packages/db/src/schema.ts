@@ -53,6 +53,7 @@ export const user = pgTable('user', {
   login: text('login'),
   lastInteractionAt: timestamp('last_interaction_at', { withTimezone: true }),
   timeZone: text('time_zone'),
+  openrouterApiKey: text('openrouter_api_key'),
 })
 
 export const session = pgTable('session', {
@@ -381,3 +382,17 @@ export const storyTestResults = pgTable(
     statusIdx: index('story_test_results_status_idx').on(table.status),
   }),
 )
+
+export const cliAuthState = pgTable('cli_auth_state', {
+  stateToken: text('state_token').primaryKey(),
+  sessionToken: text('session_token'),
+  userId: text('user_id'),
+  openrouterApiKey: text('openrouter_api_key'),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
