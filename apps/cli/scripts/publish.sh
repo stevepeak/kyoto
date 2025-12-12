@@ -63,7 +63,7 @@ echo ""
 echo -e "\033[0;36mPublishing to npm...\033[0m"
 echo -e "\033[0;36m─────────────────────────────────────────────────────────────\033[0m"
 EXIT_CODE=0
-npm publish --access public || EXIT_CODE=$?
+npm publish --access public --ignore-scripts || EXIT_CODE=$?
 
 # Remove trap since we're about to exit normally (restore will happen via trap)
 # But we need to disable the trap first to avoid double restore
