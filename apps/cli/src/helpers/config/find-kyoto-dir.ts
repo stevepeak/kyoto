@@ -15,6 +15,8 @@ export interface KyotoPaths {
   config: string
   /** Absolute path to the .kyoto/vectra directory (for vector DB, etc.) */
   vectra: string
+  /** Absolute path to the .kyoto/commit-plan.json file */
+  commitPlan: string
 }
 
 /**
@@ -28,9 +30,10 @@ export async function pwdKyoto(gitRoot: string): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
   const config = join(root, 'config.json')
   const vectra = join(root, 'vectra')
+  const commitPlan = join(root, 'commit-plan.json')
 
   // Create all necessary directories
   await mkdir(root, { recursive: true })
 
-  return { gitRoot, root, config, vectra }
+  return { gitRoot, root, config, vectra, commitPlan }
 }
