@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     )
   }
 
-  const session = getCliSession({ token })
+  const session = await getCliSession({ token })
   if (!session) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
@@ -29,6 +29,7 @@ export async function GET(req: Request) {
     token: session.token,
     userId: session.userId,
     login: session.login,
+    openrouterApiKey: session.openrouterApiKey,
     createdAtMs: session.createdAtMs,
   })
 }

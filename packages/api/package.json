@@ -20,6 +20,7 @@
     "@app/linear": "workspace:*",
     "@app/posthog": "workspace:^",
     "@app/schemas": "workspace:*",
+    "@openrouter/sdk": "catalog:",
     "@sentry/nextjs": "catalog:",
     "@trigger.dev/sdk": "catalog:",
     "@trpc/server": "catalog:",

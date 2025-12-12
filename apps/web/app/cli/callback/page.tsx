@@ -1,8 +1,10 @@
+import { ensureOpenRouterApiKey } from '@app/api'
 import { redirect } from 'next/navigation'
 
 import { getSession } from '@/lib/auth-server'
 import { getUserLogin } from '@/lib/auth-utils'
 import { consumePendingCliLogin, createCliSession } from '@/lib/cli-auth'
+import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,9 +49,14 @@ export default async function CliCallbackPage(props: {
     )
   }
 
-  const cliSession = createCliSession({
+  const cliSession = await createCliSession({
+    state,
     userId: session.user.id,
     login: getUserLogin(session.user),
+    openrouterApiKey: await ensureOpenRouterApiKey({
+      db,
+      userId: session.user.id,
+    }),
   })
 
   const url = new URL(pending.redirectUri)

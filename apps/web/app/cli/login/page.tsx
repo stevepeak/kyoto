@@ -22,7 +22,7 @@ export default async function CliLoginPage(props: {
 
   // Validate and register (state -> redirectUri) so the callback can't be tampered with.
   const redirectUrl = validateLoopbackRedirectUri(redirectUri)
-  registerPendingCliLogin({
+  await registerPendingCliLogin({
     state,
     redirectUri: redirectUrl.toString(),
   })

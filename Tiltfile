@@ -6,10 +6,9 @@ dotenv()
 
 local_resource(
     name='Web',
-    auto_init=False,
     labels=["Apps"],
     serve_cmd="bun --cwd apps/web dev",
-    links=[ link("http://localhost:3002/", "Web") ],
+    links=[ link("http://localhost:3000/", "Web") ],
 )
 
 local_resource(

@@ -48,12 +48,8 @@ export async function run(argv = process.argv): Promise<void> {
   program
     .command('login')
     .description('Login via browser using GitHub OAuth')
-    .option(
-      '--web-url <url>',
-      'Kyoto web URL (default: KYOTO_WEB_URL or http://localhost:3002)',
-    )
-    .action(async (options: { webUrl?: string }) => {
-      await renderCommand(<Login webUrl={options.webUrl} />)
+    .action(async () => {
+      await renderCommand(<Login />)
     })
 
   program

@@ -28,16 +28,16 @@ Create a `.env.local` file with the following variables:
 DATABASE_URL="postgresql://user:password@host:5432/database"
 
 # App URL (for auth redirects)
-NEXT_PUBLIC_APP_URL="http://localhost:3002"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # Better Auth
 # Generate with: openssl rand -base64 32
 BETTER_AUTH_SECRET="your-secret-here"
-BETTER_AUTH_URL="http://localhost:3002"
+BETTER_AUTH_URL="http://localhost:3000"
 
 # GitHub OAuth
 # Get these from: https://github.com/settings/developers
-# Authorization callback URL: http://localhost:3002/api/auth/callback/github
+# Authorization callback URL: http://localhost:3000/api/auth/callback/github
 GITHUB_CLIENT_ID="your_github_client_id"
 GITHUB_CLIENT_SECRET="your_github_client_secret"
 
@@ -55,8 +55,8 @@ NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
 2. Click "New OAuth App"
 3. Fill in the details:
    - **Application name**: Web2 (or your choice)
-   - **Homepage URL**: `http://localhost:3002`
-   - **Authorization callback URL**: `http://localhost:3002/api/auth/callback/github`
+   - **Homepage URL**: `http://localhost:3000`
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
 4. Copy the Client ID and generate a Client Secret
 5. Add them to your `.env.local` file
 
@@ -79,7 +79,7 @@ bun drizzle-kit migrate
 bun run dev
 ```
 
-Open [http://localhost:3002](http://localhost:3002) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 

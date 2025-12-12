@@ -16,7 +16,7 @@ function getAppUrl(): string {
     return window.location.origin
   }
   // Fallback for SSR
-  return 'http://localhost:3002'
+  return 'http://localhost:3000'
 }
 
 const authClient = createAuthClient({

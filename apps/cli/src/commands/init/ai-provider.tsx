@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { pwdKyoto } from '../../helpers/config/find-kyoto-dir'
 import { type Config, getConfig } from '../../helpers/config/get'
+import { getDefaultModelForProvider } from '../../helpers/config/get-default-model'
 import { updateConfigJson as updateConfig } from '../../helpers/config/update'
 import { useCliLogger } from '../../helpers/logging/logger'
 
@@ -19,19 +20,6 @@ type Step =
   | 'api-key'
   | 'saving'
   | 'done'
-
-function getDefaultModelForProvider(provider: Provider): string {
-  switch (provider) {
-    case 'openai':
-      return 'gpt-5-mini'
-    case 'openrouter':
-      return 'x-ai/grok-4.1-fast'
-    case 'vercel':
-      return 'openai/gpt-5-mini'
-    case 'anthropic':
-      return 'claude-3.5-sonnet'
-  }
-}
 
 function getProviderLabel(provider: Provider | null | undefined): string {
   if (!provider) return ''
@@ -141,14 +129,12 @@ export function AIProvider({
         const fsPaths = await pwdKyoto(gitRoot)
 
         const configPath = fsPaths.config
-        const config: Partial<Config> = existingConfig
-          ? { ...existingConfig }
-          : {}
 
         const defaultModel = getDefaultModelForProvider(provider)
 
         const finalConfigValue: Config = {
-          ...config,
+          // TODO not assert this, but we do for now
+          ...existingConfig!,
           ai: {
             provider,
             apiKey,

@@ -1,20 +1,12 @@
 import { Box, Text, useApp } from 'ink'
 import { randomBytes } from 'node:crypto'
 import { createServer } from 'node:http'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
-import { writeCliAuthSession } from '../helpers/auth/session-store'
 import { openBrowser } from '../helpers/browser/open-browser'
+import { updateUserSessionToken } from '../helpers/config/get'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
-
-function getWebUrl(explicit?: string): string {
-  if (explicit) return explicit.replace(/\/+$/, '')
-  // eslint-disable-next-line no-process-env
-  const env = process.env.KYOTO_WEB_URL
-  if (env) return env.replace(/\/+$/, '')
-  return 'http://localhost:3002'
-}
 
 function generateState(): string {
   return randomBytes(16).toString('base64url')
@@ -125,9 +117,10 @@ async function startCallbackServer(args: { expectedState: string }): Promise<{
   }
 }
 
-export default function Login(props: { webUrl?: string }): React.ReactElement {
+export default function Login(): React.ReactElement {
   const { exit } = useApp()
-  const webUrl = useMemo(() => getWebUrl(props.webUrl), [props.webUrl])
+  // eslint-disable-next-line no-process-env
+  const webUrl = process.env.APP_URL
   const [status, setStatus] = useState<
     'idle' | 'starting' | 'opened' | 'waiting' | 'saving' | 'done' | 'error'
   >('idle')
@@ -166,12 +159,7 @@ export default function Login(props: { webUrl?: string }): React.ReactElement {
         if (cancelled) return
 
         setStatus('saving')
-        await writeCliAuthSession({
-          webUrl,
-          token: result.token,
-          login: result.login,
-          createdAtMs: Date.now(),
-        })
+        await updateUserSessionToken({ sessionToken: result.token })
 
         setLogin(result.login ?? null)
         setStatus('done')
@@ -217,10 +205,7 @@ export default function Login(props: { webUrl?: string }): React.ReactElement {
         {status === 'saving' ? <Text>Saving session token…</Text> : null}
 
         {status === 'done' ? (
-          <Text>
-            Logged in{login ? ` as @${login}` : ''}. Token saved to{' '}
-            <Text bold>.kyoto/auth.json</Text>.
-          </Text>
+          <Text>Logged in{login ? ` as @${login}` : ''}.</Text>
         ) : null}
 
         {status === 'error' ? (

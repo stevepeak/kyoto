@@ -1,18 +1,19 @@
 import { z } from 'zod'
 
 const envSchema = z.object({
-  SITE_BASE_URL: z
-    .string()
-    .trim()
-    .min(1)
-    .transform((value) => value.replace(/\/+$/, ''))
-    .default('https://usekyoto.com'),
   APP_URL: z
     .string()
-    .trim()
-    .min(1)
+    .url()
     .transform((value) => value.replace(/\/+$/, ''))
-    .optional(),
+    .default('https://usekyoto.com'),
+
+  // Better Auth
+  BETTER_AUTH_SECRET: z
+    .string()
+    .min(1, 'BETTER_AUTH_SECRET is required')
+    .describe(
+      'Secret key for Better Auth encryption/decryption. Generate with: openssl rand -base64 32',
+    ),
 
   // GitHub
   GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
@@ -65,6 +66,7 @@ const envSchema = z.object({
   // AI
   OPENAI_API_KEY: z.string().startsWith('sk-'),
   OPENROUTER_API_KEY: z.string().startsWith('sk-or-v1-'),
+  OPENROUTER_PROVISION_KEY: z.string().startsWith('sk-or-v1-'),
   AI_GATEWAY_API_KEY: z.string().startsWith('vck_'),
 
   // Daytona
@@ -104,7 +106,7 @@ export function getConfig(
     POSTHOG_HOST: env.POSTHOG_HOST ?? env.NEXT_PUBLIC_POSTHOG_HOST,
     SENTRY_DSN: env.SENTRY_DSN ?? env.NEXT_PUBLIC_SENTRY_DSN,
     GITHUB_APP_SLUG: env.GITHUB_APP_SLUG ?? env.NEXT_PUBLIC_GITHUB_APP_SLUG,
-    APP_URL: env.APP_URL ?? env.NEXT_PUBLIC_APP_URL ?? env.SITE_BASE_URL,
+    APP_URL: env.APP_URL ?? env.NEXT_PUBLIC_APP_URL,
   }
 
   return envSchema.parse(normalizedEnv)

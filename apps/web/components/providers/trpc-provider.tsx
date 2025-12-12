@@ -9,7 +9,7 @@ import { trpc } from '@/lib/trpc-client'
 
 function getUrl() {
   // eslint-disable-next-line no-process-env
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   return `${base}/api/trpc`
 }
 
