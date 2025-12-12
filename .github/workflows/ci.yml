@@ -37,6 +37,11 @@ jobs:
 
   kyoto:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+    env:
+      KYOTO_AI_TOKEN: ${{ secrets.KYOTO_AI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
