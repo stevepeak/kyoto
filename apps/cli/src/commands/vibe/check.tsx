@@ -9,6 +9,7 @@ import { VibeAgents } from '../../helpers/display/vibe-agents'
 import { init } from '../../helpers/init'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import { writePlanFile } from '../../helpers/vibe-check/plan'
+import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
 
 interface VibeCheckProps {
@@ -190,6 +191,7 @@ export default function VibeCheck({
   return (
     <Box flexDirection="column">
       <Jumbo />
+      <Header kanji="'ノリ" title="Vibe checking" />
       {warnings.length > 0 && (
         <Box marginTop={1} flexDirection="column">
           {warnings.map((warning, index) => (

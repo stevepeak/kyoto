@@ -159,8 +159,8 @@ export function MCP({ state, onComplete }: MCPProps): React.ReactElement {
 
           if (!services.kyoto) {
             services.kyoto = {
-              command: 'npx',
-              args: ['kyoto', 'mcp'],
+              command: 'kyoto',
+              args: ['mcp'],
             }
 
             await writeFile(

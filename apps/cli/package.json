@@ -45,6 +45,7 @@
     "@app/shell": "workspace:^",
     "@app/types": "workspace:^",
     "@app/utils": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.24.3",
     "@openrouter/ai-sdk-provider": "catalog:",
     "ai": "catalog:",
     "commander": "^14.0.2",

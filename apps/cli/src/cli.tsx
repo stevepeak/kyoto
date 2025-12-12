@@ -7,7 +7,7 @@ import Commit from './commands/commit'
 import Docs from './commands/docs'
 import Help from './commands/help'
 import Login from './commands/login'
-import Mcp from './commands/mcp'
+import { runMcpCommand } from './commands/mcp'
 import Plan from './commands/plan'
 import Setup from './commands/setup'
 import SetupAi from './commands/setup-ai'
@@ -73,6 +73,8 @@ async function renderCommand(args: {
 }
 
 export async function run(argv = process.argv): Promise<void> {
+  // Check if we're in MCP mode - if so, skip CLI initialization that might output
+  const isMcpMode = argv.includes('mcp') && !process.stdin.isTTY
   await initializeCliLogFile()
   const program = new Command()
 
@@ -123,7 +125,7 @@ export async function run(argv = process.argv): Promise<void> {
     .command('mcp')
     .description('MCP command')
     .action(async () => {
-      await renderCommand({ commandName: 'mcp', element: <Mcp /> })
+      await runMcpCommand()
     })
 
   program
@@ -176,11 +178,6 @@ export async function run(argv = process.argv): Promise<void> {
     )
     .action(async (options: { staged?: boolean; timeout?: string }) => {
       const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
-      // Print headers before Ink renders to prevent duplication on resize
-      const { printJumboHeader, printSectionHeader } =
-        await import('./ui/jumbo-print')
-      printJumboHeader()
-      printSectionHeader({ kanji: 'ノリ', title: 'Vibe checking' })
       await renderCommand({
         commandName: 'vibe_check',
         commandOptions: options,
@@ -190,9 +187,12 @@ export async function run(argv = process.argv): Promise<void> {
       })
     })
 
-  program.showHelpAfterError()
+  // In MCP mode, don't show help on error - just exit silently
+  if (!isMcpMode) {
+    program.showHelpAfterError()
+  }
 
-  if (argv.length <= 2) {
+  if (argv.length <= 2 && !isMcpMode) {
     await renderCommand({ commandName: 'help', element: <Help /> })
     return
   }

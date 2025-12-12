@@ -13,7 +13,6 @@ local_resource(
 
 local_resource(
     name='Trigger',
-    auto_init=False,
     labels=["Apps"],
     serve_cmd="bun run --cwd apps/trigger dev",
     links=[ link("https://cloud.trigger.dev/orgs/tailz-5e0b/projects/tailz-uBK2/env/dev/runs", "Trigger") ],
@@ -31,8 +30,7 @@ local_resource(
 local_resource(
     labels=["Development"],
     name='MCP Builder',
-    auto_init=False,
-    serve_cmd="bunx @modelcontextprotocol/inspector",
+    serve_cmd="bunx @modelcontextprotocol/inspector ~/.bun/bin/kyoto mcp",
     # ! cannot show link, must get from logs w/ token
     # links=[ link("http://localhost:6274", "MCP Inspector") ],
 )
@@ -40,7 +38,6 @@ local_resource(
 local_resource(
     name='Drizzle Studio',
     labels=["Development"],
-    auto_init=False,
     serve_cmd="bun run --cwd packages/db db:studio",
     links=[link("https://local.drizzle.studio", "Drizzle Studio") ],
 )
@@ -48,7 +45,6 @@ local_resource(
 local_resource(
     name='Storybook',
     labels=["Development"],
-    auto_init=False,
     serve_cmd="bun run --cwd apps/web storybook",
     links=[ link("http://localhost:6006/", "Storybook") ],
 )
