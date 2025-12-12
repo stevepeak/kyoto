@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Type System
 
-- Prefer interfaces over types for object definitions
+- Prefer types over interfaces for object definitions
 - Use type for unions, intersections, and mapped types
 - NEVER use `any` or `as any` types or coercion
 - Use strict TypeScript configuration

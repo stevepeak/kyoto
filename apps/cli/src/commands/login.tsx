@@ -2,11 +2,43 @@ import { Box, Text, useApp } from 'ink'
 import { randomBytes } from 'node:crypto'
 import { createServer } from 'node:http'
 import React, { useEffect, useState } from 'react'
+import { z } from 'zod'
 
 import { openBrowser } from '../helpers/browser/open-browser'
-import { updateUserSessionToken } from '../helpers/config/get'
+import { updateUserAuth } from '../helpers/config/get'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
+
+const cliSessionResponseSchema = z.object({
+  token: z.string(),
+  userId: z.string(),
+  login: z.string().optional(),
+  openrouterApiKey: z.string(),
+  createdAtMs: z.number(),
+})
+
+async function fetchCliSession(args: {
+  webUrl: string
+  token: string
+}): Promise<z.infer<typeof cliSessionResponseSchema>> {
+  const url = new URL('/api/cli/session', args.webUrl)
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${args.token}`,
+    },
+  })
+
+  const json: unknown = await res.json()
+  if (!res.ok) {
+    const err = z.object({ error: z.string() }).safeParse(json)
+    throw new Error(
+      err.success ? err.data.error : 'Failed to fetch CLI session',
+    )
+  }
+
+  return cliSessionResponseSchema.parse(json)
+}
 
 function generateState(): string {
   return randomBytes(16).toString('base64url')
@@ -120,7 +152,7 @@ async function startCallbackServer(args: { expectedState: string }): Promise<{
 export default function Login(): React.ReactElement {
   const { exit } = useApp()
   // eslint-disable-next-line no-process-env
-  const webUrl = process.env.APP_URL
+  const webUrl = process.env.APP_URL ?? 'https://usekyoto.com'
   const [status, setStatus] = useState<
     'idle' | 'starting' | 'opened' | 'waiting' | 'saving' | 'done' | 'error'
   >('idle')
@@ -159,7 +191,12 @@ export default function Login(): React.ReactElement {
         if (cancelled) return
 
         setStatus('saving')
-        await updateUserSessionToken({ sessionToken: result.token })
+        const session = await fetchCliSession({ webUrl, token: result.token })
+        await updateUserAuth({
+          sessionToken: session.token,
+          userId: session.userId,
+          openrouterApiKey: session.openrouterApiKey,
+        })
 
         setLogin(result.login ?? null)
         setStatus('done')

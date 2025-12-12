@@ -1,4 +1,7 @@
+import { eq, schema, sql } from '@app/db'
 import { randomBytes } from 'node:crypto'
+
+import { db } from '@/lib/db'
 
 type PendingCliLogin = {
   redirectUri: string
@@ -9,12 +12,9 @@ type CliSession = {
   token: string
   userId: string
   login: string
+  openrouterApiKey: string
   createdAtMs: number
 }
-
-// NOTE: In-memory only by request (no DB). This is intentionally not durable.
-const pendingCliLogins = new Map<string, PendingCliLogin>()
-const cliSessions = new Map<string, CliSession>()
 
 const PENDING_TTL_MS = 5 * 60 * 1000
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000
@@ -23,18 +23,15 @@ function nowMs(): number {
   return Date.now()
 }
 
-function pruneExpired(): void {
-  const now = nowMs()
-  for (const [state, pending] of pendingCliLogins.entries()) {
-    if (now - pending.createdAtMs > PENDING_TTL_MS) {
-      pendingCliLogins.delete(state)
-    }
-  }
-
-  for (const [token, session] of cliSessions.entries()) {
-    if (now - session.createdAtMs > SESSION_TTL_MS) {
-      cliSessions.delete(token)
-    }
+async function pruneExpired(): Promise<void> {
+  // Best-effort DB cleanup. This should never block login flows.
+  // Use Postgres `now()` to avoid any driver-specific JS Date parameter issues.
+  try {
+    await db
+      .delete(schema.cliAuthState)
+      .where(sql`${schema.cliAuthState.expiresAt} < now()`)
+  } catch {
+    // Intentionally ignored.
   }
 }
 
@@ -61,46 +58,144 @@ export function validateLoopbackRedirectUri(redirectUri: string): URL {
   return url
 }
 
-export function registerPendingCliLogin(args: {
+export async function registerPendingCliLogin(args: {
   state: string
   redirectUri: string
-}): void {
-  pruneExpired()
-  pendingCliLogins.set(args.state, {
-    redirectUri: args.redirectUri,
-    createdAtMs: nowMs(),
-  })
+}): Promise<void> {
+  await pruneExpired()
+
+  const expiresAt = new Date(nowMs() + PENDING_TTL_MS)
+  await db
+    .insert(schema.cliAuthState)
+    .values({
+      stateToken: args.state,
+      redirectUri: args.redirectUri,
+      expiresAt,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: schema.cliAuthState.stateToken,
+      set: {
+        redirectUri: args.redirectUri,
+        expiresAt,
+        updatedAt: new Date(),
+      },
+    })
 }
 
-export function consumePendingCliLogin(args: {
+export async function consumePendingCliLogin(args: {
   state: string
-}): PendingCliLogin {
-  pruneExpired()
-  const pending = pendingCliLogins.get(args.state)
-  if (!pending) {
+}): Promise<PendingCliLogin> {
+  const row = await db.query.cliAuthState.findFirst({
+    where: eq(schema.cliAuthState.stateToken, args.state),
+    columns: {
+      redirectUri: true,
+      expiresAt: true,
+      createdAt: true,
+    },
+  })
+
+  if (!row?.redirectUri) {
     throw new Error('CLI login state not found or expired')
   }
-  pendingCliLogins.delete(args.state)
-  return pending
+
+  // Check expiration
+  const expiresAtMs = row.expiresAt.getTime()
+  if (Date.now() > expiresAtMs) {
+    throw new Error('CLI login state not found or expired')
+  }
+
+  // Delete the consumed state
+  await db
+    .delete(schema.cliAuthState)
+    .where(eq(schema.cliAuthState.stateToken, args.state))
+
+  return {
+    redirectUri: row.redirectUri,
+    createdAtMs: row.createdAt.getTime(),
+  }
 }
 
-export function createCliSession(args: {
+export async function createCliSession(args: {
+  state: string
   userId: string
   login: string
-}): CliSession {
-  pruneExpired()
+  openrouterApiKey: string
+}): Promise<CliSession> {
+  await pruneExpired()
   const token = randomBytes(32).toString('base64url')
-  const session: CliSession = {
+  const createdAtMs = nowMs()
+
+  const expiresAt = new Date(createdAtMs + SESSION_TTL_MS)
+  await db
+    .insert(schema.cliAuthState)
+    .values({
+      stateToken: args.state,
+      sessionToken: token,
+      userId: args.userId,
+      openrouterApiKey: args.openrouterApiKey,
+      expiresAt,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: schema.cliAuthState.stateToken,
+      set: {
+        sessionToken: token,
+        userId: args.userId,
+        openrouterApiKey: args.openrouterApiKey,
+        expiresAt,
+        updatedAt: new Date(),
+      },
+    })
+
+  return {
     token,
     userId: args.userId,
     login: args.login,
-    createdAtMs: nowMs(),
+    openrouterApiKey: args.openrouterApiKey,
+    createdAtMs,
   }
-  cliSessions.set(token, session)
-  return session
 }
 
-export function getCliSession(args: { token: string }): CliSession | null {
-  pruneExpired()
-  return cliSessions.get(args.token) ?? null
+export async function getCliSession(args: {
+  token: string
+}): Promise<CliSession | null> {
+  await pruneExpired()
+  const row = await db.query.cliAuthState.findFirst({
+    where: eq(schema.cliAuthState.sessionToken, args.token),
+    columns: {
+      sessionToken: true,
+      userId: true,
+      openrouterApiKey: true,
+      createdAt: true,
+      expiresAt: true,
+    },
+  })
+
+  if (!row?.sessionToken || !row.userId || !row.openrouterApiKey) {
+    return null
+  }
+
+  const expiresAtMs = row.expiresAt.getTime()
+  if (Date.now() > expiresAtMs) {
+    return null
+  }
+
+  // Query user table to get login
+  const user = await db.query.user.findFirst({
+    where: eq(schema.user.id, row.userId),
+    columns: {
+      login: true,
+    },
+  })
+
+  const login = user?.login ?? ''
+
+  return {
+    token: row.sessionToken,
+    userId: row.userId,
+    login,
+    openrouterApiKey: row.openrouterApiKey,
+    createdAtMs: row.createdAt.getTime(),
+  }
 }
