@@ -26,8 +26,11 @@ const commandGroups = [
         description:
           'Use Kyoto AI to commit unstaged changes into logical commits',
         example: [
-          'kyoto commit',
-          ['kyoto commit --dry-run', 'Just list the commit plan'],
+          ['kyoto commit', 'Use commit plan (or create one) and commit to it'],
+          [
+            'kyoto commit --plan',
+            'Generate a commit plan without committing to it',
+          ],
         ],
       },
     ],
@@ -117,22 +120,22 @@ export default function Help(): React.ReactElement {
             title={group.title}
             kanji={(group as { kanji?: string }).kanji}
           />
-
           <Text dimColor>{'─'.repeat(Math.min(terminalWidth - 2, 50))}</Text>
+          <Text> </Text>
 
           {group.commands.map((command) => {
             const shouldUseVertical =
               useVerticalLayout || terminalWidth < minWidthForHorizontal
 
             return (
-              <Box key={command.name} flexDirection="column">
+              <Box key={command.name} flexDirection="column" marginBottom={1}>
                 {shouldUseVertical ? (
-                  <Box flexDirection="column">
+                  <Box flexDirection="column" gap={1}>
                     <Text color="red">{command.name}</Text>
                     <Text>{command.description}</Text>
                   </Box>
                 ) : (
-                  <Box>
+                  <Box gap={1}>
                     <Text color="red">{command.name.padEnd(columnWidth)}</Text>
                     <Text>{command.description}</Text>
                   </Box>
@@ -150,6 +153,7 @@ export default function Help(): React.ReactElement {
                       <Box
                         key={idx}
                         flexDirection={shouldUseVertical ? 'column' : 'row'}
+                        gap={1}
                       >
                         {shouldUseVertical ? (
                           <>
@@ -157,7 +161,11 @@ export default function Help(): React.ReactElement {
                               <Text dimColor>$ </Text>
                               <Text color="yellow">{commandText}</Text>
                             </Text>
-                            {description && <Text dimColor>{description}</Text>}
+                            {description && (
+                              <Text dimColor wrap="truncate">
+                                {description}
+                              </Text>
+                            )}
                           </>
                         ) : (
                           <>
@@ -167,7 +175,9 @@ export default function Help(): React.ReactElement {
                             {description && (
                               <>
                                 <Text> </Text>
-                                <Text dimColor>{description}</Text>
+                                <Text dimColor wrap="truncate">
+                                  {description}
+                                </Text>
                               </>
                             )}
                           </>
