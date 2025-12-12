@@ -20,68 +20,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Spinner } from '@/components/ui/spinner'
 import { signIn, signOut, useSession } from '@/lib/auth-client'
 import { getUserLogin } from '@/lib/auth-utils'
 
-function Spinner() {
-  return (
-    <svg
-      className="animate-spin size-4"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      />
-    </svg>
-  )
-}
-
 export function LoginButton() {
   const { data: session, isPending } = useSession()
-  const [isLoading, setIsLoading] = useState(false)
+  const [hasStartedSignIn, setHasStartedSignIn] = useState(false)
   const router = useRouter()
-
-  if (isPending) {
-    return (
-      <Button disabled>
-        <Spinner />
-        Signing in...
-      </Button>
-    )
-  }
+  const userLogin = session?.user ? getUserLogin(session.user) : null
+  const isStevepeak = userLogin === 'stevepeak'
+  const isSigningIn = isPending || hasStartedSignIn
 
   if (!session) {
     return (
       <Button
-        disabled={isLoading}
+        disabled={isSigningIn}
         onClick={async () => {
-          setIsLoading(true)
-          try {
-            await signIn.social({
-              provider: 'github',
-              callbackURL: '/',
-            })
-          } finally {
-            setIsLoading(false)
-          }
+          // NOTE: `signIn.social()` can resolve before session loading starts (redirect/popup flow).
+          // Keep the button disabled from the first click to avoid a brief "enabled" flash.
+          setHasStartedSignIn(true)
+          await signIn.social({
+            provider: 'github',
+            callbackURL: '/',
+          })
         }}
       >
-        {isLoading ? (
+        {isSigningIn ? (
           <>
             <Spinner />
-            Logging in with GitHub...
+            Signing in...
           </>
         ) : (
           <>
@@ -142,22 +110,34 @@ export function LoginButton() {
           </span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
+        {/* <DropdownMenuSeparator /> */}
 
         {/* Teams */}
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={() => {
             router.push('/~')
           }}
         >
           <Users className="size-4" />
           <span>Teams</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
+
+        {/* Development */}
+        {isStevepeak && (
+          <DropdownMenuItem
+            onClick={() => {
+              router.push('/development')
+            }}
+          >
+            <FlaskConical className="size-4" />
+            <span>Development</span>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator />
 
         {/* Settings */}
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={() => {
             // eslint-disable-next-line no-console
             console.log('Settings clicked')
@@ -165,10 +145,10 @@ export function LoginButton() {
         >
           <Settings className="size-4" />
           <span>Settings</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
         {/* Feature Preview */}
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={() => {
             // eslint-disable-next-line no-console
             console.log('Feature Preview clicked')
@@ -176,10 +156,10 @@ export function LoginButton() {
         >
           <FlaskConical className="size-4" />
           <span>Feature preview</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
         {/* Appearance */}
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={() => {
             // eslint-disable-next-line no-console
             console.log('Appearance clicked')
@@ -187,7 +167,7 @@ export function LoginButton() {
         >
           <Palette className="size-4" />
           <span>Appearance</span>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
         <DropdownMenuSeparator />
 
