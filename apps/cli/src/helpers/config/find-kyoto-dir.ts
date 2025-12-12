@@ -13,8 +13,6 @@ export interface KyotoPaths {
   root: string
   /** Absolute path to the .kyoto/config.json file */
   config: string
-  /** Absolute path to the .kyoto/vectra directory (for vector DB, etc.) */
-  vectra: string
   /** Absolute path to the .kyoto/commit-plan.json file */
   commitPlan: string
 }
@@ -24,16 +22,15 @@ export interface KyotoPaths {
  * Creates necessary directories if they don't exist.
  *
  * @param gitRoot - The git repository root directory
- * @returns An object with absolute paths to .kyoto root, config.json, and vectra
+ * @returns An object with absolute paths to .kyoto root, config.json
  */
 export async function pwdKyoto(gitRoot: string): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
   const config = join(root, 'config.json')
-  const vectra = join(root, 'vectra')
   const commitPlan = join(root, 'commit-plan.json')
 
   // Create all necessary directories
   await mkdir(root, { recursive: true })
 
-  return { gitRoot, root, config, vectra, commitPlan }
+  return { gitRoot, root, config, commitPlan }
 }

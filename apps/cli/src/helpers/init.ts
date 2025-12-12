@@ -7,7 +7,6 @@ import {
   hasStagedChanges,
   isBranchClean,
 } from '@app/shell'
-import { createIndex, ensureIndex } from '@app/vectra'
 import { type LanguageModel } from 'ai'
 
 import { type KyotoPaths, pwdKyoto } from './config/find-kyoto-dir'
@@ -29,14 +28,6 @@ interface InitResult {
   fs: KyotoPaths
   config: Config
   model: LanguageModel
-}
-
-/**
- * Ensures the vectra database exists for story search functionality
- */
-async function ensureVectraDatabase(vectra: string): Promise<void> {
-  const index = createIndex(vectra)
-  await ensureIndex(index)
 }
 
 /**
@@ -76,9 +67,6 @@ export async function init(): Promise<InitResult> {
     hasStagedChanges: staged,
     hasChanges: changes,
   }
-
-  // Ensure vectra database exists for story search
-  await ensureVectraDatabase(fs.vectra)
 
   // Construct the AI model from config
   const { model } = constructModel(config)

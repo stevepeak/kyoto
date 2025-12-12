@@ -18,7 +18,7 @@
     },
     "apps/cli": {
       "name": "@usekyoto/cli",
-      "version": "0.0.0",
+      "version": "0.0.5",
       "bin": {
         "kyoto": "./bin/kyoto.js",
       },
@@ -29,7 +29,6 @@
         "@app/shell": "workspace:^",
         "@app/types": "workspace:^",
         "@app/utils": "workspace:^",
-        "@app/vectra": "workspace:^",
         "@openrouter/ai-sdk-provider": "catalog:",
         "ai": "catalog:",
         "commander": "^14.0.2",
