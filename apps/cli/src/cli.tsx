@@ -9,6 +9,9 @@ import Login from './commands/login'
 import Mcp from './commands/mcp'
 import Plan from './commands/plan'
 import Setup from './commands/setup'
+import SetupAi from './commands/setup-ai'
+import SetupGithub from './commands/setup-github'
+import SetupMcp from './commands/setup-mcp'
 import VibeCheck from './commands/vibe/check'
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
@@ -38,12 +41,36 @@ export async function run(argv = process.argv): Promise<void> {
 
   program.name('kyoto').description('Kyoto CLI')
 
-  program
-    .command('setup')
-    .description('Initialize Kyoto by configuring your AI provider and API key')
+  const setupCommand = program
+    // TODO finish these later
+    .command('setup', { hidden: true })
+    .description('Setup commands')
+
+  setupCommand
+    .command('mcp')
+    .description('Add Kyoto to your MCP services')
     .action(async () => {
-      await renderCommand(<Setup />)
+      await renderCommand(<SetupMcp />)
     })
+
+  setupCommand
+    .command('github')
+    .description('Add a GitHub Action for Kyoto')
+    .action(async () => {
+      await renderCommand(<SetupGithub />)
+    })
+
+  // Intentionally not listed in `help.tsx`
+  setupCommand
+    .command('ai')
+    .description('Configure your AI provider and API key')
+    .action(async () => {
+      await renderCommand(<SetupAi />)
+    })
+
+  setupCommand.action(async () => {
+    await renderCommand(<Setup />)
+  })
 
   program
     .command('login')

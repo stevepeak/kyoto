@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 import { openBrowser } from '../helpers/browser/open-browser'
 import { updateUserAuth } from '../helpers/config/get'
+import { ensureKyotoInGitignore } from '../helpers/git/ensure-kyoto-in-gitignore'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
 import { Link } from '../ui/link'
@@ -204,6 +205,12 @@ export default function Login(): React.ReactElement {
           userId: session.userId,
           openrouterApiKey: session.openrouterApiKey,
         })
+
+        try {
+          await ensureKyotoInGitignore()
+        } catch {
+          // Silent best-effort
+        }
 
         setLogin(result.login ?? null)
         setStatus('done')

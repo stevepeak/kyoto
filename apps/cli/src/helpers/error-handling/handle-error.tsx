@@ -56,7 +56,7 @@ const apiKeyErrorHandler: ErrorHandler = {
     )
     logger(
       <Text color="#7c6653">
-        Please check your API key configuration. Run `kyoto setup` to
+        Please check your API key configuration. Run `kyoto setup ai` to
         reconfigure.\n
       </Text>,
     )
@@ -85,8 +85,8 @@ const gatewayErrorHandler: ErrorHandler = {
     )
     logger(
       <Text color="#7c6653">
-        \nRun `kyoto setup` to reconfigure your API key, or try using --provider
-        openai instead.\n
+        \nRun `kyoto setup ai` to reconfigure your API key, or try using
+        --provider openai instead.\n
       </Text>,
     )
     if (setExitCode) {

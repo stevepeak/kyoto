@@ -94,12 +94,17 @@ export function AIProvider({
         // Don't set finalConfig yet - wait for user confirmation
         setStep('confirm-change')
       } catch {
-        setStep('select-provider')
+        setError('Please run `kyoto login` first.')
+        process.exitCode = 1
+        setStep('done')
+        setTimeout(() => {
+          onComplete()
+        }, 750)
       }
     }
 
     void checkConfig()
-  }, [state, step])
+  }, [onComplete, state, step])
 
   // Mark input as ready when entering confirm-change step (after a small delay to ensure it's rendered)
   useEffect(() => {
@@ -119,7 +124,13 @@ export function AIProvider({
   }, [step])
 
   useEffect(() => {
-    if (state !== 'active' || step !== 'saving' || !provider || !apiKey) {
+    if (
+      state !== 'active' ||
+      step !== 'saving' ||
+      !provider ||
+      !apiKey ||
+      !existingConfig
+    ) {
       return
     }
 
@@ -134,7 +145,7 @@ export function AIProvider({
 
         const finalConfigValue: Config = {
           // TODO not assert this, but we do for now
-          ...existingConfig!,
+          ...existingConfig,
           ai: {
             provider,
             apiKey,

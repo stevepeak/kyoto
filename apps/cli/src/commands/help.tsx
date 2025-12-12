@@ -32,29 +32,36 @@ const commandGroups = [
       },
     ],
   },
-  {
-    title: 'Tooling',
-    kanji: '設定',
-    commands: [
-      {
-        name: 'mcp',
-        description: 'For your coding agent to vibe check themselves',
-        example: 'kyoto mcp',
-      },
-    ],
-  },
+  // TODO finish these later
+  // {
+  //   title: 'Tooling',
+  //   kanji: '設定',
+  //   commands: [
+  //     {
+  //       name: 'mcp',
+  //       description: 'For your coding agent to vibe check themselves',
+  //       example: 'kyoto mcp',
+  //     },
+  //   ],
+  // },
   {
     title: 'Configuring',
     kanji: '設定',
     commands: [
       {
-        name: 'setup',
-        description: 'Configure your Kyoto experience',
-        example: [
-          ['kyoto setup github', 'Add a GitHub Action for Kyoto'],
-          ['kyoto setup mcp', 'Add Kyoto to your MCP services'],
-        ],
+        name: 'login',
+        description: 'Login via GitHub to get started',
+        example: 'kyoto login',
       },
+      // TODO finish these later
+      // {
+      //   name: 'setup',
+      //   description: 'Configure your Kyoto experience',
+      //   example: [
+      //     ['kyoto setup github', 'Add a GitHub Action for Kyoto'],
+      //     ['kyoto setup mcp', 'Add Kyoto to your MCP services'],
+      //   ],
+      // },
       {
         name: 'docs',
         description: 'View the Kyoto documentation',

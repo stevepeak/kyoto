@@ -49,7 +49,7 @@ export async function getConfig(): Promise<Config> {
     }
     // Config file doesn't exist or is invalid
     throw new Error(
-      'Kyoto config is invalid. Please run `kyoto setup` to configure your AI provider and API key.',
+      'Kyoto config is invalid. Please run `kyoto setup ai` to configure your AI provider and API key.',
     )
   }
 }
