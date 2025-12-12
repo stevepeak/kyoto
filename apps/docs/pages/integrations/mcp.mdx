@@ -3,51 +3,49 @@ title: MCP
 description: Tools for agents to vibe check themselves.
 ---
 
-## Automatic Setup
+Kyoto MCP empowers your AI agents to evaluate and improve their vibe coding; enabling faster, higher-quality iteration and more productive outcomes.
 
-<Tip>Use the Kyoto CLI to automatically set this up</Tip>
+<Tabs>
+  <Tab title="Auto Setup">
+    
+    Run the command below to setup the MCP integration in your IDE.
 
-```sh
-kyoto setup mcp
-```
+    ```sh
+    kyoto setup mcp
+    ```
 
-Follow the instructions to configure the MCP service which includes:
+  </Tab>
 
-- Adding Kyoto to `.cursor/mcp.json`
-- Creating a `.cursor/rules/kyoto.mdc` for agents to follow
+  <Tab title="Manual Setup">
+    <Steps>
+      <Step title="Register Kyoto's MCP">
+        Add the following configuration to `.cursor/mcp.json`:
 
-## Manual Setup
+        ```json .cursor/mcp.json
+        {
+          "services": {
+            "Kyoto": {
+              "command": "npx",
+              "args": ["@usekyoto/cli", "mcp"]
+            }
+          }
+        }
+        ```
+      </Step>
 
-First, register the MCP service, then give instructions to your agents to use it.
+      <Step title="Add agent rules">
+        Create a rule file at `.cursor/rules/kyoto.mdc`:
 
-**Register Kyoto's MCP**
+        ```md .cursor/rules/kyoto.mdc
+        ---
+        description: Kyoto MCP rules for vibe checking AI code
+        alwaysApply: true
+        ---
 
-<CodeGroup>
+        Use the Kyoto MCP tool once your work is complete to ensure it aligns with best coding practices.
+        ```
+      </Step>
+    </Steps>
 
-```json .cursor/mcp.json
-{
-  "services": {
-    "Kyoto": {
-      "command": "npx",
-      "args": ["kyoto", "mcp"]
-    }
-  }
-}
-```
-
-</CodeGroup>
-
-**Add agent rules**
-
-<CodeGroup>
-
-```md .cursor/rules/kyoto.mdc
----
-description: Kyoto MCP rules for vibe checking AI code
-alwaysApply: true
----
-
-Use the Kyoto MCP tool once your work is complete to ensure it aligns with best coding practices.
-```
-
-</CodeGroup>
+  </Tab>
+</Tabs>

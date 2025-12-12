@@ -1,40 +1,57 @@
 ---
-title: GitHub Actions
+title: GitHub
 description: Run Kyoto in GitHub Actions.
 ---
 
-## Automatic Setup
+Run Kyoto in GitHub Actions to get vibe checks on your pull requests — ensuring your project's vibes are always on point.
 
-<Tip>Use the Kyoto CLI to automatically set this up</Tip>
+<Tabs>
+  <Tab title="Auto Setup">
+    Run the command below to setup the GitHub actions
 
-```sh
-kyoto setup github
-```
+    ```sh
+    kyoto setup github
+    ```
 
-Follow the instructions to configure the GitHub Actions workflow, which includes:
+  </Tab>
 
-- Creating a GitHub Action at `.github/workflows/kyoto.yml`
+  <Tab title="Manual Setup">
+    Create a GitHub Actions workflow at `.github/workflows/kyoto.yml`
 
-## Manual Setup
+    ```yml .github/workflows/kyoto.yml
+    name: Kyoto
 
-Create a GitHub Actions workflow at `.github/workflows/kyoto.yml`
+    on:
+      push:
+        branches:
+          - main
+      pull_request:
 
-```yml .github/workflows/kyoto.yml
-name: Kyoto
+    jobs:
+      test:
+        runs-on: ubuntu-latest
+        permissions:
+          checks: write
+          contents: read
+        env:
+          KYOTO_AI_TOKEN: ${{ secrets.KYOTO_AI_TOKEN }}
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-node@v4
+            with:
+              node-version: '22'
+          - run: npx @usekyoto/cli vibe check
+    ```
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
+  </Tab>
+</Tabs>
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npx @usekyoto/cli vibe check
-```
+## GitHub Actions Secrets
+
+Kyoto requires the `KYOTO_AI_TOKEN` secret to run in GitHub Actions.
+
+1. Go to your repository on [GitHub](https://github.com/)
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Click **"New repository secret"**
+4. Name: `KYOTO_AI_TOKEN`
+5. Call `kyoto setup github` to view the token value.
