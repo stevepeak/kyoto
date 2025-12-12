@@ -388,6 +388,7 @@ export const cliAuthState = pgTable('cli_auth_state', {
   sessionToken: text('session_token'),
   userId: text('user_id'),
   openrouterApiKey: text('openrouter_api_key'),
+  redirectUri: text('redirect_uri'),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
