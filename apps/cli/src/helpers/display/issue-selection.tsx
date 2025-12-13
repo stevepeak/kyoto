@@ -1,9 +1,10 @@
-import { type AgentRunState, type VibeCheckSeverity } from '@app/types'
+import { type AgentRunState } from '@app/types'
 import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
 import React, { useMemo, useState } from 'react'
 
 import { Header } from '../../ui/header'
+import { formatFindingLabel, formatSeverity } from '../vibe-check/display-utils'
 import {
   type ConsolidatedFinding,
   consolidateFindings,
@@ -21,16 +22,6 @@ interface FindingItem {
   label: string
   value: string
   finding: ConsolidatedFinding
-}
-
-function formatSeverity(severity: VibeCheckSeverity): string {
-  return severity.toUpperCase()
-}
-
-function formatFindingLabel(finding: ConsolidatedFinding): string {
-  const severity = formatSeverity(finding.severity)
-  const pathPart = finding.path ? ` (${finding.path})` : ''
-  return `[${severity}] ${finding.message}${pathPart}`
 }
 
 function CustomItem({
