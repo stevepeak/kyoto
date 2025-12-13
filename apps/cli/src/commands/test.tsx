@@ -1,5 +1,5 @@
-import { analyzeTestSuggestions, formatScopeDescription } from '@app/agents'
-import { getScopeContext } from '@app/shell'
+import { analyzeTestSuggestions } from '@app/agents'
+import { formatScopeDescription, getScopeContext } from '@app/shell'
 import { type VibeCheckContext } from '@app/types'
 import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useRef, useState } from 'react'

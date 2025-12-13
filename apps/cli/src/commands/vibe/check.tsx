@@ -1,5 +1,5 @@
-import { formatScopeDescription } from '@app/agents'
 import {
+  formatScopeDescription,
   getCurrentBranch,
   getCurrentCommitSha,
   getScopeContext,

@@ -7,7 +7,7 @@ import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { formatScopeContent } from '../helpers/format-scope-content'
-import { formatScopeDescription } from '../helpers/format-scope-description'
+import { formatScopeDescription } from '@app/shell'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const testSuggestionsOutputSchema = z.object({
