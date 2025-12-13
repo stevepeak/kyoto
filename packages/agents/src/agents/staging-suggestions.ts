@@ -1,6 +1,8 @@
 import {
   createLocalReadFileTool,
   createLocalTerminalCommandTool,
+  findGitRoot,
+  getUncommittedFilePaths,
 } from '@app/shell'
 import { type VibeCheckScope } from '@app/types'
 import { type Tracer } from '@opentelemetry/api'
@@ -56,6 +58,9 @@ export async function analyzeStagingSuggestions({
   instructions,
   options: { maxSteps = 30, model, telemetryTracer, progress },
 }: AnalyzeStagingSuggestionsOptions): Promise<StagingSuggestionsOutput> {
+  const gitRoot = await findGitRoot()
+  const uncommittedFilePaths = await getUncommittedFilePaths(gitRoot)
+
   const agent = new Agent({
     model,
     system: dedent`
@@ -139,6 +144,10 @@ export async function analyzeStagingSuggestions({
 
     ${instructions ? `User instructions: ${instructions}` : ''}
 
+    Here is the authoritative list of uncommitted files (including untracked). You MUST include
+    every file from this list in your suggestions:
+    ${uncommittedFilePaths.map((p) => `- ${p}`).join('\n')}
+
     Use the available tools to:
     1. Get a complete list of all uncommitted files (staged + unstaged + untracked)
     2. Read the changed files to understand what was modified
@@ -160,5 +169,35 @@ export async function analyzeStagingSuggestions({
     prompt,
   })
 
-  return result.experimental_output
+  // Ensure we include untracked/new files even if the model forgets them.
+  const output = result.experimental_output
+  const suggestedFiles = new Set<string>()
+  for (const suggestion of output.suggestions) {
+    for (const file of suggestion.files) {
+      suggestedFiles.add(file)
+    }
+  }
+
+  const missing = uncommittedFilePaths.filter((p) => !suggestedFiles.has(p))
+  if (missing.length === 0) {
+    return output
+  }
+
+  const maxOrder = output.suggestions.reduce(
+    (acc, s) => Math.max(acc, s.order),
+    0,
+  )
+
+  return {
+    suggestions: [
+      ...output.suggestions,
+      {
+        order: maxOrder + 1,
+        commitMessage: 'chore: commit remaining changes',
+        files: missing,
+        reasoning:
+          'These files were uncommitted (including untracked/new files) but were not included in the initial suggestions.',
+      },
+    ],
+  }
 }

@@ -1,7 +1,52 @@
 import { runGit } from '@app/shell'
 import { execa } from 'execa'
+import { access } from 'node:fs/promises'
+import path from 'node:path'
 
 import { type CommitPlan } from './commit-plan'
+
+async function getGitIndexLockPath(args: {
+  gitRoot: string
+}): Promise<string | null> {
+  const { gitRoot } = args
+
+  // Worktrees/submodules may have `.git` as a file; `--git-dir` is the reliable way.
+  const { stdout } = await execa('git', ['rev-parse', '--git-dir'], {
+    cwd: gitRoot,
+  })
+
+  const gitDir = stdout.trim()
+  if (gitDir.length === 0) {
+    return null
+  }
+
+  const resolvedGitDir = path.isAbsolute(gitDir)
+    ? gitDir
+    : path.join(gitRoot, gitDir)
+  return path.join(resolvedGitDir, 'index.lock')
+}
+
+async function assertNoGitIndexLock(args: { gitRoot: string }): Promise<void> {
+  const lockPath = await getGitIndexLockPath({ gitRoot: args.gitRoot })
+  if (!lockPath) {
+    return
+  }
+
+  try {
+    await access(lockPath)
+  } catch {
+    return
+  }
+
+  throw new Error(
+    [
+      `Git index is locked (found: ${lockPath}).`,
+      'Another git process is likely still running (or a previous one crashed).',
+      'Close any editor opened by git and stop any running git commands, then retry.',
+      `If you are sure nothing is running, remove the lock file: rm -f "${lockPath}"`,
+    ].join('\n'),
+  )
+}
 
 /**
  * Gets all changed files (staged and unstaged) from git status.
@@ -53,7 +98,10 @@ export async function executeCommitPlan(args: {
   const { gitRoot, plan, onProgress, onStepStart, onStepComplete } = args
   let committedSteps = 0
 
+  await assertNoGitIndexLock({ gitRoot })
+
   for (const step of [...plan.steps].sort((a, b) => a.order - b.order)) {
+    await assertNoGitIndexLock({ gitRoot })
     onStepStart?.({ order: step.order, commitMessage: step.commitMessage })
 
     // Get current changed files before each step to validate file paths

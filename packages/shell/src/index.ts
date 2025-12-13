@@ -2,6 +2,7 @@
 export { findGitRoot } from './git/find-git-root'
 export { getChangedTsFiles } from './git/get-changed-ts-files'
 export { getChangedTsFilesFromCommits } from './git/get-changed-ts-files-from-commits'
+export { getUncommittedFilePaths } from './git/get-uncommitted-file-paths'
 export { getStagedTsFiles } from './git/get-staged-ts-files'
 export { getUnstagedTsFiles } from './git/get-unstaged-ts-files'
 export {

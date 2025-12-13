@@ -75,3 +75,9 @@ export {
   type EvaluationAgentOptions as evaluationAgentOptions,
   type ValidationResult,
 } from './agent-types'
+
+// ============================================================================
+// CLI SCHEMAS (CLI ↔ web shared contracts)
+// ============================================================================
+
+export { type CliSessionResponse, cliSessionResponseSchema } from './cli'
