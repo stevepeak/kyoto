@@ -10,9 +10,9 @@ import Login from './login'
 import { runMcpCommand } from './mcp'
 import Plan from './plan'
 import Setup from './setup'
-import SetupAi from './setup-ai'
-import SetupGithub from './setup-github'
-import SetupMcp from './setup-mcp'
+import SetupAi from './setup/ai'
+import SetupGithub from './setup/github'
+import SetupMcp from './setup/mcp'
 import Test from './test'
 import VibeCheck from './vibe/check'
 
@@ -75,10 +75,7 @@ export function registerCommands(program: Command): void {
       '[instructions]',
       'Optional instructions to guide how Kyoto groups changes and writes commit messages',
     )
-    .option(
-      '--plan',
-      'Generate and save a commit plan to .kyoto/commit-plan.json without committing',
-    )
+    .option('--plan', 'Preview a commit plan without committing')
     .action(
       async (instructions: string | undefined, options: { plan?: boolean }) => {
         await renderCommand({
