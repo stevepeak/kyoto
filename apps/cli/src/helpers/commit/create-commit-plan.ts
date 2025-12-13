@@ -11,7 +11,7 @@ export async function createCommitPlan(args: {
   const { model, instructions, onProgress } = args
 
   const result = await analyzeStagingSuggestions({
-    scope: { type: 'unstaged' },
+    scope: { type: 'changes' },
     instructions,
     options: {
       model,

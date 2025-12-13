@@ -13,8 +13,6 @@ export interface KyotoPaths {
   root: string
   /** Absolute path to the .kyoto/config.json file */
   config: string
-  /** Absolute path to the .kyoto/commit-plan.json file */
-  commitPlan: string
 }
 
 /**
@@ -27,10 +25,9 @@ export interface KyotoPaths {
 export async function pwdKyoto(gitRoot: string): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
   const config = join(root, 'config.json')
-  const commitPlan = join(root, 'commit-plan.json')
 
   // Create all necessary directories
   await mkdir(root, { recursive: true })
 
-  return { gitRoot, root, config, commitPlan }
+  return { gitRoot, root, config }
 }
