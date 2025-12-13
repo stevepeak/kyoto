@@ -77,6 +77,8 @@ export default function VibeCheck({
             setWarnings,
             exit,
             cancelled: cancelledRef,
+            commandName: 'vibe check',
+            alternativeCommand: 'kyoto vibe check',
           })
           return
         }
@@ -98,6 +100,8 @@ export default function VibeCheck({
             setWarnings,
             exit,
             cancelled: cancelledRef,
+            commandName: 'vibe check',
+            alternativeCommand: 'kyoto vibe check',
           })
           return
         }
