@@ -21,20 +21,29 @@ Kyoto MCP empowers your AI agents to evaluate and improve their vibe coding; ena
       <Step title="Register Kyoto's MCP">
         Add the following configuration to `.cursor/mcp.json`:
 
+        <Note>
+          Click here to [add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=kytoto&config=eyJjb21tYW5kIjogImt5b3RvIiwiYXJncyI6IFsibWNwIl19)
+        </Note>
+
         ```json .cursor/mcp.json
         {
-          "services": {
+          "mcpServers": {
             "Kyoto": {
-              "command": "npx",
-              "args": ["@usekyoto/cli", "mcp"]
+              "command": "kyoto",
+              "args": ["mcp"]
             }
           }
         }
         ```
       </Step>
 
+
       <Step title="Add agent rules">
         Create a rule file at `.cursor/rules/kyoto.mdc`:
+
+        <Note>
+          Click here to [add to Cursor](cursor://anysphere.cursor-deeplink/rule?name=kyoto&text=---%0Adescription%3A+Kyoto+MCP+rules+for+vibe+checking+AI+code%0AalwaysApply%3A+true%0A---%0A%0AUse+the+Kyoto+MCP+tool+to+vibe+check+once+your+work+is+complete+to+ensure+the+code+aligns+with+our+best+coding+practices.%0A%0A)
+        </Note>
 
         ```md .cursor/rules/kyoto.mdc
         ---

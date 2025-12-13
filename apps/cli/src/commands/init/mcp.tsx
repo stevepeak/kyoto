@@ -22,7 +22,7 @@ interface MCPProps {
 
 const mcpJsonSchema = z
   .object({
-    services: z.record(z.unknown()).optional(),
+    mcpServers: z.record(z.unknown()).optional(),
   })
   .passthrough()
 
@@ -76,8 +76,8 @@ export function MCP({ state, onComplete }: MCPProps): React.ReactElement {
             JSON.parse(mcpContent) as unknown,
           )
           const mcpConfig = parsed.success ? parsed.data : null
-          const services = mcpConfig?.services
-          if (services?.kyoto) {
+          const mcpServers = mcpConfig?.mcpServers
+          if (mcpServers?.kyoto) {
             files.push('.cursor/mcp.json')
           }
         } catch {
