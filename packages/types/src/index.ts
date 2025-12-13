@@ -5,6 +5,7 @@ export type VibeCheckScope =
   | { type: 'commit'; commit: string }
   | { type: 'staged' }
   | { type: 'unstaged' }
+  | { type: 'changes' }
   | { type: 'paths'; paths: string[] }
 
 export type VibeCheckTarget = 'staged' | 'unstaged'

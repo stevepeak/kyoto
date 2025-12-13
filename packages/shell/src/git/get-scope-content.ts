@@ -28,7 +28,9 @@ export async function getScopeFilePaths(
       return await getChangedTsFilesFromCommits(scope.commits, gitRoot)
     case 'staged':
       return await getStagedTsFiles(gitRoot)
-    case 'unstaged': {
+    case 'unstaged':
+      return await getUnstagedTsFiles(gitRoot)
+    case 'changes': {
       // Check all changes (staged + unstaged)
       const stagedFiles = await getStagedTsFiles(gitRoot)
       const unstagedFiles = await getUnstagedTsFiles(gitRoot)
@@ -100,6 +102,29 @@ async function getFileDiff(
             cwd: gitRoot,
           })
           return stdout
+        } catch {
+          // File is untracked, return empty (will use fileContents instead)
+          return ''
+        }
+      }
+      case 'changes': {
+        // For 'changes' scope, get both staged and unstaged diffs (all changes)
+        try {
+          await execa('git', ['ls-files', '--error-unmatch', '--', filePath], {
+            cwd: gitRoot,
+          })
+          // File is tracked, get both staged and unstaged diffs
+          const stagedResult = await execa(
+            'git',
+            ['diff', '--cached', '--', filePath],
+            { cwd: gitRoot },
+          ).catch(() => ({ stdout: '' }))
+          const unstagedResult = await execa('git', ['diff', '--', filePath], {
+            cwd: gitRoot,
+          }).catch(() => ({ stdout: '' }))
+          return [stagedResult.stdout, unstagedResult.stdout]
+            .filter((s) => s.trim().length > 0)
+            .join('\n')
         } catch {
           // File is untracked, return empty (will use fileContents instead)
           return ''

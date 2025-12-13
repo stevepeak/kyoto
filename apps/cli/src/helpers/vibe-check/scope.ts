@@ -246,10 +246,9 @@ export async function getVibeCheckScope(
     }
   }
 
-  // Local development: use staged/unstaged
   const scope: VibeCheckScope = staged
     ? ({ type: 'staged' as const } as const)
-    : ({ type: 'unstaged' as const } as const)
+    : ({ type: 'changes' as const } as const)
 
   // Check for staged changes early (only for local staged checks)
   if (staged && !hasStagedChanges) {

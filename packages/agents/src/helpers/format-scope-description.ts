@@ -36,6 +36,8 @@ export function formatScopeDescription({
       return 'staged changes'
     case 'unstaged':
       return 'unstaged changes'
+    case 'changes':
+      return 'all changes'
     case 'paths':
       return `specified paths: ${scope.paths.join(', ')}`
   }

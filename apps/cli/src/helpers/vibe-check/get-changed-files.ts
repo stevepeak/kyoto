@@ -24,7 +24,9 @@ export async function getChangedFiles(args: {
       return await getChangedTsFilesFromCommits(scope.commits, gitRoot)
     case 'staged':
       return await getStagedTsFiles(gitRoot)
-    case 'unstaged': {
+    case 'unstaged':
+      return await getUnstagedTsFiles(gitRoot)
+    case 'changes': {
       // Check all changes (staged + unstaged)
       const stagedFiles = await getStagedTsFiles(gitRoot)
       const unstagedFiles = await getUnstagedTsFiles(gitRoot)
