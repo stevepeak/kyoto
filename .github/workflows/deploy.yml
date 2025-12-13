@@ -1,4 +1,4 @@
-name: Deploy Database Migrations
+name: Migrations
 
 on:
   push:
