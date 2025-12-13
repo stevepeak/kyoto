@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { run } from '../src/cli.tsx'
+import { run } from '../dist/cli.js'
 
 try {
   await run(process.argv)

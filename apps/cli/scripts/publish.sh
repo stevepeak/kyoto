@@ -65,6 +65,29 @@ echo -e "\033[0;36m────────────────────�
 EXIT_CODE=0
 npm publish --access public --ignore-scripts || EXIT_CODE=$?
 
+if [ "$EXIT_CODE" -eq 0 ]; then
+  echo ""
+  echo -e "\033[0;36mTesting published package via npx...\033[0m"
+  echo -e "\033[0;36m─────────────────────────────────────────────────────────────\033[0m"
+  echo -e "\033[0;36mRunning:\033[0m \033[1;36mnpx --yes @usekyoto/cli\033[0m"
+
+  # Avoid set -e terminating the script on a non-zero exit from the smoke test.
+  set +e
+  NPX_OUTPUT="$(npx --yes @usekyoto/cli 2>&1)"
+  NPX_EXIT_CODE=$?
+  set -e
+
+  echo ""
+  echo -e "\033[0;36mnpx output:\033[0m"
+  echo "$NPX_OUTPUT"
+
+  if [ "$NPX_EXIT_CODE" -ne 0 ]; then
+    EXIT_CODE="$NPX_EXIT_CODE"
+  fi
+fi
+
+
+
 # Remove trap since we're about to exit normally (restore will happen via trap)
 # But we need to disable the trap first to avoid double restore
 trap - EXIT
