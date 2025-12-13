@@ -1,3 +1,4 @@
+import { formatScopeDescription } from '@app/agents'
 import {
   getCurrentBranch,
   getCurrentCommitSha,
@@ -45,6 +46,7 @@ export default function VibeCheck({
   const [context, setContext] = useState<VibeCheckContext | null>(null)
   const [finalStates, setFinalStates] = useState<AgentRunState[] | null>(null)
   const [showIssueSelection, setShowIssueSelection] = useState(false)
+  const [scopeDescription, setScopeDescription] = useState<string | null>(null)
 
   const cancelledRef = useRef(false)
 
@@ -106,6 +108,11 @@ export default function VibeCheck({
         const scopeContent = await getScopeContext(
           scopeResult.scope,
           fs.gitRoot,
+        )
+
+        // Set scope description for display
+        setScopeDescription(
+          formatScopeDescription({ scope: scopeResult.scope }),
         )
 
         setContext({
@@ -211,6 +218,11 @@ export default function VibeCheck({
   return (
     <Box flexDirection="column">
       <Jumbo />
+      {scopeDescription && (
+        <Box marginBottom={1}>
+          <Text color="grey">Scope: {scopeDescription}</Text>
+        </Box>
+      )}
       <Header kanji="空気" title="Vibe checks" />
       {warnings.length > 0 && (
         <Box marginTop={1} flexDirection="column">

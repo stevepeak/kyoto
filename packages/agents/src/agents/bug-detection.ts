@@ -8,6 +8,7 @@ import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { formatScopeContent } from '../helpers/format-scope-content'
+import { formatScopeDescription } from '../helpers/format-scope-description'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const bugDetectionOutputSchema = z.object({
@@ -130,16 +131,7 @@ export async function analyzeBugDetection({
   // Format scope content for the prompt
   const scopeContentText = formatScopeContent(context.scopeContent)
 
-  const scopeDescription =
-    context.scope.type === 'commit'
-      ? `commit ${context.scope.commit}`
-      : context.scope.type === 'commits'
-        ? `commits ${context.scope.commits.join(', ')}`
-        : context.scope.type === 'staged'
-          ? 'staged changes'
-          : context.scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${context.scope.paths.join(', ')}`
+  const scopeDescription = formatScopeDescription({ scope: context.scope })
 
   const prompt = dedent`
     Review the ${scopeDescription} and detect bugs, logic errors, and potential runtime issues.

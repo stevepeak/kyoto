@@ -1,4 +1,4 @@
-import { analyzeTestSuggestions } from '@app/agents'
+import { analyzeTestSuggestions, formatScopeDescription } from '@app/agents'
 import { getScopeContext } from '@app/shell'
 import { type VibeCheckContext } from '@app/types'
 import { Box, Text, useApp } from 'ink'
@@ -35,6 +35,7 @@ export default function Test({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [suggestions, setSuggestions] = useState<TestSuggestion[]>([])
+  const [scopeDescription, setScopeDescription] = useState<string | null>(null)
 
   const cancelledRef = useRef(false)
 
@@ -74,6 +75,11 @@ export default function Test({
         }
         return
       }
+
+      // Set scope description for display
+      setScopeDescription(
+        formatScopeDescription({ scope: setupResult.context.scope }),
+      )
 
       try {
         // Retrieve scope content for the agent
@@ -154,6 +160,11 @@ export default function Test({
   return (
     <Box flexDirection="column">
       <Jumbo />
+      {scopeDescription && (
+        <Box marginBottom={1}>
+          <Text color="grey">Scope: {scopeDescription}</Text>
+        </Box>
+      )}
       <Header kanji="試験" title="Test suggestions" />
       {warnings.length > 0 && (
         <Box marginTop={1} flexDirection="column">

@@ -30,3 +30,4 @@ export {
   analyzeTestSuggestions,
   testSuggestionsOutputSchema,
 } from './agents/test-suggestions'
+export { formatScopeDescription } from './helpers/format-scope-description'
