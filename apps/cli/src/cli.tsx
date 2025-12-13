@@ -14,6 +14,7 @@ import Setup from './commands/setup'
 import SetupAi from './commands/setup-ai'
 import SetupGithub from './commands/setup-github'
 import SetupMcp from './commands/setup-mcp'
+import Test from './commands/test'
 import VibeCheck from './commands/vibe/check'
 import { CLI_VERSION } from './generated/version'
 import { getCliAnalyticsContext } from './helpers/analytics/cli-analytics'
@@ -24,6 +25,48 @@ import {
 import { handleError } from './helpers/error-handling/handle-error'
 import { initializeCliLogFile } from './helpers/logging/cli-log-file'
 import { createLogger } from './helpers/logging/logger'
+
+function parseCommitOptions(args: {
+  commitSpec: string | undefined
+  options: {
+    timeout?: string
+    commits?: string
+    commit?: string
+  }
+}): {
+  timeoutMinutes: number
+  commitCount?: number
+  commitSha?: string
+} {
+  const timeoutMinutes = Number.parseFloat(args.options.timeout ?? '1')
+
+  let commitCount: number | undefined
+  let commitSha: string | undefined = args.options.commit
+
+  // Parse commit specification from argument (e.g., -1, -4, or SHA)
+  if (args.commitSpec) {
+    // Check if it's a negative number (commit count)
+    if (args.commitSpec.startsWith('-')) {
+      const num = Number.parseInt(args.commitSpec, 10)
+      if (!Number.isNaN(num) && num < 0) {
+        commitCount = Math.abs(num)
+      }
+    } else {
+      // Assume it's a commit SHA
+      commitSha = args.commitSpec
+    }
+  }
+
+  // Override with --commits flag if provided
+  if (args.options.commits) {
+    const count = Number.parseInt(args.options.commits, 10)
+    if (!Number.isNaN(count) && count > 0) {
+      commitCount = count
+    }
+  }
+
+  return { timeoutMinutes, commitCount, commitSha }
+}
 
 async function renderCommand(args: {
   commandName: string
@@ -210,38 +253,70 @@ export async function run(argv = process.argv): Promise<void> {
           last?: boolean
         },
       ) => {
-        const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
-
-        let commitCount: number | undefined
-        let commitSha: string | undefined = options.commit
-
-        // Parse commit specification from argument (e.g., -1, -4, or SHA)
-        if (commitSpec) {
-          // Check if it's a negative number (commit count)
-          if (commitSpec.startsWith('-')) {
-            const num = Number.parseInt(commitSpec, 10)
-            if (!Number.isNaN(num) && num < 0) {
-              commitCount = Math.abs(num)
-            }
-          } else {
-            // Assume it's a commit SHA
-            commitSha = commitSpec
-          }
-        }
-
-        // Override with --commits flag if provided
-        if (options.commits) {
-          const count = Number.parseInt(options.commits, 10)
-          if (!Number.isNaN(count) && count > 0) {
-            commitCount = count
-          }
-        }
+        const { timeoutMinutes, commitCount, commitSha } = parseCommitOptions({
+          commitSpec,
+          options,
+        })
 
         await renderCommand({
           commandName: 'vibe_check',
           commandOptions: { ...options, commitCount, commitSha },
           element: (
             <VibeCheck
+              staged={options.staged}
+              timeoutMinutes={timeoutMinutes}
+              commitCount={commitCount}
+              commitSha={commitSha}
+              sinceBranch={options.since}
+              last={options.last}
+            />
+          ),
+        })
+      },
+    )
+
+  program
+    .command('test')
+    .description('Generate test suggestions for code changes')
+    .argument(
+      '[commit-spec]',
+      'Commit specification: negative number for last N commits (e.g., -1, -4) or commit SHA',
+    )
+    .option('--staged', 'Only check staged changes')
+    .option(
+      '--timeout <minutes>',
+      'Timeout for the agent in minutes (default: 1)',
+      '1',
+    )
+    .option('--commits <count>', 'Check the last N commits (e.g., --commits 4)')
+    .option('--commit <sha>', 'Check a specific commit by SHA')
+    .option(
+      '--since <branch>',
+      'Check commits since a branch (e.g., --since main)',
+    )
+    .option('--last', 'Check commits since last vibe check')
+    .action(
+      async (
+        commitSpec: string | undefined,
+        options: {
+          staged?: boolean
+          timeout?: string
+          commits?: string
+          commit?: string
+          since?: string
+          last?: boolean
+        },
+      ) => {
+        const { timeoutMinutes, commitCount, commitSha } = parseCommitOptions({
+          commitSpec,
+          options,
+        })
+
+        await renderCommand({
+          commandName: 'test',
+          commandOptions: { ...options, commitCount, commitSha },
+          element: (
+            <Test
               staged={options.staged}
               timeoutMinutes={timeoutMinutes}
               commitCount={commitCount}

@@ -45,6 +45,25 @@ const commandGroups = [
           ['kyoto diff', 'Get a concise summary of your current changes'],
         ],
       },
+      {
+        name: 'test',
+        description: 'Generate test suggestions for code changes',
+        example: [
+          ['kyoto test', 'Generate test suggestions for all changes'],
+          [
+            'kyoto test --staged',
+            'Generate test suggestions for staged changes only',
+          ],
+          [
+            'kyoto test --commits 4',
+            'Generate test suggestions for the last 4 commits',
+          ],
+          [
+            'kyoto test --last',
+            'Generate test suggestions since last vibe check',
+          ],
+        ],
+      },
     ],
   },
   // TODO finish these later
