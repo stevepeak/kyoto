@@ -13,12 +13,12 @@ import {
 type Step = 'checking' | 'setting-up' | 'commit-prompt' | 'committing' | 'done'
 type ComponentState = 'pending' | 'active' | 'completed'
 
-export interface UseMcpSetupOptions {
+interface UseMcpSetupOptions {
   state: ComponentState
   onComplete: () => void
 }
 
-export interface UseMcpSetupReturn {
+interface UseMcpSetupReturn {
   step: Step
   configuredFiles: string[]
   commitPromptValue: string

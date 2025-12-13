@@ -23,7 +23,6 @@ interface TestSuggestion {
 
 export default function Test({
   staged = false,
-  timeoutMinutes = 1,
   commitCount,
   commitSha,
   sinceBranch,
@@ -80,7 +79,7 @@ export default function Test({
           scope: setupResult.context.scope,
           options: {
             model: setupResult.context.model,
-            progress: (message) => {
+            progress: (_message) => {
               // Could show progress if needed
             },
           },
@@ -128,7 +127,7 @@ export default function Test({
   }, [exit, staged, commitCount, commitSha, sinceBranch, last])
 
   const handleSubmit = (
-    selectedItems: Array<{ label: string; value: string }>,
+    _selectedItems: { label: string; value: string }[],
   ): void => {
     // User can check/uncheck items with space, but we don't need to do anything on submit
     // The checkbox list is just for tracking what to test
@@ -153,9 +152,11 @@ export default function Test({
       )}
       {!loading && !error && suggestions.length > 0 && (
         <Box marginTop={1} flexDirection="column">
-          <Text color="grey" marginBottom={1}>
-            Use arrow keys to navigate, space to toggle, Enter to exit.
-          </Text>
+          <Box marginBottom={1}>
+            <Text color="grey">
+              Use arrow keys to navigate, space to toggle, Enter to exit.
+            </Text>
+          </Box>
           <MultiSelect
             items={suggestions.map((suggestion, index) => ({
               label: suggestion.category

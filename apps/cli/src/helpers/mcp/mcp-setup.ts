@@ -4,15 +4,15 @@ import { join } from 'node:path'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-export const mcpJsonSchema = z
+const mcpJsonSchema = z
   .object({
     mcpServers: z.record(z.unknown()).optional(),
   })
   .passthrough()
 
-export type McpConfig = z.infer<typeof mcpJsonSchema>
+type McpConfig = z.infer<typeof mcpJsonSchema>
 
-export interface McpConfigurationStatus {
+interface McpConfigurationStatus {
   configuredFiles: string[]
 }
 

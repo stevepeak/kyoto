@@ -149,7 +149,7 @@ export default function VibeCheck({
     return () => {
       cancelledRef.current = true
     }
-  }, [exit, staged, commitCount, commitSha])
+  }, [exit, staged, commitCount, commitSha, sinceBranch, last])
 
   const handleAgentComplete = async (
     states: AgentRunState[],

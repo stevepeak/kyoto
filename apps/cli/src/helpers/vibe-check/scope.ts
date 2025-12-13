@@ -8,11 +8,10 @@ import {
 import { type VibeCheckScope } from '@app/types'
 
 import { getConfig } from '../config/get'
-
 import {
   getGitHubBaseRef,
-  getGitHubHeadRef,
   getGitHubEventName,
+  getGitHubHeadRef,
   isGitHubActions,
 } from './github-actions'
 

@@ -5,9 +5,7 @@ import React from 'react'
  * Creates a warning React node based on the warning message.
  * Returns null if no warning should be shown.
  */
-export function createWarningNode(
-  warning: string | null,
-): React.ReactNode | null {
+function createWarningNode(warning: string | null): React.ReactNode | null {
   if (!warning) {
     return null
   }

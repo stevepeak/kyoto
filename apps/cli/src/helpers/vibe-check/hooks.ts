@@ -1,5 +1,6 @@
+import type React from 'react'
+
 import { type VibeCheckScope } from '@app/types'
-import { useRef } from 'react'
 
 import { type LanguageModel } from '../config/get-model'
 import { init } from '../init'
