@@ -85,6 +85,9 @@ async function prepareNpmPackage(): Promise<void> {
 
   const publishedPackageJson = {
     ...cliPackageJson,
+    bin: {
+      kyoto: './bin/packed.js',
+    },
     dependencies: rewriteDeps({ deps: cliPackageJson.dependencies, catalog }),
     devDependencies: rewriteDeps({
       deps: cliPackageJson.devDependencies,

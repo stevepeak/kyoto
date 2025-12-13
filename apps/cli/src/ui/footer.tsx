@@ -13,7 +13,7 @@ export function Footer() {
         </Link>{' '}
         <Text dimColor>v{CLI_VERSION} </Text>
         <Text color="grey">
-          is crafted with intention on{' '}
+          is crafted intention on{' '}
           <Link url="https://github.com/iopeak/kyoto">GitHub</Link>
         </Text>
       </Text>

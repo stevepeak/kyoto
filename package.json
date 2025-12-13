@@ -45,7 +45,7 @@
     }
   },
   "bin": {
-    "kyoto": "./apps/cli/bin/kyoto.js"
+    "kyoto": "./apps/cli/bin/dev.js"
   },
   "scripts": {
     "dev": "turbo run dev",

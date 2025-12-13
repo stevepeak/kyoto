@@ -149,6 +149,30 @@ export default function VibeCheck({
     }
   }, [exit, staged, commitCount, commitSha, sinceBranch, last])
 
+  // Update config with latest commit SHA and branch after successful vibe check
+  useEffect(() => {
+    if (!finalStates || !context || finalStates.length === 0) {
+      return
+    }
+
+    void (async () => {
+      try {
+        const commitSha = await getCurrentCommitSha(context.gitRoot)
+        const branch = await getCurrentBranch(context.gitRoot)
+        if (commitSha && branch) {
+          await updateConfig({
+            latest: {
+              sha: commitSha,
+              branch,
+            },
+          })
+        }
+      } catch {
+        // Silently fail - config update is not critical
+      }
+    })()
+  }, [finalStates, context])
+
   const handleAgentComplete = async (
     states: AgentRunState[],
   ): Promise<void> => {
@@ -159,22 +183,6 @@ export default function VibeCheck({
     // Store states and show issue selection
     setFinalStates(states)
     setShowIssueSelection(true)
-
-    // Update config with latest commit SHA and branch after successful vibe check
-    try {
-      const commitSha = await getCurrentCommitSha(context.gitRoot)
-      const branch = await getCurrentBranch(context.gitRoot)
-      if (commitSha && branch) {
-        await updateConfig({
-          latest: {
-            sha: commitSha,
-            branch,
-          },
-        })
-      }
-    } catch {
-      // Silently fail - config update is not critical
-    }
   }
 
   const handleIssueSelect = async (
