@@ -108,16 +108,22 @@ export function IssueSelection({
     [allFindings],
   )
 
-  const handleSelect = async (item: FindingItem): Promise<void> => {
+  const handleSelect = (item: { label: string; value: string }): void => {
+    // Find the corresponding FindingItem
+    const findingItem = items.find((i) => i.value === item.value)
+    if (!findingItem) {
+      return
+    }
+
     // Mark as started immediately
-    setStartedIds((prev) => new Set(prev).add(item.value))
+    setStartedIds((prev) => new Set(prev).add(findingItem.value))
 
     // Spawn agent for this finding (don't await, let it run in background)
-    void onSelect(item.finding)
+    void onSelect(findingItem.finding)
   }
 
   // Handle "q" to exit
-  useInput((input, key) => {
+  useInput((input) => {
     if (input === 'q' || input === 'Q') {
       onExit()
     }
@@ -193,15 +199,18 @@ export function IssueSelection({
               <SelectInput
                 items={items}
                 onSelect={handleSelect}
-                itemComponent={(props) => {
-                  const item = items.find((i) => i.value === props.value)
-                  if (!item) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                itemComponent={(props: any) => {
+                  const findingItem = items.find(
+                    (i) => i.value === (props.value ?? props.item?.value),
+                  )
+                  if (!findingItem) {
                     return null
                   }
                   return (
                     <CustomItem
-                      isSelected={props.isSelected}
-                      finding={item.finding}
+                      isSelected={props.isSelected ?? false}
+                      finding={findingItem.finding}
                       isStarted={false}
                     />
                   )

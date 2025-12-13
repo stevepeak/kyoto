@@ -295,10 +295,12 @@ export default function VibeCheck({
 
       // Open the deep link (don't await, let it run in background)
       openBrowser({ url: deepLink }).catch((err) => {
+        // eslint-disable-next-line no-console
         console.error(`Failed to open deep link for finding: ${err}`)
       })
     } catch (err) {
       // Log error but don't exit - user can continue selecting other issues
+      // eslint-disable-next-line no-console
       console.error(`Failed to spawn agent for finding: ${err}`)
     }
   }

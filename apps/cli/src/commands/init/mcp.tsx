@@ -151,14 +151,14 @@ export function MCP({ state, onComplete }: MCPProps): React.ReactElement {
           }
 
           // Append services configuration
-          if (!mcpConfig.services) {
-            mcpConfig.services = {}
+          if (!mcpConfig.mcpServers) {
+            mcpConfig.mcpServers = {}
           }
 
-          const services = mcpConfig.services
+          const mcpServers = mcpConfig.mcpServers
 
-          if (!services.kyoto) {
-            services.kyoto = {
+          if (!mcpServers.kyoto) {
+            mcpServers.kyoto = {
               command: 'kyoto',
               args: ['mcp'],
             }
