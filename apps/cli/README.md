@@ -35,7 +35,7 @@ Login via browser using GitHub OAuth:
 
 ### Vibe Check
 
-Check code for various issues before commiting to github.
+Check code for various issues before committing to github.
 
 - `kyoto vibe check` - Check all changes
 - `kyoto vibe check --staged` - Only check staged changes

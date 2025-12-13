@@ -177,7 +177,7 @@ export async function run(argv = process.argv): Promise<void> {
 
   vibeCommand
     .command('check')
-    .description('Check code for various issues before commiting to github')
+    .description('Check code for various issues before committing to github')
     .argument(
       '[commit-spec]',
       'Commit specification: negative number for last N commits (e.g., -1, -4) or commit SHA',

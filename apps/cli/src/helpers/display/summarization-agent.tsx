@@ -73,7 +73,7 @@ export function SummarizationAgent({
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Header kanji="計" title="Planing" />
+      <Header kanji="計" title="Planning" />
       <Box width="80%">
         <Text wrap="truncate">
           {state.status === 'running' ? (

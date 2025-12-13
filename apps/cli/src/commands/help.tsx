@@ -17,7 +17,7 @@ const commandGroups = [
           ['kyoto vibe check --staged', 'Check only staged changes'],
           [
             'kyoto vibe check --watch',
-            '(Coming soon) Contininously vibe check new git changes',
+            '(Coming soon) Continuously vibe check new git changes',
           ],
         ],
       },
