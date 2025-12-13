@@ -15,16 +15,17 @@
       "pages/quickstart",
       "pages/roadmap",
       {
-        "group": "Vibing",
+        "group": "Vibing Tools",
         "icon": "wave",
         "pages": [
           "pages/features/vibe",
           "pages/features/commit",
-          "pages/features/diff"
+          "pages/features/diff",
+          "pages/features/test"
         ]
       },
       {
-        "group": "Tooling",
+        "group": "Integrations",
         "icon": "torii-gate",
         "pages": ["pages/integrations/mcp", "pages/integrations/github"]
       }
