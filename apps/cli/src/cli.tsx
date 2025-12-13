@@ -188,8 +188,16 @@ export async function run(argv = process.argv): Promise<void> {
       'Timeout for each agent in minutes (default: 1)',
       '1',
     )
-    .option('--commits <count>', 'Check the last N commits (e.g., --commits 4)')
+    .option(
+      '--commits <count>',
+      'Check the last N commits (e.g., --commits 4 or simply -4)',
+    )
     .option('--commit <sha>', 'Check a specific commit by SHA')
+    .option(
+      '--since <branch>',
+      'Check commits since a branch (e.g., --since main)',
+    )
+    .option('--last', 'Check commits since last vibe check')
     .action(
       async (
         commitSpec: string | undefined,
@@ -198,6 +206,8 @@ export async function run(argv = process.argv): Promise<void> {
           timeout?: string
           commits?: string
           commit?: string
+          since?: string
+          last?: boolean
         },
       ) => {
         const timeoutMinutes = Number.parseFloat(options.timeout ?? '1')
@@ -236,6 +246,8 @@ export async function run(argv = process.argv): Promise<void> {
               timeoutMinutes={timeoutMinutes}
               commitCount={commitCount}
               commitSha={commitSha}
+              sinceBranch={options.since}
+              last={options.last}
             />
           ),
         })

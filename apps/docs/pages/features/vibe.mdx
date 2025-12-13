@@ -10,13 +10,21 @@ description: Kyoto will vibe check your code to keep development running smoothl
 
 Kyoto vibe checks your AI code to reduce entropy and optimize your AI vibing experience.
 
-Run on demand
-
 ```sh
 kyoto vibe check
 ```
 
-or, continuously <Badge>coming soon</Badge>
+or, choose what to vibe check with
+
+```sh
+kyoto vibe check               # all uncommited changes
+kyoto vibe check --last        # since last vibe check
+kyoto vibe check -1            # last commit
+kyoto vibe check -3            # last 3 commits
+kyoto vibe check --since main  # branch changes
+kyoto vibe check --staged      # staged changes only
+kyoto vibe check --unstaged    # unstaged changes only
+```
 
 or, let coding agents vibe check themselves
 
