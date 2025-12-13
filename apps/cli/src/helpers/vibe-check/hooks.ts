@@ -19,6 +19,8 @@ interface UseVibeCheckSetupArgs {
   onError: (error: string) => void
   exit: () => void
   cancelled: { current: boolean }
+  commandName?: string
+  alternativeCommand?: string
 }
 
 interface VibeCheckContext {
@@ -62,6 +64,8 @@ export async function setupVibeCheck(
     onError,
     exit,
     cancelled,
+    commandName,
+    alternativeCommand,
   } = args
 
   try {
@@ -86,6 +90,8 @@ export async function setupVibeCheck(
         setWarnings: onWarning,
         exit,
         cancelled,
+        commandName,
+        alternativeCommand,
       })
       return {
         context: null,
@@ -117,6 +123,8 @@ export async function setupVibeCheck(
         setWarnings: onWarning,
         exit,
         cancelled,
+        commandName,
+        alternativeCommand,
       })
       return {
         context: null,
