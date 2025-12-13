@@ -1,19 +1,14 @@
 import {
+  createGitHubChecksTool,
   createLocalReadFileTool,
   createLocalTerminalCommandTool,
 } from '@app/shell'
-import { type VibeCheckScope } from '@app/types'
-import { type Tracer } from '@opentelemetry/api'
-import {
-  Experimental_Agent as Agent,
-  type LanguageModel,
-  Output,
-  stepCountIs,
-} from 'ai'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { type AnalyzeAgentOptions } from '../types'
 
 export const bugDetectionOutputSchema = z.object({
   findings: z.array(
@@ -27,24 +22,14 @@ export const bugDetectionOutputSchema = z.object({
 })
 type BugDetectionOutput = z.infer<typeof bugDetectionOutputSchema>
 
-interface AnalyzeBugDetectionOptions {
-  scope: VibeCheckScope
-  options: {
-    maxSteps?: number
-    model: LanguageModel
-    telemetryTracer?: Tracer
-    progress?: (message: string) => void
-  }
-}
-
 /**
  * Ask an AI agent to scan code changes for bugs, logic errors, and potential runtime issues.
  * The agent can extend slightly outside the scope if functionality in the scope could contribute to a bug.
  */
 export async function analyzeBugDetection({
   scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress },
-}: AnalyzeBugDetectionOptions): Promise<BugDetectionOutput> {
+  options: { maxSteps = 30, model, telemetryTracer, progress, github },
+}: AnalyzeAgentOptions): Promise<BugDetectionOutput> {
   const agent = new Agent({
     model,
     system: dedent`
@@ -65,6 +50,7 @@ export async function analyzeBugDetection({
       # Tools Available
       - **terminalCommand**: Execute git commands to retrieve change information and diffs
       - **readFile**: Read files from the repository to analyze their content and related code
+      ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # What to Look For
 
@@ -114,6 +100,7 @@ export async function analyzeBugDetection({
         - **path**: The file path where the bug was found
         - **suggestion**: How to fix the bug or prevent it (e.g., "Add null check before accessing user.name")
         - **severity**: Use "error" for critical bugs, "warn" for potential issues, "info" for code quality
+      ${github ? '- **When running in GitHub Actions**: Use the githubChecks tool to create a check run named "Bug Detection" and add annotations directly on the code lines where bugs are found. This provides immediate inline feedback in pull requests.' : ''}
       - Be specific: Include line numbers or code snippets in suggestions when helpful
       - Consider TypeScript types: If types indicate a value could be null/undefined, flag missing checks
       - Look for patterns: Common bug patterns like missing await, incorrect async handling, etc.
@@ -127,6 +114,9 @@ export async function analyzeBugDetection({
     tools: {
       terminalCommand: createLocalTerminalCommandTool(progress),
       readFile: createLocalReadFileTool(progress),
+      ...(github
+        ? { githubChecks: createGitHubChecksTool(github, progress) }
+        : {}),
     },
     stopWhen: stepCountIs(maxSteps),
     onStepFinish: (step) => {

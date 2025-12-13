@@ -11,6 +11,7 @@ import { init } from '../../helpers/init'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import {
   getGitHubBaseRef,
+  getGitHubContext,
   getGitHubEventName,
   getGitHubHeadRef,
   isGitHubActions,
@@ -40,6 +41,12 @@ export default function VibeCheck({
     kyotoRoot: string
     scope: VibeCheckScope
     model: LanguageModel
+    github?: {
+      owner: string
+      repo: string
+      sha: string
+      token: string
+    }
   } | null>(null)
   const [finalStates, setFinalStates] = useState<AgentRunState[] | null>(null)
   const [isSummarizing, setIsSummarizing] = useState(false)
@@ -221,11 +228,15 @@ export default function VibeCheck({
           return
         }
 
+        // Detect GitHub Actions environment and add GitHub context if available
+        const githubContext = getGitHubContext()
+
         setContext({
           gitRoot: fs.gitRoot,
           kyotoRoot: fs.root,
           scope,
           model,
+          ...(githubContext ? { github: githubContext } : {}),
         })
       } catch (err) {
         if (cancelled) {

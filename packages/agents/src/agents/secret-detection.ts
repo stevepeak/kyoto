@@ -1,19 +1,14 @@
 import {
+  createGitHubChecksTool,
   createLocalReadFileTool,
   createLocalTerminalCommandTool,
 } from '@app/shell'
-import { type VibeCheckScope } from '@app/types'
-import { type Tracer } from '@opentelemetry/api'
-import {
-  Experimental_Agent as Agent,
-  type LanguageModel,
-  Output,
-  stepCountIs,
-} from 'ai'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { type AnalyzeAgentOptions } from '../types'
 
 export const secretDetectionOutputSchema = z.object({
   findings: z.array(
@@ -27,24 +22,14 @@ export const secretDetectionOutputSchema = z.object({
 })
 type SecretDetectionOutput = z.infer<typeof secretDetectionOutputSchema>
 
-interface AnalyzeSecretDetectionOptions {
-  scope: VibeCheckScope
-  options: {
-    maxSteps?: number
-    model: LanguageModel
-    telemetryTracer?: Tracer
-    progress?: (message: string) => void
-  }
-}
-
 /**
  * Ask an AI agent to scan code changes for leaked secrets, API keys, passwords,
  * tokens, and other sensitive information that should not be committed.
  */
 export async function analyzeSecretDetection({
   scope,
-  options: { maxSteps = 20, model, telemetryTracer, progress },
-}: AnalyzeSecretDetectionOptions): Promise<SecretDetectionOutput> {
+  options: { maxSteps = 20, model, telemetryTracer, progress, github },
+}: AnalyzeAgentOptions): Promise<SecretDetectionOutput> {
   const agent = new Agent({
     model,
     system: dedent`
@@ -64,6 +49,7 @@ export async function analyzeSecretDetection({
       # Tools Available
       - **terminalCommand**: Execute git commands to retrieve change information and diffs
       - **readFile**: Read files from the repository to analyze their content
+      ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # What to Look For
       Look for these types of sensitive information in the code changes:
@@ -97,6 +83,7 @@ export async function analyzeSecretDetection({
         - **path**: The file path where the secret was found
         - **suggestion**: How to fix it (e.g., "Move to environment variable or secrets manager")
         - **severity**: Use "error" for actual secrets, "warn" for suspicious patterns, "info" for false positives
+      ${github ? '- **When running in GitHub Actions**: Use the githubChecks tool to create a check run named "Secret Detection" and add annotations directly on the code lines where secrets are found. This is critical for security.' : ''}
       - Be precise: Don't flag variable names like "apiKey" if they're just being assigned from environment variables
       - Flag hardcoded values that look like actual secrets (long random strings, base64 encoded values, etc.)
       - Consider context: Test files might have mock credentials, but real-looking credentials should still be flagged
@@ -110,6 +97,9 @@ export async function analyzeSecretDetection({
     tools: {
       terminalCommand: createLocalTerminalCommandTool(progress),
       readFile: createLocalReadFileTool(progress),
+      ...(github
+        ? { githubChecks: createGitHubChecksTool(github, progress) }
+        : {}),
     },
     stopWhen: stepCountIs(maxSteps),
     onStepFinish: (step) => {

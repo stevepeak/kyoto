@@ -32,6 +32,12 @@ export interface VibeCheckContext {
   gitRoot: string
   scope: VibeCheckScope
   model: LanguageModel
+  github?: {
+    owner: string
+    repo: string
+    sha: string
+    token: string
+  }
 }
 
 export interface VibeCheckAgent {

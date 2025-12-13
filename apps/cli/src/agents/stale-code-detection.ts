@@ -14,6 +14,7 @@ export const staleCodeDetectionAgent: VibeCheckAgent = {
       options: {
         model: context.model,
         progress: reporter.progress,
+        github: context.github,
       },
     })
 

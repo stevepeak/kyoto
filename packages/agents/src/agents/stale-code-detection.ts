@@ -1,19 +1,14 @@
 import {
+  createGitHubChecksTool,
   createLocalReadFileTool,
   createLocalTerminalCommandTool,
 } from '@app/shell'
-import { type VibeCheckScope } from '@app/types'
-import { type Tracer } from '@opentelemetry/api'
-import {
-  Experimental_Agent as Agent,
-  type LanguageModel,
-  Output,
-  stepCountIs,
-} from 'ai'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { type AnalyzeAgentOptions } from '../types'
 
 export const staleCodeDetectionOutputSchema = z.object({
   findings: z.array(
@@ -27,16 +22,6 @@ export const staleCodeDetectionOutputSchema = z.object({
 })
 type StaleCodeDetectionOutput = z.infer<typeof staleCodeDetectionOutputSchema>
 
-interface AnalyzeStaleCodeDetectionOptions {
-  scope: VibeCheckScope
-  options: {
-    maxSteps?: number
-    model: LanguageModel
-    telemetryTracer?: Tracer
-    progress?: (message: string) => void
-  }
-}
-
 /**
  * Ask an AI agent to scan code changes for stale code:
  * - Code that was added in the scope but is not actually used
@@ -44,8 +29,8 @@ interface AnalyzeStaleCodeDetectionOptions {
  */
 export async function analyzeStaleCodeDetection({
   scope,
-  options: { maxSteps = 25, model, telemetryTracer, progress },
-}: AnalyzeStaleCodeDetectionOptions): Promise<StaleCodeDetectionOutput> {
+  options: { maxSteps = 25, model, telemetryTracer, progress, github },
+}: AnalyzeAgentOptions): Promise<StaleCodeDetectionOutput> {
   const agent = new Agent({
     model,
     system: dedent`
@@ -70,6 +55,7 @@ export async function analyzeStaleCodeDetection({
       # Tools Available
       - **terminalCommand**: Execute git commands to retrieve change information and search for usages
       - **readFile**: Read files from the repository to analyze their content
+      ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # Analysis Strategy
       For each changed file:
@@ -99,6 +85,7 @@ export async function analyzeStaleCodeDetection({
         - **path**: The file path where the stale code exists
         - **suggestion**: Detailed explanation of why it's stale and how to fix it (remove it, or explain if it's intentionally unused)
         - **severity**: Use "warn" for unused code, "info" for potentially intentional unused exports
+      ${github ? '- **When running in GitHub Actions**: Use the githubChecks tool to create a check run named "Stale Code Detection" and add annotations directly on the code lines where stale code is found.' : ''}
       - Don't flag:
         - Test files or test utilities (unless clearly unused)
         - Type-only exports that are used for type checking
@@ -114,6 +101,9 @@ export async function analyzeStaleCodeDetection({
     tools: {
       terminalCommand: createLocalTerminalCommandTool(progress),
       readFile: createLocalReadFileTool(progress),
+      ...(github
+        ? { githubChecks: createGitHubChecksTool(github, progress) }
+        : {}),
     },
     stopWhen: stepCountIs(maxSteps),
     onStepFinish: (step) => {

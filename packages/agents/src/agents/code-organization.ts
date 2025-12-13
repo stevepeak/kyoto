@@ -1,19 +1,14 @@
 import {
+  createGitHubChecksTool,
   createLocalReadFileTool,
   createLocalTerminalCommandTool,
 } from '@app/shell'
-import { type VibeCheckScope } from '@app/types'
-import { type Tracer } from '@opentelemetry/api'
-import {
-  Experimental_Agent as Agent,
-  type LanguageModel,
-  Output,
-  stepCountIs,
-} from 'ai'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { type AnalyzeAgentOptions } from '../types'
 
 export const codeOrganizationOutputSchema = z.object({
   findings: z.array(
@@ -27,16 +22,6 @@ export const codeOrganizationOutputSchema = z.object({
 })
 type CodeOrganizationOutput = z.infer<typeof codeOrganizationOutputSchema>
 
-interface AnalyzeCodeOrganizationOptions {
-  scope: VibeCheckScope
-  options: {
-    maxSteps?: number
-    model: LanguageModel
-    telemetryTracer?: Tracer
-    progress?: (message: string) => void
-  }
-}
-
 /**
  * Ask an AI agent to scan code changes for functions and components that
  * should be moved to other packages or extracted into helper functions
@@ -44,8 +29,8 @@ interface AnalyzeCodeOrganizationOptions {
  */
 export async function analyzeCodeOrganization({
   scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress },
-}: AnalyzeCodeOrganizationOptions): Promise<CodeOrganizationOutput> {
+  options: { maxSteps = 30, model, telemetryTracer, progress, github },
+}: AnalyzeAgentOptions): Promise<CodeOrganizationOutput> {
   const agent = new Agent({
     model,
     system: dedent`
@@ -74,6 +59,7 @@ export async function analyzeCodeOrganization({
       # Tools Available
       - **terminalCommand**: Execute git commands to retrieve change information
       - **readFile**: Read files from the repository to analyze their content
+      ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # Package Structure Context
       The monorepo has these packages:
@@ -98,6 +84,7 @@ export async function analyzeCodeOrganization({
         - **path**: The file path where the issue exists
         - **suggestion**: Detailed reasoning about what should be moved/extracted and where it should go
         - **severity**: Use "warn" for organization issues, "error" for critical size/complexity issues
+      ${github ? '- **When running in GitHub Actions**: Use the githubChecks tool to create a check run named "Code Organization" and add annotations directly on the code lines where issues are found.' : ''}
       - Keep findings concise and actionable
       - Focus on the most impactful refactoring opportunities
     `,
@@ -109,6 +96,9 @@ export async function analyzeCodeOrganization({
     tools: {
       terminalCommand: createLocalTerminalCommandTool(progress),
       readFile: createLocalReadFileTool(progress),
+      ...(github
+        ? { githubChecks: createGitHubChecksTool(github, progress) }
+        : {}),
     },
     stopWhen: stepCountIs(maxSteps),
     onStepFinish: (step) => {

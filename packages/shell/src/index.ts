@@ -30,3 +30,4 @@ export {
 } from './tools/create-directory-tool'
 export { createLocalUpdateStoryTool } from './tools/update-story-tool'
 export { writeLocalFile } from './tools/write-file-tool'
+export { createGitHubChecksTool } from './tools/github-checks-tool'

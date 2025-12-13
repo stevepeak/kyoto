@@ -18,7 +18,7 @@
     },
     "apps/cli": {
       "name": "@usekyoto/cli",
-      "version": "0.0.6",
+      "version": "0.0.8",
       "bin": {
         "kyoto": "./bin/kyoto.js",
       },
@@ -338,6 +338,7 @@
       "name": "@app/shell",
       "version": "0.0.1",
       "dependencies": {
+        "@octokit/rest": "catalog:",
         "ai": "catalog:",
         "execa": "catalog:",
         "zod": "catalog:",

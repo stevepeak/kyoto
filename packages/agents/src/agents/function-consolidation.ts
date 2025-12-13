@@ -1,19 +1,14 @@
 import {
+  createGitHubChecksTool,
   createLocalReadFileTool,
   createLocalTerminalCommandTool,
 } from '@app/shell'
-import { type VibeCheckScope } from '@app/types'
-import { type Tracer } from '@opentelemetry/api'
-import {
-  Experimental_Agent as Agent,
-  type LanguageModel,
-  Output,
-  stepCountIs,
-} from 'ai'
+import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { type AnalyzeAgentOptions } from '../types'
 
 export const functionConsolidationOutputSchema = z.object({
   findings: z.array(
@@ -29,24 +24,14 @@ type FunctionConsolidationOutput = z.infer<
   typeof functionConsolidationOutputSchema
 >
 
-interface AnalyzeFunctionConsolidationOptions {
-  scope: VibeCheckScope
-  options: {
-    maxSteps?: number
-    model: LanguageModel
-    telemetryTracer?: Tracer
-    progress?: (message: string) => void
-  }
-}
-
 /**
  * Ask an AI agent to scan code changes for functions that are similar
  * enough to consolidate (extract helper, deduplicate, etc.).
  */
 export async function analyzeFunctionConsolidation({
   scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress },
-}: AnalyzeFunctionConsolidationOptions): Promise<FunctionConsolidationOutput> {
+  options: { maxSteps = 30, model, telemetryTracer, progress, github },
+}: AnalyzeAgentOptions): Promise<FunctionConsolidationOutput> {
   const agent = new Agent({
     model,
     system: dedent`
@@ -66,6 +51,7 @@ export async function analyzeFunctionConsolidation({
       # Tools Available
       - **terminalCommand**: Execute git commands to retrieve change information
       - **readFile**: Read files from the repository to analyze their content
+      ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # Important Instructions
       - Only analyze TypeScript files (.ts, .tsx)
@@ -76,6 +62,7 @@ export async function analyzeFunctionConsolidation({
         - **path**: The file path where the consolidation should happen (typically the first file)
         - **suggestion**: Detailed reasoning about why these functions should be consolidated and how
         - **severity**: Use "warn" for consolidation opportunities
+      ${github ? '- **When running in GitHub Actions**: Use the githubChecks tool to create a check run named "Function Consolidation" and add annotations directly on the code lines where consolidation opportunities exist.' : ''}
       - Keep findings concise and actionable
     `,
     experimental_telemetry: {
@@ -86,6 +73,9 @@ export async function analyzeFunctionConsolidation({
     tools: {
       terminalCommand: createLocalTerminalCommandTool(progress),
       readFile: createLocalReadFileTool(progress),
+      ...(github
+        ? { githubChecks: createGitHubChecksTool(github, progress) }
+        : {}),
     },
     stopWhen: stepCountIs(maxSteps),
     onStepFinish: (step) => {
