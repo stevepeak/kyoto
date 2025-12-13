@@ -1,4 +1,4 @@
-import { findGitRoot } from '@app/shell'
+import { findGitRoot, getScopeContext } from '@app/shell'
 import {
   type VibeCheckAgent,
   type VibeCheckContext,
@@ -36,10 +36,15 @@ async function runMcpServer(): Promise<void> {
       const gitRoot = await findGitRoot()
       const config = await getConfig()
       const { model } = constructModel(config)
+      const scope = { type: 'unstaged' as const }
+
+      // Retrieve scope content programmatically before agents start
+      const scopeContent = await getScopeContext(scope, gitRoot)
 
       return {
         gitRoot,
-        scope: { type: 'unstaged' },
+        scope,
+        scopeContent,
         model,
       }
     } catch (error) {

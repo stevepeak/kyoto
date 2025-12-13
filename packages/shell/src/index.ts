@@ -20,6 +20,17 @@ export {
   isBranchClean,
 } from './git/get-git-status'
 export { runGit } from './git/run-git'
+export {
+  getScopeContext,
+  getScopeDiffs,
+  getScopeFileContents,
+  getScopeFilePaths,
+  type ScopeContext,
+} from './git/get-scope-content'
+export {
+  parseCommitSpec,
+  type ParseCommitSpecResult,
+} from './git/parse-commit-spec'
 
 // Tools
 export { createLocalReadFileTool, readLocalFile } from './tools/read-file-tool'

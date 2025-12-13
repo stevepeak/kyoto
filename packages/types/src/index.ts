@@ -28,9 +28,16 @@ export interface VibeCheckReporter {
   progress: (message: string) => void
 }
 
+export interface ScopeContext {
+  filePaths: string[]
+  diffs: Record<string, string> // path -> diff content
+  fileContents: Record<string, string> // path -> full file content (for untracked files or when diff not available)
+}
+
 export interface VibeCheckContext {
   gitRoot: string
   scope: VibeCheckScope
+  scopeContent: ScopeContext // Pre-retrieved content to save tokens
   model: LanguageModel
   github?: {
     owner: string

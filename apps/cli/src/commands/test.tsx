@@ -1,4 +1,6 @@
 import { analyzeTestSuggestions } from '@app/agents'
+import { getScopeContext } from '@app/shell'
+import { type VibeCheckContext } from '@app/types'
 import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -74,11 +76,26 @@ export default function Test({
       }
 
       try {
+        // Retrieve scope content for the agent
+        const scopeContent = await getScopeContext(
+          setupResult.context.scope,
+          setupResult.context.gitRoot,
+        )
+
+        const context: VibeCheckContext = {
+          gitRoot: setupResult.context.gitRoot,
+          scope: setupResult.context.scope,
+          scopeContent,
+          model: setupResult.context.model,
+          ...(setupResult.context.github
+            ? { github: setupResult.context.github }
+            : {}),
+        }
+
         // Run the test suggestions agent
         const result = await analyzeTestSuggestions({
-          scope: setupResult.context.scope,
+          context,
           options: {
-            model: setupResult.context.model,
             progress: (_message) => {
               // Could show progress if needed
             },

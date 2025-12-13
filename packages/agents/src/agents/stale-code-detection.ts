@@ -7,7 +7,8 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { formatScopeContent } from '../helpers/format-scope-content'
+import { formatScopeDescription } from '../helpers/format-scope-description'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const staleCodeDetectionOutputSchema = z.object({
@@ -28,18 +29,20 @@ type StaleCodeDetectionOutput = z.infer<typeof staleCodeDetectionOutputSchema>
  * - Code that was previously used but is no longer reachable due to changes
  */
 export async function analyzeStaleCodeDetection({
-  scope,
-  options: { maxSteps = 25, model, telemetryTracer, progress, github },
+  context,
+  options,
 }: AnalyzeAgentOptions): Promise<StaleCodeDetectionOutput> {
+  const { maxSteps = 25, telemetryTracer, progress } = options ?? {}
+  const github = context.github
   const agent = new Agent({
-    model,
+    model: context.model,
     system: dedent`
       You are a senior engineer who identifies stale, unused, or unreachable code.
       Your goal is to find code that is not being used, either because it was added
       but never referenced, or because it became unreachable due to recent changes.
 
       # Your Task
-      1. Retrieve the changed files using git commands (terminalCommand) or readFile tool
+      1. Analyze the pre-loaded code changes to understand what was modified
       2. Read the relevant TypeScript files (.ts, .tsx) to analyze their content
       3. Identify stale code in two categories:
          a. **New unused code**: Functions, variables, types, exports, or imports that were
@@ -49,12 +52,9 @@ export async function analyzeStaleCodeDetection({
             functions that are no longer called anywhere in the codebase)
       4. Return structured JSON following the provided schema
 
-      # Retrieving Changes
-      ${buildRetrievalGuidance(scope)}
-
       # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information and search for usages
-      - **readFile**: Read files from the repository to analyze their content
+      - **terminalCommand**: Execute grep/ripgrep commands to search for usages across the codebase
+      - **readFile**: Read files from the repository to analyze their content (for files outside the scope or for additional context)
       ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # Analysis Strategy
@@ -116,25 +116,21 @@ export async function analyzeStaleCodeDetection({
     }),
   })
 
-  const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
-          ? 'staged changes'
-          : scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
+  const scopeDescription = formatScopeDescription({ scope: context.scope })
+
+  const scopeContentText = formatScopeContent(context.scopeContent)
 
   const prompt = dedent`
     Review the ${scopeDescription} and find stale code that is not being used.
 
+    Code changes:
+    ${scopeContentText || 'No code changes found.'}
+
     Use the available tools to:
-    1. Retrieve and analyze the changed TypeScript files
+    1. Analyze the code changes above to identify what was added or modified
     2. Identify new code that was added but is never used
     3. Identify existing code that became unreachable or unused due to changes
-    4. Search the codebase to verify whether code is actually unused
+    4. Search the codebase using terminalCommand with grep/ripgrep to verify whether code is actually unused
 
     For each stale code finding, create a finding with:
     - A message describing what is stale (e.g., "Unused function: calculateTotal", "Unreachable code after return")

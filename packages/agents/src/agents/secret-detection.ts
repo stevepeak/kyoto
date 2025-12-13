@@ -7,7 +7,8 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { formatScopeContent } from '../helpers/format-scope-content'
+import { formatScopeDescription } from '../helpers/format-scope-description'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const secretDetectionOutputSchema = z.object({
@@ -27,28 +28,25 @@ type SecretDetectionOutput = z.infer<typeof secretDetectionOutputSchema>
  * tokens, and other sensitive information that should not be committed.
  */
 export async function analyzeSecretDetection({
-  scope,
-  options: { maxSteps = 20, model, telemetryTracer, progress, github },
+  context,
+  options,
 }: AnalyzeAgentOptions): Promise<SecretDetectionOutput> {
+  const { maxSteps = 20, telemetryTracer, progress } = options ?? {}
+  const github = context.github
   const agent = new Agent({
-    model,
+    model: context.model,
     system: dedent`
       You are a security engineer who detects leaked secrets and sensitive information in code changes.
       Your goal is to identify any secrets, API keys, passwords, tokens, or other sensitive data
       that should not be committed to version control.
 
       # Your Task
-      1. Retrieve the changed files using git commands (terminalCommand) or readFile tool
-      2. Analyze the actual code changes (diffs) to identify leaked secrets
-      3. Look for patterns that indicate sensitive information
-      4. Return structured JSON following the provided schema
-
-      # Retrieving Changes
-      ${buildRetrievalGuidance(scope)}
+      1. Analyze the pre-loaded code changes (diffs) to identify leaked secrets
+      2. Look for patterns that indicate sensitive information
+      3. Return structured JSON following the provided schema
 
       # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information and diffs
-      - **readFile**: Read files from the repository to analyze their content
+      - **readFile**: Read files from the repository if additional context is needed (for files outside the scope)
       ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # What to Look For
@@ -112,22 +110,17 @@ export async function analyzeSecretDetection({
     }),
   })
 
-  const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
-          ? 'staged changes'
-          : scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
+  const scopeDescription = formatScopeDescription({ scope: context.scope })
+
+  const scopeContentText = formatScopeContent(context.scopeContent)
 
   const prompt = dedent`
     Review the ${scopeDescription} and scan for leaked secrets, API keys, passwords, tokens, or other sensitive information.
 
-    Use the available tools to retrieve and analyze the code changes (diffs).
-    Focus on identifying actual sensitive values in the changes, not just variable names.
+    Code changes:
+    ${scopeContentText || 'No code changes found.'}
+
+    Analyze the code changes above. Focus on identifying actual sensitive values in the changes, not just variable names.
 
     For each secret or sensitive data found, create a finding with:
     - A message describing what was found and where

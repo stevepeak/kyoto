@@ -7,7 +7,8 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { formatScopeContent } from '../helpers/format-scope-content'
+import { formatScopeDescription } from '../helpers/format-scope-description'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const functionConsolidationOutputSchema = z.object({
@@ -29,28 +30,26 @@ type FunctionConsolidationOutput = z.infer<
  * enough to consolidate (extract helper, deduplicate, etc.).
  */
 export async function analyzeFunctionConsolidation({
-  scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress, github },
+  context,
+  options,
 }: AnalyzeAgentOptions): Promise<FunctionConsolidationOutput> {
+  const { maxSteps = 30, telemetryTracer, progress } = options ?? {}
+  const github = context.github
   const agent = new Agent({
-    model,
+    model: context.model,
     system: dedent`
       You are a senior engineer who spots duplicate or overlapping functions.
       Your goal is to suggest where two or more functions could be consolidated
       into a shared helper, merged implementation, or clearer abstraction.
 
       # Your Task
-      1. Retrieve the changed files using git commands (terminalCommand) or readFile tool
+      1. Analyze the pre-loaded code changes to understand what files were modified
       2. Read the relevant TypeScript files (.ts, .tsx) to analyze their functions
       3. Identify functions that overlap in purpose, inputs, or control flow
       4. Return structured JSON following the provided schema
 
-      # Retrieving Changes
-      ${buildRetrievalGuidance(scope)}
-
       # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information
-      - **readFile**: Read files from the repository to analyze their content
+      - **readFile**: Read files from the repository to analyze their content (for files outside the scope or for additional context)
       ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # Important Instructions
@@ -88,21 +87,17 @@ export async function analyzeFunctionConsolidation({
     }),
   })
 
-  const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
-          ? 'staged changes'
-          : scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
+  const scopeDescription = formatScopeDescription({ scope: context.scope })
+
+  const scopeContentText = formatScopeContent(context.scopeContent)
 
   const prompt = dedent`
     Review the ${scopeDescription} and find functions that can be consolidated.
 
-    Use the available tools to retrieve and analyze the changed TypeScript files.
+    Code changes:
+    ${scopeContentText || 'No code changes found.'}
+
+    Analyze the code changes above. If needed, use the readFile tool to read full files for context.
     Look for functions that share similar logic, patterns, or could benefit from
     being extracted into shared helpers.
 

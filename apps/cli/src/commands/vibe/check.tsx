@@ -1,11 +1,14 @@
-import { getCurrentBranch, getCurrentCommitSha } from '@app/shell'
-import { type AgentRunState, type VibeCheckScope } from '@app/types'
+import {
+  getCurrentBranch,
+  getCurrentCommitSha,
+  getScopeContext,
+} from '@app/shell'
+import { type AgentRunState, type VibeCheckContext } from '@app/types'
 import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { defaultVibeCheckAgents } from '../../agents'
 import { openBrowser } from '../../helpers/browser/open-browser'
-import { type LanguageModel } from '../../helpers/config/get-model'
 import { updateConfig } from '../../helpers/config/update'
 import { IssueSelection } from '../../helpers/display/issue-selection'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
@@ -39,18 +42,7 @@ export default function VibeCheck({
   const { exit } = useApp()
   const [warnings, setWarnings] = useState<React.ReactNode[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [context, setContext] = useState<{
-    gitRoot: string
-    kyotoRoot: string
-    scope: VibeCheckScope
-    model: LanguageModel
-    github?: {
-      owner: string
-      repo: string
-      sha: string
-      token: string
-    }
-  } | null>(null)
+  const [context, setContext] = useState<VibeCheckContext | null>(null)
   const [finalStates, setFinalStates] = useState<AgentRunState[] | null>(null)
   const [showIssueSelection, setShowIssueSelection] = useState(false)
 
@@ -110,10 +102,16 @@ export default function VibeCheck({
         // Detect GitHub Actions environment and add GitHub context if available
         const githubContext = getGitHubContext()
 
+        // Retrieve scope content programmatically before agents start
+        const scopeContent = await getScopeContext(
+          scopeResult.scope,
+          fs.gitRoot,
+        )
+
         setContext({
           gitRoot: fs.gitRoot,
-          kyotoRoot: fs.root,
           scope: scopeResult.scope,
+          scopeContent,
           model,
           ...(githubContext ? { github: githubContext } : {}),
         })

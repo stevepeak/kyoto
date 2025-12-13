@@ -7,7 +7,8 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { formatScopeContent } from '../helpers/format-scope-content'
+import { formatScopeDescription } from '../helpers/format-scope-description'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const codeOrganizationOutputSchema = z.object({
@@ -28,11 +29,13 @@ type CodeOrganizationOutput = z.infer<typeof codeOrganizationOutputSchema>
  * to reduce file sizes and improve code organization.
  */
 export async function analyzeCodeOrganization({
-  scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress, github },
+  context,
+  options,
 }: AnalyzeAgentOptions): Promise<CodeOrganizationOutput> {
+  const { maxSteps = 30, telemetryTracer, progress } = options ?? {}
+  const github = context.github
   const agent = new Agent({
-    model,
+    model: context.model,
     system: dedent`
       You are a senior engineer who identifies code organization issues.
       Your goal is to find functions and components that are:
@@ -42,7 +45,7 @@ export async function analyzeCodeOrganization({
       4. Duplicated across files (should be moved to shared utilities)
 
       # Your Task
-      1. Retrieve the changed files using git commands (terminalCommand) or readFile tool
+      1. Analyze the pre-loaded code changes to understand what files were modified
       2. Read the relevant TypeScript files (.ts, .tsx) to analyze their structure
       3. Identify code organization issues:
          - Files that are too large (>300 lines is a good threshold, but context matters)
@@ -53,12 +56,8 @@ export async function analyzeCodeOrganization({
          - Helper functions that should be extracted from large functions
       4. Return structured JSON following the provided schema
 
-      # Retrieving Changes
-      ${buildRetrievalGuidance(scope)}
-
       # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information
-      - **readFile**: Read files from the repository to analyze their content
+      - **readFile**: Read files from the repository to analyze their content (for files outside the scope or for additional context)
       ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # Package Structure Context
@@ -111,21 +110,17 @@ export async function analyzeCodeOrganization({
     }),
   })
 
-  const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
-          ? 'staged changes'
-          : scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
+  const scopeDescription = formatScopeDescription({ scope: context.scope })
+
+  const scopeContentText = formatScopeContent(context.scopeContent)
 
   const prompt = dedent`
     Review the ${scopeDescription} and find code organization issues.
 
-    Use the available tools to retrieve and analyze the changed TypeScript files.
+    Code changes:
+    ${scopeContentText || 'No code changes found.'}
+
+    Analyze the code changes above. If needed, use the readFile tool to read full files for context.
     Look for:
     - Files that are too large or contain too much functionality
     - Functions/components that should be moved to other packages

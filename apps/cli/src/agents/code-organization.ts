@@ -10,12 +10,8 @@ export const codeOrganizationAgent: VibeCheckAgent = {
     reporter.progress('Starting...')
 
     const result = await analyzeCodeOrganization({
-      scope: context.scope,
-      options: {
-        model: context.model,
-        progress: reporter.progress,
-        github: context.github,
-      },
+      context,
+      options: { progress: reporter.progress },
     })
 
     if (result.findings.length === 0) {

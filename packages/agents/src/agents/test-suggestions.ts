@@ -6,7 +6,8 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { formatScopeContent } from '../helpers/format-scope-content'
+import { formatScopeDescription } from '../helpers/format-scope-description'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const testSuggestionsOutputSchema = z.object({
@@ -33,28 +34,25 @@ type TestSuggestionsOutput = z.infer<typeof testSuggestionsOutputSchema>
  * The agent examines the scope and recommends specific test cases.
  */
 export async function analyzeTestSuggestions({
-  scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress },
+  context,
+  options,
 }: AnalyzeAgentOptions): Promise<TestSuggestionsOutput> {
+  const { maxSteps = 30, telemetryTracer, progress } = options ?? {}
   const agent = new Agent({
-    model,
+    model: context.model,
     system: dedent`
       You are a product-focused QA engineer who analyzes code changes and suggests high-level user flows that need testing.
       Your goal is to identify user-facing behaviors and flows that should be manually tested based on the code changes.
 
       # Your Task
-      1. Retrieve the changed files using git commands (terminalCommand) or readFile tool
-      2. Read the relevant files to understand what user-facing features or behaviors changed
+      1. Analyze the pre-loaded code changes to understand what user-facing features or behaviors changed
+      2. Read the relevant files if needed to understand the full context
       3. Identify the high-level user flows affected by these changes
       4. Suggest concise user flow descriptions that a human tester would follow
       5. Return structured JSON following the provided schema
 
-      # Retrieving Changes
-      ${buildRetrievalGuidance(scope)}
-
       # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information and diffs
-      - **readFile**: Read files from the repository to analyze their content and understand user-facing changes
+      - **readFile**: Read files from the repository to analyze their content and understand user-facing changes (for files outside the scope or for additional context)
 
       # What to Focus On
 
@@ -112,22 +110,18 @@ export async function analyzeTestSuggestions({
     }),
   })
 
-  const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
-          ? 'staged changes'
-          : scope.type === 'unstaged'
-            ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
+  const scopeDescription = formatScopeDescription({ scope: context.scope })
+
+  const scopeContentText = formatScopeContent(context.scopeContent)
 
   const prompt = dedent`
     Analyze the ${scopeDescription} and identify high-level user flows that need testing.
 
-    Use the available tools to retrieve and analyze the code changes. Read the changed files
-    to understand what user-facing features or behaviors were modified, added, or removed.
+    Code changes:
+    ${scopeContentText || 'No code changes found.'}
+
+    Analyze the code changes above. If needed, use the readFile tool to read full files for context.
+    Understand what user-facing features or behaviors were modified, added, or removed.
 
     Focus on identifying user flows - what a real person using the application would do:
     - What new user-facing features were added?

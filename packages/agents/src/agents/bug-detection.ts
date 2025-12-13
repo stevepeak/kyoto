@@ -7,7 +7,7 @@ import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
-import { buildRetrievalGuidance } from '../helpers/build-retrieval-guidance'
+import { formatScopeContent } from '../helpers/format-scope-content'
 import { type AnalyzeAgentOptions } from '../types'
 
 export const bugDetectionOutputSchema = z.object({
@@ -27,29 +27,27 @@ type BugDetectionOutput = z.infer<typeof bugDetectionOutputSchema>
  * The agent can extend slightly outside the scope if functionality in the scope could contribute to a bug.
  */
 export async function analyzeBugDetection({
-  scope,
-  options: { maxSteps = 30, model, telemetryTracer, progress, github },
+  context,
+  options,
 }: AnalyzeAgentOptions): Promise<BugDetectionOutput> {
+  const { maxSteps = 30, telemetryTracer, progress } = options ?? {}
+  const github = context.github
   const agent = new Agent({
-    model,
+    model: context.model,
     system: dedent`
       You are a senior engineer who detects bugs, logic errors, and potential runtime issues in code changes.
       Your goal is to identify actual bugs, edge cases, type errors, null pointer issues, race conditions,
       and other problems that could cause the code to fail or behave incorrectly.
 
       # Your Task
-      1. Retrieve the changed files using git commands (terminalCommand) or readFile tool
-      2. Read the relevant files to understand the code changes and their context
+      1. Analyze the pre-loaded code changes (diffs) to understand what was modified
+      2. Read the relevant files if needed to understand the full context
       3. Analyze the code for bugs, logic errors, and potential issues
       4. If needed, examine related files slightly outside the scope if they interact with the changed code
       5. Return structured JSON following the provided schema
 
-      # Retrieving Changes
-      ${buildRetrievalGuidance(scope)}
-
       # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information and diffs
-      - **readFile**: Read files from the repository to analyze their content and related code
+      - **readFile**: Read files from the repository to analyze their content and related code (for files outside the scope or for additional context)
       ${github ? '- **githubChecks**: Create GitHub check runs and add inline annotations on code lines when running in GitHub Actions' : ''}
 
       # What to Look For
@@ -129,23 +127,28 @@ export async function analyzeBugDetection({
     }),
   })
 
+  // Format scope content for the prompt
+  const scopeContentText = formatScopeContent(context.scopeContent)
+
   const scopeDescription =
-    scope.type === 'commit'
-      ? `commit ${scope.commit}`
-      : scope.type === 'commits'
-        ? `commits ${scope.commits.join(', ')}`
-        : scope.type === 'staged'
+    context.scope.type === 'commit'
+      ? `commit ${context.scope.commit}`
+      : context.scope.type === 'commits'
+        ? `commits ${context.scope.commits.join(', ')}`
+        : context.scope.type === 'staged'
           ? 'staged changes'
-          : scope.type === 'unstaged'
+          : context.scope.type === 'unstaged'
             ? 'unstaged changes'
-            : `specified paths: ${scope.paths.join(', ')}`
+            : `specified paths: ${context.scope.paths.join(', ')}`
 
   const prompt = dedent`
     Review the ${scopeDescription} and detect bugs, logic errors, and potential runtime issues.
 
-    Use the available tools to retrieve and analyze the code changes. Read the changed files
-    and, if necessary, related files that interact with the changed code to understand the
-    full context and identify bugs.
+    Code changes:
+    ${scopeContentText || 'No code changes found.'}
+
+    Analyze the code changes above. If needed, use the readFile tool to examine related files
+    that interact with the changed code to understand the full context and identify bugs.
 
     Look for:
     - Type errors and null/undefined access issues

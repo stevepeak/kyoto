@@ -30,4 +30,3 @@ export {
   analyzeTestSuggestions,
   testSuggestionsOutputSchema,
 } from './agents/test-suggestions'
-export { buildRetrievalGuidance } from './helpers/build-retrieval-guidance'

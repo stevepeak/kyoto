@@ -10,12 +10,8 @@ export const secretDetectionAgent: VibeCheckAgent = {
     reporter.progress('Starting...')
 
     const result = await analyzeSecretDetection({
-      scope: context.scope,
-      options: {
-        model: context.model,
-        progress: reporter.progress,
-        github: context.github,
-      },
+      context,
+      options: { progress: reporter.progress },
     })
 
     if (result.findings.length === 0) {
