@@ -22,6 +22,7 @@ import { getVibeCheckScope } from '../../helpers/vibe-check/scope'
 import { showWarningAndExit } from '../../helpers/vibe-check/warnings'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
+import { ScopeDisplay } from '../../ui/ScopeDisplay'
 
 interface VibeCheckProps {
   staged?: boolean
@@ -218,11 +219,7 @@ export default function VibeCheck({
   return (
     <Box flexDirection="column">
       <Jumbo />
-      {scopeDescription && (
-        <Box marginBottom={1}>
-          <Text color="grey">Scope: {scopeDescription}</Text>
-        </Box>
-      )}
+      <ScopeDisplay scopeDescription={scopeDescription} />
       <Header kanji="空気" title="Vibe checks" />
       {warnings.length > 0 && (
         <Box marginTop={1} flexDirection="column">

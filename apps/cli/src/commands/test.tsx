@@ -8,6 +8,7 @@ import { setupVibeCheck } from '../helpers/vibe-check/hooks'
 import { Header } from '../ui/header'
 import { Jumbo } from '../ui/jumbo'
 import { MultiSelect } from '../ui/multi-select'
+import { ScopeDisplay } from '../ui/ScopeDisplay'
 
 interface TestProps {
   staged?: boolean
@@ -160,11 +161,7 @@ export default function Test({
   return (
     <Box flexDirection="column">
       <Jumbo />
-      {scopeDescription && (
-        <Box marginBottom={1}>
-          <Text color="grey">Scope: {scopeDescription}</Text>
-        </Box>
-      )}
+      <ScopeDisplay scopeDescription={scopeDescription} />
       <Header kanji="試験" title="Test suggestions" />
       {warnings.length > 0 && (
         <Box marginTop={1} flexDirection="column">
