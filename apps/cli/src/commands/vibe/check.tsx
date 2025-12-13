@@ -4,10 +4,13 @@ import { Box, Text, useApp } from 'ink'
 import React, { useEffect, useState } from 'react'
 
 import { defaultVibeCheckAgents } from '../../agents'
+import { openBrowser } from '../../helpers/browser/open-browser'
 import { type LanguageModel } from '../../helpers/config/get-model'
-import { SummarizationAgent } from '../../helpers/display/summarization-agent'
+import { IssueSelection } from '../../helpers/display/issue-selection'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
 import { init } from '../../helpers/init'
+import { generateCursorDeepLink } from '../../helpers/vibe-check/cursor-deep-link'
+import { type ConsolidatedFinding } from '../../helpers/vibe-check/findings'
 import { getChangedFiles } from '../../helpers/vibe-check/get-changed-files'
 import {
   getGitHubBaseRef,
@@ -16,7 +19,6 @@ import {
   getGitHubHeadRef,
   isGitHubActions,
 } from '../../helpers/vibe-check/github-actions'
-import { writePlanFile } from '../../helpers/vibe-check/plan'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
 
@@ -49,7 +51,7 @@ export default function VibeCheck({
     }
   } | null>(null)
   const [finalStates, setFinalStates] = useState<AgentRunState[] | null>(null)
-  const [isSummarizing, setIsSummarizing] = useState(false)
+  const [showIssueSelection, setShowIssueSelection] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -279,47 +281,30 @@ export default function VibeCheck({
       return
     }
 
-    // Store states and trigger summarization
+    // Store states and show issue selection
     setFinalStates(states)
-    setIsSummarizing(true)
+    setShowIssueSelection(true)
   }
 
-  const handleSummarizationComplete = async (
-    markdown: string,
+  const handleIssueSelect = async (
+    finding: ConsolidatedFinding,
   ): Promise<void> => {
-    if (!context) {
-      return
-    }
-
     try {
-      await writePlanFile(markdown, context.kyotoRoot)
+      // Generate deep link for this finding
+      const deepLink = generateCursorDeepLink(finding)
 
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(undefined)
-        }, 250)
+      // Open the deep link (don't await, let it run in background)
+      openBrowser({ url: deepLink }).catch((err) => {
+        console.error(`Failed to open deep link for finding: ${err}`)
       })
-
-      exit()
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to write plan file'
-      setError(message)
-      process.exitCode = 1
-
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(undefined)
-        }, 500)
-      })
-
-      exit()
+      // Log error but don't exit - user can continue selecting other issues
+      console.error(`Failed to spawn agent for finding: ${err}`)
     }
   }
 
-  const handleSummarizationError = (errorMessage: string): void => {
-    setError(errorMessage)
-    process.exitCode = 1
+  const handleExit = (): void => {
+    exit()
   }
 
   return (
@@ -341,13 +326,11 @@ export default function VibeCheck({
           timeoutMinutes={timeoutMinutes}
         />
       )}
-      {isSummarizing && finalStates && context && (
-        <SummarizationAgent
+      {showIssueSelection && finalStates && (
+        <IssueSelection
           agentStates={finalStates}
-          gitRoot={context.gitRoot}
-          model={context.model}
-          onComplete={handleSummarizationComplete}
-          onError={handleSummarizationError}
+          onSelect={handleIssueSelect}
+          onExit={handleExit}
         />
       )}
       {error && <Text color="red">{error}</Text>}
