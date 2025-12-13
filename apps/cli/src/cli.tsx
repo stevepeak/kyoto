@@ -249,6 +249,7 @@ export async function run(argv = process.argv): Promise<void> {
 
   if (argv.length <= 2 && !isMcpMode) {
     await renderCommand({ commandName: 'help', element: <Help /> })
+    process.exitCode = 0
     return
   }
 

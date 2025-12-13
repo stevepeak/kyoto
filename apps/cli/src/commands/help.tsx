@@ -119,7 +119,7 @@ export default function Help(): React.ReactElement {
     // Allow the render to flush before exiting
     setTimeout(() => {
       exit()
-    }, 0)
+    }, 250)
   }, [exit])
 
   return (
