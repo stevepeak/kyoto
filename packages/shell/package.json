@@ -20,6 +20,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@app/types": "workspace:*",
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "tsconfig": "workspace:*",

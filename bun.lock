@@ -18,7 +18,7 @@
     },
     "apps/cli": {
       "name": "@usekyoto/cli",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "bin": {
         "kyoto": "./bin/kyoto.js",
       },
@@ -344,6 +344,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@app/types": "workspace:*",
         "@kyoto/eslint-config": "workspace:*",
         "@types/node": "catalog:",
         "tsconfig": "workspace:*",
