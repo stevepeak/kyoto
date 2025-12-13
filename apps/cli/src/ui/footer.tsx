@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <Box>
       <Text>
-        <Text color="red">京</Text>
+        <Text color="red">入</Text>
         <Link url="https://usekyoto.com">
           <Text bold>Kyoto</Text>
         </Link>{' '}

@@ -325,7 +325,7 @@ export default function VibeCheck({
   return (
     <Box flexDirection="column">
       <Jumbo />
-      <Header kanji="空気" title="Vibe checking" />
+      <Header kanji="空気" title="Vibe checks" />
       {warnings.length > 0 && (
         <Box marginTop={1} flexDirection="column">
           {warnings.map((warning, index) => (
