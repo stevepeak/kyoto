@@ -185,7 +185,7 @@ export default function Commit({
         await new Promise((resolve) => {
           setTimeout(() => {
             resolve(undefined)
-          }, 2000)
+          }, 200)
         })
 
         if (!cancelled) {

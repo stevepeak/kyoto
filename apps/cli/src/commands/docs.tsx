@@ -34,7 +34,7 @@ export default function Docs(): React.ReactElement {
         setStatus('opened')
         setTimeout(() => {
           exit()
-        }, 1000)
+        }, 200)
       } catch (error) {
         setStatus('error')
         setErrorMessage(
@@ -42,7 +42,7 @@ export default function Docs(): React.ReactElement {
         )
         setTimeout(() => {
           exit()
-        }, 2000)
+        }, 200)
       }
     }
 

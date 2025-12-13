@@ -134,7 +134,7 @@ export default function Diff(): React.ReactElement {
           await new Promise((resolve) => {
             setTimeout(() => {
               resolve(undefined)
-            }, 3000)
+            }, 200)
           })
           if (!cancelled) {
             exit()
