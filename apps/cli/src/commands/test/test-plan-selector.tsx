@@ -96,7 +96,9 @@ export function TestPlanSelector({
           <Text color="cyan">→</Text>
           <Text color={isCustomInputHighlighted ? 'cyan' : 'grey'}>
             {customInput ||
-              (isCustomInputHighlighted ? '' : 'Custom instructions...')}
+              (isCustomInputHighlighted
+                ? ''
+                : 'Type some additional instructions')}
           </Text>
           {isCustomInputHighlighted && <Text dimColor>▋</Text>}
         </Box>

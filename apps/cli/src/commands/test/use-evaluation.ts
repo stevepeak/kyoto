@@ -68,7 +68,9 @@ export function useEvaluation(options: UseEvaluationOptions) {
     // Clear previous logs when starting a new evaluation cycle
     clearStream()
 
-    log(`${changedFiles.length} file(s) changed`)
+    log(
+      `${changedFiles.length} file${changedFiles.length === 1 ? '' : 's'} changed`,
+    )
     setStage({ type: 'evaluating' })
   }, [stage.type, changedFiles, clearStream, log, setStage])
 

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Teams',
-  description: 'Kyoto Teams',
+  description: 'Teams',
 }
 
 export default async function OrganizationsPage() {
