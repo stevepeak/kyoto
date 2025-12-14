@@ -3,23 +3,27 @@ import {
   type BrowserTestSuggestion,
 } from '@app/agents'
 import { getScopeContext } from '@app/shell'
-import type { ScopeContext, VibeCheckScope } from '@app/types'
-import type { LanguageModel } from 'ai'
-import { useEffect, useRef } from 'react'
+import { type ScopeContext, type VibeCheckScope } from '@app/types'
+import { type LanguageModel } from 'ai'
+import {
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+  useEffect,
+  useRef,
+} from 'react'
 
-import type { Stage, TestStatus } from './types'
+import { type Stage, type TestStatus } from './types'
 
 type UseEvaluationOptions = {
   stage: Stage
   changedFiles: string[]
-  modelRef: React.RefObject<LanguageModel | null>
-  gitRootRef: React.RefObject<string | null>
+  modelRef: RefObject<LanguageModel | null>
+  gitRootRef: RefObject<string | null>
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void
   addDivider: () => void
   setStage: (stage: Stage) => void
-  setTestStatuses: React.Dispatch<
-    React.SetStateAction<Record<string, TestStatus>>
-  >
+  setTestStatuses: Dispatch<SetStateAction<Record<string, TestStatus>>>
   setHighlightedIndex: (index: number) => void
   setCustomInput: (input: string) => void
 }

@@ -1,4 +1,4 @@
-import type { BrowserTestSuggestion } from '@app/agents'
+import { type BrowserTestSuggestion } from '@app/agents'
 
 export type StreamItem =
   | { type: 'log'; text: string; color?: string; dim?: boolean }

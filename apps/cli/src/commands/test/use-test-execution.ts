@@ -1,9 +1,13 @@
-import type { BrowserTestSuggestion } from '@app/agents'
-import type { MutableRefObject } from 'react'
-import { useCallback } from 'react'
+import { type BrowserTestSuggestion } from '@app/agents'
+import {
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+  useCallback,
+} from 'react'
 
-import type { BrowserTestAgent } from '../../agents/test-browser'
-import type { Stage, TestStatus } from './types'
+import { type BrowserTestAgent } from '../../agents/test-browser'
+import { type Stage, type TestStatus } from './types'
 
 type UseTestExecutionOptions = {
   agentRef: MutableRefObject<BrowserTestAgent | null>
@@ -15,9 +19,7 @@ type UseTestExecutionOptions = {
   addAgentMessage: (text: string) => void
   addTestResult: (args: { description: string; passed: boolean }) => void
   setStage: (stage: Stage) => void
-  setTestStatuses: React.Dispatch<
-    React.SetStateAction<Record<string, TestStatus>>
-  >
+  setTestStatuses: Dispatch<SetStateAction<Record<string, TestStatus>>>
   setCustomInput: (input: string) => void
   resetFileWatcher: () => void
   lastEvaluatedFilesRef: MutableRefObject<string>

@@ -9,7 +9,7 @@ import {
   createBrowserTestAgent,
 } from '../../agents/test-browser'
 import { init } from '../../helpers/init'
-import type { Stage } from './types'
+import { type Stage } from './types'
 
 type UseBrowserAgentOptions = {
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void

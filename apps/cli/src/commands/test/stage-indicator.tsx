@@ -2,7 +2,7 @@ import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React from 'react'
 
-import type { Stage, TestStatus } from './types'
+import { type Stage, type TestStatus } from './types'
 
 type StageIndicatorProps = {
   stage: Stage

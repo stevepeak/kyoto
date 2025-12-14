@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import type { StreamItem } from './types'
+import { type StreamItem } from './types'
 
 const MAX_STREAM_SIZE = 50
 

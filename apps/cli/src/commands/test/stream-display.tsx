@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
-import type { StreamItem } from './types'
+import { type StreamItem } from './types'
 
 type StreamDisplayProps = {
   stream: StreamItem[]

@@ -1,8 +1,8 @@
-import type { BrowserTestSuggestion } from '@app/agents'
+import { type BrowserTestSuggestion } from '@app/agents'
 import { Box, Text, useInput, useStdin } from 'ink'
 import React from 'react'
 
-import type { TestStatus } from './types'
+import { type TestStatus } from './types'
 
 type TestPlanSelectorProps = {
   tests: BrowserTestSuggestion[]

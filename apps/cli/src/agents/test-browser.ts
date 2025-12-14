@@ -16,7 +16,7 @@ import {
 } from 'ai'
 import { dedent } from 'ts-dedent'
 
-export type BrowserTestAgentConfig = {
+type BrowserTestAgentConfig = {
   /** The language model to use */
   model: LanguageModel
   /** Instructions from .kyoto/instructions.md */
@@ -29,7 +29,7 @@ export type BrowserTestAgentConfig = {
   onBrowserClosed?: () => void
 }
 
-export type BrowserTestAgentResult = {
+type BrowserTestAgentResult = {
   /** The agent's response text */
   response: string
   /** Updated message history for continuation */

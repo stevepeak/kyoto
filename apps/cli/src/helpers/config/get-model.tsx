@@ -7,8 +7,6 @@ import { type Config } from './get'
 
 type Provider = 'openai' | 'vercel' | 'openrouter' | 'anthropic' | 'auto'
 
-export { LanguageModel }
-
 interface ConstructModelOptions {
   model?: string
   provider?: Provider
