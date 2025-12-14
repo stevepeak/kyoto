@@ -3,7 +3,7 @@ import {
   type VibeCheckAgent,
   type VibeCheckContext,
 } from '@app/types'
-import { withTimeout } from '@app/utils'
+import { pluralize, withTimeout } from '@app/utils'
 import { Box, Text } from 'ink'
 import Spinner from 'ink-spinner'
 import React, { useEffect, useRef, useState } from 'react'
@@ -57,7 +57,7 @@ export function Agent({
         const result = await withTimeout(
           agent.run(context, reporter),
           timeoutMs,
-          `Agent "${agent.label}" timed out after ${timeoutMinutes} minute${timeoutMinutes === 1 ? '' : 's'}`,
+          `Agent "${agent.label}" timed out after ${timeoutMinutes} ${pluralize(timeoutMinutes, 'minute')}`,
         )
         const status =
           result.status === 'pass'

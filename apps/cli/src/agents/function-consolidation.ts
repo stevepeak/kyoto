@@ -1,5 +1,6 @@
 import { analyzeFunctionConsolidation } from '@app/agents'
 import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
+import { pluralize } from '@app/utils'
 
 export const functionConsolidationAgent: VibeCheckAgent = {
   id: 'function-consolidation',
@@ -24,7 +25,7 @@ export const functionConsolidationAgent: VibeCheckAgent = {
 
     return {
       status: 'warn',
-      summary: `${result.findings.length} consolidation candidate${result.findings.length === 1 ? '' : 's'}`,
+      summary: `${result.findings.length} consolidation ${pluralize(result.findings.length, 'candidate')}`,
       findings: result.findings,
     }
   },

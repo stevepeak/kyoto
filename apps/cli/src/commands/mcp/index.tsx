@@ -4,6 +4,7 @@ import {
   type VibeCheckContext,
   type VibeCheckResult,
 } from '@app/types'
+import { pluralize } from '@app/utils'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
@@ -102,14 +103,14 @@ async function runMcpServer(): Promise<void> {
       const summaryParts: string[] = []
       if (errorCount > 0) {
         summaryParts.push(
-          `${errorCount} critical issue${errorCount === 1 ? '' : 's'}`,
+          `${errorCount} critical ${pluralize(errorCount, 'issue')}`,
         )
       }
       if (warnCount > 0) {
-        summaryParts.push(`${warnCount} warning${warnCount === 1 ? '' : 's'}`)
+        summaryParts.push(`${warnCount} ${pluralize(warnCount, 'warning')}`)
       }
       if (infoCount > 0) {
-        summaryParts.push(`${infoCount} note${infoCount === 1 ? '' : 's'}`)
+        summaryParts.push(`${infoCount} ${pluralize(infoCount, 'note')}`)
       }
       const summary =
         summaryParts.length > 0 ? summaryParts.join(', ') : 'No issues found'

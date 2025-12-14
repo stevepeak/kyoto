@@ -1,4 +1,5 @@
 import { type AgentRunState } from '@app/types'
+import { pluralize } from '@app/utils'
 import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
 import React, { useMemo, useState } from 'react'
@@ -213,8 +214,8 @@ export function IssueSelection({
         <Box marginTop={1}>
           <Text color="grey">
             {startedIds.size > 0
-              ? `${startedIds.size} issue${startedIds.size === 1 ? '' : 's'} started. ${items.length} remaining.`
-              : `${items.length} issue${items.length === 1 ? '' : 's'} available.`}
+              ? `${startedIds.size} ${pluralize(startedIds.size, 'issue')} started. ${items.length} remaining.`
+              : `${items.length} ${pluralize(items.length, 'issue')} available.`}
           </Text>
         </Box>
       </Box>

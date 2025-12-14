@@ -1,5 +1,6 @@
 import { analyzeSecretDetection } from '@app/agents'
 import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
+import { pluralize } from '@app/utils'
 
 export const secretDetectionAgent: VibeCheckAgent = {
   id: 'secret-detection',
@@ -30,7 +31,7 @@ export const secretDetectionAgent: VibeCheckAgent = {
 
     return {
       status,
-      summary: `${result.findings.length} potential secret${result.findings.length === 1 ? '' : 's'} detected`,
+      summary: `${result.findings.length} potential ${pluralize(result.findings.length, 'secret')} detected`,
       findings: result.findings,
     }
   },

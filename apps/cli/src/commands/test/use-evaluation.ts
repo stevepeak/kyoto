@@ -1,19 +1,15 @@
-import {
-  analyzeBrowserTestSuggestions,
-  type BrowserTestSuggestion,
-} from '@app/agents'
-import { getScopeContext } from '@app/shell'
-import { type ScopeContext, type VibeCheckScope } from '@app/types'
 import { type LanguageModel } from 'ai'
 import {
   type Dispatch,
   type RefObject,
   type SetStateAction,
-  useEffect,
   useRef,
 } from 'react'
 
 import { type Stage, type TestStatus } from './types'
+import { useEvaluationRestart } from './use-evaluation-restart'
+import { useFileEvaluationTrigger } from './use-file-evaluation-trigger'
+import { usePerformEvaluation } from './use-perform-evaluation'
 
 type UseEvaluationOptions = {
   stage: Stage
@@ -28,6 +24,12 @@ type UseEvaluationOptions = {
   setCustomInput: (input: string) => void
 }
 
+/**
+ * Orchestrates the evaluation lifecycle by composing three focused hooks:
+ * - useFileEvaluationTrigger: Watches for file changes and triggers evaluation
+ * - usePerformEvaluation: Runs the browser test suggestions analysis
+ * - useEvaluationRestart: Handles mid-evaluation file changes
+ */
 export function useEvaluation(options: UseEvaluationOptions) {
   const {
     stage,
@@ -46,162 +48,37 @@ export function useEvaluation(options: UseEvaluationOptions) {
   const lastEvaluatedFilesRef = useRef<string>('')
 
   // Trigger evaluation when files change
-  useEffect(() => {
-    // Only trigger from waiting or awaiting-input stages
-    if (stage.type !== 'waiting' && stage.type !== 'awaiting-input') {
-      return
-    }
-
-    if (changedFiles.length === 0) {
-      return
-    }
-
-    // Check if files have actually changed since last evaluation
-    const currentFilesKey = [...changedFiles].sort().join(',')
-    if (currentFilesKey === lastEvaluatedFilesRef.current) {
-      return
-    }
-
-    // Files changed - start evaluation
-    lastEvaluatedFilesRef.current = currentFilesKey
-
-    // Clear previous logs when starting a new evaluation cycle
-    clearStream()
-
-    log(
-      `${changedFiles.length} file${changedFiles.length === 1 ? '' : 's'} changed`,
-    )
-    setStage({ type: 'evaluating' })
-  }, [stage.type, changedFiles, clearStream, log, setStage])
+  useFileEvaluationTrigger({
+    stage,
+    changedFiles,
+    lastEvaluatedFilesRef,
+    clearStream,
+    log,
+    setStage,
+  })
 
   // Handle evaluation when entering evaluating stage
-  useEffect(() => {
-    if (stage.type !== 'evaluating') {
-      return
-    }
-
-    // Cancel any previous evaluation
-    if (evaluationAbortRef.current) {
-      evaluationAbortRef.current.abort()
-    }
-
-    const abortController = new AbortController()
-    evaluationAbortRef.current = abortController
-
-    const evaluate = async (): Promise<void> => {
-      if (!modelRef.current || !gitRootRef.current) {
-        setStage({ type: 'waiting' })
-        return
-      }
-
-      try {
-        const scope: VibeCheckScope = { type: 'changes' }
-        const scopeContent: ScopeContext = await getScopeContext(
-          scope,
-          gitRootRef.current,
-        )
-
-        // Check if aborted
-        if (abortController.signal.aborted) return
-
-        const result = await analyzeBrowserTestSuggestions({
-          context: {
-            gitRoot: gitRootRef.current,
-            scope,
-            scopeContent,
-            model: modelRef.current,
-          },
-          options: {
-            progress: (msg) => {
-              if (!abortController.signal.aborted) {
-                log(msg, { dim: true })
-              }
-            },
-          },
-        })
-
-        // Check if aborted
-        if (abortController.signal.aborted) return
-
-        if (result.tests.length === 0) {
-          log('No tests suggested for these changes')
-          setStage({ type: 'waiting' })
-        } else {
-          handleTestsFound(result.tests)
-        }
-      } catch (err) {
-        if (abortController.signal.aborted) return
-        log(
-          `Analysis error: ${err instanceof Error ? err.message : 'Unknown'}`,
-          { color: 'red' },
-        )
-        setStage({ type: 'waiting' })
-      }
-    }
-
-    const handleTestsFound = (tests: BrowserTestSuggestion[]) => {
-      log(
-        `Found ${tests.length} suggested test${tests.length === 1 ? '' : 's'}`,
-      )
-      // Pre-select all tests
-      const statuses: Record<string, TestStatus> = {}
-      for (const test of tests) {
-        statuses[test.id] = 'selected'
-      }
-      setTestStatuses(statuses)
-      setHighlightedIndex(0)
-      setCustomInput('')
-      setStage({ type: 'awaiting-input', tests })
-    }
-
-    void evaluate()
-
-    return () => {
-      abortController.abort()
-    }
-  }, [
-    stage.type,
+  usePerformEvaluation({
+    stage,
     modelRef,
     gitRootRef,
+    evaluationAbortRef,
     log,
     setStage,
     setTestStatuses,
     setHighlightedIndex,
     setCustomInput,
-  ])
+  })
 
   // Re-trigger evaluation if files change during evaluation
-  useEffect(() => {
-    if (stage.type !== 'evaluating') {
-      return
-    }
-
-    if (changedFiles.length === 0) {
-      return
-    }
-
-    const currentFilesKey = [...changedFiles].sort().join(',')
-    if (currentFilesKey !== lastEvaluatedFilesRef.current) {
-      // Files changed during evaluation - abort and restart
-      lastEvaluatedFilesRef.current = currentFilesKey
-      log('Files changed, restarting analysis...', {
-        color: 'yellow',
-        dim: true,
-      })
-
-      // Abort current evaluation
-      if (evaluationAbortRef.current) {
-        evaluationAbortRef.current.abort()
-      }
-
-      // Re-trigger by toggling stage
-      setStage({ type: 'waiting' })
-      // Use setTimeout to allow state to settle before re-entering evaluating
-      setTimeout(() => {
-        setStage({ type: 'evaluating' })
-      }, 0)
-    }
-  }, [stage.type, changedFiles, log, setStage])
+  useEvaluationRestart({
+    stage,
+    changedFiles,
+    lastEvaluatedFilesRef,
+    evaluationAbortRef,
+    log,
+    setStage,
+  })
 
   return {
     lastEvaluatedFilesRef,

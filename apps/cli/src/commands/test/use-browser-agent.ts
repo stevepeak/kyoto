@@ -47,10 +47,10 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
       cancelledRef.current = true
       if (agentRef.current) {
         void agentRef.current.close().finally(() => {
-          process.exit(0)
+          exit()
         })
       } else {
-        process.exit(0)
+        exit()
       }
     }
 
@@ -58,7 +58,7 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
     return () => {
       process.off('SIGINT', handleSigint)
     }
-  }, [])
+  }, [exit])
 
   useEffect(() => {
     if (hasInitializedRef.current) return

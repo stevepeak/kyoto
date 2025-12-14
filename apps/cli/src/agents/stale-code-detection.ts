@@ -1,5 +1,6 @@
 import { analyzeStaleCodeDetection } from '@app/agents'
 import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
+import { pluralize } from '@app/utils'
 
 export const staleCodeDetectionAgent: VibeCheckAgent = {
   id: 'stale-code-detection',
@@ -24,7 +25,7 @@ export const staleCodeDetectionAgent: VibeCheckAgent = {
 
     return {
       status: 'warn',
-      summary: `${result.findings.length} stale code issue${result.findings.length === 1 ? '' : 's'} found`,
+      summary: `${result.findings.length} stale code ${pluralize(result.findings.length, 'issue')} found`,
       findings: result.findings,
     }
   },

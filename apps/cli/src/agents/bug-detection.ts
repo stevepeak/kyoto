@@ -1,5 +1,6 @@
 import { analyzeBugDetection } from '@app/agents'
 import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
+import { pluralize } from '@app/utils'
 
 export const bugDetectionAgent: VibeCheckAgent = {
   id: 'bug-detection',
@@ -40,18 +41,18 @@ export const bugDetectionAgent: VibeCheckAgent = {
     const summaryParts: string[] = []
     if (errorCount > 0) {
       summaryParts.push(
-        `${errorCount} critical bug${errorCount === 1 ? '' : 's'}`,
+        `${errorCount} critical ${pluralize(errorCount, 'bug')}`,
       )
     }
     if (warnCount > 0) {
       summaryParts.push(
-        `${warnCount} potential issue${warnCount === 1 ? '' : 's'}`,
+        `${warnCount} potential ${pluralize(warnCount, 'issue')}`,
       )
     }
     if (result.findings.length > errorCount + warnCount) {
       const infoCount = result.findings.length - errorCount - warnCount
       summaryParts.push(
-        `${infoCount} code quality note${infoCount === 1 ? '' : 's'}`,
+        `${infoCount} code quality ${pluralize(infoCount, 'note')}`,
       )
     }
 

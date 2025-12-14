@@ -1,5 +1,6 @@
 import { analyzeLibraryUsage } from '@app/agents'
 import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
+import { pluralize } from '@app/utils'
 
 export const libraryUsageAgent: VibeCheckAgent = {
   id: 'library-usage',
@@ -24,7 +25,7 @@ export const libraryUsageAgent: VibeCheckAgent = {
 
     return {
       status: 'warn',
-      summary: `${result.findings.length} library usage issue${result.findings.length === 1 ? '' : 's'} found`,
+      summary: `${result.findings.length} library usage ${pluralize(result.findings.length, 'issue')} found`,
       findings: result.findings,
     }
   },
