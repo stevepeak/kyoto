@@ -10,7 +10,6 @@ import {
 import Commit from './commit'
 import Diff from './diff'
 import Docs from './docs'
-import Log from './log'
 import Login from './login'
 import { runMcpCommand } from './mcp'
 import Plan from './plan'
@@ -106,22 +105,6 @@ export function registerCommands(program: Command): void {
     .description('Analyze and summarize staged and unstaged git changes')
     .action(async () => {
       await renderCommand({ commandName: 'diff', element: <Diff /> })
-    })
-
-  program
-    .command('log')
-    .description('View git history with compact ages')
-    .option('--limit <count>', 'Number of commits to show', '10')
-    .option('--no-graph', 'Disable git graph')
-    .action(async (options: { limit?: string; graph?: boolean }) => {
-      const parsedLimit = Number.parseInt(options.limit ?? '10', 10)
-      const limit = Number.isFinite(parsedLimit) ? parsedLimit : 10
-
-      await renderCommand({
-        commandName: 'log',
-        commandOptions: options,
-        element: <Log limit={limit} graph={options.graph ?? true} />,
-      })
     })
 
   const vibeCommand = program.command('vibe').description('Vibe check commands')

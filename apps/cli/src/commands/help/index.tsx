@@ -4,7 +4,25 @@ import { useEffect } from 'react'
 import { Footer } from '../../ui/footer'
 import { Jumbo } from '../../ui/jumbo'
 
-const commandGroups = [
+// Unified example type - always use objects with command and optional description
+type CommandExample = {
+  command: string
+  description?: string
+}
+
+type HelpCommand = {
+  name: string
+  description: string
+  examples: CommandExample[]
+}
+
+type CommandGroup = {
+  title: string
+  kanji?: string
+  commands: HelpCommand[]
+}
+
+const commandGroups: CommandGroup[] = [
   {
     title: 'Vibing',
     kanji: '改善',
@@ -12,61 +30,67 @@ const commandGroups = [
       {
         name: 'vibe check',
         description: 'Run several agents to ensure your code is in good shape',
-        example: [
-          ['kyoto vibe check', 'Check all changes'],
-          ['kyoto vibe check --staged', 'Check only staged changes'],
-          [
-            'kyoto vibe check --watch',
-            '(Coming soon) Continuously vibe check new git changes',
-          ],
+        examples: [
+          { command: 'kyoto vibe check', description: 'Check all changes' },
+          {
+            command: 'kyoto vibe check --staged',
+            description: 'Check only staged changes',
+          },
+          {
+            command: 'kyoto vibe check --watch',
+            description:
+              '(Coming soon) Continuously vibe check new git changes',
+          },
         ],
       },
       {
         name: 'commit',
         description:
           'Use Kyoto AI to commit unstaged changes into logical commits',
-        example: [
-          ['kyoto commit', 'Create a commit plan, then commit it'],
-          [
-            'kyoto commit "group by feature, use conventional commits"',
-            'Create a new commit plan using the provided instructions, then commit',
-          ],
+        examples: [
+          {
+            command: 'kyoto commit',
+            description: 'Create a commit plan, then commit it',
+          },
+          {
+            command:
+              'kyoto commit "group by feature, use conventional commits"',
+            description:
+              'Create a new commit plan using the provided instructions, then commit',
+          },
         ],
       },
       {
         name: 'diff',
         description:
           'Analyze and summarize staged and unstaged git changes to understand what you are working on',
-        example: [
-          ['kyoto diff', 'Get a concise summary of your current changes'],
-        ],
-      },
-      {
-        name: 'log',
-        description: 'Better commit logs',
-        example: [
-          ['kyoto log', 'Show the last 10 commits'],
-          ['kyoto log --limit 25', 'Show the last 25 commits'],
-          ['kyoto log --no-graph', 'Show commits without the graph'],
+        examples: [
+          {
+            command: 'kyoto diff',
+            description: 'Get a concise summary of your current changes',
+          },
         ],
       },
       {
         name: 'test',
         description: 'Generate test suggestions for code changes',
-        example: [
-          ['kyoto test', 'Generate test suggestions for all changes'],
-          [
-            'kyoto test --staged',
-            'Generate test suggestions for staged changes only',
-          ],
-          [
-            'kyoto test --commits 4',
-            'Generate test suggestions for the last 4 commits',
-          ],
-          [
-            'kyoto test --last',
-            'Generate test suggestions since last vibe check',
-          ],
+        examples: [
+          {
+            command: 'kyoto test',
+            description: 'Generate test suggestions for all changes',
+          },
+          {
+            command: 'kyoto test --staged',
+            description: 'Generate test suggestions for staged changes only',
+          },
+          {
+            command: 'kyoto test --commits 4',
+            description: 'Generate test suggestions for the last 4 commits',
+          },
+          {
+            command: 'kyoto test --last',
+            description: 'Generate test suggestions since last vibe check',
+          },
         ],
       },
     ],
@@ -79,7 +103,7 @@ const commandGroups = [
   //     {
   //       name: 'mcp',
   //       description: 'For your coding agent to vibe check themselves',
-  //       example: 'kyoto mcp',
+  //       examples: [{ command: 'kyoto mcp' }],
   //     },
   //   ],
   // },
@@ -90,25 +114,25 @@ const commandGroups = [
       {
         name: 'login',
         description: 'Login via GitHub to get started',
-        example: 'kyoto login',
+        examples: [{ command: 'kyoto login' }],
       },
       // TODO finish these later
       // {
       //   name: 'setup',
       //   description: 'Configure your Kyoto experience',
-      //   example: [
-      //     ['kyoto setup github', 'Add a GitHub Action for Kyoto'],
-      //     ['kyoto setup mcp', 'Add Kyoto to your MCP services'],
+      //   examples: [
+      //     { command: 'kyoto setup github', description: 'Add a GitHub Action for Kyoto' },
+      //     { command: 'kyoto setup mcp', description: 'Add Kyoto to your MCP services' },
       //   ],
       // },
       {
         name: 'docs',
         description: 'View the Kyoto documentation',
-        example: 'kyoto docs',
+        examples: [{ command: 'kyoto docs' }],
       },
     ],
   },
-] as const
+]
 
 function GroupHeader({
   title,
@@ -125,19 +149,94 @@ function GroupHeader({
   )
 }
 
+function ExampleDisplay({
+  example,
+  columnWidth,
+  isVertical,
+}: {
+  example: CommandExample
+  columnWidth: number
+  isVertical: boolean
+}): React.ReactElement {
+  if (isVertical) {
+    return (
+      <Box flexDirection="column">
+        <Text>
+          <Text dimColor>$ </Text>
+          <Text color="yellow">{example.command}</Text>
+        </Text>
+        {example.description && (
+          <Text dimColor wrap="truncate">
+            {example.description}
+          </Text>
+        )}
+      </Box>
+    )
+  }
+
+  return (
+    <Box flexDirection="row">
+      <Text>{' '.repeat(columnWidth + 1)}</Text>
+      <Text dimColor>$ </Text>
+      <Text color="yellow">{example.command}</Text>
+      {example.description && (
+        <>
+          <Text> </Text>
+          <Text dimColor wrap="truncate">
+            {example.description}
+          </Text>
+        </>
+      )}
+    </Box>
+  )
+}
+
+function CommandDisplay({
+  command,
+  columnWidth,
+  isVertical,
+}: {
+  command: HelpCommand
+  columnWidth: number
+  isVertical: boolean
+}): React.ReactElement {
+  return (
+    <Box flexDirection="column" marginBottom={1}>
+      {isVertical ? (
+        <Box flexDirection="column" gap={1}>
+          <Text color="red">{command.name}</Text>
+          <Text>{command.description}</Text>
+        </Box>
+      ) : (
+        <Box gap={1}>
+          <Text color="red">{command.name.padEnd(columnWidth)}</Text>
+          <Text>{command.description}</Text>
+        </Box>
+      )}
+      {command.examples.map((example, idx) => (
+        <ExampleDisplay
+          key={idx}
+          example={example}
+          columnWidth={columnWidth}
+          isVertical={isVertical}
+        />
+      ))}
+    </Box>
+  )
+}
+
 export default function Help(): React.ReactElement {
   const { exit } = useApp()
   const { stdout } = useStdout()
   const terminalWidth = stdout.columns || 80
+
   const columnWidth = Math.max(
     ...commandGroups.flatMap((group) =>
       group.commands.map((command) => command.name.length),
     ),
   )
 
-  // Use vertical layout when terminal is narrow (less than 80 columns)
-  const useVerticalLayout = terminalWidth < 80
-  const minWidthForHorizontal = columnWidth + 20 // command name + description space
+  const isVertical = terminalWidth < 80
 
   useEffect(() => {
     // Allow the render to flush before exiting
@@ -152,136 +251,18 @@ export default function Help(): React.ReactElement {
       <Text> </Text>
       {commandGroups.map((group) => (
         <Box key={group.title} flexDirection="column" marginBottom={1}>
-          <GroupHeader
-            title={group.title}
-            kanji={(group as { kanji?: string }).kanji}
-          />
+          <GroupHeader title={group.title} kanji={group.kanji} />
           <Text dimColor>{'─'.repeat(Math.min(terminalWidth - 2, 50))}</Text>
           <Text> </Text>
 
-          {group.commands.map((command) => {
-            const shouldUseVertical =
-              useVerticalLayout || terminalWidth < minWidthForHorizontal
-
-            return (
-              <Box key={command.name} flexDirection="column" marginBottom={1}>
-                {shouldUseVertical ? (
-                  <Box flexDirection="column" gap={1}>
-                    <Text color="red">{command.name}</Text>
-                    <Text>{command.description}</Text>
-                  </Box>
-                ) : (
-                  <Box gap={1}>
-                    <Text color="red">{command.name.padEnd(columnWidth)}</Text>
-                    <Text>{command.description}</Text>
-                  </Box>
-                )}
-                {'examples' in command && Array.isArray(command.examples) ? (
-                  command.examples.map((example, idx) => {
-                    const isTuple =
-                      Array.isArray(example) &&
-                      example.length === 2 &&
-                      typeof example[0] === 'string' &&
-                      typeof example[1] === 'string'
-                    const commandText = isTuple ? example[0] : example
-                    const description = isTuple ? example[1] : null
-                    return (
-                      <Box
-                        key={idx}
-                        flexDirection={shouldUseVertical ? 'column' : 'row'}
-                        gap={1}
-                      >
-                        {shouldUseVertical ? (
-                          <>
-                            <Text>
-                              <Text dimColor>$ </Text>
-                              <Text color="yellow">{commandText}</Text>
-                            </Text>
-                            {description && (
-                              <Text dimColor wrap="truncate">
-                                {description}
-                              </Text>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <Text>{' '.repeat(columnWidth + 1)}</Text>
-                            <Text dimColor>$ </Text>
-                            <Text color="yellow">{commandText}</Text>
-                            {description && (
-                              <>
-                                <Text> </Text>
-                                <Text dimColor wrap="truncate">
-                                  {description}
-                                </Text>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </Box>
-                    )
-                  })
-                ) : 'example' in command ? (
-                  Array.isArray(command.example) ? (
-                    command.example.map((example, idx) => {
-                      const isTuple =
-                        Array.isArray(example) &&
-                        example.length === 2 &&
-                        typeof example[0] === 'string' &&
-                        typeof example[1] === 'string'
-                      const commandText = isTuple ? example[0] : example
-                      const description = isTuple ? example[1] : null
-                      return (
-                        <Box
-                          key={idx}
-                          flexDirection={shouldUseVertical ? 'column' : 'row'}
-                        >
-                          {shouldUseVertical ? (
-                            <>
-                              <Text>
-                                <Text dimColor>$ </Text>
-                                <Text color="yellow">{commandText}</Text>
-                              </Text>
-                              {description && (
-                                <Text dimColor>{description}</Text>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <Text>{' '.repeat(columnWidth + 1)}</Text>
-                              <Text dimColor>$ </Text>
-                              <Text color="yellow">{commandText}</Text>
-                              {description && (
-                                <>
-                                  <Text> </Text>
-                                  <Text dimColor>{description}</Text>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </Box>
-                      )
-                    })
-                  ) : typeof command.example === 'string' ? (
-                    <Box flexDirection={shouldUseVertical ? 'column' : 'row'}>
-                      {shouldUseVertical ? (
-                        <Text>
-                          <Text dimColor>$ </Text>
-                          <Text color="yellow">{command.example}</Text>
-                        </Text>
-                      ) : (
-                        <>
-                          <Text>{' '.repeat(columnWidth + 1)}</Text>
-                          <Text dimColor>$ </Text>
-                          <Text color="yellow">{command.example}</Text>
-                        </>
-                      )}
-                    </Box>
-                  ) : null
-                ) : null}
-              </Box>
-            )
-          })}
+          {group.commands.map((command) => (
+            <CommandDisplay
+              key={command.name}
+              command={command}
+              columnWidth={columnWidth}
+              isVertical={isVertical}
+            />
+          ))}
 
           <Text> </Text>
         </Box>
