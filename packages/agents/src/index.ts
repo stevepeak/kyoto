@@ -1,4 +1,9 @@
 export {
+  analyzeBrowserTestSuggestions,
+  type BrowserTestSuggestion,
+  browserTestSuggestionsOutputSchema,
+} from './agents/browser-test-suggestions'
+export {
   analyzeBugDetection,
   bugDetectionOutputSchema,
 } from './agents/bug-detection'

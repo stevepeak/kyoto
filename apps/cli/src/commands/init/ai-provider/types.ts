@@ -1,3 +1,5 @@
+import type React from 'react'
+
 import { type Config } from '../../../helpers/config/get'
 import { type Provider } from './constants'
 
