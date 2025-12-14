@@ -41,6 +41,25 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
     exit()
   }, [exit])
 
+  // Handle SIGINT (Control-C) to clean up browser
+  useEffect(() => {
+    const handleSigint = (): void => {
+      cancelledRef.current = true
+      if (agentRef.current) {
+        void agentRef.current.close().finally(() => {
+          process.exit(0)
+        })
+      } else {
+        process.exit(0)
+      }
+    }
+
+    process.on('SIGINT', handleSigint)
+    return () => {
+      process.off('SIGINT', handleSigint)
+    }
+  }, [])
+
   useEffect(() => {
     if (hasInitializedRef.current) return
     hasInitializedRef.current = true
@@ -133,7 +152,7 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
     return () => {
       cancelledRef.current = true
     }
-  }, [log, addAgentMessage, addDivider, setStage, exit])
+  }, [log, addAgentMessage, addDivider, setStage, exit, headless])
 
   return {
     agent: agentRef.current,

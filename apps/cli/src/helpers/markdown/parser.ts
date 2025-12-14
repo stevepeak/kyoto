@@ -18,7 +18,7 @@ export type BlockToken =
 /**
  * Parse inline markdown (bold, italic, code, links)
  */
-export function parseInline(text: string): InlineToken[] {
+function parseInline(text: string): InlineToken[] {
   const tokens: InlineToken[] = []
   let remaining = text
 
