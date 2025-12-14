@@ -10,12 +10,10 @@ import { useCreateCommitPlan } from './use-create-commit-plan'
 import { useExecuteCommitPlan } from './use-execute-commit-plan'
 
 interface CommitProps {
-  plan?: boolean
   instructions?: string
 }
 
 export default function Commit({
-  plan: shouldOnlyPlan = false,
   instructions,
 }: CommitProps): React.ReactElement {
   const { exit } = useApp()
@@ -40,7 +38,6 @@ export default function Commit({
     plan,
     error: createError,
   } = useCreateCommitPlan({
-    shouldOnlyPlan,
     instructions,
     onComplete: (loadedPlan, gitRoot) => {
       const state = {
@@ -114,9 +111,7 @@ export default function Commit({
 
     const normalized = value.trim().toLowerCase()
     const shouldCommit =
-      normalized === 'y' ||
-      normalized === 'yes' ||
-      (!shouldOnlyPlan && normalized === '')
+      normalized === 'y' || normalized === 'yes' || normalized === ''
 
     if (shouldCommit) {
       setAwaitingConfirmation(false)
@@ -130,20 +125,14 @@ export default function Commit({
 
       // Execute the plan
       await execute()
-    } else if (
-      (shouldOnlyPlan && normalized === '') ||
-      normalized === 'n' ||
-      normalized === 'no'
-    ) {
+    } else if (normalized === 'n' || normalized === 'no') {
       // User declined - exit without saving
       setAwaitingConfirmation(false)
       exit()
     } else {
       // Invalid input
       setConfirmationError(
-        shouldOnlyPlan
-          ? 'Please enter "y" for yes or "n" for no (or press Enter for no)'
-          : 'Please enter "y" for yes or "n" for no (or press Enter for yes)',
+        'Please enter "y" for yes or "n" for no (or press Enter for yes)',
       )
     }
   }
@@ -161,7 +150,6 @@ export default function Commit({
           value={inputValue}
           onChange={setInputValue}
           onSubmit={handleConfirmation}
-          shouldOnlyPlan={shouldOnlyPlan}
           error={confirmationError}
         />
       )}

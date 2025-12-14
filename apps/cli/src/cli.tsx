@@ -15,6 +15,7 @@ export async function run(argv = process.argv): Promise<void> {
 
   program.name('kyoto').description('Kyoto CLI').version(CLI_VERSION)
 
+  // Register all commands from modular structure
   registerCommands(program)
 
   // In MCP mode, don't show help on error - just exit silently

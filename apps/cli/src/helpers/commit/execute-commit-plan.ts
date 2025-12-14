@@ -1,92 +1,7 @@
-import { runGit } from '@app/shell'
-import { execa } from 'execa'
-import { access } from 'node:fs/promises'
-import path from 'node:path'
+import { assertNoGitIndexLock, getAllChangedFiles, runGit } from '@app/shell'
+import { sleep } from '@app/utils'
 
 import { type CommitPlan } from './commit-plan'
-
-async function getGitIndexLockPath(args: {
-  gitRoot: string
-}): Promise<string | null> {
-  const { gitRoot } = args
-
-  // Worktrees/submodules may have `.git` as a file; `--git-dir` is the reliable way.
-  const { stdout } = await execa('git', ['rev-parse', '--git-dir'], {
-    cwd: gitRoot,
-  })
-
-  const gitDir = stdout.trim()
-  if (gitDir.length === 0) {
-    return null
-  }
-
-  const resolvedGitDir = path.isAbsolute(gitDir)
-    ? gitDir
-    : path.join(gitRoot, gitDir)
-  return path.join(resolvedGitDir, 'index.lock')
-}
-
-async function assertNoGitIndexLock(args: { gitRoot: string }): Promise<void> {
-  const lockPath = await getGitIndexLockPath({ gitRoot: args.gitRoot })
-  if (!lockPath) {
-    return
-  }
-
-  try {
-    await access(lockPath)
-  } catch {
-    return
-  }
-
-  throw new Error(
-    [
-      `Git index is locked (found: ${lockPath}).`,
-      'Another git process is likely still running (or a previous one crashed).',
-      'Close any editor opened by git and stop any running git commands, then retry.',
-      `If you are sure nothing is running, remove the lock file: rm -f "${lockPath}"`,
-    ].join('\n'),
-  )
-}
-
-/**
- * Gets all changed files (staged and unstaged) from git status.
- * Returns a Set of file paths that have changes.
- */
-async function getAllChangedFiles(gitRoot: string): Promise<Set<string>> {
-  try {
-    // Use -z for robust parsing (handles spaces, renames, etc.)
-    const { stdout } = await execa('git', ['status', '--porcelain', '-z'], {
-      cwd: gitRoot,
-    })
-    const files = new Set<string>()
-    const tokens = stdout.split('\0').filter((t) => t.length > 0)
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i]
-      if (!token || token.length < 4) {
-        continue
-      }
-
-      const status = token.slice(0, 2)
-      const pathA = token.slice(3)
-      if (pathA.length > 0) {
-        files.add(pathA)
-      }
-
-      // Renames/copies include a second path as the next NUL-delimited token.
-      const isRenameOrCopy = status.includes('R') || status.includes('C')
-      if (isRenameOrCopy) {
-        const pathB = tokens[i + 1]
-        if (pathB && pathB.length > 0) {
-          files.add(pathB)
-          i++
-        }
-      }
-    }
-    return files
-  } catch {
-    return new Set()
-  }
-}
 
 export async function executeCommitPlan(args: {
   gitRoot: string
@@ -106,7 +21,7 @@ export async function executeCommitPlan(args: {
 
     // Get current changed files before each step to validate file paths
     // This ensures we only try to stage files that actually exist and have changes
-    const currentChangedFiles = await getAllChangedFiles(gitRoot)
+    const currentChangedFiles = await getAllChangedFiles({ gitRoot })
 
     // Filter step files to only include files that actually have changes
     const validFiles = step.files.filter((file) =>
@@ -145,6 +60,7 @@ export async function executeCommitPlan(args: {
     }
 
     onProgress?.(`Committing ${step.order}: ${step.commitMessage}`)
+    await sleep({ ms: 1000 })
     await runGit({
       gitRoot,
       args: ['commit', '-m', step.commitMessage],

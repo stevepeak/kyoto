@@ -2,12 +2,12 @@ import { createServer } from 'node:http'
 
 import { CALLBACK_HTML } from './callback-html'
 
-export type LoginCallbackResult = {
+type LoginCallbackResult = {
   token: string
   login: string
 }
 
-export type CallbackServer = {
+type CallbackServer = {
   redirectUri: string
   waitForCallback: Promise<LoginCallbackResult>
   close: () => void

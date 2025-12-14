@@ -43,6 +43,7 @@
     "@ai-sdk/anthropic": "catalog:",
     "@ai-sdk/openai": "catalog:",
     "@app/agents": "workspace:^",
+    "@app/schemas": "workspace:^",
     "@app/shell": "workspace:^",
     "@app/types": "workspace:^",
     "@app/utils": "workspace:^",

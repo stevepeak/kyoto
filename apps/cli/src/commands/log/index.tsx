@@ -3,7 +3,6 @@ import { execa } from 'execa'
 import { Box, Text, useApp } from 'ink'
 import { useEffect, useMemo, useState } from 'react'
 
-import { Footer } from '../../ui/footer'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
 

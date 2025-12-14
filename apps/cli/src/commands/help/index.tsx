@@ -26,14 +26,10 @@ const commandGroups = [
         description:
           'Use Kyoto AI to commit unstaged changes into logical commits',
         example: [
-          ['kyoto commit', 'Use commit plan (or create one) and commit to it'],
+          ['kyoto commit', 'Create a commit plan, then commit it'],
           [
             'kyoto commit "group by feature, use conventional commits"',
             'Create a new commit plan using the provided instructions, then commit',
-          ],
-          [
-            'kyoto commit --plan',
-            'Generate a commit plan without committing to it',
           ],
         ],
       },

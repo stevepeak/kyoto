@@ -22,6 +22,11 @@ export {
 } from './git/get-git-status'
 export { runGit } from './git/run-git'
 export {
+  assertNoGitIndexLock,
+  getAllChangedFiles,
+  getGitIndexLockPath,
+} from './git/git-utils'
+export {
   getScopeContext,
   getScopeDiffs,
   getScopeFileContents,

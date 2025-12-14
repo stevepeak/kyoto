@@ -47,7 +47,6 @@ Analyze uncommitted changes and organize them into logical commits:
 
 - `kyoto commit` - Plan and commit uncommitted changes into logical commits
 - `kyoto commit [instructions]` - Provide optional instructions to guide grouping and commit messages
-- `kyoto commit --plan` - Preview a commit plan without committing
 
 ### MCP
 

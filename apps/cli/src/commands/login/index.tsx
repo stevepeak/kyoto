@@ -1,10 +1,9 @@
+import { type CliSessionResponse, cliSessionResponseSchema } from '@app/schemas'
 import { Box, Text, useApp } from 'ink'
 import Spinner from 'ink-spinner'
 import { randomBytes } from 'node:crypto'
 import React, { useEffect, useState } from 'react'
 import { z } from 'zod'
-
-import { cliSessionResponseSchema, type CliSessionResponse } from '@app/schemas'
 
 import { openBrowser } from '../../helpers/browser/open-browser'
 import { updateConfig } from '../../helpers/config/update'

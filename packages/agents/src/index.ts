@@ -3,6 +3,11 @@ export {
   bugDetectionOutputSchema,
 } from './agents/bug-detection'
 export {
+  createAnalyzeAgent,
+  githubChecksInstruction,
+  toolsAvailableSection,
+} from './factory'
+export {
   analyzeCodeOrganization,
   codeOrganizationOutputSchema,
 } from './agents/code-organization'

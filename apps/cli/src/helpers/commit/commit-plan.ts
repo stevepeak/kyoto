@@ -7,7 +7,7 @@ const CommitPlanStepSchema = z.object({
   reasoning: z.string().optional(),
 })
 
-export const CommitPlanSchema = z.object({
+const CommitPlanSchema = z.object({
   version: z.literal(1),
   createdAt: z.string().datetime(),
   steps: z.array(CommitPlanStepSchema),

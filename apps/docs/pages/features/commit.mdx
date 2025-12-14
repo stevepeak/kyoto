@@ -7,26 +7,16 @@ When we vibe, we can tend to make many changes across the codebase.
 It becomes difficult to manage what files in what order should be committed.
 Use Kyoto to commit changes sequentially and with AI-summarized messages.
 
-## Plan commits
-
-To preview a commit plan without committing, use `--plan`.
-
-```sh
-kyoto commit --plan
-```
-
-and, you can guide the plan
-
-```sh
-kyoto commit --plan "new button and bug fix"
-```
-
-Like what you see? Have Kyoto make those commits for you.
-
 ## Make commits
 
 When you're ready, run `kyoto commit`, review the plan, and confirm to commit the changes sequentially.
 
 ```sh
 kyoto commit
+```
+
+You can also provide instructions to guide how Kyoto groups changes and writes commit messages:
+
+```sh
+kyoto commit "new button and bug fix"
 ```

@@ -5,7 +5,6 @@ import { createCommitPlan } from '../../helpers/commit/create-commit-plan'
 import { init } from '../../helpers/init'
 
 interface UseCreateCommitPlanOptions {
-  shouldOnlyPlan: boolean
   instructions?: string
   onComplete: (plan: CommitPlan, gitRoot: string) => void
   onError: (error: string) => void
@@ -20,7 +19,6 @@ interface UseCreateCommitPlanReturn {
 }
 
 export function useCreateCommitPlan({
-  shouldOnlyPlan,
   instructions,
   onComplete,
   onError,
@@ -51,34 +49,6 @@ export function useCreateCommitPlan({
           if (!cancelled) {
             onError(errorMessage)
             onExit()
-          }
-          return
-        }
-
-        if (shouldOnlyPlan) {
-          setProgress('Analyzing uncommitted changes...')
-          const newPlan = await createCommitPlan({
-            model,
-            instructions,
-            onProgress: (message) => {
-              if (!cancelled) {
-                setProgress(message)
-              }
-            },
-          })
-
-          if (!cancelled) {
-            setPlan(newPlan)
-            setLoading(false)
-            // Auto-exit after showing results (do not save any files)
-            await new Promise((resolve) => {
-              setTimeout(() => {
-                resolve(undefined)
-              }, 150)
-            })
-            if (!cancelled) {
-              onExit()
-            }
           }
           return
         }
@@ -147,7 +117,7 @@ export function useCreateCommitPlan({
     return () => {
       cancelled = true
     }
-  }, [shouldOnlyPlan, instructions, onComplete, onError, onExit])
+  }, [instructions, onComplete, onError, onExit])
 
   return {
     loading,

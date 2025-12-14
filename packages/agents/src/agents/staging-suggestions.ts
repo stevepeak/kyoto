@@ -56,7 +56,7 @@ interface AnalyzeStagingSuggestionsOptions {
 export async function analyzeStagingSuggestions({
   scope: _scope,
   instructions,
-  options: { maxSteps = 30, model, telemetryTracer, progress },
+  options: { maxSteps = 20, model, telemetryTracer, progress },
 }: AnalyzeStagingSuggestionsOptions): Promise<StagingSuggestionsOutput> {
   const gitRoot = await findGitRoot()
   const uncommittedFilePaths = await getUncommittedFilePaths(gitRoot)
@@ -66,7 +66,7 @@ export async function analyzeStagingSuggestions({
     system: dedent`
       You are a senior engineer who helps organize code changes into logical, sequential commits.
       Your goal is to analyze uncommitted changes (both staged and unstaged) and suggest how to
-      organize them into smaller, focused commits that tell a clear story.
+      organize them into focused commits that tell a clear story.
 
       ${
         instructions
@@ -77,46 +77,6 @@ export async function analyzeStagingSuggestions({
           `
           : ''
       }
-
-      # Your Task
-      1. Retrieve all uncommitted changes (both staged and unstaged files)
-      2. Read the relevant files to understand what changed
-      3. Analyze dependencies and logical relationships between changes
-      4. Group related changes together
-      5. Suggest a sequence of commits with clear commit messages
-
-      # Retrieving Changes
-      - Use \`git status --porcelain\` to see all uncommitted changes (staged and unstaged)
-      - Use \`git diff --cached --name-only\` to list staged files
-      - Use \`git diff --cached\` to see staged changes
-      - Use \`git diff --name-only\` to list unstaged modified files
-      - Use \`git diff\` to see unstaged changes
-      - Use \`git ls-files --others --exclude-standard\` to list untracked files
-      - Use \`git diff --cached <file>\` to see staged changes for a specific file
-      - Use \`git diff <file>\` to see unstaged changes for a specific file
-
-      # Tools Available
-      - **terminalCommand**: Execute git commands to retrieve change information
-      - **readFile**: Read files from the repository to analyze their content
-
-      # Important Instructions
-      - Analyze ALL uncommitted changes (both staged and unstaged)
-      - Group files by logical relationship:
-        * Files that implement a single feature together
-        * Files that share dependencies (e.g., if A imports B, they might go together)
-        * Files that are part of the same refactoring
-        * Configuration changes together
-        * Test files with their corresponding implementation files
-      - Order commits by dependency: foundational changes first, dependent changes later
-      - Each commit should be focused and self-contained when possible
-      - Suggest clear, descriptive commit messages following conventional commit format when appropriate
-      - Include all changed files in your suggestions (don't leave any out)
-      - For each suggestion:
-        * **order**: Sequential number (1, 2, 3, etc.) indicating the order to stage/commit
-        * **commitMessage**: A clear commit message (e.g., "Add user authentication", "Fix bug in data validation")
-        * **files**: Array of file paths relative to git root
-        * **reasoning**: Brief explanation of why these files belong together (optional but helpful)
-      - If there are no changes, return an empty suggestions array
     `,
     experimental_telemetry: {
       isEnabled: true,
