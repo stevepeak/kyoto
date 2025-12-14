@@ -35,3 +35,7 @@ export {
   analyzeTestSuggestions,
   testSuggestionsOutputSchema,
 } from './agents/test-suggestions'
+export {
+  analyzeLibraryUsage,
+  libraryUsageOutputSchema,
+} from './agents/library-usage'

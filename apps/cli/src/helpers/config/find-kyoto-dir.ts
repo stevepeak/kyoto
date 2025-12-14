@@ -13,6 +13,10 @@ export interface KyotoPaths {
   root: string
   /** Absolute path to the .kyoto/config.json file */
   config: string
+  /** Absolute path to the .kyoto/instructions.md file */
+  instructions: string
+  /** Absolute path to the .kyoto/browser-state.json file for persisting login sessions */
+  browserState: string
 }
 
 /**
@@ -25,9 +29,11 @@ export interface KyotoPaths {
 export async function pwdKyoto(gitRoot: string): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
   const config = join(root, 'config.json')
+  const instructions = join(root, 'instructions.md')
+  const browserState = join(root, 'browser-state.json')
 
   // Create all necessary directories
   await mkdir(root, { recursive: true })
 
-  return { gitRoot, root, config }
+  return { gitRoot, root, config, instructions, browserState }
 }

@@ -6,7 +6,6 @@ import React, { useEffect, useReducer } from 'react'
 
 import { getConfig } from '../../../helpers/config/get'
 import { createWorkflowContent } from '../../../helpers/init/github-workflow-template'
-
 import { CreatedResult } from './created-result'
 import { DefaultResult } from './default-result'
 import { ExistsResult } from './exists-result'

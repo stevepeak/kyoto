@@ -62,7 +62,7 @@ export default async function RepoPageRoute(props: RepoPageRouteProps) {
 
   const session = await getSession()
   if (!session?.user?.id) {
-    redirect('/api/auth/signin')
+    redirect(`/login?redirect=/~/${owner}/${repo}`)
   }
 
   const ownerData = await checkOwnerMembership({

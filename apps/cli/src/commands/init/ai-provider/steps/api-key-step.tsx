@@ -3,7 +3,7 @@ import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
 import React, { useState } from 'react'
 
-import type { ApiKeyStepProps } from '../types'
+import { type ApiKeyStepProps } from '../types'
 
 export function ApiKeyStep({
   providerLabel,

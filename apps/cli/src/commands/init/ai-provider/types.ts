@@ -1,6 +1,5 @@
-import type { Config } from '../../../helpers/config/get'
-
-import type { Provider } from './constants'
+import { type Config } from '../../../helpers/config/get'
+import { type Provider } from './constants'
 
 export type Step =
   | 'check-existing'
@@ -38,5 +37,5 @@ export type ApiKeyStepProps = {
 export type CompletedStepProps = {
   model: string | undefined
   providerLabel: string
-  logs: Array<{ key: string; content: React.ReactNode }>
+  logs: { key: string; content: React.ReactNode }[]
 }

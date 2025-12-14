@@ -64,7 +64,7 @@ export default async function ChangelogPageRoute(
 
   const session = await getSession()
   if (!session?.user?.id) {
-    redirect('/api/auth/signin')
+    redirect(`/login?redirect=/~/${owner}/${repo}/changelog`)
   }
 
   const ownerData = await checkOwnerMembership({

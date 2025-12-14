@@ -1,9 +1,11 @@
-import { Box, Text } from 'ink'
-import React, { Fragment } from 'react'
+import { type AgentRunState } from '@app/types'
+import { Box, Text, useInput } from 'ink'
+import React, { Fragment, useMemo } from 'react'
 
 import { defaultVibeCheckAgents } from '../../agents'
 import { IssueSelection } from '../../helpers/display/issue-selection'
 import { VibeAgents } from '../../helpers/display/vibe-agents'
+import { consolidateFindings } from '../../helpers/vibe-check/findings'
 import { useVibeCheck } from '../../helpers/vibe-check/use-vibe-check'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
@@ -73,6 +75,10 @@ function IssuesStep({
   )
 }
 
+function hasIssues(states: AgentRunState[]): boolean {
+  return consolidateFindings(states).length > 0
+}
+
 export default function VibeCheck({
   staged = false,
   timeoutMinutes = 1,
@@ -100,6 +106,24 @@ export default function VibeCheck({
     last,
   })
 
+  const issuesExist = useMemo(
+    () => finalStates && hasIssues(finalStates),
+    [finalStates],
+  )
+
+  const showIssueSelection = step === 'issues' && issuesExist
+  const showNoIssuesMessage = step === 'issues' && !issuesExist
+
+  // Handle "q" to exit when no issues are found
+  useInput(
+    (input) => {
+      if (input === 'q' || input === 'Q') {
+        handleExit()
+      }
+    },
+    { isActive: showNoIssuesMessage },
+  )
+
   return (
     <Box flexDirection="column">
       <Jumbo />
@@ -108,7 +132,7 @@ export default function VibeCheck({
 
       <WarningsDisplay warnings={warnings} />
 
-      {step === 'agents' && context && (
+      {context && (
         <AgentsStep
           context={context}
           timeoutMinutes={timeoutMinutes}
@@ -116,7 +140,13 @@ export default function VibeCheck({
         />
       )}
 
-      {step === 'issues' && finalStates && (
+      {showNoIssuesMessage && (
+        <Box marginTop={1}>
+          <Text color="green">No issues found. All checks passed!</Text>
+        </Box>
+      )}
+
+      {showIssueSelection && finalStates && (
         <IssuesStep
           finalStates={finalStates}
           onSelect={handleIssueSelect}

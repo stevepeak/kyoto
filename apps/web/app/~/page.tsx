@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function OrganizationsPage() {
   const session = await getSession()
   if (!session?.user?.id) {
-    redirect('/api/auth/signin')
+    redirect('/login?redirect=/~')
   }
 
   const organizations = await getUserOrganizations({

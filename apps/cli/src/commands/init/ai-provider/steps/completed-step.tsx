@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
-import type { CompletedStepProps } from '../types'
+import { type CompletedStepProps } from '../types'
 
 export function CompletedStep({
   model,

@@ -3,7 +3,7 @@ import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
 import React, { useEffect, useState } from 'react'
 
-import type { ConfirmChangeStepProps } from '../types'
+import { type ConfirmChangeStepProps } from '../types'
 
 export function ConfirmChangeStep({
   existingConfig,

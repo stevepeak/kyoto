@@ -125,19 +125,13 @@ export function registerCommands(program: Command): void {
     },
   )
 
-  addVibeCommandOptions(
-    program
-      .command('test')
-      .description('Generate test suggestions for code changes'),
-  ).action(
-    async (commitSpec: string | undefined, options: VibeCommandRawOptions) => {
-      const props = parseVibeCommandOptions({ commitSpec, options })
-
+  program
+    .command('test')
+    .description('Interactive browser testing with AI agent')
+    .action(async () => {
       await renderCommand({
         commandName: 'test',
-        commandOptions: props,
-        element: <Test {...props} />,
+        element: <Test />,
       })
-    },
-  )
+    })
 }

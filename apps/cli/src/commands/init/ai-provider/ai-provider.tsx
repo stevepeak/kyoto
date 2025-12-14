@@ -5,7 +5,6 @@ import { type Config, getConfig } from '../../../helpers/config/get'
 import { getDefaultModelForProvider } from '../../../helpers/config/get-default-model'
 import { updateConfig } from '../../../helpers/config/update'
 import { useCliLogger } from '../../../helpers/logging/logger'
-
 import { getProviderLabel, type Provider } from './constants'
 import {
   ApiKeyStep,
@@ -14,7 +13,7 @@ import {
   PendingStep,
   SelectProviderStep,
 } from './steps'
-import type { AIProviderProps, ComponentState, Step } from './types'
+import { type AIProviderProps, type ComponentState, type Step } from './types'
 
 export function AIProvider({
   state,
