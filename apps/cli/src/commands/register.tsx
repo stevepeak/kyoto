@@ -128,10 +128,12 @@ export function registerCommands(program: Command): void {
   program
     .command('test')
     .description('Interactive browser testing with AI agent')
-    .action(async () => {
+    .option('--headless', 'Run browser in headless mode')
+    .action(async (options: { headless?: boolean }) => {
       await renderCommand({
         commandName: 'test',
-        element: <Test />,
+        commandOptions: options,
+        element: <Test headless={options.headless} />,
       })
     })
 }

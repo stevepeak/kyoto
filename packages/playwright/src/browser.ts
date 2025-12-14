@@ -19,6 +19,8 @@ export type PlaywrightContext = {
 export type LaunchBrowserOptions = {
   /** Path to storage state file to load (if exists) and save to on close */
   storageStatePath?: string
+  /** Run browser in headless mode (default: false) */
+  headless?: boolean
 }
 
 /**
@@ -32,7 +34,7 @@ export async function launchBrowser(
   options?: LaunchBrowserOptions,
 ): Promise<PlaywrightContext> {
   const browser = await chromium.launch({
-    headless: false,
+    headless: options?.headless ?? false,
   })
 
   // Load existing storage state if file exists

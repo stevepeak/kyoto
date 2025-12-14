@@ -15,7 +15,7 @@ export type TestStatus = 'pending' | 'selected' | 'running' | 'pass' | 'fail'
  * Stage 4: Executing test plan
  */
 export type Stage =
-  | { type: 'initializing'; text: string }
+  | { type: 'initializing'; text?: string }
   | { type: 'waiting' }
   | { type: 'evaluating' }
   | { type: 'awaiting-input'; tests: BrowserTestSuggestion[] }

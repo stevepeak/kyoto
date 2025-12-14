@@ -23,6 +23,8 @@ type BrowserTestAgentConfig = {
   instructions: string
   /** Path to browser state file for persisting login sessions */
   browserStatePath?: string
+  /** Run browser in headless mode (default: false) */
+  headless?: boolean
   /** Progress callback for logging */
   onProgress?: (message: string) => void
   /** Called when the browser is closed by the user */
@@ -36,18 +38,32 @@ type BrowserTestAgentResult = {
   messages: CoreMessage[]
 }
 
+type ResetContextArgs = {
+  /** List of files that were modified */
+  changedFiles: string[]
+  /** Test plan from the analyzer agent */
+  testPlan: Array<{ description: string; steps: string[] }>
+}
+
 /**
  * Creates a browser test agent that can be used interactively.
  * Supports continuation by maintaining message history.
  */
 export async function createBrowserTestAgent(config: BrowserTestAgentConfig) {
-  const { model, instructions, browserStatePath, onProgress, onBrowserClosed } =
-    config
+  const {
+    model,
+    instructions,
+    browserStatePath,
+    headless,
+    onProgress,
+    onBrowserClosed,
+  } = config
 
   // Launch the browser with storage state if available
-  onProgress?.('Launching browser...')
+  onProgress?.('Launching browser')
   const browserContext = await launchBrowser({
     storageStatePath: browserStatePath,
+    headless,
   })
 
   // Register callback for when browser is closed by user
@@ -119,6 +135,37 @@ export async function createBrowserTestAgent(config: BrowserTestAgentConfig) {
   }
 
   /**
+   * Reset the message context for a new test batch.
+   * Clears history and seeds with context about changed files and test plan.
+   */
+  function resetContext(args: ResetContextArgs): void {
+    const { changedFiles, testPlan } = args
+
+    // Clear existing messages
+    messages.length = 0
+
+    // Seed with context about this test batch
+    const contextMessage = dedent`
+      ## Test Context
+
+      ### Changed Files
+      ${changedFiles.map((f) => `- ${f}`).join('\n')}
+
+      ### Test Plan
+      ${testPlan.map((t, i) => `${i + 1}. **${t.description}**\n   Steps: ${t.steps.join(' → ')}`).join('\n\n')}
+
+      You will now receive individual test prompts. Execute each test and report pass/fail.
+    `
+
+    messages.push({ role: 'user', content: contextMessage })
+    messages.push({
+      role: 'assistant',
+      content:
+        'Understood. I have the context about the changed files and test plan. Ready to execute tests.',
+    })
+  }
+
+  /**
    * Close the browser and clean up.
    */
   async function close(): Promise<void> {
@@ -135,6 +182,7 @@ export async function createBrowserTestAgent(config: BrowserTestAgentConfig) {
 
   return {
     run,
+    resetContext,
     close,
     getBrowserContext,
   }

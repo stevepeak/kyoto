@@ -13,7 +13,11 @@ import { useFileWatcher } from './use-file-watcher'
 import { useStream } from './use-stream'
 import { useTestExecution } from './use-test-execution'
 
-export default function Test(): React.ReactElement {
+type TestProps = {
+  headless?: boolean
+}
+
+export default function Test(props: TestProps): React.ReactElement {
   // Stream of log items
   const { stream, log, addDivider, addAgentMessage, addTestResult } =
     useStream()
@@ -46,6 +50,7 @@ export default function Test(): React.ReactElement {
   // Browser agent lifecycle
   const { agentRef, modelRef, gitRootRef, cancelledRef, isExiting, close } =
     useBrowserAgent({
+      headless: props.headless,
       log,
       addAgentMessage,
       addDivider,
@@ -70,6 +75,7 @@ export default function Test(): React.ReactElement {
   const { runTests } = useTestExecution({
     agentRef,
     cancelledRef,
+    changedFiles,
     testStatuses,
     customInput,
     log,

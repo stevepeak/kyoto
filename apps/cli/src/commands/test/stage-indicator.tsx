@@ -36,7 +36,11 @@ export function StageIndicator({
   }
 }
 
-function InitializingIndicator({ text }: { text: string }): React.ReactElement {
+function InitializingIndicator({
+  text = 'Initializing...',
+}: {
+  text?: string
+}): React.ReactElement {
   return (
     <Box gap={1}>
       <Text color="yellow">

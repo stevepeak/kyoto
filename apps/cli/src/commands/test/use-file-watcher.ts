@@ -1,4 +1,7 @@
 import { findGitRoot, getUncommittedFilePaths } from '@app/shell'
+import { createHash } from 'crypto'
+import { readFile, stat } from 'fs/promises'
+import { join } from 'path'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 type FileWatcherState = {
@@ -10,6 +13,44 @@ type FileWatcherState = {
   isPolling: boolean
   /** Error if file watching fails */
   error: string | null
+}
+
+/**
+ * Compute a hash of file contents for a list of files.
+ * Returns a composite hash representing the state of all files.
+ */
+async function computeFilesHash(args: {
+  gitRoot: string
+  files: string[]
+}): Promise<string> {
+  const { gitRoot, files } = args
+
+  if (files.length === 0) return ''
+
+  const hash = createHash('md5')
+
+  // Sort files for consistent ordering
+  const sortedFiles = [...files].sort()
+
+  for (const file of sortedFiles) {
+    try {
+      const filePath = join(gitRoot, file)
+      const fileStat = await stat(filePath)
+
+      if (fileStat.isFile()) {
+        const content = await readFile(filePath)
+        // Include filename and content in hash
+        hash.update(file)
+        hash.update(content)
+      }
+    } catch {
+      // File may have been deleted, include just the name
+      hash.update(file)
+      hash.update('DELETED')
+    }
+  }
+
+  return hash.digest('hex')
 }
 
 type UseFileWatcherOptions = {
@@ -40,7 +81,7 @@ export function useFileWatcher(
     error: null,
   })
 
-  const previousFilesRef = useRef<string[]>([])
+  const previousHashRef = useRef<string>('')
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const mountedRef = useRef(true)
@@ -58,15 +99,20 @@ export function useFileWatcher(
 
       // Sort for consistent comparison
       const sortedFiles = [...files].sort()
-      const previousSorted = [...previousFilesRef.current].sort()
 
-      // Check if files have changed
-      const hasChanged =
-        sortedFiles.length !== previousSorted.length ||
-        sortedFiles.some((file, i) => file !== previousSorted[i])
+      // Compute content hash of all files
+      const currentHash = await computeFilesHash({
+        gitRoot,
+        files: sortedFiles,
+      })
 
-      if (hasChanged) {
-        previousFilesRef.current = sortedFiles
+      if (!mountedRef.current) return
+
+      // Check if content has actually changed (not just the file list)
+      const hasChanged = currentHash !== previousHashRef.current
+
+      if (hasChanged && sortedFiles.length > 0) {
+        previousHashRef.current = currentHash
 
         // Clear existing debounce
         if (debounceTimeoutRef.current) {
@@ -108,7 +154,8 @@ export function useFileWatcher(
   }, [debounceMs])
 
   const reset = useCallback(() => {
-    previousFilesRef.current = []
+    // Don't reset the hash - we want to keep tracking the current state
+    // Only reset UI state
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current)
       debounceTimeoutRef.current = null

@@ -66,10 +66,10 @@ export function OrganizationsListPage(props: OrganizationsListPageProps) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-cormorant text-5xl font-semibold">
-              Your Organizations
+              Your Teams
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Organizations you have access to
+              Teams you have access to
             </p>
           </div>
           <Button

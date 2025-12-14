@@ -12,6 +12,7 @@ import { init } from '../../helpers/init'
 import { type Stage } from './types'
 
 type UseBrowserAgentOptions = {
+  headless?: boolean
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void
   addAgentMessage: (text: string) => void
   addDivider: () => void
@@ -21,7 +22,7 @@ type UseBrowserAgentOptions = {
 type InitResult = Awaited<ReturnType<typeof init>>
 
 export function useBrowserAgent(options: UseBrowserAgentOptions) {
-  const { log, addAgentMessage, addDivider, setStage } = options
+  const { headless, log, addAgentMessage, addDivider, setStage } = options
   const { exit } = useApp()
 
   const agentRef = useRef<BrowserTestAgent | null>(null)
@@ -79,12 +80,12 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
         if (cancelledRef.current) return
 
         setStage({ type: 'initializing', text: 'Launching browser...' })
-        log('Launching browser...')
 
         const agent = await createBrowserTestAgent({
           model,
           instructions,
           browserStatePath: fs.browserState,
+          headless,
           onProgress: (msg) => log(msg, { dim: true }),
           onBrowserClosed: () => {
             if (!cancelledRef.current) {
@@ -101,9 +102,7 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
           await agent.close()
           return
         }
-
-        setStage({ type: 'initializing', text: 'Navigating to test URL...' })
-        log('Navigating to test URL...')
+        setStage({ type: 'initializing' })
 
         const result = await agent.run(
           'Navigate to the URL specified in the instructions and stop. Report that you are ready and waiting for further instructions.',

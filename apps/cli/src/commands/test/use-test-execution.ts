@@ -12,6 +12,7 @@ import { type Stage, type TestStatus } from './types'
 type UseTestExecutionOptions = {
   agentRef: MutableRefObject<BrowserTestAgent | null>
   cancelledRef: MutableRefObject<boolean>
+  changedFiles: string[]
   testStatuses: Record<string, TestStatus>
   customInput: string
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void
@@ -29,6 +30,7 @@ export function useTestExecution(options: UseTestExecutionOptions) {
   const {
     agentRef,
     cancelledRef,
+    changedFiles,
     testStatuses,
     customInput,
     log,
@@ -60,6 +62,16 @@ export function useTestExecution(options: UseTestExecutionOptions) {
 
       setStage({ type: 'executing', tests })
       addDivider()
+
+      // Reset agent context with fresh test batch info
+      agentRef.current.resetContext({
+        changedFiles,
+        testPlan: selectedTests.map((t) => ({
+          description: t.description,
+          steps: t.steps,
+        })),
+      })
+
       log(`Running ${selectedTests.length} test(s)...`)
 
       for (const test of selectedTests) {
@@ -120,6 +132,7 @@ export function useTestExecution(options: UseTestExecutionOptions) {
     [
       agentRef,
       cancelledRef,
+      changedFiles,
       testStatuses,
       customInput,
       log,
