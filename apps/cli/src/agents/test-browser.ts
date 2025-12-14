@@ -103,8 +103,8 @@ export async function createBrowserTestAgent(config: BrowserTestAgentConfig) {
       tools,
       stopWhen: stepCountIs(50),
       onStepFinish: (step) => {
-        if (step.text) {
-          onProgress?.(step.text)
+        if (step.reasoningText && step.reasoningText !== '[REDACTED]') {
+          onProgress?.(step.reasoningText)
         }
       },
     })

@@ -8,7 +8,7 @@ import { getUserOrganizations } from '@/lib/memberships'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Kyoto Teams',
+  title: 'Teams',
   description: 'Kyoto Teams',
 }
 
