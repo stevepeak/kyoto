@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
+import { Markdown } from '../../helpers/markdown'
 import { type StreamItem } from './types'
 
 type StreamDisplayProps = {
@@ -35,7 +36,7 @@ function StreamItemRow({ item }: { item: StreamItem }): React.ReactElement {
           Agent:
         </Text>
         <Box paddingLeft={2}>
-          <Text>{item.text}</Text>
+          <Markdown>{item.text}</Markdown>
         </Box>
       </Box>
     )

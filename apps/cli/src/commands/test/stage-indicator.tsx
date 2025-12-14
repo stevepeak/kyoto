@@ -16,7 +16,7 @@ export function StageIndicator({
   isExiting,
 }: StageIndicatorProps): React.ReactElement {
   if (isExiting) {
-    return <Text dimColor>Closing browser...</Text>
+    return <Text dimColor>Ending session...</Text>
   }
 
   switch (stage.type) {

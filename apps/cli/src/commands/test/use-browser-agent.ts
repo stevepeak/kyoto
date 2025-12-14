@@ -56,8 +56,6 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
 
         if (cancelledRef.current) return
 
-        log('Checking for instructions...')
-
         if (!existsSync(fs.instructions)) {
           log(`No instructions file found at ${fs.instructions}`, {
             color: 'red',
@@ -75,11 +73,11 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
         }
 
         const instructions = await readFile(fs.instructions, 'utf-8')
-        log('Found instructions.md')
+        log('Applying .kyoto/instructions.md', { color: 'grey' })
 
         if (cancelledRef.current) return
 
-        setStage({ type: 'initializing', text: 'Launching browser...' })
+        setStage({ type: 'initializing' })
 
         const agent = await createBrowserTestAgent({
           model,

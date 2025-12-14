@@ -169,7 +169,6 @@ export async function createBrowserTestAgent(config: BrowserTestAgentConfig) {
    * Close the browser and clean up.
    */
   async function close(): Promise<void> {
-    onProgress?.('Closing browser...')
     await closeBrowser(browserContext)
   }
 
