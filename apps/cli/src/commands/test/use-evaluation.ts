@@ -92,8 +92,6 @@ export function useEvaluation(options: UseEvaluationOptions) {
         return
       }
 
-      log('Analyzing changes...', { dim: true })
-
       try {
         const scope: VibeCheckScope = { type: 'changes' }
         const scopeContent: ScopeContext = await getScopeContext(
@@ -140,7 +138,9 @@ export function useEvaluation(options: UseEvaluationOptions) {
     }
 
     const handleTestsFound = (tests: BrowserTestSuggestion[]) => {
-      log(`Found ${tests.length} suggested test(s)`)
+      log(
+        `Found ${tests.length} suggested test${tests.length === 1 ? '' : 's'}`,
+      )
       // Pre-select all tests
       const statuses: Record<string, TestStatus> = {}
       for (const test of tests) {

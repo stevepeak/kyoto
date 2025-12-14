@@ -90,8 +90,6 @@ export default function Diff(): React.ReactElement {
           combinedDiff = `=== UNSTAGED CHANGES ===\n${unstagedDiff}`
         }
 
-        setProgress('Analyzing changes...')
-
         // Use AI to analyze and summarize
         const result = await generateText({
           model,

@@ -68,7 +68,7 @@ export function TestPlanSelector({
 
   return (
     <Box flexDirection="column">
-      <Text color="red" bold>
+      <Text color="yellow" bold>
         Test Plan:
       </Text>
       <Box marginTop={1} flexDirection="column">

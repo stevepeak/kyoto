@@ -80,15 +80,10 @@ export function useTestExecution(options: UseTestExecutionOptions) {
         })),
       })
 
-      log(
-        `Running ${selectedTests.length} test${selectedTests.length === 1 ? '' : 's'}...`,
-      )
-
       for (const test of selectedTests) {
         if (cancelledRef.current) break
 
         setTestStatuses((prev) => ({ ...prev, [test.id]: 'running' }))
-        log(`Testing: ${test.description}`, { dim: true })
 
         try {
           const prompt = `Test the following behavior:\n\n**${test.description}**\n\nSteps:\n${test.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nPerform these steps and report whether the test passes or fails.`
