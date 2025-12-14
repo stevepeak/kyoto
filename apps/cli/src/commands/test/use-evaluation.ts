@@ -20,8 +20,8 @@ type UseEvaluationOptions = {
   changedFiles: string[]
   modelRef: RefObject<LanguageModel | null>
   gitRootRef: RefObject<string | null>
+  clearStream: () => void
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void
-  addDivider: () => void
   setStage: (stage: Stage) => void
   setTestStatuses: Dispatch<SetStateAction<Record<string, TestStatus>>>
   setHighlightedIndex: (index: number) => void
@@ -34,8 +34,8 @@ export function useEvaluation(options: UseEvaluationOptions) {
     changedFiles,
     modelRef,
     gitRootRef,
+    clearStream,
     log,
-    addDivider,
     setStage,
     setTestStatuses,
     setHighlightedIndex,
@@ -65,14 +65,12 @@ export function useEvaluation(options: UseEvaluationOptions) {
     // Files changed - start evaluation
     lastEvaluatedFilesRef.current = currentFilesKey
 
-    if (stage.type === 'awaiting-input') {
-      log('New file changes detected, re-analyzing...', { color: 'yellow' })
-    }
+    // Clear previous logs when starting a new evaluation cycle
+    clearStream()
 
-    addDivider()
     log(`${changedFiles.length} file(s) changed`)
     setStage({ type: 'evaluating' })
-  }, [stage.type, changedFiles, addDivider, log, setStage])
+  }, [stage.type, changedFiles, clearStream, log, setStage])
 
   // Handle evaluation when entering evaluating stage
   useEffect(() => {

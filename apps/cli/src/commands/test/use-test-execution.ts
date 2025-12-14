@@ -15,10 +15,16 @@ type UseTestExecutionOptions = {
   changedFiles: string[]
   testStatuses: Record<string, TestStatus>
   customInput: string
+  clearStream: () => void
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void
   addDivider: () => void
   addAgentMessage: (text: string) => void
-  addTestResult: (args: { description: string; passed: boolean }) => void
+  addTestResult: (args: {
+    description: string
+    passed: boolean
+    steps: string[]
+    response: string
+  }) => void
   setStage: (stage: Stage) => void
   setTestStatuses: Dispatch<SetStateAction<Record<string, TestStatus>>>
   setCustomInput: (input: string) => void
@@ -33,6 +39,7 @@ export function useTestExecution(options: UseTestExecutionOptions) {
     changedFiles,
     testStatuses,
     customInput,
+    clearStream,
     log,
     addDivider,
     addAgentMessage,
@@ -60,8 +67,9 @@ export function useTestExecution(options: UseTestExecutionOptions) {
         return
       }
 
+      // Clear previous logs when starting execution
+      clearStream()
       setStage({ type: 'executing', tests })
-      addDivider()
 
       // Reset agent context with fresh test batch info
       agentRef.current.resetContext({
@@ -72,7 +80,9 @@ export function useTestExecution(options: UseTestExecutionOptions) {
         })),
       })
 
-      log(`Running ${selectedTests.length} test(s)...`)
+      log(
+        `Running ${selectedTests.length} test${selectedTests.length === 1 ? '' : 's'}...`,
+      )
 
       for (const test of selectedTests) {
         if (cancelledRef.current) break
@@ -95,16 +105,16 @@ export function useTestExecution(options: UseTestExecutionOptions) {
           addTestResult({
             description: test.description,
             passed,
+            steps: test.steps,
+            response: result.response,
           })
         } catch (err) {
           setTestStatuses((prev) => ({ ...prev, [test.id]: 'fail' }))
           addTestResult({
             description: test.description,
             passed: false,
-          })
-          log(`Error: ${err instanceof Error ? err.message : 'Unknown'}`, {
-            color: 'red',
-            dim: true,
+            steps: test.steps,
+            response: `Error: ${err instanceof Error ? err.message : 'Unknown'}`,
           })
         }
       }
@@ -124,7 +134,6 @@ export function useTestExecution(options: UseTestExecutionOptions) {
       }
 
       addDivider()
-      log('Done. Watching for file changes...', { color: 'cyan' })
       resetFileWatcher()
       lastEvaluatedFilesRef.current = ''
       setStage({ type: 'waiting' })
@@ -135,6 +144,7 @@ export function useTestExecution(options: UseTestExecutionOptions) {
       changedFiles,
       testStatuses,
       customInput,
+      clearStream,
       log,
       addDivider,
       addAgentMessage,

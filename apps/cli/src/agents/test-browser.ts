@@ -42,7 +42,7 @@ type ResetContextArgs = {
   /** List of files that were modified */
   changedFiles: string[]
   /** Test plan from the analyzer agent */
-  testPlan: Array<{ description: string; steps: string[] }>
+  testPlan: { description: string; steps: string[] }[]
 }
 
 /**

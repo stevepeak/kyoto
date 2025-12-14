@@ -8,8 +8,8 @@ import { getUserOrganizations } from '@/lib/memberships'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Organizations - Kyoto',
-  description: 'Your organizations on Kyoto',
+  title: 'Teams - Kyoto',
+  description: 'Teams',
 }
 
 export default async function OrganizationsPage() {

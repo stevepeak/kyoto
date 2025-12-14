@@ -43,12 +43,44 @@ function StreamItemRow({ item }: { item: StreamItem }): React.ReactElement {
   }
 
   if (item.type === 'test-result') {
+    const badge = item.passed ? '✓' : '✗'
+    const badgeColor = item.passed ? 'green' : 'red'
+    const borderColor = item.passed ? 'green' : 'red'
+
     return (
-      <Box gap={1}>
-        <Text color={item.passed ? 'green' : 'red'}>
-          {item.passed ? '✓' : '✗'}
-        </Text>
-        <Text color={item.passed ? 'green' : 'red'}>{item.description}</Text>
+      <Box
+        marginTop={1}
+        flexDirection="column"
+        paddingX={1}
+        borderStyle="round"
+        borderColor={borderColor}
+      >
+        <Box marginBottom={1}>
+          <Text color={badgeColor}>{badge} </Text>
+          <Text bold color="cyan">
+            {item.description}
+          </Text>
+        </Box>
+        <Box flexDirection="column">
+          <Text color="yellow" bold>
+            Steps:
+          </Text>
+          {item.steps.map((step, stepIndex) => (
+            <Box key={stepIndex} marginLeft={2}>
+              <Text dimColor>
+                {stepIndex + 1}. {step}
+              </Text>
+            </Box>
+          ))}
+        </Box>
+        <Box flexDirection="column" marginTop={1}>
+          <Text color="gray" bold>
+            Result:
+          </Text>
+          <Box marginLeft={2}>
+            <Markdown>{item.response}</Markdown>
+          </Box>
+        </Box>
       </Box>
     )
   }

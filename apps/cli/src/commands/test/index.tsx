@@ -19,8 +19,14 @@ type TestProps = {
 
 export default function Test(props: TestProps): React.ReactElement {
   // Stream of log items
-  const { stream, log, addDivider, addAgentMessage, addTestResult } =
-    useStream()
+  const {
+    stream,
+    clearStream,
+    log,
+    addDivider,
+    addAgentMessage,
+    addTestResult,
+  } = useStream()
 
   // Current stage
   const [stage, setStage] = useState<Stage>({
@@ -63,8 +69,8 @@ export default function Test(props: TestProps): React.ReactElement {
     changedFiles,
     modelRef,
     gitRootRef,
+    clearStream,
     log,
-    addDivider,
     setStage,
     setTestStatuses,
     setHighlightedIndex,
@@ -78,6 +84,7 @@ export default function Test(props: TestProps): React.ReactElement {
     changedFiles,
     testStatuses,
     customInput,
+    clearStream,
     log,
     addDivider,
     addAgentMessage,
@@ -127,7 +134,7 @@ export default function Test(props: TestProps): React.ReactElement {
   return (
     <Box flexDirection="column">
       <Jumbo />
-      <Header kanji="試験" title="Browser Test" />
+      <Header kanji="試験" title="Vibe testing" />
 
       <StreamDisplay stream={stream} />
 
