@@ -33,18 +33,47 @@
           "name": "Vibe Tests"
         }
       ]
+    },
+    "commands": [
+      {
+        "command": "kyoto.refreshVibeChecks",
+        "title": "Refresh Vibe Checks",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "kyoto.openFinding",
+        "title": "Open Finding in Cursor"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "kyoto.refreshVibeChecks",
+          "when": "view == kyoto.vibeChecks",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
     "vscode:prepublish": "bun run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch",
     "typecheck": "tsc --noEmit",
-    "build": "bun run compile && vsce package"
+    "build": "bun run compile && vsce package",
+    "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
+    "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
+  },
+  "dependencies": {
+    "@app/schemas": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@kyoto/eslint-config": "workspace:*",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.25.0",
+    "tsconfig": "workspace:*",
     "typescript": "catalog:"
   }
 }

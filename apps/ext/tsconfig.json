@@ -1,14 +1,5 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2022",
-    "outDir": "dist",
-    "lib": ["ES2022"],
-    "sourceMap": true,
-    "rootDir": "src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "exclude": ["node_modules", "dist"]
+  "extends": "tsconfig/bun.json",
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/.*/", "dist"]
 }

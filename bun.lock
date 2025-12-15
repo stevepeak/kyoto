@@ -64,9 +64,14 @@
     "apps/ext": {
       "name": "kyoto-extension",
       "version": "0.0.1",
+      "dependencies": {
+        "@app/schemas": "workspace:*",
+        "zod": "catalog:",
+      },
       "devDependencies": {
         "@types/vscode": "^1.85.0",
         "@vscode/vsce": "^3.2.1",
+        "esbuild": "^0.25.0",
         "typescript": "catalog:",
       },
     },

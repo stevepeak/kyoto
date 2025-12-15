@@ -44,6 +44,34 @@ const commandGroups: CommandGroup[] = [
         ],
       },
       {
+        name: 'vibe test',
+        description: 'Generate test suggestions for code changes',
+        examples: [
+          {
+            command: 'kyoto vibe test',
+            description: 'Generate test suggestions for all changes',
+          },
+          {
+            command: 'kyoto vibe test --staged',
+            description: 'Generate test suggestions for staged changes only',
+          },
+          {
+            command: 'kyoto vibe test --commits 4',
+            description: 'Generate test suggestions for the last 4 commits',
+          },
+          {
+            command: 'kyoto vibe test --last',
+            description: 'Generate test suggestions since last vibe check',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Tooling',
+    kanji: '道具',
+    commands: [
+      {
         name: 'commit',
         description:
           'Use Kyoto AI to commit unstaged changes into logical commits',
@@ -71,42 +99,8 @@ const commandGroups: CommandGroup[] = [
           },
         ],
       },
-      {
-        name: 'vibe test',
-        description: 'Generate test suggestions for code changes',
-        examples: [
-          {
-            command: 'kyoto vibe test',
-            description: 'Generate test suggestions for all changes',
-          },
-          {
-            command: 'kyoto vibe test --staged',
-            description: 'Generate test suggestions for staged changes only',
-          },
-          {
-            command: 'kyoto vibe test --commits 4',
-            description: 'Generate test suggestions for the last 4 commits',
-          },
-          {
-            command: 'kyoto vibe test --last',
-            description: 'Generate test suggestions since last vibe check',
-          },
-        ],
-      },
     ],
   },
-  // TODO finish these later
-  // {
-  //   title: 'Tooling',
-  //   kanji: '設定',
-  //   commands: [
-  //     {
-  //       name: 'mcp',
-  //       description: 'For your coding agent to vibe check themselves',
-  //       examples: [{ command: 'kyoto mcp' }],
-  //     },
-  //   ],
-  // },
   {
     title: 'Configuring',
     kanji: '設定',

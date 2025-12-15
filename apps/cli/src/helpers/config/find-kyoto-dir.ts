@@ -15,7 +15,9 @@ export interface KyotoPaths {
   config: string
   /** Absolute path to the .kyoto/instructions.md file */
   instructions: string
-  /** Absolute path to the .kyoto/browser-state.json file for persisting login sessions */
+  /** Absolute path to the .kyoto/vibe/check/check.json file */
+  vibeCheck: string
+  /** Absolute path to the .kyoto/vibe/test/browser-state.json file for persisting login sessions */
   browserState: string
 }
 
@@ -30,10 +32,13 @@ export async function pwdKyoto(gitRoot: string): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
   const config = join(root, 'config.json')
   const instructions = join(root, 'instructions.md')
-  const browserState = join(root, 'browser-state.json')
+  const vibeCheck = join(root, 'vibe/check/check.json')
+  const browserState = join(root, 'vibe/test/browser-state.json')
 
   // Create all necessary directories
   await mkdir(root, { recursive: true })
+  await mkdir(join(root, 'vibe/check'), { recursive: true })
+  await mkdir(join(root, 'vibe/test'), { recursive: true })
 
-  return { gitRoot, root, config, instructions, browserState }
+  return { gitRoot, root, config, instructions, vibeCheck, browserState }
 }
