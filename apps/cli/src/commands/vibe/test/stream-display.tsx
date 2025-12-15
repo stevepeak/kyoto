@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
-import { Markdown } from '../../helpers/markdown'
+import { Markdown } from '../../../helpers/markdown'
 import { type StreamItem } from './types'
 
 type StreamDisplayProps = {

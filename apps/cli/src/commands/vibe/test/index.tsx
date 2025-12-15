@@ -1,8 +1,8 @@
 import { Box, useInput } from 'ink'
 import React, { useState } from 'react'
 
-import { Header } from '../../ui/header'
-import { Jumbo } from '../../ui/jumbo'
+import { Header } from '../../../ui/header'
+import { Jumbo } from '../../../ui/jumbo'
 import { StageIndicator } from './stage-indicator'
 import { StreamDisplay } from './stream-display'
 import { TestPlanSelector } from './test-plan-selector'

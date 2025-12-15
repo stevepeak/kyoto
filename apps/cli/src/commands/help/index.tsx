@@ -72,23 +72,23 @@ const commandGroups: CommandGroup[] = [
         ],
       },
       {
-        name: 'test',
+        name: 'vibe test',
         description: 'Generate test suggestions for code changes',
         examples: [
           {
-            command: 'kyoto test',
+            command: 'kyoto vibe test',
             description: 'Generate test suggestions for all changes',
           },
           {
-            command: 'kyoto test --staged',
+            command: 'kyoto vibe test --staged',
             description: 'Generate test suggestions for staged changes only',
           },
           {
-            command: 'kyoto test --commits 4',
+            command: 'kyoto vibe test --commits 4',
             description: 'Generate test suggestions for the last 4 commits',
           },
           {
-            command: 'kyoto test --last',
+            command: 'kyoto vibe test --last',
             description: 'Generate test suggestions since last vibe check',
           },
         ],

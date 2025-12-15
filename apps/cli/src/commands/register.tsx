@@ -17,8 +17,8 @@ import Setup from './setup'
 import SetupAi from './setup/ai'
 import SetupGithub from './setup/github'
 import SetupMcp from './setup/mcp'
-import Test from './test'
 import VibeCheck from './vibe/check'
+import VibeTest from './vibe/test'
 
 /**
  * Registers all CLI commands with the commander program.
@@ -125,15 +125,15 @@ export function registerCommands(program: Command): void {
     },
   )
 
-  program
+  vibeCommand
     .command('test')
     .description('Interactive browser testing with AI agent')
     .option('--headless', 'Run browser in headless mode')
     .action(async (options: { headless?: boolean }) => {
       await renderCommand({
-        commandName: 'test',
+        commandName: 'vibe_test',
         commandOptions: options,
-        element: <Test headless={options.headless} />,
+        element: <VibeTest headless={options.headless} />,
       })
     })
 }

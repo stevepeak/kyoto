@@ -6,7 +6,7 @@ import {
   useCallback,
 } from 'react'
 
-import { type BrowserTestAgent } from '../../agents/test-browser'
+import { type BrowserTestAgent } from '../../../agents/test-browser'
 import { type Stage, type TestStatus } from './types'
 
 type UseTestExecutionOptions = {
