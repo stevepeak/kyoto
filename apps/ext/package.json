@@ -5,10 +5,15 @@
   "version": "0.0.1",
   "publisher": "kyoto",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
-    "Other"
+    "vibe",
+    "vibe-coding",
+    "vibe-testing",
+    "ci",
+    "cd",
+    "agents"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
@@ -36,24 +41,10 @@
     },
     "commands": [
       {
-        "command": "kyoto.refreshVibeChecks",
-        "title": "Refresh Vibe Checks",
-        "icon": "$(refresh)"
-      },
-      {
         "command": "kyoto.openFinding",
         "title": "Open Finding in Cursor"
       }
-    ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "kyoto.refreshVibeChecks",
-          "when": "view == kyoto.vibeChecks",
-          "group": "navigation"
-        }
-      ]
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "bun run compile",
@@ -65,8 +56,7 @@
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@app/schemas": "workspace:*",
-    "zod": "catalog:"
+    "@app/schemas": "workspace:*"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",

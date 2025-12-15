@@ -23,9 +23,6 @@ export function activate(context: vscode.ExtensionContext): void {
       'kyoto.vibeTests',
       vibeTestsProvider,
     ),
-    vscode.commands.registerCommand('kyoto.refreshVibeChecks', () => {
-      vibeChecksProvider.refresh()
-    }),
     vscode.commands.registerCommand(
       'kyoto.openFinding',
       (finding: FindingItem) => {
@@ -50,7 +47,9 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 }
 
-export function deactivate(): void {}
+export function deactivate(): void {
+  // Extension cleanup handled by VS Code via context.subscriptions
+}
 
 /**
  * Generates a Cursor deep link URL that spawns a new agent with a prompt
@@ -328,7 +327,7 @@ class VibeTestsProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     return element
   }
 
-  getChildren(): Thenable<vscode.TreeItem[]> {
+  getChildren(): Promise<vscode.TreeItem[]> {
     const item = new vscode.TreeItem(
       'Coming soon...',
       vscode.TreeItemCollapsibleState.None,

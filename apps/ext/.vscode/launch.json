@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension (Cursor / VS Code)",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "code",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extensions"
+      ],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "preLaunchTask": "bun run watch"
+    }
+  ]
+}

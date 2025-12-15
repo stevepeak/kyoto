@@ -29,9 +29,7 @@ type InitializeAgentError = {
   hint?: string
 }
 
-export type InitializeAgentResult =
-  | InitializeAgentSuccess
-  | InitializeAgentError
+type InitializeAgentResult = InitializeAgentSuccess | InitializeAgentError
 
 /**
  * Initializes the browser test agent with all required dependencies.
