@@ -118,6 +118,8 @@ export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
         // Detect GitHub Actions environment and add GitHub context if available
         const githubContext = getGitHubContext()
 
+        // TODO this method below can take a little time.
+        // TODO so we need a spinner on the scope descriptions.
         // Retrieve scope content programmatically before agents start
         const scopeContent = await getScopeContext(
           scopeResult.scope,
@@ -128,7 +130,6 @@ export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
         setScopeDescription(
           formatScopeDescription({ scope: scopeResult.scope }),
         )
-
         setContext({
           gitRoot: fs.gitRoot,
           scope: scopeResult.scope,

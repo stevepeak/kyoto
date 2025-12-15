@@ -19,7 +19,7 @@ function formatCommitRange({
 
   const first = formatShortSha({ sha: commits[0] })
   const last = formatShortSha({ sha: commits[commits.length - 1] })
-  return `commits ${first}...${last}`
+  return `${commits.length} commits ${first}...${last}`
 }
 
 export function formatScopeDescription({

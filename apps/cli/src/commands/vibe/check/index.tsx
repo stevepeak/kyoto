@@ -2,14 +2,14 @@ import { type AgentRunState } from '@app/types'
 import { Box, Text, useInput } from 'ink'
 import React, { Fragment, useMemo } from 'react'
 
-import { defaultVibeCheckAgents } from '../../agents'
-import { IssueSelection } from '../../helpers/display/issue-selection'
-import { VibeAgents } from '../../helpers/display/vibe-agents'
-import { consolidateFindings } from '../../helpers/vibe-check/findings'
-import { useVibeCheck } from '../../helpers/vibe-check/use-vibe-check'
-import { Header } from '../../ui/header'
-import { Jumbo } from '../../ui/jumbo'
-import { ScopeDisplay } from '../../ui/ScopeDisplay'
+import { defaultVibeCheckAgents } from '../../../agents'
+import { IssueSelection } from '../../../helpers/display/issue-selection'
+import { VibeAgents } from '../../../helpers/display/vibe-agents'
+import { consolidateFindings } from '../../../helpers/vibe-check/findings'
+import { useVibeCheck } from '../../../helpers/vibe-check/use-vibe-check'
+import { Header } from '../../../ui/header'
+import { Jumbo } from '../../../ui/jumbo'
+import { ScopeDisplay } from '../../../ui/ScopeDisplay'
 
 interface VibeCheckProps {
   staged?: boolean

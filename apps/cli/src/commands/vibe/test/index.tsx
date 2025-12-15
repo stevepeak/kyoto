@@ -1,5 +1,5 @@
 import { Box, useInput } from 'ink'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { Header } from '../../../ui/header'
 import { Jumbo } from '../../../ui/jumbo'
@@ -15,6 +15,7 @@ import { useTestExecution } from './use-test-execution'
 
 type TestProps = {
   headless?: boolean
+  interactive?: boolean
 }
 
 export default function Test(props: TestProps): React.ReactElement {
@@ -95,6 +96,26 @@ export default function Test(props: TestProps): React.ReactElement {
     resetFileWatcher,
     lastEvaluatedFilesRef,
   })
+
+  // Auto-run tests when not in interactive mode
+  const autoRunTriggeredRef = useRef(false)
+  const interactive = props.interactive ?? false
+
+  useEffect(() => {
+    if (
+      !interactive &&
+      stage.type === 'awaiting-input' &&
+      !autoRunTriggeredRef.current
+    ) {
+      autoRunTriggeredRef.current = true
+      void runTests(stage.tests)
+    }
+
+    // Reset the trigger when we leave awaiting-input
+    if (stage.type !== 'awaiting-input') {
+      autoRunTriggeredRef.current = false
+    }
+  }, [interactive, stage, runTests])
 
   // Handle escape to exit
   useInput(

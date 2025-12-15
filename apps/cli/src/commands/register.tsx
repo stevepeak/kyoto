@@ -129,11 +129,17 @@ export function registerCommands(program: Command): void {
     .command('test')
     .description('Interactive browser testing with AI agent')
     .option('--headless', 'Run browser in headless mode')
-    .action(async (options: { headless?: boolean }) => {
+    .option('-i, --interactive', 'Enable interactive mode')
+    .action(async (options: { headless?: boolean; interactive?: boolean }) => {
       await renderCommand({
         commandName: 'vibe_test',
         commandOptions: options,
-        element: <VibeTest headless={options.headless} />,
+        element: (
+          <VibeTest
+            headless={options.headless}
+            interactive={options.interactive}
+          />
+        ),
       })
     })
 }
