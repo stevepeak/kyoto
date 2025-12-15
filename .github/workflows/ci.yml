@@ -35,7 +35,7 @@ jobs:
   #     - uses: ./.github/actions/setup
   #     - run: bun test
 
-  kyoto:
+  vibe-check:
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -47,6 +47,19 @@ jobs:
       - uses: ./.github/actions/setup
       - run: bun link
       - run: kyoto vibe check
+
+  vibe-test:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+    env:
+      KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: bun link
+      - run: kyoto test
 
   build:
     runs-on: ubuntu-latest

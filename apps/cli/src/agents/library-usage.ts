@@ -1,32 +1,19 @@
 import { analyzeLibraryUsage } from '@app/agents'
-import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
 import { pluralize } from '@app/utils'
 
-export const libraryUsageAgent: VibeCheckAgent = {
+import { createVibeCheckAgent } from './factory'
+
+export const libraryUsageAgent = createVibeCheckAgent({
   id: 'library-usage',
   label: 'Library usage',
   description:
     'Check library usage against documentation to ensure best practices and avoid reinventing the wheel',
-  async run(context, reporter): Promise<VibeCheckResult> {
-    reporter.progress('Analyzing library usage...')
-
-    const result = await analyzeLibraryUsage({
-      context,
-      options: { progress: reporter.progress },
-    })
-
-    if (result.findings.length === 0) {
-      return {
-        status: 'pass',
-        summary: 'Library usage follows best practices',
-        findings: [],
-      }
-    }
-
-    return {
-      status: 'warn',
-      summary: `${result.findings.length} library usage ${pluralize(result.findings.length, 'issue')} found`,
-      findings: result.findings,
-    }
+  analyzerFn: analyzeLibraryUsage,
+  progressMessage: 'Analyzing library usage...',
+  summary: {
+    type: 'simple',
+    passSummary: 'Library usage follows best practices',
+    findingSummary: (count) =>
+      `${count} library usage ${pluralize(count, 'issue')} found`,
   },
-}
+})

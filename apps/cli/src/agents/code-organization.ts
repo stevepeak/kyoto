@@ -1,32 +1,18 @@
 import { analyzeCodeOrganization } from '@app/agents'
-import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
 import { pluralize } from '@app/utils'
 
-export const codeOrganizationAgent: VibeCheckAgent = {
+import { createVibeCheckAgent } from './factory'
+
+export const codeOrganizationAgent = createVibeCheckAgent({
   id: 'code-organization',
   label: 'Code organization',
   description:
     'Find functions and components that should be moved to other packages or extracted into helper functions to reduce file sizes',
-  async run(context, reporter): Promise<VibeCheckResult> {
-    reporter.progress('Starting...')
-
-    const result = await analyzeCodeOrganization({
-      context,
-      options: { progress: reporter.progress },
-    })
-
-    if (result.findings.length === 0) {
-      return {
-        status: 'pass',
-        summary: 'No code organization issues detected',
-        findings: [],
-      }
-    }
-
-    return {
-      status: 'warn',
-      summary: `${result.findings.length} organization ${pluralize(result.findings.length, 'issue')} found`,
-      findings: result.findings,
-    }
+  analyzerFn: analyzeCodeOrganization,
+  summary: {
+    type: 'simple',
+    passSummary: 'No code organization issues detected',
+    findingSummary: (count) =>
+      `${count} organization ${pluralize(count, 'issue')} found`,
   },
-}
+})

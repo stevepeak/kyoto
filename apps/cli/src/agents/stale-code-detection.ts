@@ -1,32 +1,18 @@
 import { analyzeStaleCodeDetection } from '@app/agents'
-import { type VibeCheckAgent, type VibeCheckResult } from '@app/types'
 import { pluralize } from '@app/utils'
 
-export const staleCodeDetectionAgent: VibeCheckAgent = {
+import { createVibeCheckAgent } from './factory'
+
+export const staleCodeDetectionAgent = createVibeCheckAgent({
   id: 'stale-code-detection',
   label: 'Stale code detection',
   description:
     'Detect unused code that was added in scope or became unreachable due to changes',
-  async run(context, reporter): Promise<VibeCheckResult> {
-    reporter.progress('Starting...')
-
-    const result = await analyzeStaleCodeDetection({
-      context,
-      options: { progress: reporter.progress },
-    })
-
-    if (result.findings.length === 0) {
-      return {
-        status: 'pass',
-        summary: 'No stale code detected',
-        findings: [],
-      }
-    }
-
-    return {
-      status: 'warn',
-      summary: `${result.findings.length} stale code ${pluralize(result.findings.length, 'issue')} found`,
-      findings: result.findings,
-    }
+  analyzerFn: analyzeStaleCodeDetection,
+  summary: {
+    type: 'simple',
+    passSummary: 'No stale code detected',
+    findingSummary: (count) =>
+      `${count} stale code ${pluralize(count, 'issue')} found`,
   },
-}
+})
