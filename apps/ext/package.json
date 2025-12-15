@@ -1,0 +1,50 @@
+{
+  "name": "kyoto-extension",
+  "displayName": "Kyoto",
+  "description": "Kyoto Extension",
+  "version": "0.0.1",
+  "publisher": "kyoto",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kyoto",
+          "title": "Kyoto",
+          "icon": "resources/kyoto-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kyoto": [
+        {
+          "id": "kyoto.vibeChecks",
+          "name": "Vibe Checks"
+        },
+        {
+          "id": "kyoto.vibeTests",
+          "name": "Vibe Tests"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "bun run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "typecheck": "tsc --noEmit",
+    "build": "bun run compile && vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.1",
+    "typescript": "catalog:"
+  }
+}
