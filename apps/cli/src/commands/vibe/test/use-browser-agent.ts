@@ -3,7 +3,7 @@ import { useApp } from 'ink'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { type BrowserTestAgent } from '../../../agents/test-browser'
-import { initializeAgent } from '../../../helpers/browser-agent-init'
+import { initializeAgent } from './browser-agent-init'
 import { type Stage } from './types'
 
 type UseBrowserAgentOptions = {

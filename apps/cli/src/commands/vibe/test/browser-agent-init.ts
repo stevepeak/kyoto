@@ -6,8 +6,8 @@ import { readFile } from 'node:fs/promises'
 import {
   type BrowserTestAgent,
   createBrowserTestAgent,
-} from '../agents/test-browser'
-import { init } from './init'
+} from '../../../agents/test-browser'
+import { init } from '../../../helpers/init'
 
 type InitializeAgentOptions = {
   headless?: boolean

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-import { type CommitPlan } from '../../helpers/commit/commit-plan'
-import { executeCommitPlan } from '../../helpers/commit/execute-commit-plan'
+import { type CommitPlan } from './commit-plan'
+import { executeCommitPlan } from './execute-commit-plan'
 
 interface UseExecuteCommitPlanOptions {
   plan: CommitPlan

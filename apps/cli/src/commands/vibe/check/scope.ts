@@ -7,7 +7,7 @@ import {
 } from '@app/shell'
 import { type VibeCheckScope } from '@app/types'
 
-import { getConfig } from '../config/get'
+import { getConfig } from '../../../helpers/config/get'
 import {
   getGitHubBaseRef,
   getGitHubEventName,

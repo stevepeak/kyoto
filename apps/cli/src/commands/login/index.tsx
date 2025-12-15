@@ -7,11 +7,11 @@ import { z } from 'zod'
 
 import { openBrowser } from '../../helpers/browser/open-browser'
 import { updateConfig } from '../../helpers/config/update'
-import { ensureKyotoInGitignore } from '../../helpers/git/ensure-kyoto-in-gitignore'
-import { startCallbackServer } from '../../helpers/login/create-callback-server'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
 import { Link } from '../../ui/link'
+import { startCallbackServer } from './create-callback-server'
+import { ensureKyotoInGitignore } from './ensure-kyoto-in-gitignore'
 
 async function fetchCliSession(args: {
   webUrl: string

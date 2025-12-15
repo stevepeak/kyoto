@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
-import { type CommitPlan } from '../../helpers/commit/commit-plan'
+import { type CommitPlan } from './commit-plan'
 
 interface CommitPlanDisplayProps {
   plan: CommitPlan

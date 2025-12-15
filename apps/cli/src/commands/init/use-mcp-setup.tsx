@@ -2,7 +2,7 @@ import { Text } from 'ink'
 import React, { useEffect, useState } from 'react'
 
 import { type LogEntry } from '../../types/logger'
-import { useCliLogger } from '../logging/logger'
+import { useCliLogger } from '../../helpers/logging/logger'
 import {
   checkMcpConfiguration,
   commitMcpChanges,

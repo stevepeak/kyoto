@@ -4,14 +4,14 @@ import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
 import React, { useMemo, useState } from 'react'
 
-import { Header } from '../../ui/header'
-import { formatFindingLabel, formatSeverity } from '../vibe-check/display-utils'
+import { Header } from '../../../ui/header'
+import { formatFindingLabel, formatSeverity } from './display-utils'
 import {
   type ConsolidatedFinding,
   consolidateFindings,
   getFindingId,
   sortFindingsByPriority,
-} from '../vibe-check/findings'
+} from './findings'
 
 interface IssueSelectionProps {
   agentStates: AgentRunState[]

@@ -3,7 +3,7 @@ import Spinner from 'ink-spinner'
 import TextInput from 'ink-text-input'
 import React from 'react'
 
-import { useMcpSetup } from '../../helpers/mcp/use-mcp-setup'
+import { useMcpSetup } from './use-mcp-setup'
 
 type ComponentState = 'pending' | 'active' | 'completed'
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import { type CommitPlan } from '../../helpers/commit/commit-plan'
-import { createCommitPlan } from '../../helpers/commit/create-commit-plan'
 import { init } from '../../helpers/init'
+import { type CommitPlan } from './commit-plan'
+import { createCommitPlan } from './create-commit-plan'
 
 interface UseCreateCommitPlanOptions {
   instructions?: string

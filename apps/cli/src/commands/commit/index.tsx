@@ -1,8 +1,8 @@
 import { Box, Text, useApp } from 'ink'
 import React, { useRef, useState } from 'react'
 
-import { type CommitPlan } from '../../helpers/commit/commit-plan'
 import { CommandLayout } from '../../ui/command-layout'
+import { type CommitPlan } from './commit-plan'
 import { CommitPlanDisplay } from './CommitPlanDisplay'
 import { ConfirmationInput } from './ConfirmationInput'
 import { ExecutionProgress } from './ExecutionProgress'
