@@ -10,12 +10,12 @@ type AnalyzerFn = (args: {
   context: VibeCheckContext
   options: { progress: (message: string) => void }
 }) => Promise<{
-  findings: Array<{
+  findings: {
     message: string
     path?: string
     suggestion?: string
     severity: 'info' | 'warn' | 'error'
-  }>
+  }[]
 }>
 
 type SummaryConfig =

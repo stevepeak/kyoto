@@ -6,9 +6,9 @@ import React, { useEffect, useReducer } from 'react'
 
 import { getConfig } from '../../../helpers/config/get'
 import { CreatedResult } from './created-result'
-import { createWorkflowContent } from './github-workflow-template'
 import { DefaultResult } from './default-result'
 import { ExistsResult } from './exists-result'
+import { createWorkflowContent } from './github-workflow-template'
 import { LoadingStep } from './loading-step'
 
 // State machine types

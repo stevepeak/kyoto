@@ -17,6 +17,7 @@ import { getChangedFiles } from './get-changed-files'
 import { getGitHubContext } from './github-actions'
 import { getVibeCheckScope } from './scope'
 import { showWarningAndExit } from './warnings'
+import { writeVibeCheckFile } from './write-check-file'
 
 interface UseVibeCheckArgs {
   staged?: boolean
@@ -173,7 +174,7 @@ export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
     }
   }, [exit, staged, commitCount, commitSha, sinceBranch, last])
 
-  // Update config with latest commit SHA and branch after successful vibe check
+  // Update config and write check.json after successful vibe check
   useEffect(() => {
     if (!finalStates || !context || finalStates.length === 0) {
       return
@@ -191,8 +192,17 @@ export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
             },
           })
         }
+
+        // Write check.json for extension to read
+        await writeVibeCheckFile({
+          gitRoot: context.gitRoot,
+          scope: context.scope,
+          branch,
+          headCommit: sha,
+          agentStates: finalStates,
+        })
       } catch {
-        // Silently fail - config update is not critical
+        // Silently fail - config/file update is not critical
       }
     })()
   }, [finalStates, context])

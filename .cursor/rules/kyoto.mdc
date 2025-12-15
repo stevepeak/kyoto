@@ -1,6 +1,0 @@
----
-description: Kyoto MCP rules for vibe checking AI code
-alwaysApply: true
----
-
-Use the Kyoto MCP tool once your work is complete to ensure it aligns with best coding practices.
