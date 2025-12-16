@@ -80,15 +80,15 @@ export function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   <CardTitle className="text-2xl font-semibold tracking-tight">
-                    Test your app with agents
+                    User story testing
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Try our browser agents that run periodic tests on your web
-                    applications automatically.
+                    Try our browser agents that run periodic user story tests on
+                    your website to ensure functionality is working as expected.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-violet-600 transition-colors group-hover:text-violet-500">
-                  <span>Try browser agents</span>
+                  <span>Try user story testing</span>
                   <span className="transition-transform duration-200 group-hover:translate-x-1">
                     →
                   </span>
