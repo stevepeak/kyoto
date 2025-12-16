@@ -19,7 +19,7 @@ export function DashboardPage() {
         <div className="text-center">
           <Kanji
             title="`入` Enter `京` Kyoto `行` to take action towards `改 善` continuous improvement."
-            className="mb-2 text-red-800"
+            className="mb-2"
           >
             入京行改善
           </Kanji>

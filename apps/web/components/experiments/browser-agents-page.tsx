@@ -22,6 +22,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 import { useTRPC } from '@/lib/trpc-client'
 import { cn } from '@/lib/utils'
+import { Kanji } from '../kanji'
 
 type ActiveTab = 'stories' | 'integrations'
 
@@ -410,21 +411,23 @@ export function BrowserAgentsPage() {
         ) : activeTab === 'stories' ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="max-w-md text-center">
-              <h2 className="text-xl font-semibold">Browser Agents</h2>
+              <Kanji title="Sakusei - to create." className="mb-2">
+                さくせい
+              </Kanji>
+              <h2 className="text-xl font-semibold">User Story Testing</h2>
               <p className="mt-2 text-muted-foreground">
-                Write natural language stories that describe critical user
-                journeys. Kyoto runs these as automated sanity checks on your
-                production app, catching issues before your users do.
-              </p>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Select a story or create a new one to get started.
+                Write <b>natural language stories</b> that describe critical
+                user journeys. Kyoto runs these as automated sanity checks on
+                your production app, catching issues before your users do.
               </p>
             </div>
           </div>
         ) : (
           <div className="flex flex-1 items-center justify-center">
             <div className="max-w-md text-center">
-              <Webhook className="mx-auto size-12 text-muted-foreground/50" />
+              <Kanji title="Sakusei - to create." className="mb-2">
+                さくせい
+              </Kanji>
               <h2 className="mt-4 text-xl font-semibold">Integrations</h2>
               <p className="mt-2 text-muted-foreground">
                 Connect external services to receive notifications when your

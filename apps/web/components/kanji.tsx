@@ -12,7 +12,7 @@ export function Kanji({ title, children, className }: KanjiProps) {
   return (
     <p
       className={cn(
-        'text-sm font-semibold tracking-[0.3em] text-primary',
+        'text-sm font-semibold tracking-[0.3em] text-primary text-red-800',
         className,
       )}
       title={title}

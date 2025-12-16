@@ -8,14 +8,12 @@ import {
   Video,
   XCircle,
 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import 'rrweb-player/dist/style.css'
 
 import type { BrowserAgentRun } from '@app/schemas'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useTRPC } from '@/lib/trpc-client'
+import { useSessionRecordingPlayer } from '@/hooks/use-session-recording-player'
 import { cn } from '@/lib/utils'
 
 import { getDisplayStatus, RunStatusIcon } from './run-status-utils'
@@ -26,61 +24,16 @@ type RunDetailsPanelProps = {
 }
 
 export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
-  const trpc = useTRPC()
-  const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<unknown>(null)
-  const [isPlayerReady, setIsPlayerReady] = useState(false)
-
-  const recordingQuery = trpc.xpBrowserAgents.getRecording.useQuery(
-    { runId: run.id },
-    { enabled: !!run.sessionId },
-  )
-
-  const initPlayer = useCallback(async () => {
-    if (
-      !containerRef.current ||
-      !recordingQuery.data?.events ||
-      playerRef.current
-    ) {
-      return
-    }
-
-    // Dynamic import to avoid SSR issues
-    const rrwebPlayer = await import('rrweb-player')
-
-    // Clear container
-    containerRef.current.innerHTML = ''
-
-    playerRef.current = new rrwebPlayer.default({
-      target: containerRef.current,
-      props: {
-        events: recordingQuery.data.events,
-        width: 800,
-        height: 450,
-        autoPlay: false,
-        showController: true,
-        speedOption: [0.5, 1, 2, 4],
-      },
-    })
-
-    setIsPlayerReady(true)
-  }, [recordingQuery.data?.events])
-
-  useEffect(() => {
-    void initPlayer()
-
-    return () => {
-      if (playerRef.current) {
-        playerRef.current = null
-      }
-    }
-  }, [initPlayer])
-
-  // Reset player when run changes
-  useEffect(() => {
-    playerRef.current = null
-    setIsPlayerReady(false)
-  }, [run.id])
+  const {
+    containerRef,
+    isPlayerReady,
+    isLoading: isRecordingLoading,
+    error: recordingError,
+    hasRecording,
+  } = useSessionRecordingPlayer({
+    runId: run.id,
+    sessionId: run.sessionId,
+  })
 
   const observations = run.observations
   const displayStatus = getDisplayStatus(run)
@@ -149,19 +102,19 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center rounded-lg bg-muted/50">
-              {recordingQuery.isLoading ? (
+              {isRecordingLoading ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
                   <Loader2 className="size-8 animate-spin" />
                   <span>Loading recording...</span>
                 </div>
-              ) : recordingQuery.error ? (
+              ) : recordingError ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-destructive">
                   <span>Failed to load recording</span>
                   <span className="text-sm text-muted-foreground">
-                    {recordingQuery.error.message}
+                    {recordingError.message}
                   </span>
                 </div>
-              ) : !isPlayerReady && recordingQuery.data ? (
+              ) : !isPlayerReady && hasRecording ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
                   <Loader2 className="size-8 animate-spin" />
                   <span>Initializing player...</span>

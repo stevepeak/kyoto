@@ -7,8 +7,8 @@ import { getSession } from '@/lib/auth-server'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Browser Agents - Experimental',
-  description: 'Experimental browser agent stories',
+  title: 'Browser Agents',
+  description: 'User behavior testing',
 }
 
 export default async function ExperimentalBrowserAgentsPage() {
