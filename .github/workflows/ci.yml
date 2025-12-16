@@ -28,13 +28,6 @@ jobs:
       - uses: ./.github/actions/setup
       - run: bun run knip
 
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: ./.github/actions/setup
-  #     - run: bun test
-
   vibe-check:
     runs-on: ubuntu-latest
     permissions:
@@ -45,21 +38,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: bun link
       - run: kyoto vibe check
 
-  vibe-test:
-    runs-on: ubuntu-latest
-    permissions:
-      checks: write
-      contents: read
-    env:
-      KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - run: bun link
-      - run: kyoto test
+  # vibe-test:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     checks: write
+  #     contents: read
+  #   env:
+  #     KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/actions/setup
+  #     - run: bun link
+  #     - run: kyoto vibe test
 
   build:
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 import { type AgentRunState } from '@app/types'
-import { Box, Text, useInput } from 'ink'
-import React, { Fragment, useMemo } from 'react'
+import { Box, Text, useInput, useStdin } from 'ink'
+import React, { Fragment, useEffect, useMemo } from 'react'
 
 import { defaultVibeCheckAgents } from '../../../agents'
 import { Header } from '../../../ui/header'
@@ -111,6 +111,8 @@ export default function VibeCheck({
     [finalStates],
   )
 
+  const { isRawModeSupported } = useStdin()
+
   const showIssueSelection = step === 'issues' && issuesExist
   const showNoIssuesMessage = step === 'issues' && !issuesExist
 
@@ -121,8 +123,15 @@ export default function VibeCheck({
         handleExit()
       }
     },
-    { isActive: showNoIssuesMessage },
+    { isActive: showNoIssuesMessage && (isRawModeSupported ?? false) },
   )
+
+  // Auto-exit in CI (non-interactive) mode when complete
+  useEffect(() => {
+    if (showNoIssuesMessage && !isRawModeSupported) {
+      handleExit()
+    }
+  }, [showNoIssuesMessage, isRawModeSupported, handleExit])
 
   return (
     <Box flexDirection="column">

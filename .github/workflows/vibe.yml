@@ -1,0 +1,29 @@
+name: vibe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vibe-check:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+    env:
+      KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: bunx @usekyoto/cli vibe check
+
+  vibe-test:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+    env:
+      KYOTO_TOKEN: ${{ secrets.KYOTO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: bunx @usekyoto/cli vibe test

@@ -1,8 +1,8 @@
 import { type AgentRunState } from '@app/types'
 import { pluralize } from '@app/utils'
-import { Box, Text, useInput } from 'ink'
+import { Box, Text, useInput, useStdin } from 'ink'
 import SelectInput from 'ink-select-input'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { Header } from '../../../ui/header'
 import { formatFindingLabel, formatSeverity } from './display-utils'
@@ -65,6 +65,8 @@ export function IssueSelection({
   onSelect,
   onExit,
 }: IssueSelectionProps): React.ReactElement {
+  const { isRawModeSupported } = useStdin()
+
   // Consolidate and sort findings
   const allFindings = useMemo(() => {
     const consolidated = consolidateFindings(agentStates)
@@ -114,12 +116,29 @@ export function IssueSelection({
     void onSelect(findingItem.finding)
   }
 
-  // Handle "q" to exit
-  useInput((input) => {
-    if (input === 'q' || input === 'Q') {
-      onExit()
+  // Handle "q" to exit (only in interactive mode)
+  useInput(
+    (input) => {
+      if (input === 'q' || input === 'Q') {
+        onExit()
+      }
+    },
+    { isActive: isRawModeSupported ?? false },
+  )
+
+  // In CI (non-interactive) mode, auto-exit after displaying issues
+  useEffect(() => {
+    if (!isRawModeSupported && allFindings.length > 0) {
+      // Set exit code to 1 to indicate issues found
+      process.exitCode = 1
+      // Give a moment for the render to complete, then exit
+      const timer = setTimeout(() => {
+        onExit()
+      }, 100)
+      return () => clearTimeout(timer)
     }
-  })
+    return undefined
+  }, [isRawModeSupported, allFindings.length, onExit])
 
   if (allFindings.length === 0) {
     return (
@@ -152,6 +171,31 @@ export function IssueSelection({
                   isStarted={true}
                 />
               ))}
+          </Box>
+        </Box>
+      </Box>
+    )
+  }
+
+  // Non-interactive mode (CI) - just display issues without SelectInput
+  if (!isRawModeSupported) {
+    return (
+      <Box flexDirection="column" marginTop={1}>
+        <Header kanji="行" title="Issues Found" />
+        <Box width="80%" flexDirection="column" marginTop={1}>
+          <Text color="red">
+            Found {allFindings.length} {pluralize(allFindings.length, 'issue')}:
+          </Text>
+          <Box marginTop={1} flexDirection="column">
+            {allItems.map((item) => (
+              <Box key={item.value} marginLeft={2}>
+                <CustomItem
+                  isSelected={false}
+                  finding={item.finding}
+                  isStarted={false}
+                />
+              </Box>
+            ))}
           </Box>
         </Box>
       </Box>
