@@ -1,16 +1,17 @@
 import { type BrowserTestSuggestion } from '@app/agents'
 
 export type StreamItem =
-  | { type: 'log'; text: string; color?: string; dim?: boolean }
-  | { type: 'agent'; text: string }
+  | { id: string; type: 'log'; text: string; color?: string; dim?: boolean }
+  | { id: string; type: 'agent'; text: string }
   | {
+      id: string
       type: 'test-result'
       description: string
       passed: boolean
       steps: string[]
       response: string
     }
-  | { type: 'divider' }
+  | { id: string; type: 'divider' }
 
 export type TestStatus = 'pending' | 'selected' | 'running' | 'pass' | 'fail'
 

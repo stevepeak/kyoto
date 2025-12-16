@@ -1,4 +1,4 @@
-import { Box, useInput } from 'ink'
+import { Box, useInput, useStdin } from 'ink'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { Header } from '../../../ui/header'
@@ -118,13 +118,14 @@ export default function Test(props: TestProps): React.ReactElement {
   }, [interactive, stage, runTests])
 
   // Handle escape to exit
+  const { isRawModeSupported } = useStdin()
   useInput(
     (input, key) => {
       if (key.escape || input === 'q' || input === 'Q') {
         void close()
       }
     },
-    { isActive: !isExiting },
+    { isActive: !isExiting && (isRawModeSupported ?? false) },
   )
 
   // Handle test selection navigation

@@ -4,6 +4,10 @@ import { type StreamItem } from './types'
 
 const MAX_STREAM_SIZE = 50
 
+function generateStreamItemId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+}
+
 export function useStream() {
   const [stream, setStream] = useState<StreamItem[]>([])
 
@@ -17,18 +21,18 @@ export function useStream() {
 
   const log = useCallback(
     (text: string, opts?: { color?: string; dim?: boolean }) => {
-      addToStream({ type: 'log', text, ...opts })
+      addToStream({ id: generateStreamItemId(), type: 'log', text, ...opts })
     },
     [addToStream],
   )
 
   const addDivider = useCallback(() => {
-    addToStream({ type: 'divider' })
+    addToStream({ id: generateStreamItemId(), type: 'divider' })
   }, [addToStream])
 
   const addAgentMessage = useCallback(
     (text: string) => {
-      addToStream({ type: 'agent', text })
+      addToStream({ id: generateStreamItemId(), type: 'agent', text })
     },
     [addToStream],
   )
@@ -40,7 +44,7 @@ export function useStream() {
       steps: string[]
       response: string
     }) => {
-      addToStream({ type: 'test-result', ...args })
+      addToStream({ id: generateStreamItemId(), type: 'test-result', ...args })
     },
     [addToStream],
   )

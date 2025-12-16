@@ -13,8 +13,8 @@ export function StreamDisplay({
 }: StreamDisplayProps): React.ReactElement {
   return (
     <Box marginTop={1} flexDirection="column">
-      {stream.map((item, i) => (
-        <StreamItemRow key={i} item={item} />
+      {stream.map((item) => (
+        <StreamItemRow key={item.id} item={item} />
       ))}
     </Box>
   )
@@ -66,7 +66,7 @@ function StreamItemRow({ item }: { item: StreamItem }): React.ReactElement {
             Steps:
           </Text>
           {item.steps.map((step, stepIndex) => (
-            <Box key={stepIndex} marginLeft={2}>
+            <Box key={`${item.id}-step-${stepIndex}`} marginLeft={2}>
               <Text dimColor>
                 {stepIndex + 1}. {step}
               </Text>
