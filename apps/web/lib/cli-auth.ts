@@ -1,3 +1,4 @@
+import { getUserGithubLogin } from '@app/api'
 import { eq, schema, sql } from '@app/db'
 import { randomBytes } from 'node:crypto'
 
@@ -189,7 +190,15 @@ export async function getCliSession(args: {
     },
   })
 
-  const login = user?.login ?? ''
+  // If login is not in user table, try to resolve it from GitHub
+  let login = user?.login ?? ''
+  if (!login) {
+    const githubLogin = await getUserGithubLogin({
+      db,
+      userId: row.userId,
+    })
+    login = githubLogin ?? ''
+  }
 
   return {
     token: row.sessionToken,

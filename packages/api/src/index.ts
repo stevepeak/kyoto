@@ -8,7 +8,7 @@ import { router } from './trpc'
 export type { Context, Session, SessionUser } from './context'
 
 // TODO maybe move these into a @app/utils package?
-export { getUser } from './helpers/users'
+export { getUser, getUserGithubLogin } from './helpers/users'
 export { ensureOpenRouterApiKey } from './helpers/openrouter'
 export {
   findOwnerForUser,
