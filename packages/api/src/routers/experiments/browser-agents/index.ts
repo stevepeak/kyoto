@@ -1,6 +1,10 @@
+import { getConfig } from '@app/config'
 import { desc, eq, schema } from '@app/db'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { tasks } from '@trigger.dev/sdk'
 import { TRPCError } from '@trpc/server'
+import { generateText } from 'ai'
+import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { protectedProcedure, router } from '../../../trpc'
@@ -64,6 +68,8 @@ export const xpBrowserAgentsRouter = router({
         id: z.string().uuid(),
         name: z.string().min(1).max(255).optional(),
         instructions: z.string().min(1).optional(),
+        scheduleText: z.string().nullable().optional(),
+        cronSchedule: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -83,12 +89,61 @@ export const xpBrowserAgentsRouter = router({
           ...(input.instructions !== undefined
             ? { instructions: input.instructions }
             : {}),
+          ...(input.scheduleText !== undefined
+            ? { scheduleText: input.scheduleText }
+            : {}),
+          ...(input.cronSchedule !== undefined
+            ? { cronSchedule: input.cronSchedule }
+            : {}),
           updatedAt: new Date(),
         })
         .where(eq(schema.xpStories.id, input.id))
         .returning()
 
       return updated
+    }),
+
+  parseCron: protectedProcedure
+    .input(z.object({ text: z.string().min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const config = getConfig()
+      const openrouter = createOpenRouter({
+        apiKey: config.OPENROUTER_API_KEY,
+      })
+
+      const result = await generateText({
+        model: openrouter('openai/gpt-4o-mini'),
+        prompt: dedent`
+          Convert the following natural language schedule into a cron expression.
+          
+          Input: "${input.text}"
+          
+          Rules:
+          - Output ONLY the cron expression, nothing else
+          - Use standard 5-field cron format: minute hour day-of-month month day-of-week
+          - If the input is ambiguous, make a reasonable interpretation
+          - Examples:
+            - "every hour" → "0 * * * *"
+            - "every day at 5pm" → "0 17 * * *"
+            - "every monday at 9am" → "0 9 * * 1"
+            - "every 30 minutes" → "*/30 * * * *"
+          
+          Output the cron expression:
+        `,
+      })
+
+      const cronSchedule = result.text.trim()
+
+      // Basic validation: should have 5 space-separated parts
+      const parts = cronSchedule.split(/\s+/)
+      if (parts.length !== 5) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Failed to parse schedule. Please try a different phrasing.',
+        })
+      }
+
+      return { cronSchedule }
     }),
 
   delete: protectedProcedure

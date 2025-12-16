@@ -19,10 +19,12 @@
     "@app/db": "workspace:*",
     "@app/linear": "workspace:*",
     "@app/posthog": "workspace:^",
+    "@openrouter/ai-sdk-provider": "catalog:",
     "@openrouter/sdk": "catalog:",
     "@sentry/nextjs": "catalog:",
     "@trigger.dev/sdk": "catalog:",
     "@trpc/server": "catalog:",
+    "ai": "catalog:",
     "superjson": "catalog:",
     "ts-dedent": "catalog:",
     "zod": "catalog:"

@@ -3,6 +3,7 @@
 import {
   CheckCircle,
   Circle,
+  Clock,
   ExternalLink,
   Loader2,
   Play,
@@ -24,6 +25,8 @@ type Story = {
   id: string
   name: string
   instructions: string
+  scheduleText: string | null
+  cronSchedule: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -51,6 +54,8 @@ export function BrowserAgentsPage() {
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null)
   const [editedInstructions, setEditedInstructions] = useState<string>('')
   const [editedName, setEditedName] = useState<string>('')
+  const [editedScheduleText, setEditedScheduleText] = useState<string>('')
+  const [editedCronSchedule, setEditedCronSchedule] = useState<string>('')
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [triggerHandle, setTriggerHandle] = useState<TriggerHandle | null>(null)
 
@@ -66,6 +71,8 @@ export function BrowserAgentsPage() {
       setSelectedStoryId(newStory.id)
       setEditedName(newStory.name)
       setEditedInstructions(newStory.instructions)
+      setEditedScheduleText('')
+      setEditedCronSchedule('')
       setHasUnsavedChanges(false)
     },
   })
@@ -84,6 +91,8 @@ export function BrowserAgentsPage() {
       setSelectedStoryId(null)
       setEditedName('')
       setEditedInstructions('')
+      setEditedScheduleText('')
+      setEditedCronSchedule('')
       setHasUnsavedChanges(false)
     },
   })
@@ -94,6 +103,13 @@ export function BrowserAgentsPage() {
         runId: data.triggerHandle.id,
         publicAccessToken: data.triggerHandle.publicAccessToken,
       })
+    },
+  })
+
+  const parseCronMutation = trpc.xpBrowserAgents.parseCron.useMutation({
+    onSuccess: (data) => {
+      setEditedCronSchedule(data.cronSchedule)
+      setHasUnsavedChanges(true)
     },
   })
 
@@ -121,6 +137,8 @@ export function BrowserAgentsPage() {
     if (storyQuery.data?.story) {
       setEditedName(storyQuery.data.story.name)
       setEditedInstructions(storyQuery.data.story.instructions)
+      setEditedScheduleText(storyQuery.data.story.scheduleText ?? '')
+      setEditedCronSchedule(storyQuery.data.story.cronSchedule ?? '')
       setHasUnsavedChanges(false)
     }
   }, [storyQuery.data?.story])
@@ -139,18 +157,36 @@ export function BrowserAgentsPage() {
       id: selectedStoryId,
       name: editedName,
       instructions: editedInstructions,
+      scheduleText: editedScheduleText || null,
+      cronSchedule: editedCronSchedule || null,
     })
   }, [
     selectedStoryId,
     hasUnsavedChanges,
     editedName,
     editedInstructions,
+    editedScheduleText,
+    editedCronSchedule,
     updateMutation,
   ])
 
   const handleDelete = () => {
     if (!selectedStoryId) return
     deleteMutation.mutate({ id: selectedStoryId })
+  }
+
+  const handleScheduleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedScheduleText(e.target.value)
+    setHasUnsavedChanges(true)
+  }
+
+  const handleScheduleBlur = () => {
+    if (
+      editedScheduleText.trim() &&
+      editedScheduleText !== storyQuery.data?.story?.scheduleText
+    ) {
+      parseCronMutation.mutate({ text: editedScheduleText })
+    }
   }
 
   const handleTrigger = () => {
@@ -302,6 +338,40 @@ export function BrowserAgentsPage() {
             <div className="flex flex-1 overflow-hidden">
               {/* Editor */}
               <div className="flex-1 overflow-auto p-6">
+                {/* Schedule Input */}
+                <div className="mb-4 rounded-lg border bg-muted/30 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                    <Clock className="size-4" />
+                    Run Schedule
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={editedScheduleText}
+                      onChange={handleScheduleTextChange}
+                      onBlur={handleScheduleBlur}
+                      placeholder="e.g., every day at 5pm, every hour, every monday at 9am..."
+                      className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+                    />
+                    {parseCronMutation.isPending && (
+                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                  {editedCronSchedule && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Cron:{' '}
+                      <code className="rounded bg-muted px-1.5 py-0.5 font-mono">
+                        {editedCronSchedule}
+                      </code>
+                    </div>
+                  )}
+                  {parseCronMutation.error && (
+                    <div className="mt-2 text-xs text-destructive">
+                      {parseCronMutation.error.message}
+                    </div>
+                  )}
+                </div>
+
                 <Tiptap
                   value={editedInstructions}
                   onChange={handleInstructionsChange}
@@ -361,10 +431,15 @@ export function BrowserAgentsPage() {
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
+            <div className="max-w-md text-center">
               <h2 className="text-xl font-semibold">Browser Agents</h2>
               <p className="mt-2 text-muted-foreground">
-                Select a story or create a new one to get started
+                Write natural language stories that describe critical user
+                journeys. Kyoto runs these as automated sanity checks on your
+                production app, catching issues before your users do.
+              </p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Select a story or create a new one to get started.
               </p>
             </div>
           </div>
