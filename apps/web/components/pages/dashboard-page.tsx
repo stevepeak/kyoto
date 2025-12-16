@@ -10,14 +10,21 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { Kanji } from '../kanji'
 
 export function DashboardPage() {
   return (
     <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
       <div className="w-full max-w-4xl space-y-8">
         <div className="text-center">
+          <Kanji
+            title="`入` Enter `京` Kyoto `行` to take action towards `改 善` continuous improvement."
+            className="mb-2 text-red-800"
+          >
+            入京行改善
+          </Kanji>
           <h1 className="font-cormorant text-5xl font-semibold tracking-tight">
-            Welcome to Kyoto
+            👋 Meet Kyoto,
           </h1>
           <p className="mt-3 text-lg italic text-muted-foreground">
             Vibe coding tools for the developers of tomorrow.
@@ -89,6 +96,50 @@ export function DashboardPage() {
             </Card>
           </Link>
         </div>
+
+        <p className="text-center text-sm text-muted-foreground">
+          <span className="text-red-800">入</span>{' '}
+          <span className="font-semibold">Kyoto</span> is{' '}
+          <a
+            href="https://github.com/stevepeak/kyoto"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            open source
+          </a>{' '}
+          by{' '}
+          <a
+            href="https://x.com/iopeak"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            @iopeak
+          </a>{' '}
+          (Founder of{' '}
+          <a
+            href="https://codecov.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Codecov
+          </a>
+          ).
+        </p>
+        <p className="text-center text-sm text-muted-foreground">
+          Inspired and initially demoed at{' '}
+          <a
+            href="https://hackerresidency.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Hacker Residency Group
+          </a>{' '}
+          in Da Nang, Vietnam 2025.
+        </p>
       </div>
     </div>
   )
