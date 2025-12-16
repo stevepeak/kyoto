@@ -50,7 +50,7 @@ export function CraftStoryForm({ owner, repo }: CraftStoryFormProps) {
       }
 
       // Navigate back to the repository page
-      router.push(`/~/${owner}/${repo}`)
+      router.push(`/${owner}/${repo}`)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to create story')
       setIsSaving(false)

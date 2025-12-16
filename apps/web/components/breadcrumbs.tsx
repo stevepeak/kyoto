@@ -21,22 +21,20 @@ export function Breadcrumbs() {
 
   const breadcrumbs: { label: string; href: string }[] = []
 
-  // Handle ~/owner/repo pattern
-  if (segments[0] === '~') {
+  // Handle /owner/repo pattern
+  if (segments.length >= 1) {
+    // Owner level: /owner
+    breadcrumbs.push({
+      label: segments[0],
+      href: `/${segments[0]}`,
+    })
+
     if (segments.length >= 2) {
-      // Owner level: ~/owner
+      // Repo level: /owner/repo
       breadcrumbs.push({
         label: segments[1],
-        href: `/~/${segments[1]}`,
+        href: `/${segments[0]}/${segments[1]}`,
       })
-
-      if (segments.length >= 3) {
-        // Repo level: ~/owner/repo
-        breadcrumbs.push({
-          label: segments[2],
-          href: `/~/${segments[1]}/${segments[2]}`,
-        })
-      }
     }
   }
 

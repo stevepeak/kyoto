@@ -115,7 +115,7 @@ export function LoginButton() {
         {/* Teams */}
         {/* <DropdownMenuItem
           onClick={() => {
-            router.push('/~')
+            router.push('/')
           }}
         >
           <Users className="size-4" />

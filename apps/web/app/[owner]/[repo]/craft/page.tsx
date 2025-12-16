@@ -63,7 +63,7 @@ export default async function CraftPageRoute(props: CraftPageRouteProps) {
 
   const session = await getSession()
   if (!session?.user?.id) {
-    redirect(`/login?redirect=/~/${owner}/${repo}/craft`)
+    redirect(`/login?redirect=/${owner}/${repo}/craft`)
   }
 
   const ownerData = await checkOwnerMembership({

@@ -53,7 +53,7 @@ export default async function OrgPageRoute(props: OrgPageRouteProps) {
 
   const session = await getSession()
   if (!session?.user?.id) {
-    redirect(`/login?redirect=/~/${owner}`)
+    redirect(`/login?redirect=/${owner}`)
   }
 
   const ownerData = await checkOwnerMembership({

@@ -1,18 +1,18 @@
 import { type Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { RepoPage } from '@/components/pages/repo-page'
+import { ChangelogPage } from '@/components/pages/changelog-page'
 import { getSession } from '@/lib/auth-server'
 import { checkOwnerMembership, checkRepoMembership } from '@/lib/memberships'
 
 export const dynamic = 'force-dynamic'
 
-interface RepoPageRouteProps {
+interface ChangelogPageRouteProps {
   params: Promise<{ owner: string; repo: string }>
 }
 
 export async function generateMetadata(
-  props: RepoPageRouteProps,
+  props: ChangelogPageRouteProps,
 ): Promise<Metadata> {
   const params = await props.params
   const { owner, repo } = params
@@ -20,8 +20,8 @@ export async function generateMetadata(
   const session = await getSession()
   if (!session?.user?.id) {
     return {
-      title: `${owner}/${repo} - Kyoto`,
-      description: 'Repository page on Kyoto',
+      title: `${owner}/${repo} Changelog - Kyoto`,
+      description: 'Changelog page on Kyoto',
     }
   }
 
@@ -32,8 +32,8 @@ export async function generateMetadata(
 
   if (!ownerData) {
     return {
-      title: `${owner}/${repo} - Kyoto`,
-      description: 'Repository page on Kyoto',
+      title: `${owner}/${repo} Changelog - Kyoto`,
+      description: 'Changelog page on Kyoto',
     }
   }
 
@@ -45,24 +45,26 @@ export async function generateMetadata(
 
   if (!repoData) {
     return {
-      title: `${owner}/${repo} - Kyoto`,
-      description: 'Repository page on Kyoto',
+      title: `${owner}/${repo} Changelog - Kyoto`,
+      description: 'Changelog page on Kyoto',
     }
   }
 
   return {
-    title: `${owner}/${repoData.name} - Kyoto`,
-    description: `View ${repoData.name} repository on Kyoto`,
+    title: `${owner}/${repoData.name} Changelog - Kyoto`,
+    description: `View changelog for ${repoData.name} repository on Kyoto`,
   }
 }
 
-export default async function RepoPageRoute(props: RepoPageRouteProps) {
+export default async function ChangelogPageRoute(
+  props: ChangelogPageRouteProps,
+) {
   const params = await props.params
   const { owner, repo } = params
 
   const session = await getSession()
   if (!session?.user?.id) {
-    redirect(`/login?redirect=/~/${owner}/${repo}`)
+    redirect(`/login?redirect=/${owner}/${repo}/changelog`)
   }
 
   const ownerData = await checkOwnerMembership({
@@ -100,5 +102,5 @@ export default async function RepoPageRoute(props: RepoPageRouteProps) {
     )
   }
 
-  return <RepoPage owner={ownerData} repo={repoData} />
+  return <ChangelogPage owner={owner} repo={repo} />
 }

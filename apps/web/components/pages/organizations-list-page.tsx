@@ -92,7 +92,7 @@ export function OrganizationsListPage(props: OrganizationsListPageProps) {
             {organizations.map((org) => (
               <Link
                 key={org.id}
-                href={`/~/${org.login}`}
+                href={`/${org.login}`}
                 className="group flex flex-col gap-4 rounded-lg border p-6 transition-colors hover:border-foreground/20 hover:bg-accent"
               >
                 <div className="flex items-start gap-3">

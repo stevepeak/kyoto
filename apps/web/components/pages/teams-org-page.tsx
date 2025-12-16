@@ -1,14 +1,13 @@
 import { type Owner, type Repo } from '@app/db'
 import Link from 'next/link'
 
-interface OrgPageProps {
+interface TeamsOrgPageProps {
   owner: Owner
-  organizations: Owner[]
   repositories: Repo[]
 }
 
-export function OrgPage(props: OrgPageProps) {
-  const { owner, organizations, repositories } = props
+export function TeamsOrgPage(props: TeamsOrgPageProps) {
+  const { owner, repositories } = props
 
   return (
     <div className="container mx-auto min-h-screen py-12">
@@ -33,7 +32,7 @@ export function OrgPage(props: OrgPageProps) {
           <h2 className="mb-4 text-xl font-semibold">Repositories</h2>
           {repositories.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
-              No repositories found for this organization.
+              No repositories found for this team.
             </p>
           ) : (
             <div className="grid gap-3">
@@ -70,35 +69,6 @@ export function OrgPage(props: OrgPageProps) {
             </div>
           )}
         </div>
-
-        {organizations.length > 1 && (
-          <div className="rounded-lg border p-4">
-            <h2 className="mb-4 text-lg font-semibold">Your Organizations</h2>
-            <div className="grid gap-2">
-              {organizations.map((org) => (
-                <Link
-                  key={org.id}
-                  href={`/${org.login}`}
-                  className="flex items-center gap-3 rounded-md p-2 hover:bg-accent"
-                >
-                  {org.avatarUrl && (
-                    <img
-                      src={org.avatarUrl}
-                      alt={org.name ?? org.login}
-                      className="size-8 rounded-full border"
-                    />
-                  )}
-                  <div>
-                    <div className="font-medium">{org.name ?? org.login}</div>
-                    <div className="text-sm text-muted-foreground">
-                      @{org.login}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

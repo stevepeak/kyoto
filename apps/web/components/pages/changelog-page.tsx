@@ -563,7 +563,7 @@ function StoryCard({
                 className="h-auto p-1 text-muted-foreground hover:text-foreground"
                 onClick={(e) => e.stopPropagation()}
               >
-                <a href={`/~/${owner}/${repo}/stories/${story.id}`}>
+                <a href={`/${owner}/${repo}/stories/${story.id}`}>
                   <ChevronRight className="size-5" />
                 </a>
               </Button>

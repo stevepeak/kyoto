@@ -13,7 +13,7 @@ export default async function LoginPage(props: {
   searchParams: Promise<{ redirect?: string }>
 }) {
   const searchParams = await props.searchParams
-  const redirectTo = searchParams.redirect || '/~'
+  const redirectTo = searchParams.redirect || '/'
 
   return <LoginClient redirectTo={redirectTo} />
 }
