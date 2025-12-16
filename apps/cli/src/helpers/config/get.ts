@@ -58,6 +58,8 @@ export async function getConfig(): Promise<Config> {
     const kyotoAiToken = process.env.KYOTO_TOKEN
     if (kyotoAiToken) {
       // Create a minimal config from environment variables
+      // Note: userId and sessionToken are placeholders for GitHub Actions.
+      // They are not used for authentication - only the API key (KYOTO_TOKEN) is used.
       const envConfig: Config = {
         analytics: false,
         experimental: false,
@@ -68,8 +70,8 @@ export async function getConfig(): Promise<Config> {
         },
         user: {
           login: 'github-actions',
-          sessionToken: '',
-          userId: '',
+          sessionToken: 'github-actions-token',
+          userId: 'github-actions-user',
           openrouterApiKey: kyotoAiToken,
         },
       }
