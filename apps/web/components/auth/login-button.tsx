@@ -23,48 +23,91 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { signIn, signOut, useSession } from '@/lib/auth-client'
 import { getUserLogin } from '@/lib/auth-utils'
+import { cn } from '@/lib/utils'
 
 export function LoginButton() {
   const { data: session, isPending } = useSession()
   const [hasStartedSignIn, setHasStartedSignIn] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [showContent, setShowContent] = useState(false)
   const router = useRouter()
   const userLogin = session?.user ? getUserLogin(session.user) : null
   const isStevepeak = userLogin === 'stevepeak'
   // Only use isPending after mounted to prevent hydration mismatch
   const isSigningIn = mounted && (isPending || hasStartedSignIn)
 
+  // Determine if we're still loading the auth state
+  const isLoadingAuth = !mounted || isPending
+
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Show sign-in button until mounted and session is loaded
-  if (!mounted || !session) {
+  // After auth loads, if no session, trigger the expansion animation
+  useEffect(() => {
+    if (mounted && !isPending && !session) {
+      // Start expanding the circle into button shape
+      const expandTimer = setTimeout(() => setExpanded(true), 50)
+      // Show button content after shape has expanded
+      const contentTimer = setTimeout(() => setShowContent(true), 350)
+      return () => {
+        clearTimeout(expandTimer)
+        clearTimeout(contentTimer)
+      }
+    }
+  }, [mounted, isPending, session])
+
+  // Not logged in - show morphing animation from circle to button
+  if (!session) {
     return (
-      <Button
-        disabled={isSigningIn}
+      <button
+        disabled={isSigningIn || !showContent}
         onClick={async () => {
-          // NOTE: `signIn.social()` can resolve before session loading starts (redirect/popup flow).
-          // Keep the button disabled from the first click to avoid a brief "enabled" flash.
           setHasStartedSignIn(true)
           await signIn.social({
             provider: 'github',
             callbackURL: '/',
           })
         }}
-      >
-        {isSigningIn ? (
-          <>
-            <Spinner />
-            Signing in...
-          </>
-        ) : (
-          <>
-            <Github className="size-4" />
-            Sign in with GitHub
-          </>
+        style={{ borderRadius: expanded ? '6px' : '18px' }}
+        className={cn(
+          'relative h-9 overflow-hidden transition-all duration-500 ease-out',
+          'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+          'disabled:pointer-events-none',
+          expanded
+            ? 'w-[172px] bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+            : 'w-9 bg-muted',
         )}
-      </Button>
+      >
+        {/* Pulse animation overlay for loading state */}
+        <div
+          className={cn(
+            'absolute inset-0 bg-muted-foreground/10 transition-opacity duration-300',
+            isLoadingAuth ? 'animate-pulse opacity-100' : 'opacity-0',
+          )}
+        />
+        {/* Button content - fades in after expansion */}
+        <div
+          className={cn(
+            'flex items-center gap-2 transition-opacity duration-200',
+            showContent ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          {isSigningIn ? (
+            <>
+              <Spinner />
+              Signing in...
+            </>
+          ) : (
+            <>
+              <Github className="size-4" />
+              Sign in with GitHub
+            </>
+          )}
+        </div>
+      </button>
     )
   }
 

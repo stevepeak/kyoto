@@ -8,7 +8,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
+import { cn } from '@/lib/utils'
 
 const meta = {
   title: 'Auth/LoginButton',
@@ -31,24 +32,105 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Mock component showing the checking auth state
-function CheckingAuthDemo() {
+// Avatar skeleton shown during loading (circle state)
+function AvatarSkeletonDemo() {
   return (
-    <Button disabled>
-      <Spinner />
-      Signing in...
-    </Button>
+    <div className="relative h-9 w-9 rounded-full bg-muted overflow-hidden">
+      <div className="absolute inset-0 bg-muted-foreground/10 animate-pulse" />
+    </div>
   )
 }
 
-// Mock component showing the signed out state
+// Mock component showing the circle-to-button morph animation (loops)
+function LoadingTransitionDemo() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [expanded, setExpanded] = useState(false)
+  const [showContent, setShowContent] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+
+    const runCycle = () => {
+      if (!mounted) return
+
+      // Reset to loading state (circle)
+      setIsLoading(true)
+      setExpanded(false)
+      setShowContent(false)
+
+      // After 2s, finish loading and start expansion
+      setTimeout(() => {
+        if (!mounted) return
+        setIsLoading(false)
+
+        // Start expanding circle to button shape
+        setTimeout(() => {
+          if (!mounted) return
+          setExpanded(true)
+
+          // Show button content after shape has expanded
+          setTimeout(() => {
+            if (!mounted) return
+            setShowContent(true)
+
+            // Hold the button visible for 3s, then restart cycle
+            setTimeout(() => {
+              if (!mounted) return
+              runCycle()
+            }, 3000)
+          }, 300)
+        }, 50)
+      }, 2000)
+    }
+
+    runCycle()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  return (
+    <button
+      disabled
+      style={{ borderRadius: expanded ? '6px' : '18px' }}
+      className={cn(
+        'relative h-9 overflow-hidden transition-all duration-500 ease-out',
+        'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium',
+        expanded
+          ? 'w-[172px] bg-primary text-primary-foreground shadow-sm'
+          : 'w-9 bg-muted',
+      )}
+    >
+      {/* Pulse animation overlay for loading state */}
+      <div
+        className={cn(
+          'absolute inset-0 bg-muted-foreground/10 transition-opacity duration-300',
+          isLoading ? 'animate-pulse opacity-100' : 'opacity-0',
+        )}
+      />
+      {/* Button content - fades in after expansion */}
+      <div
+        className={cn(
+          'flex items-center gap-2 transition-opacity duration-200',
+          showContent ? 'opacity-100' : 'opacity-0',
+        )}
+      >
+        <Github className="size-4" />
+        Sign in with GitHub
+      </div>
+    </button>
+  )
+}
+
+// Mock component showing the signed out state (fully expanded button)
 function SignedOutDemo() {
   const [isLoading, setIsLoading] = useState(false)
 
   return (
     <Button
       disabled={isLoading}
-      onClick={async () => {
+      onClick={() => {
         setIsLoading(true)
         setTimeout(() => setIsLoading(false), 2000)
       }}
@@ -56,7 +138,7 @@ function SignedOutDemo() {
       {isLoading ? (
         <>
           <Spinner />
-          Logging in with GitHub...
+          Signing in...
         </>
       ) : (
         <>
@@ -178,13 +260,25 @@ function SignedInDemo() {
   )
 }
 
-export const SignedIn: Story = {
-  render: () => <SignedInDemo />,
+export const Loading: Story = {
+  render: () => <AvatarSkeletonDemo />,
   parameters: {
     docs: {
       description: {
         story:
-          'Shows the user avatar when authenticated. Click to see the dropdown menu with account options.',
+          'Shows an avatar skeleton while the authentication state is being determined.',
+      },
+    },
+  },
+}
+
+export const LoadingTransition: Story = {
+  render: () => <LoadingTransitionDemo />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Demonstrates the transition from loading skeleton to sign-in button when user is not authenticated. The button fades in with a subtle slide animation.',
       },
     },
   },
@@ -196,19 +290,19 @@ export const SignedOut: Story = {
     docs: {
       description: {
         story:
-          'Shows the sign-in button when no user is authenticated. Click to see the loading state.',
+          'Shows the sign-in button when no user is authenticated. Click to see the loading state during sign-in.',
       },
     },
   },
 }
 
-export const Loading: Story = {
-  render: () => <CheckingAuthDemo />,
+export const SignedIn: Story = {
+  render: () => <SignedInDemo />,
   parameters: {
     docs: {
       description: {
         story:
-          'Shows a loading skeleton while the authentication state is being determined.',
+          'Shows the user avatar when authenticated. Click to see the dropdown menu with account options.',
       },
     },
   },
