@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 export function Navbar() {
   return (
     <nav className="border-b">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <Image
