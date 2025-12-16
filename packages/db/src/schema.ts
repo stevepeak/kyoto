@@ -255,6 +255,8 @@ export const xpStories = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     instructions: text('instructions').notNull(),
+    scheduleText: text('schedule_text'),
+    cronSchedule: text('cron_schedule'),
   },
   (table) => ({
     userIdIdx: index('xp_stories_user_id_idx').on(table.userId),
