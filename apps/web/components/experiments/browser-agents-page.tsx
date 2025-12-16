@@ -488,36 +488,39 @@ export function BrowserAgentsPage() {
                         No runs yet
                       </div>
                     ) : (
-                      runs.map((run) => (
-                        <Card
-                          key={run.id}
-                          className={cn(
-                            'cursor-pointer py-3 transition-colors hover:bg-accent/50',
-                            selectedRunId === run.id && 'ring-2 ring-primary',
-                          )}
-                          onClick={() => setSelectedRunId(run.id)}
-                        >
-                          <CardHeader className="px-3 py-0">
-                            <CardTitle className="flex items-center gap-2 text-sm">
-                              <RunStatusIcon status={run.status} />
-                              <span className="capitalize">{run.status}</span>
-                              {run.sessionId && (
-                                <Video className="ml-auto size-3 text-muted-foreground" />
-                              )}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="px-3 py-0">
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(run.createdAt).toLocaleString()}
-                            </div>
-                            {run.error && (
-                              <div className="mt-2 truncate text-xs text-destructive">
-                                {run.error}
-                              </div>
+                      runs.map((run) => {
+                        const displayStatus = getDisplayStatus(run)
+                        return (
+                          <Card
+                            key={run.id}
+                            className={cn(
+                              'cursor-pointer py-3 transition-colors hover:bg-accent/50',
+                              selectedRunId === run.id && 'ring-2 ring-primary',
                             )}
-                          </CardContent>
-                        </Card>
-                      ))
+                            onClick={() => setSelectedRunId(run.id)}
+                          >
+                            <CardHeader className="px-3 py-0">
+                              <CardTitle className="flex items-center gap-2 text-sm">
+                                <RunStatusIcon status={displayStatus.status} />
+                                <span>{displayStatus.label}</span>
+                                {run.sessionId && (
+                                  <Video className="ml-auto size-3 text-muted-foreground" />
+                                )}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-3 py-0">
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(run.createdAt).toLocaleString()}
+                              </div>
+                              {run.error && (
+                                <div className="mt-2 truncate text-xs text-destructive">
+                                  {run.error}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )
+                      })
                     )}
                   </div>
                 )}
@@ -617,6 +620,7 @@ function RunDetailsPanel({ run, onBack }: { run: Run; onBack: () => void }) {
   }, [run.id])
 
   const observations = run.observations
+  const displayStatus = getDisplayStatus(run)
 
   return (
     <div className="space-y-6">
@@ -627,8 +631,8 @@ function RunDetailsPanel({ run, onBack }: { run: Run; onBack: () => void }) {
           Back to Editor
         </Button>
         <div className="flex items-center gap-2">
-          <RunStatusIcon status={run.status} />
-          <span className="font-medium capitalize">{run.status}</span>
+          <RunStatusIcon status={displayStatus.status} />
+          <span className="font-medium">{displayStatus.label}</span>
         </div>
         <span className="text-sm text-muted-foreground">
           {new Date(run.createdAt).toLocaleString()}
@@ -755,9 +759,29 @@ function RunDetailsPanel({ run, onBack }: { run: Run; onBack: () => void }) {
   )
 }
 
+function getDisplayStatus(run: Run): { status: string; label: string } {
+  if (run.status === 'running') {
+    return { status: 'running', label: 'Running' }
+  }
+  if (run.status === 'pending') {
+    return { status: 'pending', label: 'Pending' }
+  }
+  if (run.status === 'failed' || run.error) {
+    return { status: 'failed', label: 'Failed' }
+  }
+  if (run.status === 'completed') {
+    // Check if the agent task actually succeeded
+    if (run.observations?.success === false) {
+      return { status: 'failed', label: 'Failed' }
+    }
+    return { status: 'passed', label: 'Pass' }
+  }
+  return { status: run.status, label: run.status }
+}
+
 function RunStatusIcon({ status }: { status: string }) {
   switch (status) {
-    case 'completed':
+    case 'passed':
       return <CheckCircle className="size-4 text-green-500" />
     case 'failed':
       return <XCircle className="size-4 text-destructive" />
