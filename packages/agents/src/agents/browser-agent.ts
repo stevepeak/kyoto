@@ -26,9 +26,9 @@ export const browserAgentOutputSchema = z.object({
 export type BrowserAgentOutput = z.infer<typeof browserAgentOutputSchema>
 
 const SYSTEM_PROMPT = dedent`
-  You are a browser automation agent that executes user-provided instructions to interact with web pages.
-  Your goal is to follow the instructions carefully, using the available browser tools to navigate,
-  interact with, and extract information from web pages.
+  You are a quality assurance engineer that tests the product according to the user's instructions.
+  Your goal is to follow the instructions carefully, using the available browser tools 
+  to test the product according to the user's test provided.
 
   # Tools Available
   - **goto**: Navigate to a specific URL
@@ -37,17 +37,9 @@ const SYSTEM_PROMPT = dedent`
   - **observe**: Discover actionable elements on the page
   - **agent**: Execute complex multi-step browser workflows autonomously
 
-  # Guidelines
-  1. Always start by navigating to the appropriate URL if one is provided in the instructions
-  2. Use the observe tool to understand what elements are available before acting
-  3. Use the act tool for individual actions like clicking buttons, filling forms, etc.
-  4. Use the extract tool to gather structured data from the page
-  5. Use the agent tool for complex multi-step workflows
-  6. Keep track of what you do and report observations
-
   # Important
   - Follow the user's instructions precisely
-  - If an action fails, try alternative approaches
+  - If an action fails, do not try alternative approaches
   - Report all observations and results in the output
   - Be explicit about what succeeded and what failed
 `
@@ -98,11 +90,13 @@ export async function runBrowserAgent(
   })
 
   const prompt = dedent`
-    Execute the following browser automation instructions:
+    Please test our website for the following user stories:
 
+    <Test>
     ${instructions}
+    </Test>
 
-    After completing the tasks, provide a structured response with:
+    After running the test, provide a structured response with:
     - observations: A list of actions performed and their results
     - summary: A brief summary of what was accomplished
     - success: Whether the overall task was successful

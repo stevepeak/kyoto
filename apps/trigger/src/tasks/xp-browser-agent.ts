@@ -58,10 +58,7 @@ export const xpBrowserAgentTask = task({
         env: 'BROWSERBASE',
         apiKey: config.BROWSERBASE_API_KEY,
         projectId: config.BROWSERBASE_PROJECT_ID,
-        model: {
-          modelName: 'openai/gpt-5-mini',
-          apiKey: config.OPENROUTER_API_KEY,
-        },
+        model: 'openai/gpt-5-mini',
         verbose: 1,
       })
 
@@ -85,10 +82,7 @@ export const xpBrowserAgentTask = task({
       const browserContext: BrowserbaseToolsContext = {
         stagehand,
         agent: stagehand.agent({
-          model: {
-            modelName: 'openai/gpt-5-mini',
-            apiKey: config.OPENROUTER_API_KEY,
-          },
+          model: 'openai/gpt-5-mini',
         }),
         onProgress: (message) => {
           void streams.append('progress', message)
