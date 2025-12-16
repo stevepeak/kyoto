@@ -9,3 +9,4 @@ export {
 } from './tasks/github'
 export { helloWorldTask } from './tasks/hello-world'
 export { xpBrowserAgentTask } from './tasks/xp-browser-agent'
+export { xpBrowserAgentScheduledTask } from './tasks/xp-browser-agent-scheduled'

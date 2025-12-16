@@ -257,6 +257,7 @@ export const xpStories = pgTable(
     instructions: text('instructions').notNull(),
     scheduleText: text('schedule_text'),
     cronSchedule: text('cron_schedule'),
+    triggerScheduleId: text('trigger_schedule_id'),
   },
   (table) => ({
     userIdIdx: index('xp_stories_user_id_idx').on(table.userId),

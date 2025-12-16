@@ -1,0 +1,1 @@
+ALTER TABLE "xp_stories" ADD COLUMN "trigger_schedule_id" text;

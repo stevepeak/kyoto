@@ -1,13 +1,22 @@
 import { getConfig } from '@app/config'
 import { desc, eq, schema } from '@app/db'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
-import { tasks } from '@trigger.dev/sdk'
+import { configure, schedules, tasks } from '@trigger.dev/sdk'
 import { TRPCError } from '@trpc/server'
 import { generateText } from 'ai'
 import { dedent } from 'ts-dedent'
 import { z } from 'zod'
 
 import { protectedProcedure, router } from '../../../trpc'
+
+let isTriggerConfigured = false
+
+function ensureTriggerConfigured(secretKey: string) {
+  if (!isTriggerConfigured) {
+    configure({ secretKey })
+    isTriggerConfigured = true
+  }
+}
 
 export const xpBrowserAgentsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -82,6 +91,36 @@ export const xpBrowserAgentsRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Story not found' })
       }
 
+      if (input.scheduleText && !input.cronSchedule) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid schedule text',
+        })
+      }
+
+      // Handle schedule management
+      let triggerScheduleId = existing.triggerScheduleId
+
+      if (input.cronSchedule !== undefined) {
+        ensureTriggerConfigured(ctx.env.TRIGGER_SECRET_KEY)
+
+        if (input.cronSchedule) {
+          // Create or update schedule
+          const createdSchedule = await schedules.create({
+            task: 'xp-browser-agent-scheduled',
+            cron: input.cronSchedule,
+            timezone: ctx.user.timeZone ?? 'UTC',
+            externalId: input.id,
+            deduplicationKey: `story-${input.id}`,
+          })
+          triggerScheduleId = createdSchedule.id
+        } else if (existing.triggerScheduleId) {
+          // Delete existing schedule
+          await schedules.del(existing.triggerScheduleId)
+          triggerScheduleId = null
+        }
+      }
+
       const [updated] = await ctx.db
         .update(schema.xpStories)
         .set({
@@ -95,6 +134,7 @@ export const xpBrowserAgentsRouter = router({
           ...(input.cronSchedule !== undefined
             ? { cronSchedule: input.cronSchedule }
             : {}),
+          triggerScheduleId,
           updatedAt: new Date(),
         })
         .where(eq(schema.xpStories.id, input.id))
@@ -156,6 +196,12 @@ export const xpBrowserAgentsRouter = router({
 
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Story not found' })
+      }
+
+      // Delete the schedule if it exists
+      if (existing.triggerScheduleId) {
+        ensureTriggerConfigured(ctx.env.TRIGGER_SECRET_KEY)
+        await schedules.del(existing.triggerScheduleId)
       }
 
       await ctx.db

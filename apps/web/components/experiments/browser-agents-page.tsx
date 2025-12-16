@@ -177,6 +177,7 @@ export function BrowserAgentsPage() {
 
   const handleScheduleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditedScheduleText(e.target.value)
+    setEditedCronSchedule('') // Clear stale cron when schedule text changes
     setHasUnsavedChanges(true)
   }
 
@@ -371,7 +372,6 @@ export function BrowserAgentsPage() {
                     </div>
                   )}
                 </div>
-
                 <Tiptap
                   value={editedInstructions}
                   onChange={handleInstructionsChange}
