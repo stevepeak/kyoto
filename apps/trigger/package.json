@@ -15,7 +15,6 @@
     "@sentry/opentelemetry": "catalog:",
     "@trigger.dev/sdk": "^4.3.0",
     "ai": "catalog:",
-    "cron-parser": "catalog:",
     "import-in-the-middle": "catalog:",
     "zod": "catalog:"
   },
