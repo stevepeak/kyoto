@@ -18,7 +18,7 @@ import {
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 import { useTRPC } from '@/lib/trpc-client'
 
-export type ActiveTab = 'stories' | 'integrations'
+type ActiveTab = 'stories' | 'integrations'
 
 export function useBrowserAgentsPage() {
   const trpc = useTRPC()
