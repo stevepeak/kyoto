@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -27,12 +27,19 @@ import { getUserLogin } from '@/lib/auth-utils'
 export function LoginButton() {
   const { data: session, isPending } = useSession()
   const [hasStartedSignIn, setHasStartedSignIn] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const userLogin = session?.user ? getUserLogin(session.user) : null
   const isStevepeak = userLogin === 'stevepeak'
-  const isSigningIn = isPending || hasStartedSignIn
+  // Only use isPending after mounted to prevent hydration mismatch
+  const isSigningIn = mounted && (isPending || hasStartedSignIn)
 
-  if (!session) {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Show sign-in button until mounted and session is loaded
+  if (!mounted || !session) {
     return (
       <Button
         disabled={isSigningIn}
