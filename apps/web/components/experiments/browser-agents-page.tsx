@@ -138,7 +138,8 @@ export function BrowserAgentsPage() {
     runId: triggerHandle?.runId ?? null,
     publicAccessToken: triggerHandle?.publicAccessToken ?? null,
     toastMessages: {
-      onProgress: () => 'Browser agent running...',
+      onProgress: (text) =>
+        text.split('\n').pop() || 'Browser agent running...',
       onSuccess: 'Browser agent completed! 🎉',
       onError: (error) =>
         `Agent failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -372,7 +373,7 @@ export function BrowserAgentsPage() {
                   variant="default"
                   size="sm"
                   onClick={handleTrigger}
-                  disabled={isRunning}
+                  disabled={isRunning || hasUnsavedChanges}
                 >
                   {isRunning ? (
                     <>
