@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, Globe } from 'lucide-react'
+import { Bot, Terminal } from 'lucide-react'
 import Link from 'next/link'
 
 import {
@@ -19,8 +19,8 @@ export function DashboardPage() {
           <h1 className="font-cormorant text-5xl font-semibold tracking-tight">
             Welcome to Kyoto
           </h1>
-          <p className="mt-3 text-lg text-muted-foreground">
-            Choose where you&apos;d like to start
+          <p className="mt-3 text-lg italic text-muted-foreground">
+            Vibe coding tools for the developers of tomorrow.
           </p>
         </div>
 
@@ -36,15 +36,15 @@ export function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <CardHeader className="relative space-y-4 p-8">
                 <div className="flex size-14 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 transition-transform duration-300 group-hover:scale-110">
-                  <BookOpen className="size-7" />
+                  <Terminal className="size-7" />
                 </div>
                 <div className="space-y-2">
                   <CardTitle className="text-2xl font-semibold tracking-tight">
-                    Vibe Check & Testing Tools
+                    Kyoto CLI
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Explore our documentation for vibe checking your codebase
-                    and comprehensive testing tools to ensure quality.
+                    Vibe check your agent written code for bugs, security
+                    issues, library usage, and more.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-emerald-600 transition-colors group-hover:text-emerald-500">
@@ -68,15 +68,15 @@ export function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <CardHeader className="relative space-y-4 p-8">
                 <div className="flex size-14 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 transition-transform duration-300 group-hover:scale-110">
-                  <Globe className="size-7" />
+                  <Bot className="size-7" />
                 </div>
                 <div className="space-y-2">
                   <CardTitle className="text-2xl font-semibold tracking-tight">
-                    Periodic Browser Agent Tests
+                    Test your app with agents
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Try our experimental browser agents that run periodic tests
-                    on your web applications automatically.
+                    Try our browser agents that run periodic tests on your web
+                    applications automatically.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-violet-600 transition-colors group-hover:text-violet-500">
