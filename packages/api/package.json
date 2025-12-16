@@ -17,6 +17,7 @@
   "dependencies": {
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/schemas": "workspace:*",
     "@app/linear": "workspace:*",
     "@app/posthog": "workspace:^",
     "@openrouter/ai-sdk-provider": "catalog:",
