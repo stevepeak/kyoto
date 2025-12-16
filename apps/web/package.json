@@ -25,7 +25,7 @@
     "@tiptap/pm": "^3.13.0",
     "@tiptap/react": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
-    "@trigger.dev/react-hooks": "4.2.0",
+    "@trigger.dev/react-hooks": "catalog:",
     "@trpc/client": "11.6.0",
     "@trpc/react-query": "11.6.0",
     "@trpc/server": "catalog:",

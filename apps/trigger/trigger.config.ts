@@ -15,6 +15,8 @@ export default defineConfig({
   // The paths for your trigger folders
   dirs: ['./src/tasks'],
   build: {
+    // Don't bundle these - they have issues when bundled
+    external: ['@browserbasehq/stagehand'],
     extensions: [
       esbuildPlugin(
         sentryEsbuildPlugin({

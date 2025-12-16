@@ -238,3 +238,53 @@ export const cliAuthState = pgTable('cli_auth_state', {
     .notNull()
     .defaultNow(),
 })
+
+// Experimental tables
+export const xpStories = pgTable(
+  'xp_stories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    instructions: text('instructions').notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('xp_stories_user_id_idx').on(table.userId),
+  }),
+)
+
+export const xpStoriesRuns = pgTable(
+  'xp_stories_runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    storyId: uuid('story_id')
+      .notNull()
+      .references(() => xpStories.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('pending'),
+    sessionId: text('session_id'),
+    sessionRecordingUrl: text('session_recording_url'),
+    observations: jsonb('observations'),
+    error: text('error'),
+  },
+  (table) => ({
+    storyIdIdx: index('xp_stories_runs_story_id_idx').on(table.storyId),
+    userIdIdx: index('xp_stories_runs_user_id_idx').on(table.userId),
+  }),
+)
