@@ -135,7 +135,7 @@ Agent that:
 
 ## Tasks
 
-- [ ] Add xp_stories and xp_stories_runs tables to packages/db/src/schema.ts and generate migration
+- [x] Add xp_stories and xp_stories_runs tables to packages/db/src/schema.ts and generate migration
 - [ ] Create router in packages/api/src/routers/experiments/browser-agents/index.ts with CRUD and trigger operations
 - [ ] Create browser agent in packages/agents/src/agents/browser-agent.ts that uses browserbase tools
 - [ ] Create trigger task in apps/trigger/src/tasks/xp-browser-agent.ts that creates browser session and executes agent

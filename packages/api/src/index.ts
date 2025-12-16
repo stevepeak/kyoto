@@ -1,3 +1,4 @@
+import { xpBrowserAgentsRouter } from './routers/experiments/browser-agents'
 import { feedbackRouter } from './routers/feedback'
 import { orgRouter } from './routers/org'
 import { repoRouter } from './routers/repo'
@@ -22,6 +23,7 @@ export const appRouter = router({
   repo: repoRouter,
   feedback: feedbackRouter,
   trigger: triggerRouter,
+  xpBrowserAgents: xpBrowserAgentsRouter,
 })
 
 // Export type router type signature,
