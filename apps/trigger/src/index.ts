@@ -4,7 +4,7 @@ import '@trigger.dev/sdk'
 export {
   handleGithubWebhookTask,
   supportedEventTypes,
-  syncGithubInstallationTask,
   syncAllGithubInstallationsTask,
+  syncGithubInstallationTask,
 } from './tasks/github'
 export { helloWorldTask } from './tasks/hello-world'

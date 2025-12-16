@@ -4,7 +4,7 @@ package-lock.json
 CHANGELOG.md
 __nock-fixtures__
 **/*.gen.*
-
+migrations/**
 .trigger
 .next 
 .cache
