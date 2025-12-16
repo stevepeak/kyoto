@@ -2,6 +2,7 @@
 
 import { CronExpressionParser } from 'cron-parser'
 import {
+  ArrowLeft,
   CalendarClock,
   CheckCircle,
   Circle,
@@ -14,10 +15,10 @@ import {
   Webhook,
   XCircle,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import 'rrweb-player/dist/style.css'
 
 import { IntegrationsPanel } from '@/components/experiments/integrations-panel'
-import { SessionRecordingPlayer } from '@/components/session-recording-player'
 import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,12 +39,24 @@ type Story = {
   updatedAt: Date
 }
 
+type Observation = {
+  action: string
+  result: string
+  timestamp: string
+}
+
+type BrowserAgentOutput = {
+  observations: Observation[]
+  summary: string
+  success: boolean
+}
+
 type Run = {
   id: string
   storyId: string
   status: string
   sessionId: string | null
-  observations: unknown
+  observations: BrowserAgentOutput | null
   error: string | null
   createdAt: Date
   updatedAt: Date
@@ -65,9 +78,7 @@ export function BrowserAgentsPage() {
   const [editedCronSchedule, setEditedCronSchedule] = useState<string>('')
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [triggerHandle, setTriggerHandle] = useState<TriggerHandle | null>(null)
-  const [viewingRecordingRunId, setViewingRecordingRunId] = useState<
-    string | null
-  >(null)
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
 
   const storiesQuery = trpc.xpBrowserAgents.list.useQuery()
   const storyQuery = trpc.xpBrowserAgents.get.useQuery(
@@ -228,8 +239,11 @@ export function BrowserAgentsPage() {
   }, [handleSave])
 
   const stories = storiesQuery.data ?? []
-  const runs = storyQuery.data?.runs ?? []
+  const runs = (storyQuery.data?.runs ?? []) as Run[]
   const isRunning = triggerMutation.isPending || triggerHandle !== null
+  const selectedRun = selectedRunId
+    ? runs.find((r) => r.id === selectedRunId)
+    : null
 
   // Calculate next scheduled run from cron
   const nextScheduledRun = useMemo(() => {
@@ -388,49 +402,58 @@ export function BrowserAgentsPage() {
               </div>
             </div>
 
-            {/* Content area with editor and runs */}
+            {/* Content area with editor/run details and runs sidebar */}
             <div className="flex flex-1 overflow-hidden">
-              {/* Editor */}
+              {/* Main content - Editor or Run Details */}
               <div className="flex-1 overflow-auto p-6">
-                {/* Schedule Input */}
-                <div className="mb-4 rounded-lg border bg-muted/30 p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                    <Clock className="size-4" />
-                    Run Schedule
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={editedScheduleText}
-                      onChange={handleScheduleTextChange}
-                      onBlur={handleScheduleBlur}
-                      placeholder="e.g., every day at 5pm, every hour, every monday at 9am..."
-                      className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+                {selectedRun ? (
+                  <RunDetailsPanel
+                    run={selectedRun}
+                    onBack={() => setSelectedRunId(null)}
+                  />
+                ) : (
+                  <>
+                    {/* Schedule Input */}
+                    <div className="mb-4 rounded-lg border bg-muted/30 p-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                        <Clock className="size-4" />
+                        Run Schedule
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={editedScheduleText}
+                          onChange={handleScheduleTextChange}
+                          onBlur={handleScheduleBlur}
+                          placeholder="e.g., every day at 5pm, every hour, every monday at 9am..."
+                          className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+                        />
+                        {parseCronMutation.isPending && (
+                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+                      {editedCronSchedule && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Cron:{' '}
+                          <code className="rounded bg-muted px-1.5 py-0.5 font-mono">
+                            {editedCronSchedule}
+                          </code>
+                        </div>
+                      )}
+                      {parseCronMutation.error && (
+                        <div className="mt-2 text-xs text-destructive">
+                          {parseCronMutation.error.message}
+                        </div>
+                      )}
+                    </div>
+                    <Tiptap
+                      value={editedInstructions}
+                      onChange={handleInstructionsChange}
+                      className="min-h-[400px]"
+                      autoFocus
                     />
-                    {parseCronMutation.isPending && (
-                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                  {editedCronSchedule && (
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      Cron:{' '}
-                      <code className="rounded bg-muted px-1.5 py-0.5 font-mono">
-                        {editedCronSchedule}
-                      </code>
-                    </div>
-                  )}
-                  {parseCronMutation.error && (
-                    <div className="mt-2 text-xs text-destructive">
-                      {parseCronMutation.error.message}
-                    </div>
-                  )}
-                </div>
-                <Tiptap
-                  value={editedInstructions}
-                  onChange={handleInstructionsChange}
-                  className="min-h-[400px]"
-                  autoFocus
-                />
+                  </>
+                )}
               </div>
 
               {/* Runs sidebar */}
@@ -465,29 +488,30 @@ export function BrowserAgentsPage() {
                         No runs yet
                       </div>
                     ) : (
-                      runs.map((run: Run) => (
-                        <Card key={run.id} className="py-3">
+                      runs.map((run) => (
+                        <Card
+                          key={run.id}
+                          className={cn(
+                            'cursor-pointer py-3 transition-colors hover:bg-accent/50',
+                            selectedRunId === run.id && 'ring-2 ring-primary',
+                          )}
+                          onClick={() => setSelectedRunId(run.id)}
+                        >
                           <CardHeader className="px-3 py-0">
                             <CardTitle className="flex items-center gap-2 text-sm">
                               <RunStatusIcon status={run.status} />
                               <span className="capitalize">{run.status}</span>
+                              {run.sessionId && (
+                                <Video className="ml-auto size-3 text-muted-foreground" />
+                              )}
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="px-3 py-0">
                             <div className="text-xs text-muted-foreground">
                               {new Date(run.createdAt).toLocaleString()}
                             </div>
-                            {run.sessionId && (
-                              <button
-                                onClick={() => setViewingRecordingRunId(run.id)}
-                                className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                              >
-                                <Video className="size-3" />
-                                View Recording
-                              </button>
-                            )}
                             {run.error && (
-                              <div className="mt-2 text-xs text-destructive">
+                              <div className="mt-2 truncate text-xs text-destructive">
                                 {run.error}
                               </div>
                             )}
@@ -531,13 +555,201 @@ export function BrowserAgentsPage() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
 
-      {/* Recording Player Modal */}
-      {viewingRecordingRunId && (
-        <SessionRecordingPlayer
-          runId={viewingRecordingRunId}
-          onClose={() => setViewingRecordingRunId(null)}
-        />
+function RunDetailsPanel({ run, onBack }: { run: Run; onBack: () => void }) {
+  const trpc = useTRPC()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const playerRef = useRef<unknown>(null)
+  const [isPlayerReady, setIsPlayerReady] = useState(false)
+
+  const recordingQuery = trpc.xpBrowserAgents.getRecording.useQuery(
+    { runId: run.id },
+    { enabled: !!run.sessionId },
+  )
+
+  const initPlayer = useCallback(async () => {
+    if (
+      !containerRef.current ||
+      !recordingQuery.data?.events ||
+      playerRef.current
+    ) {
+      return
+    }
+
+    // Dynamic import to avoid SSR issues
+    const rrwebPlayer = await import('rrweb-player')
+
+    // Clear container
+    containerRef.current.innerHTML = ''
+
+    playerRef.current = new rrwebPlayer.default({
+      target: containerRef.current,
+      props: {
+        events: recordingQuery.data.events,
+        width: 800,
+        height: 450,
+        autoPlay: false,
+        showController: true,
+        speedOption: [0.5, 1, 2, 4],
+      },
+    })
+
+    setIsPlayerReady(true)
+  }, [recordingQuery.data?.events])
+
+  useEffect(() => {
+    void initPlayer()
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current = null
+      }
+    }
+  }, [initPlayer])
+
+  // Reset player when run changes
+  useEffect(() => {
+    playerRef.current = null
+    setIsPlayerReady(false)
+  }, [run.id])
+
+  const observations = run.observations
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+          Back to Editor
+        </Button>
+        <div className="flex items-center gap-2">
+          <RunStatusIcon status={run.status} />
+          <span className="font-medium capitalize">{run.status}</span>
+        </div>
+        <span className="text-sm text-muted-foreground">
+          {new Date(run.createdAt).toLocaleString()}
+        </span>
+      </div>
+
+      {/* Summary */}
+      {observations && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              {observations.success ? (
+                <CheckCircle className="size-5 text-green-500" />
+              ) : (
+                <XCircle className="size-5 text-destructive" />
+              )}
+              Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {observations.summary}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error */}
+      {run.error && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base text-destructive">
+              <XCircle className="size-5" />
+              Error
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-destructive">{run.error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Session Recording */}
+      {run.sessionId && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Video className="size-5" />
+              Session Recording
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center rounded-lg bg-muted/50">
+              {recordingQuery.isLoading ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
+                  <Loader2 className="size-8 animate-spin" />
+                  <span>Loading recording...</span>
+                </div>
+              ) : recordingQuery.error ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-destructive">
+                  <span>Failed to load recording</span>
+                  <span className="text-sm text-muted-foreground">
+                    {recordingQuery.error.message}
+                  </span>
+                </div>
+              ) : !isPlayerReady && recordingQuery.data ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
+                  <Loader2 className="size-8 animate-spin" />
+                  <span>Initializing player...</span>
+                </div>
+              ) : null}
+              <div
+                ref={containerRef}
+                className={cn(isPlayerReady ? 'block' : 'hidden')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Agent Observations */}
+      {observations && observations.observations.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Agent Activity Log</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {observations.observations.map((obs, index) => (
+                <div key={index} className="rounded-lg border bg-muted/30 p-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-1">
+                      <div className="font-medium text-sm">{obs.action}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {obs.result}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(obs.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No observations yet */}
+      {!observations && !run.error && run.status === 'running' && (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="size-8 animate-spin mb-4" />
+          <p>Agent is running...</p>
+        </div>
+      )}
+
+      {!observations && !run.error && run.status === 'pending' && (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Circle className="size-8 mb-4" />
+          <p>Waiting to start...</p>
+        </div>
       )}
     </div>
   )
