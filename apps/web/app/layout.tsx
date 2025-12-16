@@ -33,7 +33,7 @@ const cormorantGaramond = localFont({
 
 export const metadata: Metadata = {
   title: 'Kyoto',
-  description: 'Kyoto - AI-powered story management',
+  description: 'Kyoto - Vibe coding tools for the developers of tomorrow.',
 }
 
 export default function RootLayout({
