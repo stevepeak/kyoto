@@ -32,8 +32,8 @@ const cormorantGaramond = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Web2 - Next.js App',
-  description: 'Simple Next.js app with Tailwind and shadcn',
+  title: 'Kyoto',
+  description: 'Kyoto - AI-powered story management',
 }
 
 export default function RootLayout({
