@@ -62,7 +62,7 @@ export function BrowserAgentsPage() {
 
   const createMutation = trpc.xpBrowserAgents.create.useMutation({
     onSuccess: (newStory) => {
-      storiesQuery.refetch()
+      void storiesQuery.refetch()
       setSelectedStoryId(newStory.id)
       setEditedName(newStory.name)
       setEditedInstructions(newStory.instructions)
@@ -72,15 +72,15 @@ export function BrowserAgentsPage() {
 
   const updateMutation = trpc.xpBrowserAgents.update.useMutation({
     onSuccess: () => {
-      storiesQuery.refetch()
-      storyQuery.refetch()
+      void storiesQuery.refetch()
+      void storyQuery.refetch()
       setHasUnsavedChanges(false)
     },
   })
 
   const deleteMutation = trpc.xpBrowserAgents.delete.useMutation({
     onSuccess: () => {
-      storiesQuery.refetch()
+      void storiesQuery.refetch()
       setSelectedStoryId(null)
       setEditedName('')
       setEditedInstructions('')
@@ -107,11 +107,11 @@ export function BrowserAgentsPage() {
         `Agent failed: ${error instanceof Error ? error.message : String(error)}`,
     },
     onComplete: () => {
-      storyQuery.refetch()
+      void storyQuery.refetch()
       setTriggerHandle(null)
     },
     onError: () => {
-      storyQuery.refetch()
+      void storyQuery.refetch()
       setTriggerHandle(null)
     },
   })

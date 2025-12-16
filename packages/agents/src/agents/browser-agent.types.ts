@@ -1,6 +1,6 @@
 import { type BrowserbaseToolsContext } from '@app/browserbase'
-import { type LanguageModel } from 'ai'
 import { type Tracer } from '@opentelemetry/api'
+import { type LanguageModel } from 'ai'
 
 export type AnalyzeBrowserAgentOptions = {
   /** The instructions describing what the browser agent should do */

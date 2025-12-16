@@ -20,7 +20,7 @@
   },
   "description": "Trigger.dev workflows for the application",
   "devDependencies": {
-    "trigger.dev": "^4.3.0",
+    "trigger.dev": "catalog:",
     "@babel/preset-typescript": "^7.28.5",
     "@kyoto/eslint-config": "workspace:*",
     "@sentry/esbuild-plugin": "^4.6.0",

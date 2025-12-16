@@ -20,7 +20,6 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "@opentelemetry/api": "catalog:",
     "zod": "catalog:"
   }
 }

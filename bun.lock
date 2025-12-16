@@ -104,7 +104,7 @@
         "@sentry/esbuild-plugin": "^4.6.0",
         "@trigger.dev/build": "catalog:",
         "@types/node": "catalog:",
-        "trigger.dev": "^4.3.0",
+        "trigger.dev": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -241,21 +241,6 @@
         "typescript": "catalog:",
       },
     },
-    "packages/cache": {
-      "name": "@app/cache",
-      "version": "0.0.1",
-      "dependencies": {
-        "@app/db": "workspace:*",
-        "@app/schemas": "workspace:*",
-        "@daytonaio/sdk": "catalog:",
-      },
-      "devDependencies": {
-        "@kyoto/eslint-config": "workspace:*",
-        "@types/node": "catalog:",
-        "tsconfig": "workspace:*",
-        "typescript": "catalog:",
-      },
-    },
     "packages/config": {
       "name": "@app/config",
       "version": "0.0.1",
@@ -363,7 +348,6 @@
       "name": "@app/schemas",
       "version": "0.0.1",
       "dependencies": {
-        "@opentelemetry/api": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -515,8 +499,6 @@
     "@app/api": ["@app/api@workspace:packages/api"],
 
     "@app/browserbase": ["@app/browserbase@workspace:packages/browserbase"],
-
-    "@app/cache": ["@app/cache@workspace:packages/cache"],
 
     "@app/config": ["@app/config@workspace:packages/config"],
 

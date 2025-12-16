@@ -45,8 +45,8 @@ export {
   libraryUsageOutputSchema,
 } from './agents/library-usage'
 export {
-  runBrowserAgent,
-  browserAgentOutputSchema,
   type BrowserAgentOutput,
+  browserAgentOutputSchema,
+  runBrowserAgent,
 } from './agents/browser-agent'
 export { type AnalyzeBrowserAgentOptions } from './agents/browser-agent.types'
