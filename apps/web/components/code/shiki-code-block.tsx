@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react'
 import { codeToHtml } from 'shiki'
 
+const escapeHtml = (unsafe: string) =>
+  unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+
 interface ShikiCodeBlockProps {
   code: string
   language: string
@@ -30,7 +38,7 @@ export function ShikiCodeBlock({
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to highlight code:', error)
-        setHtml(`<pre><code>${code}</code></pre>`)
+        setHtml(`<pre><code>${escapeHtml(code)}</code></pre>`)
       } finally {
         setIsLoading(false)
       }
