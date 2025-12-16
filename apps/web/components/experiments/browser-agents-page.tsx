@@ -1,6 +1,8 @@
 'use client'
 
+import { CronExpressionParser } from 'cron-parser'
 import {
+  CalendarClock,
   CheckCircle,
   Circle,
   Clock,
@@ -11,7 +13,7 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
@@ -221,6 +223,17 @@ export function BrowserAgentsPage() {
   const runs = storyQuery.data?.runs ?? []
   const isRunning = triggerMutation.isPending || triggerHandle !== null
 
+  // Calculate next scheduled run from cron
+  const nextScheduledRun = useMemo(() => {
+    if (!editedCronSchedule) return null
+    try {
+      const interval = CronExpressionParser.parse(editedCronSchedule)
+      return interval.next().toDate()
+    } catch {
+      return null
+    }
+  }, [editedCronSchedule])
+
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       {/* Left sidebar - Story list */}
@@ -387,43 +400,63 @@ export function BrowserAgentsPage() {
                   <div className="flex items-center justify-center py-8">
                     <Spinner />
                   </div>
-                ) : runs.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground">
-                    No runs yet
-                  </div>
                 ) : (
                   <div className="space-y-3">
-                    {runs.map((run: Run) => (
-                      <Card key={run.id} className="py-3">
+                    {/* Upcoming scheduled run */}
+                    {nextScheduledRun && (
+                      <Card className="border-dashed border-primary/50 bg-primary/5 py-3">
                         <CardHeader className="px-3 py-0">
                           <CardTitle className="flex items-center gap-2 text-sm">
-                            <RunStatusIcon status={run.status} />
-                            <span className="capitalize">{run.status}</span>
+                            <CalendarClock className="size-4 text-primary" />
+                            <span>Scheduled</span>
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="px-3 py-0">
                           <div className="text-xs text-muted-foreground">
-                            {new Date(run.createdAt).toLocaleString()}
+                            {nextScheduledRun.toLocaleString()}
                           </div>
-                          {run.sessionRecordingUrl && (
-                            <a
-                              href={run.sessionRecordingUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                            >
-                              <ExternalLink className="size-3" />
-                              View Recording
-                            </a>
-                          )}
-                          {run.error && (
-                            <div className="mt-2 text-xs text-destructive">
-                              {run.error}
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
-                    ))}
+                    )}
+
+                    {/* Past runs */}
+                    {runs.length === 0 && !nextScheduledRun ? (
+                      <div className="py-8 text-center text-sm text-muted-foreground">
+                        No runs yet
+                      </div>
+                    ) : (
+                      runs.map((run: Run) => (
+                        <Card key={run.id} className="py-3">
+                          <CardHeader className="px-3 py-0">
+                            <CardTitle className="flex items-center gap-2 text-sm">
+                              <RunStatusIcon status={run.status} />
+                              <span className="capitalize">{run.status}</span>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="px-3 py-0">
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(run.createdAt).toLocaleString()}
+                            </div>
+                            {run.sessionRecordingUrl && (
+                              <a
+                                href={run.sessionRecordingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                              >
+                                <ExternalLink className="size-3" />
+                                View Recording
+                              </a>
+                            )}
+                            {run.error && (
+                              <div className="mt-2 text-xs text-destructive">
+                                {run.error}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
                   </div>
                 )}
               </div>

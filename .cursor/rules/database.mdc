@@ -1,8 +1,0 @@
----
-description:
-globs: packages/db/**
-alwaysApply: true
----
-
-ONLY edit `packages/db/src/schema.ts`
-DO NOT create files in `packages/db/migrations`
