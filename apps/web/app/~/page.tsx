@@ -1,26 +1,21 @@
 import { type Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { OrganizationsListPage } from '@/components/pages/organizations-list-page'
+import { DashboardPage } from '@/components/pages/dashboard-page'
 import { getSession } from '@/lib/auth-server'
-import { getUserOrganizations } from '@/lib/memberships'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Teams',
-  description: 'Teams',
+  title: 'Dashboard',
+  description: 'Kyoto Dashboard',
 }
 
-export default async function OrganizationsPage() {
+export default async function HomePage() {
   const session = await getSession()
   if (!session?.user?.id) {
     redirect('/login?redirect=/~')
   }
 
-  const organizations = await getUserOrganizations({
-    userId: session.user.id,
-  })
-
-  return <OrganizationsListPage organizations={organizations} />
+  return <DashboardPage />
 }
