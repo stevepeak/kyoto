@@ -2,8 +2,8 @@ import { getConfig } from '@app/config'
 import { createDb, eq, schema } from '@app/db'
 import { logger, schedules, tasks } from '@trigger.dev/sdk'
 
-export const xpBrowserAgentScheduledTask = schedules.task({
-  id: 'xp-browser-agent-scheduled',
+export const browserAgentScheduledTask = schedules.task({
+  id: 'browser-agent-scheduled',
   run: async (payload) => {
     const storyId = payload.externalId
 
@@ -21,8 +21,8 @@ export const xpBrowserAgentScheduledTask = schedules.task({
     const db = createDb({ databaseUrl: config.DATABASE_URL })
 
     // Fetch the story
-    const story = await db.query.xpStories.findFirst({
-      where: eq(schema.xpStories.id, storyId),
+    const story = await db.query.stories.findFirst({
+      where: eq(schema.stories.id, storyId),
     })
 
     if (!story) {
@@ -32,7 +32,7 @@ export const xpBrowserAgentScheduledTask = schedules.task({
 
     // Create a pending run record
     const [run] = await db
-      .insert(schema.xpStoriesRuns)
+      .insert(schema.storyRuns)
       .values({
         storyId: story.id,
         userId: story.userId,
@@ -42,8 +42,10 @@ export const xpBrowserAgentScheduledTask = schedules.task({
 
     logger.log('Created run record', { runId: run.id, storyId: story.id })
 
-    // Trigger the existing browser agent task
-    const handle = await tasks.trigger('xp-browser-agent', {
+    // Trigger the appropriate task based on test type
+    const taskId = story.testType === 'vm' ? 'vm-agent' : 'browser-agent'
+
+    const handle = await tasks.trigger(taskId, {
       runId: run.id,
       storyId: story.id,
       instructions: story.instructions,

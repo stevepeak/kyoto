@@ -239,9 +239,11 @@ export const cliAuthState = pgTable('cli_auth_state', {
     .defaultNow(),
 })
 
-// Experimental tables
-export const xpStories = pgTable(
-  'xp_stories',
+// Story testing tables
+export const storyTestTypeEnum = pgEnum('story_test_type', ['browser', 'vm'])
+
+export const stories = pgTable(
+  'stories',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -255,17 +257,18 @@ export const xpStories = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     instructions: text('instructions').notNull(),
+    testType: storyTestTypeEnum('test_type').notNull().default('browser'),
     scheduleText: text('schedule_text'),
     cronSchedule: text('cron_schedule'),
     triggerScheduleId: text('trigger_schedule_id'),
   },
   (table) => ({
-    userIdIdx: index('xp_stories_user_id_idx').on(table.userId),
+    userIdIdx: index('stories_user_id_idx').on(table.userId),
   }),
 )
 
-export const xpStoriesRuns = pgTable(
-  'xp_stories_runs',
+export const storyRuns = pgTable(
+  'story_runs',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -276,7 +279,7 @@ export const xpStoriesRuns = pgTable(
       .defaultNow(),
     storyId: uuid('story_id')
       .notNull()
-      .references(() => xpStories.id, { onDelete: 'cascade' }),
+      .references(() => stories.id, { onDelete: 'cascade' }),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -289,15 +292,15 @@ export const xpStoriesRuns = pgTable(
     triggerPublicAccessToken: text('trigger_public_access_token'),
   },
   (table) => ({
-    storyIdIdx: index('xp_stories_runs_story_id_idx').on(table.storyId),
-    userIdIdx: index('xp_stories_runs_user_id_idx').on(table.userId),
+    storyIdIdx: index('story_runs_story_id_idx').on(table.storyId),
+    userIdIdx: index('story_runs_user_id_idx').on(table.userId),
   }),
 )
 
 export const integrationTypeEnum = pgEnum('integration_type', ['webhook'])
 
-export const xpIntegrations = pgTable(
-  'xp_integrations',
+export const integrations = pgTable(
+  'integrations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -315,6 +318,6 @@ export const xpIntegrations = pgTable(
     enabled: boolean('enabled').notNull().default(true),
   },
   (table) => ({
-    userIdIdx: index('xp_integrations_user_id_idx').on(table.userId),
+    userIdIdx: index('integrations_user_id_idx').on(table.userId),
   }),
 )

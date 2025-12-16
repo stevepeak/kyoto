@@ -22,9 +22,9 @@ flowchart TD
 
 ## Database Schema
 
-Create two new tables with `xp_` prefix in `packages/db/src/schema.ts`:
+Create two tables in `packages/db/src/schema.ts`:
 
-### `xp_stories` - Stores experimental browser agent stories
+### `stories` - Stores browser agent stories
 
 | Column         | Type      | Description                       |
 | -------------- | --------- | --------------------------------- |
@@ -35,12 +35,12 @@ Create two new tables with `xp_` prefix in `packages/db/src/schema.ts`:
 | `created_at`   | timestamp | Created timestamp                 |
 | `updated_at`   | timestamp | Updated timestamp                 |
 
-### `xp_stories_runs` - Stores execution runs
+### `story_runs` - Stores execution runs
 
 | Column                  | Type      | Description                                 |
 | ----------------------- | --------- | ------------------------------------------- |
 | `id`                    | uuid      | Primary key                                 |
-| `story_id`              | uuid      | Foreign key to xp_stories                   |
+| `story_id`              | uuid      | Foreign key to stories                      |
 | `user_id`               | text      | Foreign key to user                         |
 | `status`                | text      | 'pending', 'running', 'completed', 'failed' |
 | `session_id`            | text      | Browserbase session ID                      |
@@ -53,10 +53,10 @@ Create two new tables with `xp_` prefix in `packages/db/src/schema.ts`:
 ## File Structure
 
 ```
-packages/db/src/schema.ts                                    # Add xp_ tables
+packages/db/src/schema.ts                                    # Add stories tables
 packages/api/src/routers/experiments/browser-agents/index.ts # New router
 packages/agents/src/agents/browser-agent.ts                  # New browser agent
-apps/trigger/src/tasks/xp-browser-agent.ts                   # Trigger task
+apps/trigger/src/tasks/story-testing/browser.ts              # Trigger task
 apps/web/app/experimental/browser-agents/page.tsx            # Page route
 apps/web/components/experiments/browser-agents-page.tsx      # Main component
 ```
@@ -65,15 +65,15 @@ apps/web/components/experiments/browser-agents-page.tsx      # Main component
 
 ### 1. Database Schema (`packages/db/src/schema.ts`)
 
-- Add `xp_stories` table definition
-- Add `xp_stories_runs` table definition
+- Add `stories` table definition
+- Add `story_runs` table definition
 - Generate migration using `bun run --cwd packages/db db:generate`
 
 ### 2. API Routes (`packages/api/src/routers/experiments/browser-agents/index.ts`)
 
 Create router with:
 
-- `list` - Get all xp_stories for user
+- `list` - Get all stories for user
 - `get` - Get single story with runs
 - `create` - Create new story
 - `update` - Update story instructions
@@ -105,7 +105,7 @@ Features:
 - Trigger story run
 - Show run history for selected story with session recordings
 
-### 5. Trigger Task (`apps/trigger/src/tasks/xp-browser-agent.ts`)
+### 5. Trigger Task (`apps/trigger/src/tasks/story-testing/browser.ts`)
 
 Task that:
 
@@ -135,9 +135,9 @@ Agent that:
 
 ## Tasks
 
-- [x] Add xp_stories and xp_stories_runs tables to packages/db/src/schema.ts and generate migration
+- [x] Add stories and story_runs tables to packages/db/src/schema.ts and generate migration
 - [x] Create router in packages/api/src/routers/experiments/browser-agents/index.ts with CRUD and trigger operations
 - [x] Create browser agent in packages/agents/src/agents/browser-agent.ts that uses browserbase tools
-- [x] Create trigger task in apps/trigger/src/tasks/xp-browser-agent.ts that creates browser session and executes agent
+- [x] Create trigger task in apps/trigger/src/tasks/story-testing/browser.ts that creates browser session and executes agent
 - [x] Create page route at apps/web/app/experimental/browser-agents/page.tsx with authentication
 - [x] Create browser-agents-page component in apps/web/components/experiments/browser-agents-page.tsx

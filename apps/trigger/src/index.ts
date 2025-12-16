@@ -8,5 +8,6 @@ export {
   syncGithubInstallationTask,
 } from './tasks/github'
 export { helloWorldTask } from './tasks/hello-world'
-export { xpBrowserAgentTask } from './tasks/xp-browser-agent'
-export { xpBrowserAgentScheduledTask } from './tasks/xp-browser-agent-scheduled'
+export { browserAgentTask } from './tasks/story-testing/browser'
+export { browserAgentScheduledTask } from './tasks/story-testing/cron'
+export { vmAgentTask } from './tasks/story-testing/vm'

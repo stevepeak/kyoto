@@ -26,6 +26,8 @@ export {
   type BrowserAgentStory,
   browserAgentStorySchema,
   type RunDisplayStatus,
+  type StoryTestType,
+  storyTestTypeSchema,
   type TriggerHandle,
   triggerHandleSchema,
 } from './browser-agent'

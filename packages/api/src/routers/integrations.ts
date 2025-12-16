@@ -9,9 +9,9 @@ export const integrationsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const integrations = await ctx.db
       .select()
-      .from(schema.xpIntegrations)
-      .where(eq(schema.xpIntegrations.userId, ctx.user.id))
-      .orderBy(desc(schema.xpIntegrations.createdAt))
+      .from(schema.integrations)
+      .where(eq(schema.integrations.userId, ctx.user.id))
+      .orderBy(desc(schema.integrations.createdAt))
 
     return integrations
   }),
@@ -19,7 +19,7 @@ export const integrationsRouter = router({
   get: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const integration = await ctx.db.query.xpIntegrations.findFirst({
+      const integration = await ctx.db.query.integrations.findFirst({
         where: (integrations, { and, eq }) =>
           and(
             eq(integrations.id, input.id),
@@ -47,7 +47,7 @@ export const integrationsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const [integration] = await ctx.db
-        .insert(schema.xpIntegrations)
+        .insert(schema.integrations)
         .values({
           userId: ctx.user.id,
           type: input.type,
@@ -69,7 +69,7 @@ export const integrationsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.db.query.xpIntegrations.findFirst({
+      const existing = await ctx.db.query.integrations.findFirst({
         where: (integrations, { and, eq }) =>
           and(
             eq(integrations.id, input.id),
@@ -85,14 +85,14 @@ export const integrationsRouter = router({
       }
 
       const [updated] = await ctx.db
-        .update(schema.xpIntegrations)
+        .update(schema.integrations)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
           ...(input.config !== undefined ? { config: input.config } : {}),
           ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
           updatedAt: new Date(),
         })
-        .where(eq(schema.xpIntegrations.id, input.id))
+        .where(eq(schema.integrations.id, input.id))
         .returning()
 
       return updated
@@ -101,7 +101,7 @@ export const integrationsRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.db.query.xpIntegrations.findFirst({
+      const existing = await ctx.db.query.integrations.findFirst({
         where: (integrations, { and, eq }) =>
           and(
             eq(integrations.id, input.id),
@@ -117,8 +117,8 @@ export const integrationsRouter = router({
       }
 
       await ctx.db
-        .delete(schema.xpIntegrations)
-        .where(eq(schema.xpIntegrations.id, input.id))
+        .delete(schema.integrations)
+        .where(eq(schema.integrations.id, input.id))
 
       return { success: true }
     }),
@@ -126,7 +126,7 @@ export const integrationsRouter = router({
   test: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const integration = await ctx.db.query.xpIntegrations.findFirst({
+      const integration = await ctx.db.query.integrations.findFirst({
         where: (integrations, { and, eq }) =>
           and(
             eq(integrations.id, input.id),

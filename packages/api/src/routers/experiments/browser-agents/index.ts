@@ -20,13 +20,13 @@ function ensureTriggerConfigured(secretKey: string) {
   }
 }
 
-export const xpBrowserAgentsRouter = router({
+export const browserAgentsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const stories = await ctx.db
       .select()
-      .from(schema.xpStories)
-      .where(eq(schema.xpStories.userId, ctx.user.id))
-      .orderBy(desc(schema.xpStories.updatedAt))
+      .from(schema.stories)
+      .where(eq(schema.stories.userId, ctx.user.id))
+      .orderBy(desc(schema.stories.updatedAt))
 
     return stories
   }),
@@ -34,7 +34,7 @@ export const xpBrowserAgentsRouter = router({
   get: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const story = await ctx.db.query.xpStories.findFirst({
+      const story = await ctx.db.query.stories.findFirst({
         where: (stories, { and, eq }) =>
           and(eq(stories.id, input.id), eq(stories.userId, ctx.user.id)),
       })
@@ -45,9 +45,9 @@ export const xpBrowserAgentsRouter = router({
 
       const runs = await ctx.db
         .select()
-        .from(schema.xpStoriesRuns)
-        .where(eq(schema.xpStoriesRuns.storyId, story.id))
-        .orderBy(desc(schema.xpStoriesRuns.createdAt))
+        .from(schema.storyRuns)
+        .where(eq(schema.storyRuns.storyId, story.id))
+        .orderBy(desc(schema.storyRuns.createdAt))
         .limit(20)
 
       // Find active run with trigger handle for reconnection
@@ -78,15 +78,17 @@ export const xpBrowserAgentsRouter = router({
       z.object({
         name: z.string().min(1).max(255),
         instructions: z.string().min(1),
+        testType: z.enum(['browser', 'vm']),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const [story] = await ctx.db
-        .insert(schema.xpStories)
+        .insert(schema.stories)
         .values({
           userId: ctx.user.id,
           name: input.name,
           instructions: input.instructions,
+          testType: input.testType,
         })
         .returning()
 
@@ -113,7 +115,7 @@ export const xpBrowserAgentsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.db.query.xpStories.findFirst({
+      const existing = await ctx.db.query.stories.findFirst({
         where: (stories, { and, eq }) =>
           and(eq(stories.id, input.id), eq(stories.userId, ctx.user.id)),
       })
@@ -138,7 +140,7 @@ export const xpBrowserAgentsRouter = router({
         if (input.cronSchedule) {
           // Create or update schedule
           const createdSchedule = await schedules.create({
-            task: 'xp-browser-agent-scheduled',
+            task: 'browser-agent-scheduled',
             cron: input.cronSchedule,
             timezone: ctx.user.timeZone ?? 'UTC',
             externalId: input.id,
@@ -153,7 +155,7 @@ export const xpBrowserAgentsRouter = router({
       }
 
       const [updated] = await ctx.db
-        .update(schema.xpStories)
+        .update(schema.stories)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
           ...(input.instructions !== undefined
@@ -168,7 +170,7 @@ export const xpBrowserAgentsRouter = router({
           triggerScheduleId,
           updatedAt: new Date(),
         })
-        .where(eq(schema.xpStories.id, input.id))
+        .where(eq(schema.stories.id, input.id))
         .returning()
 
       capturePostHogEvent(
@@ -230,7 +232,7 @@ export const xpBrowserAgentsRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.db.query.xpStories.findFirst({
+      const existing = await ctx.db.query.stories.findFirst({
         where: (stories, { and, eq }) =>
           and(eq(stories.id, input.id), eq(stories.userId, ctx.user.id)),
       })
@@ -245,9 +247,7 @@ export const xpBrowserAgentsRouter = router({
         await schedules.del(existing.triggerScheduleId)
       }
 
-      await ctx.db
-        .delete(schema.xpStories)
-        .where(eq(schema.xpStories.id, input.id))
+      await ctx.db.delete(schema.stories).where(eq(schema.stories.id, input.id))
 
       return { success: true }
     }),
@@ -257,7 +257,7 @@ export const xpBrowserAgentsRouter = router({
     .mutation(async ({ ctx, input }) => {
       ensureTriggerConfigured(ctx.env.TRIGGER_SECRET_KEY)
 
-      const story = await ctx.db.query.xpStories.findFirst({
+      const story = await ctx.db.query.stories.findFirst({
         where: (stories, { and, eq }) =>
           and(eq(stories.id, input.storyId), eq(stories.userId, ctx.user.id)),
       })
@@ -267,7 +267,7 @@ export const xpBrowserAgentsRouter = router({
       }
 
       // Check for existing active run (only 1 run per story in parallel)
-      const activeRun = await ctx.db.query.xpStoriesRuns.findFirst({
+      const activeRun = await ctx.db.query.storyRuns.findFirst({
         where: (runs, { and, eq, inArray }) =>
           and(
             eq(runs.storyId, input.storyId),
@@ -284,7 +284,7 @@ export const xpBrowserAgentsRouter = router({
 
       // Create a pending run
       const [run] = await ctx.db
-        .insert(schema.xpStoriesRuns)
+        .insert(schema.storyRuns)
         .values({
           storyId: story.id,
           userId: ctx.user.id,
@@ -292,8 +292,10 @@ export const xpBrowserAgentsRouter = router({
         })
         .returning()
 
-      // Trigger the background task
-      const handle = await tasks.trigger('xp-browser-agent', {
+      // Trigger the appropriate task based on test type
+      const taskId = story.testType === 'vm' ? 'vm-agent' : 'browser-agent'
+
+      const handle = await tasks.trigger(taskId, {
         runId: run.id,
         storyId: story.id,
         instructions: story.instructions,
@@ -301,13 +303,13 @@ export const xpBrowserAgentsRouter = router({
 
       // Store trigger handle in the run record for reconnection on page reload
       const [updatedRun] = await ctx.db
-        .update(schema.xpStoriesRuns)
+        .update(schema.storyRuns)
         .set({
           triggerRunId: handle.id,
           triggerPublicAccessToken: handle.publicAccessToken,
           updatedAt: new Date(),
         })
-        .where(eq(schema.xpStoriesRuns.id, run.id))
+        .where(eq(schema.storyRuns.id, run.id))
         .returning()
 
       capturePostHogEvent(
@@ -332,7 +334,7 @@ export const xpBrowserAgentsRouter = router({
   getRun: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const run = await ctx.db.query.xpStoriesRuns.findFirst({
+      const run = await ctx.db.query.storyRuns.findFirst({
         where: (runs, { and, eq }) =>
           and(eq(runs.id, input.id), eq(runs.userId, ctx.user.id)),
       })
@@ -348,7 +350,7 @@ export const xpBrowserAgentsRouter = router({
     .input(z.object({ storyId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       // Verify user owns the story
-      const story = await ctx.db.query.xpStories.findFirst({
+      const story = await ctx.db.query.stories.findFirst({
         where: (stories, { and, eq }) =>
           and(eq(stories.id, input.storyId), eq(stories.userId, ctx.user.id)),
       })
@@ -359,9 +361,9 @@ export const xpBrowserAgentsRouter = router({
 
       const runs = await ctx.db
         .select()
-        .from(schema.xpStoriesRuns)
-        .where(eq(schema.xpStoriesRuns.storyId, input.storyId))
-        .orderBy(desc(schema.xpStoriesRuns.createdAt))
+        .from(schema.storyRuns)
+        .where(eq(schema.storyRuns.storyId, input.storyId))
+        .orderBy(desc(schema.storyRuns.createdAt))
 
       return runs
     }),
@@ -370,7 +372,7 @@ export const xpBrowserAgentsRouter = router({
     .input(z.object({ runId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       // Verify user owns the run
-      const run = await ctx.db.query.xpStoriesRuns.findFirst({
+      const run = await ctx.db.query.storyRuns.findFirst({
         where: (runs, { and, eq }) =>
           and(eq(runs.id, input.runId), eq(runs.userId, ctx.user.id)),
       })

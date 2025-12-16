@@ -4,6 +4,7 @@ import {
   type ActiveRun,
   type BrowserAgentRun,
   type BrowserAgentStory,
+  type StoryTestType,
   type TriggerHandle,
 } from '@app/schemas'
 import { CronExpressionParser } from 'cron-parser'
@@ -38,14 +39,14 @@ export function useBrowserAgentsPage() {
   const [triggerHandle, setTriggerHandle] = useState<TriggerHandle | null>(null)
 
   // Queries
-  const storiesQuery = trpc.xpBrowserAgents.list.useQuery()
-  const storyQuery = trpc.xpBrowserAgents.get.useQuery(
+  const storiesQuery = trpc.browserAgents.list.useQuery()
+  const storyQuery = trpc.browserAgents.get.useQuery(
     { id: selectedStoryId ?? '' },
     { enabled: !!selectedStoryId },
   )
 
   // Mutations
-  const createMutation = trpc.xpBrowserAgents.create.useMutation({
+  const createMutation = trpc.browserAgents.create.useMutation({
     onSuccess: (newStory) => {
       void storiesQuery.refetch()
       setSelectedStoryId(newStory.id)
@@ -56,14 +57,14 @@ export function useBrowserAgentsPage() {
     },
   })
 
-  const updateMutation = trpc.xpBrowserAgents.update.useMutation({
+  const updateMutation = trpc.browserAgents.update.useMutation({
     onSuccess: () => {
       void storiesQuery.refetch()
       void storyQuery.refetch()
     },
   })
 
-  const deleteMutation = trpc.xpBrowserAgents.delete.useMutation({
+  const deleteMutation = trpc.browserAgents.delete.useMutation({
     onSuccess: () => {
       void storiesQuery.refetch()
       setSelectedStoryId(null)
@@ -74,7 +75,7 @@ export function useBrowserAgentsPage() {
     },
   })
 
-  const triggerMutation = trpc.xpBrowserAgents.trigger.useMutation({
+  const triggerMutation = trpc.browserAgents.trigger.useMutation({
     onSuccess: (data) => {
       setTriggerHandle({
         runId: data.triggerHandle.id,
@@ -84,7 +85,7 @@ export function useBrowserAgentsPage() {
     },
   })
 
-  const parseCronMutation = trpc.xpBrowserAgents.parseCron.useMutation({
+  const parseCronMutation = trpc.browserAgents.parseCron.useMutation({
     onSuccess: (data) => {
       setEditedCronSchedule(data.cronSchedule)
     },
@@ -133,13 +134,20 @@ export function useBrowserAgentsPage() {
   }, [activeRun, triggerHandle])
 
   // Handlers
-  const handleCreateStory = useCallback(() => {
-    createMutation.mutate({
-      name: 'New Story',
-      instructions:
-        '# Browser Agent Instructions\n\nDescribe what the agent should do...',
-    })
-  }, [createMutation])
+  const handleCreateStory = useCallback(
+    (testType: StoryTestType) => {
+      const defaultInstructions =
+        testType === 'browser'
+          ? '# Browser Agent Instructions\n\nDescribe what the agent should do...'
+          : '# VM Agent Instructions\n\nDescribe the CLI/API/SDK test...'
+      createMutation.mutate({
+        name: 'New Story',
+        instructions: defaultInstructions,
+        testType,
+      })
+    },
+    [createMutation],
+  )
 
   const handleSave = useCallback(() => {
     if (!selectedStoryId) return

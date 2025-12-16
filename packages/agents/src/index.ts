@@ -50,3 +50,9 @@ export {
   runBrowserAgent,
 } from './agents/browser-agent'
 export { type AnalyzeBrowserAgentOptions } from './agents/browser-agent.types'
+export {
+  type AnalyzeVmAgentOptions,
+  type VmAgentOutput,
+  runVmAgent,
+  vmAgentOutputSchema,
+} from './agents/vm-agent'

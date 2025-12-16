@@ -26,10 +26,15 @@ export type BrowserAgentOutput = z.infer<typeof browserAgentOutputSchema>
 // Story Types
 // ============================================================================
 
+export const storyTestTypeSchema = z.enum(['browser', 'vm'])
+
+export type StoryTestType = z.infer<typeof storyTestTypeSchema>
+
 export const browserAgentStorySchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   instructions: z.string(),
+  testType: storyTestTypeSchema,
   scheduleText: z.string().nullable(),
   cronSchedule: z.string().nullable(),
   createdAt: z.coerce.date(),

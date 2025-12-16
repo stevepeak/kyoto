@@ -19,7 +19,7 @@ export function useSessionRecordingPlayer({
   const playerRef = useRef<unknown>(null)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
 
-  const recordingQuery = trpc.xpBrowserAgents.getRecording.useQuery(
+  const recordingQuery = trpc.browserAgents.getRecording.useQuery(
     { runId },
     { enabled: !!sessionId },
   )

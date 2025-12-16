@@ -16,12 +16,12 @@ export async function sendWebhooks(args: SendWebhooksArgs): Promise<void> {
   // Fetch all enabled webhook integrations for the user
   const integrations = await db
     .select()
-    .from(schema.xpIntegrations)
+    .from(schema.integrations)
     .where(
       and(
-        eq(schema.xpIntegrations.userId, userId),
-        eq(schema.xpIntegrations.type, 'webhook'),
-        eq(schema.xpIntegrations.enabled, true),
+        eq(schema.integrations.userId, userId),
+        eq(schema.integrations.type, 'webhook'),
+        eq(schema.integrations.enabled, true),
       ),
     )
 

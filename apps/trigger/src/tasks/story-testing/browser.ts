@@ -7,15 +7,15 @@ import { Stagehand } from '@browserbasehq/stagehand'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { logger, streams, task } from '@trigger.dev/sdk'
 
-import { sendWebhooks } from '../helpers/send-webhooks'
+import { sendWebhooks } from '../../helpers/send-webhooks'
 
-type XpBrowserAgentInput = {
+type BrowserAgentTaskInput = {
   runId: string
   storyId: string
   instructions: string
 }
 
-type XpBrowserAgentOutput = {
+type BrowserAgentTaskOutput = {
   success: boolean
   sessionId: string | null
   sessionRecordingUrl: string | null
@@ -23,9 +23,11 @@ type XpBrowserAgentOutput = {
   error: string | null
 }
 
-export const xpBrowserAgentTask = task({
-  id: 'xp-browser-agent',
-  run: async (input: XpBrowserAgentInput): Promise<XpBrowserAgentOutput> => {
+export const browserAgentTask = task({
+  id: 'browser-agent',
+  run: async (
+    input: BrowserAgentTaskInput,
+  ): Promise<BrowserAgentTaskOutput> => {
     const { runId, storyId, instructions } = input
 
     logger.log('Starting browser agent task', { runId, storyId })
@@ -34,8 +36,8 @@ export const xpBrowserAgentTask = task({
     const db = createDb({ databaseUrl: config.DATABASE_URL })
 
     // Fetch story info for webhooks
-    const story = await db.query.xpStories.findFirst({
-      where: eq(schema.xpStories.id, storyId),
+    const story = await db.query.stories.findFirst({
+      where: eq(schema.stories.id, storyId),
     })
 
     if (!story) {
@@ -44,9 +46,9 @@ export const xpBrowserAgentTask = task({
 
     // Update run status to running
     await db
-      .update(schema.xpStoriesRuns)
+      .update(schema.storyRuns)
       .set({ status: 'running', updatedAt: new Date() })
-      .where(eq(schema.xpStoriesRuns.id, runId))
+      .where(eq(schema.storyRuns.id, runId))
 
     let stagehand: Stagehand | null = null
 
@@ -69,9 +71,9 @@ export const xpBrowserAgentTask = task({
 
       // Update run with session ID
       await db
-        .update(schema.xpStoriesRuns)
+        .update(schema.storyRuns)
         .set({ sessionId, updatedAt: new Date() })
-        .where(eq(schema.xpStoriesRuns.id, runId))
+        .where(eq(schema.storyRuns.id, runId))
 
       void streams.append(
         'progress',
@@ -117,14 +119,14 @@ export const xpBrowserAgentTask = task({
 
       // Update run with results
       await db
-        .update(schema.xpStoriesRuns)
+        .update(schema.storyRuns)
         .set({
           status: 'completed',
           observations,
           sessionRecordingUrl,
           updatedAt: new Date(),
         })
-        .where(eq(schema.xpStoriesRuns.id, runId))
+        .where(eq(schema.storyRuns.id, runId))
 
       // Send webhooks for completed run
       const webhookPayload: WebhookPayload = {
@@ -167,14 +169,14 @@ export const xpBrowserAgentTask = task({
 
       // Update run with error
       await db
-        .update(schema.xpStoriesRuns)
+        .update(schema.storyRuns)
         .set({
           status: 'failed',
           error: errorMessage,
           sessionRecordingUrl,
           updatedAt: new Date(),
         })
-        .where(eq(schema.xpStoriesRuns.id, runId))
+        .where(eq(schema.storyRuns.id, runId))
 
       // Send webhooks for failed run
       const webhookPayload: WebhookPayload = {

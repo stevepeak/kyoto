@@ -1,8 +1,9 @@
 'use client'
 
 import { type BrowserAgentStory } from '@app/schemas'
-import { Loader2, Play, Plus, Trash2 } from 'lucide-react'
+import { Globe, Loader2, Play, Plus, Terminal, Trash2 } from 'lucide-react'
 
+import { Kanji } from '@/components/display/kanji'
 import {
   RunDetailsPanel,
   RunSidebar,
@@ -10,11 +11,15 @@ import {
 } from '@/components/experiments/browser-agents'
 import { IntegrationsPanel } from '@/components/experiments/integrations-panel'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
 import { useBrowserAgentsPage } from '@/hooks/use-browser-agents-page'
 import { cn } from '@/lib/utils'
-
-import { Kanji } from '@/components/display/kanji'
 
 export function BrowserAgentsPage() {
   const {
@@ -85,15 +90,49 @@ export function BrowserAgentsPage() {
           {activeTab === 'stories' ? (
             <>
               <div className="border-b p-4">
-                <Button
-                  onClick={handleCreateStory}
-                  disabled={isCreating}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {isCreating ? <Spinner /> : <Plus className="size-4" />}
-                  New Story
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      disabled={isCreating}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {isCreating ? <Spinner /> : <Plus className="size-4" />}
+                      New Story
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    <DropdownMenuItem
+                      onClick={() => handleCreateStory('browser')}
+                      className="flex cursor-pointer items-start gap-3 p-3"
+                    >
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
+                        <Globe className="size-4" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="font-medium">Browser Test</div>
+                        <div className="text-xs text-muted-foreground">
+                          Test web apps with AI browser agent
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleCreateStory('vm')}
+                      className="flex cursor-pointer items-start gap-3 p-3"
+                    >
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                        <Terminal className="size-4" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="font-medium">Virtual Machine</div>
+                        <div className="text-xs text-muted-foreground">
+                          Test CLI, API, SDK, or MCP servers from a virtual
+                          machine.
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="flex-1 overflow-auto p-2">
@@ -118,8 +157,17 @@ export function BrowserAgentsPage() {
                             'bg-accent text-accent-foreground',
                         )}
                       >
-                        <div className="truncate font-medium">{story.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          {story.testType === 'browser' ? (
+                            <Globe className="size-3 shrink-0 text-violet-500" />
+                          ) : (
+                            <Terminal className="size-3 shrink-0 text-amber-500" />
+                          )}
+                          <span className="truncate font-medium">
+                            {story.name}
+                          </span>
+                        </div>
+                        <div className="ml-5 truncate text-xs text-muted-foreground">
                           {new Date(story.updatedAt).toLocaleDateString()}
                         </div>
                       </button>
