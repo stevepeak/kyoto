@@ -1,0 +1,1 @@
+ALTER TABLE "xp_stories_runs" DROP COLUMN "scheduled_for";

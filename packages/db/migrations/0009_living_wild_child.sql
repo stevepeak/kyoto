@@ -1,0 +1,1 @@
+ALTER TABLE "xp_stories_runs" ADD COLUMN "scheduled_for" timestamp with time zone;

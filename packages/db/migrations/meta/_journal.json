@@ -64,6 +64,20 @@
       "when": 1765908495793,
       "tag": "0008_stale_sasquatch",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765909617334,
+      "tag": "0009_living_wild_child",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1765909764055,
+      "tag": "0010_moaning_mole_man",
+      "breakpoints": true
     }
   ]
 }
