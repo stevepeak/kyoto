@@ -65,7 +65,7 @@ export function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/experimental/browser-agents">
+          <Link href="/stories">
             <Card
               className={cn(
                 'group relative h-full cursor-pointer overflow-hidden transition-all duration-300',

@@ -9,7 +9,7 @@ import { writeFile } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
 
-import { sendWebhooks } from '../../helpers/send-webhooks'
+import { sendWebhooks } from '../github/send-webhooks'
 
 type VmAgentTaskInput = {
   runId: string

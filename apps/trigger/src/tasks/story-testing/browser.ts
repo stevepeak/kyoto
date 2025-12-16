@@ -7,7 +7,7 @@ import { Stagehand } from '@browserbasehq/stagehand'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { logger, streams, task } from '@trigger.dev/sdk'
 
-import { sendWebhooks } from '../../helpers/send-webhooks'
+import { sendWebhooks } from '../github/send-webhooks'
 
 type BrowserAgentTaskInput = {
   runId: string

@@ -57,7 +57,7 @@ packages/db/src/schema.ts                                    # Add stories table
 packages/api/src/routers/experiments/browser-agents/index.ts # New router
 packages/agents/src/agents/browser-agent.ts                  # New browser agent
 apps/trigger/src/tasks/story-testing/browser.ts              # Trigger task
-apps/web/app/experimental/browser-agents/page.tsx            # Page route
+apps/web/app/stories/page.tsx                                # Page route
 apps/web/components/experiments/browser-agents-page.tsx      # Main component
 ```
 
@@ -82,7 +82,7 @@ Create router with:
 - `getRun` - Get run details
 - `listRuns` - List runs for a story
 
-### 3. Web Page (`apps/web/app/experimental/browser-agents/page.tsx`)
+### 3. Web Page (`apps/web/app/stories/page.tsx`)
 
 Server component that:
 
@@ -139,5 +139,5 @@ Agent that:
 - [x] Create router in packages/api/src/routers/experiments/browser-agents/index.ts with CRUD and trigger operations
 - [x] Create browser agent in packages/agents/src/agents/browser-agent.ts that uses browserbase tools
 - [x] Create trigger task in apps/trigger/src/tasks/story-testing/browser.ts that creates browser session and executes agent
-- [x] Create page route at apps/web/app/experimental/browser-agents/page.tsx with authentication
+- [x] Create page route at apps/web/app/stories/page.tsx with authentication
 - [x] Create browser-agents-page component in apps/web/components/experiments/browser-agents-page.tsx

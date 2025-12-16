@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   description: 'User behavior testing',
 }
 
-export default async function ExperimentalBrowserAgentsPage() {
+export default async function StoriesPage() {
   const session = await getSession()
 
   if (!session?.user) {
-    redirect('/login?redirect=/experimental/browser-agents')
+    redirect('/login?redirect=/stories')
   }
 
   return <BrowserAgentsPage />
