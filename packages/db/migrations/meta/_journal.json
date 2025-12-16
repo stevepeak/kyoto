@@ -43,13 +43,6 @@
       "when": 1765600000000,
       "tag": "0005_drop_story_tables",
       "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1765902763655,
-      "tag": "0006_lovely_hulk",
-      "breakpoints": true
     }
   ]
 }
