@@ -11,6 +11,26 @@
 export { type Commit } from './agent-types'
 
 // ============================================================================
+// BROWSER AGENT SCHEMAS (Browser agent story/run types)
+// ============================================================================
+
+export {
+  type ActiveRun,
+  activeRunSchema,
+  type BrowserAgentObservation,
+  browserAgentObservationSchema,
+  type BrowserAgentOutput,
+  browserAgentOutputSchema,
+  type BrowserAgentRun,
+  browserAgentRunSchema,
+  type BrowserAgentStory,
+  browserAgentStorySchema,
+  type RunDisplayStatus,
+  type TriggerHandle,
+  triggerHandleSchema,
+} from './browser-agent'
+
+// ============================================================================
 // CLI SCHEMAS (CLI ↔ web shared contracts)
 // ============================================================================
 
