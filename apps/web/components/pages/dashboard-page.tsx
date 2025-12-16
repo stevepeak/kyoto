@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+
 import { Kanji } from '../kanji'
 
 export function DashboardPage() {

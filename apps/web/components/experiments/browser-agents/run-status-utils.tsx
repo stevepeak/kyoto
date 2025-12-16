@@ -1,6 +1,5 @@
+import { type BrowserAgentRun, type RunDisplayStatus } from '@app/schemas'
 import { CheckCircle, Circle, Loader2, XCircle } from 'lucide-react'
-
-import type { BrowserAgentRun, RunDisplayStatus } from '@app/schemas'
 
 export function getDisplayStatus(run: BrowserAgentRun): RunDisplayStatus {
   if (run.status === 'running') {

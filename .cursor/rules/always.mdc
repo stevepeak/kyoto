@@ -15,6 +15,14 @@ alwaysApply: true
 - Do not change `tsconfig.json`, ask permission with explaination if necessary
 - NEVER EDIT files in `packages/db/migrations`. If needing to make database migrations ONLY edit `packages/db/src/schema.ts`
 
+## React
+// ❌ Requires React import
+(e: React.ChangeEvent<HTMLInputElement>) => { ... }
+
+// ✅ Import the type directly
+import { type ChangeEvent } from 'react'
+(e: ChangeEvent<HTMLInputElement>) => { ... }
+
 
 ## Packages
 - use package.json workspaces catalog for installing new dependancies

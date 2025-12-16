@@ -1,14 +1,19 @@
 'use client'
 
-import { CronExpressionParser } from 'cron-parser'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-
-import type {
-  ActiveRun,
-  BrowserAgentRun,
-  BrowserAgentStory,
-  TriggerHandle,
+import {
+  type ActiveRun,
+  type BrowserAgentRun,
+  type BrowserAgentStory,
+  type TriggerHandle,
 } from '@app/schemas'
+import { CronExpressionParser } from 'cron-parser'
+import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 import { useTRPC } from '@/lib/trpc-client'
@@ -160,7 +165,7 @@ export function useBrowserAgentsPage() {
   }, [selectedStoryId, deleteMutation])
 
   const handleScheduleTextChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       setEditedScheduleText(e.target.value)
       setEditedCronSchedule('')
     },
@@ -189,12 +194,9 @@ export function useBrowserAgentsPage() {
     setEditedInstructions(value)
   }, [])
 
-  const handleNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEditedName(e.target.value)
-    },
-    [],
-  )
+  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setEditedName(e.target.value)
+  }, [])
 
   // Keyboard shortcut for save
   useEffect(() => {

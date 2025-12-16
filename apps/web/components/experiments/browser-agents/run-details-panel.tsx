@@ -1,5 +1,6 @@
 'use client'
 
+import { type BrowserAgentRun } from '@app/schemas'
 import {
   ArrowLeft,
   CheckCircle,
@@ -8,8 +9,6 @@ import {
   Video,
   XCircle,
 } from 'lucide-react'
-
-import type { BrowserAgentRun } from '@app/schemas'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

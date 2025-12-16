@@ -1,8 +1,7 @@
 'use client'
 
+import { type BrowserAgentStory } from '@app/schemas'
 import { Loader2, Play, Plus, Trash2 } from 'lucide-react'
-
-import type { BrowserAgentStory } from '@app/schemas'
 
 import {
   RunDetailsPanel,
@@ -14,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useBrowserAgentsPage } from '@/hooks/use-browser-agents-page'
 import { cn } from '@/lib/utils'
+
 import { Kanji } from '../kanji'
 
 export function BrowserAgentsPage() {
