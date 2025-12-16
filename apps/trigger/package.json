@@ -5,6 +5,7 @@
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
     "@app/posthog": "workspace:^",
+    "@app/schemas": "workspace:*",
     "@browserbasehq/stagehand": "catalog:",
     "@octokit/auth-app": "catalog:",
     "@octokit/rest": "catalog:",
