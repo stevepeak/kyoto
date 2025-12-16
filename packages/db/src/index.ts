@@ -37,17 +37,6 @@ export {
 // Export inferred types for tables
 export type Owner = InferSelectModel<typeof schema.owners>
 export type Repo = InferSelectModel<typeof schema.repos>
-export type Run = InferSelectModel<typeof schema.runs>
-
-// RunStory type - represents a story within a run's stories JSONB field
-export interface RunStory {
-  storyId: string
-  resultId: string | null
-  status: 'pass' | 'fail' | 'running' | 'skipped' | 'error'
-  summary: string | null
-  startedAt: string | null
-  completedAt: string | null
-}
 
 export interface CreateDbOptions {
   databaseUrl?: string

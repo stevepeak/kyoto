@@ -13,7 +13,6 @@ export { ensureOpenRouterApiKey } from './helpers/openrouter'
 export {
   findOwnerForUser,
   findRepoForUser,
-  findStoryForUser,
   requireRepoForUser,
 } from './helpers/memberships'
 

@@ -1,9 +1,7 @@
 import {
   bigint,
   boolean,
-  customType,
   index,
-  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -13,23 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
-// Custom types
-const vector = customType<{ data: number[] }>({
-  dataType() {
-    return 'vector(1536)'
-  },
-})
-
 // Enums
-export const storyStateEnum = pgEnum('story_state', [
-  'active',
-  'generated',
-  'paused',
-  'archived',
-  'planned',
-  'processing',
-])
-
 export const userStatusEnum = pgEnum('user_status', [
   'active',
   'disabled',
@@ -239,147 +221,6 @@ export const repoMemberships = pgTable(
     ),
     repoIdIdx: index('repo_memberships_repo_id_idx').on(table.repoId),
     userIdIdx: index('repo_memberships_user_id_idx').on(table.userId),
-  }),
-)
-
-export const runs = pgTable(
-  'runs',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    repoId: uuid('repo_id')
-      .notNull()
-      .references(() => repos.id, { onDelete: 'cascade' }),
-    commitSha: text('commit_sha'),
-    branchName: text('branch_name').notNull(),
-    commitMessage: text('commit_message'),
-    prNumber: text('pr_number'),
-    status: text('status').notNull(),
-    summary: text('summary'),
-    stories: jsonb('stories').notNull().default('[]'),
-    number: integer('number').notNull(),
-    gitAuthor: jsonb('git_author'),
-    extTriggerDev: jsonb('ext_trigger_dev'),
-  },
-  (table) => ({
-    repoIdIdx: index('runs_repo_id_idx').on(table.repoId),
-    branchNameIdx: index('runs_branch_name_idx').on(table.branchName),
-    commitShaIdx: index('runs_commit_sha_idx').on(table.commitSha),
-    statusIdx: index('runs_status_idx').on(table.status),
-    repoCommitIdx: index('runs_repo_commit_idx').on(
-      table.repoId,
-      table.commitSha,
-    ),
-    repoNumberIdx: index('runs_repo_id_number_idx').on(
-      table.repoId,
-      table.number,
-    ),
-    repoNumberUnique: unique('runs_repo_id_number_unique_idx').on(
-      table.repoId,
-      table.number,
-    ),
-  }),
-)
-
-export const stories = pgTable(
-  'stories',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    repoId: uuid('repo_id')
-      .notNull()
-      .references(() => repos.id, { onDelete: 'cascade' }),
-    name: text('name').notNull(),
-    story: text('story').notNull(),
-    decomposition: jsonb('decomposition'),
-    state: storyStateEnum('state').notNull().default('active'),
-    metadata: jsonb('metadata'),
-    embedding: vector('embedding'),
-  },
-  (table) => ({
-    repoIdIdx: index('stories_repo_id_idx').on(table.repoId),
-    repoIdStateIdx: index('stories_repo_id_state_idx').on(
-      table.repoId,
-      table.state,
-    ),
-  }),
-)
-
-export const storyEvidenceCache = pgTable(
-  'story_evidence_cache',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    branchName: text('branch_name').notNull(),
-    storyId: uuid('story_id')
-      .notNull()
-      .references(() => stories.id, { onDelete: 'cascade' }),
-    commitSha: text('commit_sha').notNull(),
-    cacheData: jsonb('cache_data').notNull(),
-    runId: uuid('run_id').references(() => runs.id, {
-      onDelete: 'set null',
-    }),
-  },
-  (table) => ({
-    storyIdIdx: index('story_evidence_cache_story_id_idx').on(table.storyId),
-    branchNameIdx: index('story_evidence_cache_branch_name_idx').on(
-      table.branchName,
-    ),
-    commitShaIdx: index('story_evidence_cache_commit_sha_idx').on(
-      table.commitSha,
-    ),
-    runIdIdx: index('story_evidence_cache_run_id_idx').on(table.runId),
-    storyCommitUnique: unique(
-      'story_evidence_cache_story_commit_unique_idx',
-    ).on(table.storyId, table.commitSha),
-  }),
-)
-
-export const storyTestResults = pgTable(
-  'story_test_results',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    storyId: uuid('story_id')
-      .notNull()
-      .references(() => stories.id, { onDelete: 'cascade' }),
-    runId: uuid('run_id').references(() => runs.id, {
-      onDelete: 'set null',
-    }),
-    status: text('status').notNull(),
-    startedAt: timestamp('started_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    completedAt: timestamp('completed_at', { withTimezone: true }),
-    durationMs: integer('duration_ms'),
-    analysis: jsonb('analysis'),
-    analysisVersion: integer('analysis_version').notNull(),
-    extTriggerDev: jsonb('ext_trigger_dev'),
-  },
-  (table) => ({
-    storyIdIdx: index('story_test_results_story_id_idx').on(table.storyId),
-    runIdIdx: index('story_test_results_run_id_idx').on(table.runId),
-    statusIdx: index('story_test_results_status_idx').on(table.status),
   }),
 )
 

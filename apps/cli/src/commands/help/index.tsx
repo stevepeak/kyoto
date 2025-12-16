@@ -37,31 +37,26 @@ const commandGroups: CommandGroup[] = [
             description: 'Check only staged changes',
           },
           {
-            command: 'kyoto vibe check --watch',
-            description:
-              '(Coming soon) Continuously vibe check new git changes',
+            command: 'kyoto vibe check -2',
+            description: 'Check the last 2 commits',
           },
         ],
       },
       {
         name: 'vibe test',
-        description: 'Generate test suggestions for code changes',
+        description: 'Continuous testing with browser',
         examples: [
           {
             command: 'kyoto vibe test',
-            description: 'Generate test suggestions for all changes',
+            description: 'with visible browser',
           },
           {
-            command: 'kyoto vibe test --staged',
-            description: 'Generate test suggestions for staged changes only',
+            command: 'kyoto vibe test --headless',
+            description: 'to hide the browser',
           },
           {
-            command: 'kyoto vibe test --commits 4',
-            description: 'Generate test suggestions for the last 4 commits',
-          },
-          {
-            command: 'kyoto vibe test --last',
-            description: 'Generate test suggestions since last vibe check',
+            command: 'kyoto vibe test --interactive',
+            description: 'interactive with test results',
           },
         ],
       },
@@ -79,12 +74,6 @@ const commandGroups: CommandGroup[] = [
           {
             command: 'kyoto commit',
             description: 'Create a commit plan, then commit it',
-          },
-          {
-            command:
-              'kyoto commit "group by feature, use conventional commits"',
-            description:
-              'Create a new commit plan using the provided instructions, then commit',
           },
         ],
       },

@@ -36,6 +36,13 @@
       "when": 1765500000000,
       "tag": "0004_add_redirect_uri_to_cli_auth_state",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765600000000,
+      "tag": "0005_drop_story_tables",
+      "breakpoints": true
     }
   ]
 }

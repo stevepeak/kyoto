@@ -2,14 +2,14 @@ import { getConfig } from '@app/config'
 import { and, createDb, eq, inArray, schema } from '@app/db'
 import { logger, task } from '@trigger.dev/sdk'
 
-import { createOctokit } from '../helpers/github'
+import { createOctokit } from '../../helpers/github'
 import {
   ensureOwnerMemberships,
   ensureRepoMemberships,
   findRepoIdsByOwnerId,
   pruneOwnerMemberships,
   pruneRepoMemberships,
-} from './github/shared/db'
+} from './shared/db'
 
 interface SyncGithubInstallationPayload {
   installationId: number | string | bigint

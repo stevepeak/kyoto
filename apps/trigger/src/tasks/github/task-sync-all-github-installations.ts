@@ -3,7 +3,7 @@ import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
 import { logger, task } from '@trigger.dev/sdk'
 
-import { syncGithubInstallationTask } from './sync-github-installation'
+import { syncGithubInstallationTask } from './task-sync-github-installation'
 
 function createAppLevelOctokit(): Octokit {
   const env = getConfig()

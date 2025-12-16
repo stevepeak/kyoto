@@ -1,11 +1,9 @@
-import { and, asc, count, desc, eq, inArray, ne, schema } from '@app/db'
+import { and, eq, schema } from '@app/db'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 import { findOwnerForUser } from '../../helpers/memberships'
 import { protectedProcedure } from '../../trpc'
-
-type RepoListItemStatus = 'pass' | 'fail' | 'skipped' | 'running' | 'error'
 
 type RepoListItem = {
   id: string
@@ -13,9 +11,6 @@ type RepoListItem = {
   defaultBranch: string | null
   enabled: boolean
   isPrivate: boolean
-  storyCount: number
-  lastRunStatus: RepoListItemStatus | null
-  lastRunAt: Date | null
 }
 
 export const listByOrg = protectedProcedure
@@ -60,75 +55,6 @@ export const listByOrg = protectedProcedure
       )
       .orderBy(schema.repos.name)
 
-    const repoIds = repos.map((repo) => repo.id)
-
-    const storyCounts =
-      repoIds.length === 0
-        ? []
-        : await ctx.db
-            .select({
-              repoId: schema.stories.repoId,
-              count: count(),
-            })
-            .from(schema.stories)
-            .where(
-              and(
-                inArray(schema.stories.repoId, repoIds),
-                ne(schema.stories.state, 'archived'),
-              ),
-            )
-            .groupBy(schema.stories.repoId)
-
-    let latestRunStatusByRepo = new Map<
-      string,
-      { status: RepoListItemStatus; createdAt: Date }
-    >()
-
-    if (repoIds.length > 0) {
-      const runRows = await ctx.db
-        .select({
-          repoId: schema.runs.repoId,
-          status: schema.runs.status,
-          createdAt: schema.runs.createdAt,
-        })
-        .from(schema.runs)
-        .where(inArray(schema.runs.repoId, repoIds))
-        .orderBy(
-          asc(schema.runs.repoId),
-          desc(schema.runs.createdAt),
-          desc(schema.runs.id),
-        )
-
-      latestRunStatusByRepo = runRows.reduce(
-        (
-          acc,
-          row,
-        ): Map<string, { status: RepoListItemStatus; createdAt: Date }> => {
-          if (
-            !acc.has(row.repoId) &&
-            row.createdAt !== null &&
-            row.createdAt instanceof Date &&
-            (row.status === 'pass' ||
-              row.status === 'fail' ||
-              row.status === 'skipped' ||
-              row.status === 'running' ||
-              row.status === 'error')
-          ) {
-            acc.set(row.repoId, {
-              status: row.status as RepoListItemStatus,
-              createdAt: row.createdAt,
-            })
-          }
-          return acc
-        },
-        new Map<string, { status: RepoListItemStatus; createdAt: Date }>(),
-      )
-    }
-
-    const storyCountByRepo = new Map(
-      storyCounts.map((entry) => [entry.repoId, Number(entry.count)]),
-    )
-
     return {
       owner: {
         id: owner.id,
@@ -141,9 +67,6 @@ export const listByOrg = protectedProcedure
         defaultBranch: repo.defaultBranch,
         enabled: repo.enabled,
         isPrivate: repo.isPrivate,
-        storyCount: storyCountByRepo.get(repo.id) ?? 0,
-        lastRunStatus: latestRunStatusByRepo.get(repo.id)?.status ?? null,
-        lastRunAt: latestRunStatusByRepo.get(repo.id)?.createdAt ?? null,
       })),
     }
   })
