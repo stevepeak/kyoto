@@ -1,7 +1,7 @@
 import { type Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { CraftStoryForm } from '@/components/craft-story-form'
+import { CraftStoryForm } from '@/components/forms/craft-story-form'
 import { getSession } from '@/lib/auth-server'
 import { checkOwnerMembership, checkRepoMembership } from '@/lib/memberships'
 

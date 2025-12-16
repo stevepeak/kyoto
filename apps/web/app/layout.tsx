@@ -1,8 +1,8 @@
 import { type Metadata } from 'next'
 import localFont from 'next/font/local'
 
-import { Navbar } from '@/components/navbar'
-import { PostHogProvider } from '@/components/posthog-provider'
+import { Navbar } from '@/components/layout/navbar'
+import { PostHogProvider } from '@/components/providers/posthog-provider'
 import { TRPCProvider } from '@/components/providers/trpc-provider'
 import { Toaster } from '@/components/ui/toaster'
 

@@ -2,7 +2,7 @@
 
 import { Clock, Loader2 } from 'lucide-react'
 
-import { Tiptap } from '@/components/tiptap'
+import { Tiptap } from '@/components/editors/tiptap'
 
 type StoryEditorProps = {
   instructions: string

@@ -6,10 +6,10 @@ import { useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { toast } from 'sonner'
 
-import { Kanji } from '@/components/kanji'
-import { KeyboardShortcutHint } from '@/components/keyboard-shortcut-hint'
-import { ShimmerButton } from '@/components/shimmer-button'
-import { Tiptap } from '@/components/tiptap'
+import { Kanji } from '@/components/display/kanji'
+import { KeyboardShortcutHint } from '@/components/display/keyboard-shortcut-hint'
+import { ShimmerButton } from '@/components/display/shimmer-button'
+import { Tiptap } from '@/components/editors/tiptap'
 import { Button } from '@/components/ui/button'
 
 interface CraftStoryFormProps {

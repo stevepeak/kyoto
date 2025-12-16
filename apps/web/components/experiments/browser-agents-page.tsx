@@ -14,7 +14,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { useBrowserAgentsPage } from '@/hooks/use-browser-agents-page'
 import { cn } from '@/lib/utils'
 
-import { Kanji } from '../kanji'
+import { Kanji } from '@/components/display/kanji'
 
 export function BrowserAgentsPage() {
   const {

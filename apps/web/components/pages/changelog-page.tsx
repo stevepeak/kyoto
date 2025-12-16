@@ -4,9 +4,9 @@ import { ChevronRight, Copy, GitBranch } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { Kanji } from '@/components/kanji'
-import { ShikiCodeBlock } from '@/components/shiki-code-block'
-import { Tiptap } from '@/components/tiptap'
+import { ShikiCodeBlock } from '@/components/code/shiki-code-block'
+import { Kanji } from '@/components/display/kanji'
+import { Tiptap } from '@/components/editors/tiptap'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 

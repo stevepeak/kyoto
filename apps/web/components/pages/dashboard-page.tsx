@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-import { Kanji } from '../kanji'
+import { Kanji } from '@/components/display/kanji'
 
 export function DashboardPage() {
   return (
