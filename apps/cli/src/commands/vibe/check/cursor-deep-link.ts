@@ -37,10 +37,7 @@ export function generateCursorDeepLink(finding: ConsolidatedFinding): string {
 
   const prompt = promptParts.join('')
 
-  // Generate the deep link using URL constructor for proper encoding
-  const baseUrl = 'cursor://anysphere.cursor-deeplink/prompt'
-  const url = new URL(baseUrl)
-  url.searchParams.set('text', prompt)
-
-  return url.toString()
+  // Use encodeURIComponent to encode spaces as %20 (not + which URLSearchParams uses)
+  // Cursor's deep link handler expects %20 for spaces
+  return `cursor://anysphere.cursor-deeplink/prompt?text=${encodeURIComponent(prompt)}`
 }

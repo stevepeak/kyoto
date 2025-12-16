@@ -86,7 +86,9 @@ function generateCursorDeepLink(finding: FindingItem): string {
   const url = new URL(baseUrl)
   url.searchParams.set('text', prompt)
 
-  return url.toString()
+  // Use encodeURIComponent to encode spaces as %20 (not + which URLSearchParams uses)
+  // Cursor's deep link handler expects %20 for spaces
+  return `cursor://anysphere.cursor-deeplink/prompt?text=${encodeURIComponent(prompt)}`
 }
 
 type VibeCheckTreeItem = AgentItem | FindingItem | MetadataItem
