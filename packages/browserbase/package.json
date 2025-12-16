@@ -14,6 +14,7 @@
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
+    "@browserbasehq/sdk": "catalog:",
     "@browserbasehq/stagehand": "catalog:",
     "ai": "catalog:",
     "zod": "catalog:"

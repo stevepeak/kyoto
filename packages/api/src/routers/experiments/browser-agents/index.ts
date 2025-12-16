@@ -1,3 +1,4 @@
+import { getSessionRecording } from '@app/browserbase'
 import { getConfig } from '@app/config'
 import { desc, eq, schema } from '@app/db'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
@@ -284,5 +285,33 @@ export const xpBrowserAgentsRouter = router({
         .orderBy(desc(schema.xpStoriesRuns.createdAt))
 
       return runs
+    }),
+
+  getRecording: protectedProcedure
+    .input(z.object({ runId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Verify user owns the run
+      const run = await ctx.db.query.xpStoriesRuns.findFirst({
+        where: (runs, { and, eq }) =>
+          and(eq(runs.id, input.runId), eq(runs.userId, ctx.user.id)),
+      })
+
+      if (!run) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Run not found' })
+      }
+
+      if (!run.sessionId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No session recording available for this run',
+        })
+      }
+
+      const events = await getSessionRecording({
+        apiKey: ctx.env.BROWSERBASE_API_KEY,
+        sessionId: run.sessionId,
+      })
+
+      return { events }
     }),
 })

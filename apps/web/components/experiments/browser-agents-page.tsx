@@ -6,17 +6,18 @@ import {
   CheckCircle,
   Circle,
   Clock,
-  ExternalLink,
   Loader2,
   Play,
   Plus,
   Trash2,
+  Video,
   Webhook,
   XCircle,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { IntegrationsPanel } from '@/components/experiments/integrations-panel'
+import { SessionRecordingPlayer } from '@/components/session-recording-player'
 import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,7 +43,6 @@ type Run = {
   storyId: string
   status: string
   sessionId: string | null
-  sessionRecordingUrl: string | null
   observations: unknown
   error: string | null
   createdAt: Date
@@ -65,6 +65,9 @@ export function BrowserAgentsPage() {
   const [editedCronSchedule, setEditedCronSchedule] = useState<string>('')
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [triggerHandle, setTriggerHandle] = useState<TriggerHandle | null>(null)
+  const [viewingRecordingRunId, setViewingRecordingRunId] = useState<
+    string | null
+  >(null)
 
   const storiesQuery = trpc.xpBrowserAgents.list.useQuery()
   const storyQuery = trpc.xpBrowserAgents.get.useQuery(
@@ -474,16 +477,14 @@ export function BrowserAgentsPage() {
                             <div className="text-xs text-muted-foreground">
                               {new Date(run.createdAt).toLocaleString()}
                             </div>
-                            {run.sessionRecordingUrl && (
-                              <a
-                                href={run.sessionRecordingUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            {run.sessionId && (
+                              <button
+                                onClick={() => setViewingRecordingRunId(run.id)}
                                 className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
                               >
-                                <ExternalLink className="size-3" />
+                                <Video className="size-3" />
                                 View Recording
-                              </a>
+                              </button>
                             )}
                             {run.error && (
                               <div className="mt-2 text-xs text-destructive">
@@ -530,6 +531,14 @@ export function BrowserAgentsPage() {
           </div>
         )}
       </div>
+
+      {/* Recording Player Modal */}
+      {viewingRecordingRunId && (
+        <SessionRecordingPlayer
+          runId={viewingRecordingRunId}
+          onClose={() => setViewingRecordingRunId(null)}
+        />
+      )}
     </div>
   )
 }

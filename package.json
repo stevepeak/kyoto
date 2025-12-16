@@ -15,6 +15,7 @@
       "@ai-sdk/anthropic": "^2.0.53",
       "cron-parser": "^5.0.6",
       "@ai-sdk/openai": "^2.0.77",
+      "@browserbasehq/sdk": "^2.6.0",
       "@browserbasehq/stagehand": "^3.0.5",
       "@daytonaio/sdk": "^0.121.0",
       "@octokit/auth-app": "^8.1.2",
