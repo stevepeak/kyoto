@@ -1,4 +1,5 @@
 import { mkdir } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 const KYOTO_DIR = '.kyoto'
@@ -11,7 +12,7 @@ export interface KyotoPaths {
   gitRoot: string
   /** Absolute path to the .kyoto directory inside the git repository */
   root: string
-  /** Absolute path to the .kyoto/config.json file */
+  /** Absolute path to the ~/.kyoto/config.json file */
   config: string
   /** Absolute path to the .kyoto/instructions.md file */
   instructions: string
@@ -19,6 +20,18 @@ export interface KyotoPaths {
   vibeCheck: string
   /** Absolute path to the .kyoto/vibe/test/browser-state.json file for persisting login sessions */
   browserState: string
+}
+
+/**
+ * Gets the path to the user's config file (~/.kyoto/config.json).
+ * Creates the directory if it doesn't exist.
+ *
+ * @returns Absolute path to ~/.kyoto/config.json
+ */
+export async function getConfigPath(): Promise<string> {
+  const configDir = join(homedir(), KYOTO_DIR)
+  await mkdir(configDir, { recursive: true })
+  return join(configDir, 'config.json')
 }
 
 /**
@@ -30,7 +43,7 @@ export interface KyotoPaths {
  */
 export async function pwdKyoto(gitRoot: string): Promise<KyotoPaths> {
   const root = join(gitRoot, KYOTO_DIR)
-  const config = join(root, 'config.json')
+  const config = await getConfigPath()
   const instructions = join(root, 'instructions.md')
   const vibeCheck = join(root, 'vibe/check/check.json')
   const browserState = join(root, 'vibe/test/browser-state.json')

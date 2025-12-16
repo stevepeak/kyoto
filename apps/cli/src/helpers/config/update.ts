@@ -1,9 +1,8 @@
-import { findGitRoot } from '@app/shell'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { type z } from 'zod'
 
-import { pwdKyoto } from './find-kyoto-dir'
+import { getConfigPath } from './find-kyoto-dir'
 import { type Config, schema } from './get'
 
 const patchSchema = schema.deepPartial()
@@ -25,8 +24,7 @@ function deepMerge(base: unknown, patch: unknown): unknown {
 }
 
 export async function updateConfig(update: ConfigPatch): Promise<Config> {
-  const gitRoot = await findGitRoot()
-  const { config: configPath } = await pwdKyoto(gitRoot)
+  const configPath = await getConfigPath()
 
   // Load current config.json (best effort) and validate it
   let existing: unknown = {}

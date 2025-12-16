@@ -96,16 +96,6 @@ export default function Login(): React.ReactElement {
           },
         })
 
-        // const analytics = await getCliAnalyticsContext()
-        // if (analytics.enabled) {
-        //   captureCliEvent({
-        //     event: 'cli_login_succeeded',
-        //     distinctId: analytics.distinctId,
-        //     properties: {},
-        //   })
-        //   await shutdownCliAnalytics()
-        // }
-
         try {
           await ensureKyotoInGitignore()
         } catch {

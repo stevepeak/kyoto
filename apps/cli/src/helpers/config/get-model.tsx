@@ -17,7 +17,7 @@ interface ConstructModelOptions {
  *
  * Priority:
  * 1. CLI arguments (--model and --provider) - uses API key from config
- * 2. config.json configuration (.kyoto/config.json)
+ * 2. config.json configuration (~/.kyoto/config.json)
  *
  * @param config - The validated config from getConfig()
  * @param options - Optional model and provider overrides

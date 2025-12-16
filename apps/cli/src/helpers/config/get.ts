@@ -1,8 +1,7 @@
-import { findGitRoot } from '@app/shell'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 
-import { pwdKyoto } from './find-kyoto-dir'
+import { getConfigPath } from './find-kyoto-dir'
 
 const providerSchema = z.enum(['openai', 'vercel', 'openrouter', 'anthropic'])
 
@@ -32,7 +31,7 @@ export const schema = z.object({
 export type Config = z.infer<typeof schema>
 
 /**
- * Gets the config from .kyoto/config.json and validates it.
+ * Gets the config from ~/.kyoto/config.json and validates it.
  * Falls back to environment variables (KYOTO_TOKEN) if config.json is missing.
  * Throws an error if the config is invalid or missing AI configuration.
  * @returns The validated config
@@ -40,8 +39,7 @@ export type Config = z.infer<typeof schema>
  */
 export async function getConfig(): Promise<Config> {
   try {
-    const gitRoot = await findGitRoot()
-    const { config: configPath } = await pwdKyoto(gitRoot)
+    const configPath = await getConfigPath()
     const content = await readFile(configPath, 'utf-8')
     const config = schema.parse(JSON.parse(content))
 
