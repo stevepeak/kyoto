@@ -1,6 +1,7 @@
 import { getSessionRecording } from '@app/browserbase'
 import { getConfig } from '@app/config'
 import { desc, eq, schema } from '@app/db'
+import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { configure, schedules, tasks } from '@trigger.dev/sdk'
 import { TRPCError } from '@trpc/server'
@@ -89,6 +90,15 @@ export const xpBrowserAgentsRouter = router({
         })
         .returning()
 
+      capturePostHogEvent(
+        POSTHOG_EVENTS.STORY_CREATED,
+        {
+          story_id: story.id,
+          story_name: story.name,
+        },
+        ctx.user.id,
+      )
+
       return story
     }),
 
@@ -160,6 +170,16 @@ export const xpBrowserAgentsRouter = router({
         })
         .where(eq(schema.xpStories.id, input.id))
         .returning()
+
+      capturePostHogEvent(
+        POSTHOG_EVENTS.STORY_EDITED,
+        {
+          story_id: updated.id,
+          story_name: updated.name,
+          edited_fields: Object.keys(input).filter((key) => key !== 'id'),
+        },
+        ctx.user.id,
+      )
 
       return updated
     }),
@@ -289,6 +309,16 @@ export const xpBrowserAgentsRouter = router({
         })
         .where(eq(schema.xpStoriesRuns.id, run.id))
         .returning()
+
+      capturePostHogEvent(
+        POSTHOG_EVENTS.STORY_RUN_MANUAL,
+        {
+          story_id: story.id,
+          story_name: story.name,
+          run_id: updatedRun.id,
+        },
+        ctx.user.id,
+      )
 
       return {
         run: updatedRun,

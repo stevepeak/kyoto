@@ -39,11 +39,9 @@ export const POSTHOG_EVENTS = {
   ORGANIZATION_INSTALLED: 'organization_installed',
   USER_CREATED: 'user_created',
   REPO_ADDED: 'repo_added',
-  STORY_WRITTEN: 'story_written',
+  STORY_CREATED: 'story_created',
   STORY_EDITED: 'story_edited',
-  CI_RUN_FAILED: 'ci_run_failed',
-  CI_RUN_PASSED: 'ci_run_passed',
-  STORY_GENERATED_TO_ACCEPTED: 'story_generated_to_accepted',
+  STORY_RUN_MANUAL: 'story_run_manual',
 } as const
 
 /**
