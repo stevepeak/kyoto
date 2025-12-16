@@ -49,7 +49,27 @@ export const xpBrowserAgentsRouter = router({
         .orderBy(desc(schema.xpStoriesRuns.createdAt))
         .limit(20)
 
-      return { story, runs }
+      // Find active run with trigger handle for reconnection
+      const activeRun = runs.find(
+        (run) =>
+          (run.status === 'pending' || run.status === 'running') &&
+          run.triggerRunId &&
+          run.triggerPublicAccessToken,
+      )
+
+      return {
+        story,
+        runs,
+        activeRun: activeRun
+          ? {
+              id: activeRun.id,
+              triggerHandle: {
+                id: activeRun.triggerRunId!,
+                publicAccessToken: activeRun.triggerPublicAccessToken!,
+              },
+            }
+          : null,
+      }
     }),
 
   create: protectedProcedure
@@ -215,6 +235,8 @@ export const xpBrowserAgentsRouter = router({
   trigger: protectedProcedure
     .input(z.object({ storyId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      ensureTriggerConfigured(ctx.env.TRIGGER_SECRET_KEY)
+
       const story = await ctx.db.query.xpStories.findFirst({
         where: (stories, { and, eq }) =>
           and(eq(stories.id, input.storyId), eq(stories.userId, ctx.user.id)),
@@ -222,6 +244,22 @@ export const xpBrowserAgentsRouter = router({
 
       if (!story) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Story not found' })
+      }
+
+      // Check for existing active run (only 1 run per story in parallel)
+      const activeRun = await ctx.db.query.xpStoriesRuns.findFirst({
+        where: (runs, { and, eq, inArray }) =>
+          and(
+            eq(runs.storyId, input.storyId),
+            inArray(runs.status, ['pending', 'running']),
+          ),
+      })
+
+      if (activeRun) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'A run is already in progress for this story',
+        })
       }
 
       // Create a pending run
@@ -241,8 +279,19 @@ export const xpBrowserAgentsRouter = router({
         instructions: story.instructions,
       })
 
+      // Store trigger handle in the run record for reconnection on page reload
+      const [updatedRun] = await ctx.db
+        .update(schema.xpStoriesRuns)
+        .set({
+          triggerRunId: handle.id,
+          triggerPublicAccessToken: handle.publicAccessToken,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.xpStoriesRuns.id, run.id))
+        .returning()
+
       return {
-        run,
+        run: updatedRun,
         triggerHandle: {
           id: handle.id,
           publicAccessToken: handle.publicAccessToken,

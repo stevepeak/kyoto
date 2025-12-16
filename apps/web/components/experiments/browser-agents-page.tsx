@@ -60,11 +60,21 @@ type Run = {
   error: string | null
   createdAt: Date
   updatedAt: Date
+  triggerRunId: string | null
+  triggerPublicAccessToken: string | null
 }
 
 type TriggerHandle = {
   runId: string
   publicAccessToken: string
+}
+
+type ActiveRun = {
+  id: string
+  triggerHandle: {
+    id: string
+    publicAccessToken: string
+  }
 }
 
 export function BrowserAgentsPage() {
@@ -124,6 +134,8 @@ export function BrowserAgentsPage() {
         runId: data.triggerHandle.id,
         publicAccessToken: data.triggerHandle.publicAccessToken,
       })
+      // Refetch to update Run History with the new run
+      void storyQuery.refetch()
     },
   })
 
@@ -164,6 +176,17 @@ export function BrowserAgentsPage() {
       setHasUnsavedChanges(false)
     }
   }, [storyQuery.data?.story])
+
+  // Auto-reconnect to active run on page load/story change
+  const activeRun = storyQuery.data?.activeRun as ActiveRun | null | undefined
+  useEffect(() => {
+    if (activeRun && !triggerHandle) {
+      setTriggerHandle({
+        runId: activeRun.triggerHandle.id,
+        publicAccessToken: activeRun.triggerHandle.publicAccessToken,
+      })
+    }
+  }, [activeRun, triggerHandle])
 
   const handleCreateStory = () => {
     createMutation.mutate({
@@ -241,7 +264,9 @@ export function BrowserAgentsPage() {
 
   const stories = storiesQuery.data ?? []
   const runs = (storyQuery.data?.runs ?? []) as Run[]
-  const isRunning = triggerMutation.isPending || triggerHandle !== null
+  // Disable Run button if there's an active run (from server or local state)
+  const isRunning =
+    triggerMutation.isPending || triggerHandle !== null || !!activeRun
   const selectedRun = selectedRunId
     ? runs.find((r) => r.id === selectedRunId)
     : null
