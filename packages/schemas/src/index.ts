@@ -30,3 +30,21 @@ export {
   vibeCheckFindingSchema,
   vibeCheckScopeSchema,
 } from './vibe-check'
+
+// ============================================================================
+// WEBHOOK PAYLOAD SCHEMAS (Integration webhook contracts)
+// ============================================================================
+
+export {
+  createSampleWebhookPayload,
+  type WebhookConfig,
+  webhookConfigSchema,
+  type WebhookEvent,
+  webhookEventSchema,
+  type WebhookPayload,
+  webhookPayloadSchema,
+  type WebhookRun,
+  webhookRunSchema,
+  type WebhookStory,
+  webhookStorySchema,
+} from './webhook-payload'

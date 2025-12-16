@@ -291,3 +291,28 @@ export const xpStoriesRuns = pgTable(
     userIdIdx: index('xp_stories_runs_user_id_idx').on(table.userId),
   }),
 )
+
+export const integrationTypeEnum = pgEnum('integration_type', ['webhook'])
+
+export const xpIntegrations = pgTable(
+  'xp_integrations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    type: integrationTypeEnum('type').notNull(),
+    name: text('name').notNull(),
+    config: jsonb('config').notNull(), // { url: string, headers?: Record<string, string> }
+    enabled: boolean('enabled').notNull().default(true),
+  },
+  (table) => ({
+    userIdIdx: index('xp_integrations_user_id_idx').on(table.userId),
+  }),
+)

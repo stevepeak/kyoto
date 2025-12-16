@@ -78,6 +78,13 @@
       "when": 1765909764055,
       "tag": "0010_moaning_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1765910687150,
+      "tag": "0011_brown_ricochet",
+      "breakpoints": true
     }
   ]
 }

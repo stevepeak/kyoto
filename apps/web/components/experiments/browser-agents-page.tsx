@@ -11,10 +11,12 @@ import {
   Play,
   Plus,
   Trash2,
+  Webhook,
   XCircle,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { IntegrationsPanel } from '@/components/experiments/integrations-panel'
 import { Tiptap } from '@/components/tiptap'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +24,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { useTriggerRun } from '@/hooks/use-trigger-run'
 import { useTRPC } from '@/lib/trpc-client'
 import { cn } from '@/lib/utils'
+
+type ActiveTab = 'stories' | 'integrations'
 
 type Story = {
   id: string
@@ -53,6 +57,7 @@ type TriggerHandle = {
 export function BrowserAgentsPage() {
   const trpc = useTRPC()
 
+  const [activeTab, setActiveTab] = useState<ActiveTab>('stories')
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null)
   const [editedInstructions, setEditedInstructions] = useState<string>('')
   const [editedName, setEditedName] = useState<string>('')
@@ -236,56 +241,88 @@ export function BrowserAgentsPage() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-      {/* Left sidebar - Story list */}
+      {/* Left sidebar */}
       <div className="w-72 flex-shrink-0 border-r bg-muted/30">
         <div className="flex h-full flex-col">
-          <div className="border-b p-4">
-            <Button
-              onClick={handleCreateStory}
-              disabled={createMutation.isPending}
-              className="w-full"
-              variant="outline"
-            >
-              {createMutation.isPending ? (
-                <Spinner />
-              ) : (
-                <Plus className="size-4" />
+          {/* Tab navigation */}
+          <div className="flex border-b">
+            <button
+              onClick={() => setActiveTab('stories')}
+              className={cn(
+                'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+                activeTab === 'stories'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
-              New Story
-            </Button>
+            >
+              Stories
+            </button>
+            <button
+              onClick={() => setActiveTab('integrations')}
+              className={cn(
+                'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+                activeTab === 'integrations'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              Integrations
+            </button>
           </div>
 
-          <div className="flex-1 overflow-auto p-2">
-            {storiesQuery.isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner />
+          {activeTab === 'stories' ? (
+            <>
+              <div className="border-b p-4">
+                <Button
+                  onClick={handleCreateStory}
+                  disabled={createMutation.isPending}
+                  className="w-full"
+                  variant="outline"
+                >
+                  {createMutation.isPending ? (
+                    <Spinner />
+                  ) : (
+                    <Plus className="size-4" />
+                  )}
+                  New Story
+                </Button>
               </div>
-            ) : stories.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                No stories yet
+
+              <div className="flex-1 overflow-auto p-2">
+                {storiesQuery.isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Spinner />
+                  </div>
+                ) : stories.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    No stories yet
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {stories.map((story: Story) => (
+                      <button
+                        key={story.id}
+                        onClick={() => setSelectedStoryId(story.id)}
+                        className={cn(
+                          'w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
+                          'hover:bg-accent hover:text-accent-foreground',
+                          selectedStoryId === story.id &&
+                            'bg-accent text-accent-foreground',
+                        )}
+                      >
+                        <div className="truncate font-medium">{story.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {new Date(story.updatedAt).toLocaleDateString()}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="space-y-1">
-                {stories.map((story: Story) => (
-                  <button
-                    key={story.id}
-                    onClick={() => setSelectedStoryId(story.id)}
-                    className={cn(
-                      'w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      selectedStoryId === story.id &&
-                        'bg-accent text-accent-foreground',
-                    )}
-                  >
-                    <div className="truncate font-medium">{story.name}</div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {new Date(story.updatedAt).toLocaleDateString()}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+            </>
+          ) : (
+            <IntegrationsPanel />
+          )}
         </div>
       </div>
 
@@ -462,7 +499,7 @@ export function BrowserAgentsPage() {
               </div>
             </div>
           </>
-        ) : (
+        ) : activeTab === 'stories' ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="max-w-md text-center">
               <h2 className="text-xl font-semibold">Browser Agents</h2>
@@ -473,6 +510,21 @@ export function BrowserAgentsPage() {
               </p>
               <p className="mt-4 text-sm text-muted-foreground">
                 Select a story or create a new one to get started.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="max-w-md text-center">
+              <Webhook className="mx-auto size-12 text-muted-foreground/50" />
+              <h2 className="mt-4 text-xl font-semibold">Integrations</h2>
+              <p className="mt-2 text-muted-foreground">
+                Connect external services to receive notifications when your
+                stories run. Add webhooks to send run results to your own
+                endpoints.
+              </p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Add an integration from the sidebar to get started.
               </p>
             </div>
           </div>
