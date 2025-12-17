@@ -167,9 +167,11 @@ export function AgentsPage() {
                             {story.name}
                           </span>
                         </div>
-                        <div className="ml-5 truncate text-xs text-muted-foreground">
-                          {new Date(story.updatedAt).toLocaleDateString()}
-                        </div>
+                        {story.scheduleText && (
+                          <div className="ml-5 truncate text-xs text-muted-foreground">
+                            {story.scheduleText}
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>
