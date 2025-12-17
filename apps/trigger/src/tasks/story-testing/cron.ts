@@ -45,11 +45,21 @@ export const agentScheduledTask = schedules.task({
     // Trigger the appropriate task based on test type
     const taskId = story.testType === 'vm' ? 'vm-agent' : 'browser-agent'
 
-    const handle = await tasks.trigger(taskId, {
-      runId: run.id,
-      storyId: story.id,
-      instructions: story.instructions,
-    })
+    // Use idempotency key to prevent duplicate runs within 1 hour
+    const idempotencyKey = `story-run-${storyId}-${Math.floor(Date.now() / (60 * 60 * 1000))}` // Changes every hour
+
+    const handle = await tasks.trigger(
+      taskId,
+      {
+        runId: run.id,
+        storyId: story.id,
+        instructions: story.instructions,
+      },
+      {
+        idempotencyKey,
+        idempotencyKeyTTL: '1h',
+      },
+    )
 
     await db
       .update(schema.storyRuns)

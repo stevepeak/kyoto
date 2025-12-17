@@ -20,6 +20,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "@sindresorhus/is": "catalog:"
+    "@sindresorhus/is": "catalog:",
+    "cron-parser": "catalog:"
   }
 }

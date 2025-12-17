@@ -2,6 +2,7 @@ import { getSessionRecording } from '@app/browserbase'
 import { getConfig } from '@app/config'
 import { desc, eq, schema } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
+import { validateCronMinimumInterval } from '@app/utils'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { auth, configure, schedules, tasks } from '@trigger.dev/sdk'
 import { TRPCError } from '@trpc/server'
@@ -129,6 +130,17 @@ export const browserAgentsRouter = router({
         })
       }
 
+      // Validate cron schedule minimum interval if provided
+      if (input.cronSchedule) {
+        const validation = validateCronMinimumInterval(input.cronSchedule)
+        if (!validation.isValid) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: validation.error ?? 'Invalid cron schedule',
+          })
+        }
+      }
+
       // Handle schedule management
       let triggerScheduleId = existing.triggerScheduleId
 
@@ -221,6 +233,15 @@ export const browserAgentsRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Failed to parse schedule. Please try a different phrasing.',
+        })
+      }
+
+      // Validate minimum interval of 1 hour
+      const validation = validateCronMinimumInterval(cronSchedule)
+      if (!validation.isValid) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: validation.error ?? 'Invalid cron schedule',
         })
       }
 
