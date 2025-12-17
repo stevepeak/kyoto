@@ -7,6 +7,7 @@ import {
 import { pluralize } from '@app/utils'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { resolve } from 'node:path'
 
 import { defaultVibeCheckAgents } from '../../agents'
 import { CLI_VERSION } from '../../generated/version'
@@ -17,7 +18,7 @@ import { constructModel } from '../../helpers/config/get-model'
  * MCP Server implementation for Kyoto code review tools.
  * This server exposes code review agents as MCP tools that can be called by AI agents.
  */
-async function runMcpServer(): Promise<void> {
+async function runMcpServer(args: { cwd?: string }): Promise<void> {
   const server = new McpServer(
     {
       name: 'Kyoto',
@@ -34,7 +35,8 @@ async function runMcpServer(): Promise<void> {
   // Errors are caught and returned as proper MCP error responses
   async function createContext(): Promise<VibeCheckContext> {
     try {
-      const gitRoot = await findGitRoot()
+      // Use provided cwd or find git root
+      const gitRoot = args.cwd ? resolve(args.cwd) : await findGitRoot()
       const config = await getConfig()
       const { model } = constructModel(config)
       const scope = { type: 'unstaged' as const }
@@ -193,8 +195,10 @@ async function runMcpServer(): Promise<void> {
  * Main entry point for MCP command.
  * Detects if running in MCP mode (stdio) or interactive mode (TTY).
  */
-export async function runMcpCommand(): Promise<void> {
-  await runMcpServer()
+export async function runMcpCommand(
+  args: { cwd?: string } = {},
+): Promise<void> {
+  await runMcpServer(args)
 }
 
 // Default export for React component (not used in MCP mode, but kept for compatibility)

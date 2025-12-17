@@ -68,8 +68,12 @@ export function registerCommands(program: Command): void {
   program
     .command('mcp')
     .description('MCP command')
-    .action(async () => {
-      await runMcpCommand()
+    .option(
+      '--cwd <path>',
+      'Working directory (git root) for agents to execute their work',
+    )
+    .action(async (options: { cwd?: string }) => {
+      await runMcpCommand({ cwd: options.cwd })
     })
 
   program

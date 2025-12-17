@@ -22,15 +22,16 @@ Kyoto MCP empowers your AI agents to evaluate and improve their vibe coding; ena
         Add the following configuration to `.cursor/mcp.json`:
 
         <Note>
-          Click here to [add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=kytoto&config=eyJjb21tYW5kIjogImt5b3RvIiwiYXJncyI6IFsibWNwIl19)
+          {/* https://cursor.com/docs/context/mcp/install-links#generate-install-link */}
+          Click here to [add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=kyoto&config=eyJjb21tYW5kIjoia3lvdG8gbWNwIC0tY3dkICR7d29ya3NwYWNlRm9sZGVyfSJ9)
         </Note>
 
         ```json .cursor/mcp.json
         {
           "mcpServers": {
-            "Kyoto": {
+            "kyoto": {
               "command": "kyoto",
-              "args": ["mcp"]
+              "args": ["mcp", "--cwd", "${workspaceFolder}"]
             }
           }
         }
@@ -42,6 +43,7 @@ Kyoto MCP empowers your AI agents to evaluate and improve their vibe coding; ena
         Create a rule file at `.cursor/rules/kyoto.mdc`:
 
         <Note>
+          {/* https://cursor.com/docs/integrations/deeplinks#rules */}
           Click here to [add to Cursor](cursor://anysphere.cursor-deeplink/rule?name=kyoto&text=---%0Adescription%3A+Kyoto+MCP+rules+for+vibe+checking+AI+code%0AalwaysApply%3A+true%0A---%0A%0AUse+the+Kyoto+MCP+tool+to+vibe+check+once+your+work+is+complete+to+ensure+the+code+aligns+with+our+best+coding+practices.%0A%0A)
         </Note>
 

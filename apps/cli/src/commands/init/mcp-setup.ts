@@ -110,10 +110,11 @@ export async function configureMcpJson(): Promise<boolean> {
 
     const mcpServers = mcpConfig.mcpServers
 
-    if (!mcpServers.kyoto) {
-      mcpServers.kyoto = {
+    if (!mcpServers.Kyoto) {
+      mcpServers.Kyoto = {
         command: 'kyoto',
-        args: ['mcp'],
+        // eslint-disable-next-line no-template-curly-in-string
+        args: ['mcp', '--cwd', '${workspaceFolder}'],
       }
 
       await writeFile(

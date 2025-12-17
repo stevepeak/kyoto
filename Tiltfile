@@ -46,7 +46,7 @@ cmd_button(
 local_resource(
     labels=["Development"],
     name='MCP Builder',
-    serve_cmd="bunx @modelcontextprotocol/inspector ~/.bun/bin/kyoto mcp",
+    serve_cmd="bunx @modelcontextprotocol/inspector ~/.bun/bin/kyoto mcp --cwd ./",
 )
 cmd_button(
     name="btn-mcp-kill",
