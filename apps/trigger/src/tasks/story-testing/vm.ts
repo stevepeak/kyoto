@@ -1,12 +1,11 @@
 import { getConfig } from '@app/config'
+import { runVmTestAgent, serializeAsciicast } from '@app/daytona'
 import { createDb, eq, schema } from '@app/db'
 import { type StoryTestOutput, type WebhookPayload } from '@app/schemas'
+import { cleanAsciicast } from '@app/utils'
 import { Daytona } from '@daytonaio/sdk'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { logger, streams, task } from '@trigger.dev/sdk'
-import { writeFile } from 'fs/promises'
-import { homedir } from 'os'
-import { join } from 'path'
-import { dedent } from 'ts-dedent'
 
 import { sendWebhooks } from '../github/send-webhooks'
 
@@ -19,7 +18,6 @@ type VmAgentTaskInput = {
 type VmAgentTaskOutput = {
   success: boolean
   sandboxId: string | null
-  asciinemaPath: string | null
   observations: StoryTestOutput | null
   error: string | null
 }
@@ -70,85 +68,50 @@ export const vmAgentTask = task({
         .set({ sessionId: sandboxId, updatedAt: new Date() })
         .where(eq(schema.storyRuns.id, runId))
 
-      void streams.append('progress', 'Installing dependencies...')
+      void streams.append('progress', 'Running VM test agent...')
 
-      // Install dependencies
-      const installResult = await sandbox.process.executeCommand(
-        dedent`
-          sudo apt-get update && \
-          sudo apt-get install -y asciinema
-        `,
-      )
+      // Create OpenRouter model for the agent
+      const openrouter = createOpenRouter({
+        apiKey: config.OPENROUTER_API_KEY,
+      })
+      const model = openrouter('openai/gpt-5-mini')
 
-      if (installResult.exitCode !== 0) {
-        throw new Error(
-          `Failed to install dependencies: ${installResult.result}`,
-        )
-      }
-
-      // Create a recording file path in the sandbox
-      const recordingPath = '/tmp/session-recording.cast'
-
-      void streams.append('progress', 'Running tests...')
-
-      await sandbox.fs.uploadFile(Buffer.from(instructions), 'instructions.md')
-
-      const testResult = await sandbox.process.executeCommand(
-        dedent`
-          asciinema rec ${recordingPath} -c \
-            'echo "hello world" && sleep 5 && cat instructions.md'
-        `,
-      )
-      // const testResult = await sandbox.process.executeCommand(
-      //   dedent`
-      //     npx @usekyoto/cli vibe test \
-      //       --vm \
-      //       --prompt instructions.md \
-      //       --record ${recordingPath}
-      //   `,
-      // )
-
-      // TODO: Parse observations from CLI output when format is defined
-      const observations: StoryTestOutput | null = null
-      logger.log('Test result', {
-        exitCode: testResult.exitCode,
-        output: testResult.result,
+      // Run the VM test agent with recorded PTY session
+      const result = await runVmTestAgent({
+        model,
+        sandbox,
+        instructions,
+        maxSteps: 50,
+        onProgress: (message) => {
+          logger.log('Agent progress', { message })
+          void streams.append('progress', message)
+        },
       })
 
-      // Download the recording
-      let asciinemaPath: string | null = null
-      try {
-        const recordingBuffer = await sandbox.fs.downloadFile(recordingPath)
+      logger.log('VM test agent completed', {
+        success: result.success,
+        response: result.response,
+      })
 
-        // Save to local machine
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-        const filename = `kyoto-vm-${runId}-${timestamp}.cast`
-        asciinemaPath = join(homedir(), 'Downloads', filename)
-
-        await writeFile(asciinemaPath, recordingBuffer)
-        logger.log('Asciinema recording saved', { path: asciinemaPath })
-        void streams.append('progress', `Recording saved to: ${asciinemaPath}`)
-      } catch (recordingError) {
-        logger.warn('Failed to save asciinema recording', {
-          error:
-            recordingError instanceof Error
-              ? recordingError.message
-              : String(recordingError),
-        })
-        void streams.append(
-          'progress',
-          'Note: Could not save recording (session may have been too short)',
-        )
-      }
+      // Serialize and clean the terminal recording
+      const rawRecording = serializeAsciicast(result.recording)
+      const terminalRecording = cleanAsciicast({ content: rawRecording })
+      logger.log('Terminal recording captured', {
+        length: terminalRecording.length,
+      })
 
       void streams.append('progress', 'VM agent completed successfully!')
 
-      // Update run with results
+      // TODO: Convert agent response to StoryTestOutput format
+      const observations: StoryTestOutput | null = null
+
+      // Update run with results and terminal recording
       await db
         .update(schema.storyRuns)
         .set({
           status: 'completed',
           observations,
+          terminalRecording,
           updatedAt: new Date(),
         })
         .where(eq(schema.storyRuns.id, runId))
@@ -175,9 +138,8 @@ export const vmAgentTask = task({
       })
 
       return {
-        success: true,
+        success: result.success,
         sandboxId,
-        asciinemaPath,
         observations,
         error: null,
       }
@@ -223,7 +185,6 @@ export const vmAgentTask = task({
       return {
         success: false,
         sandboxId,
-        asciinemaPath: null,
         observations: null,
         error: errorMessage,
       }

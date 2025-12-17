@@ -1,0 +1,1 @@
+ALTER TABLE "story_runs" ADD COLUMN "terminal_recording" text;

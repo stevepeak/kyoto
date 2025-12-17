@@ -1,4 +1,5 @@
 export { assert, default as is } from '@sindresorhus/is'
+export { cleanAsciicast } from './clean-asciicast'
 export { noop } from './noop'
 export { pluralize } from './pluralize'
 export { sleep } from './sleep'

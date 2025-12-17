@@ -54,10 +54,9 @@ export function createLspTool(ctx: { sandbox: Sandbox }) {
       'Use the LSP server to inspect code symbols within the workspace (documentSymbols or sandboxSymbols).',
     inputSchema: lspToolInputSchema,
     execute: async (input) => {
-      const projectRoot = `workspace/repo`
       const lspServer = await ctx.sandbox.createLspServer(
         languageMap[input.language],
-        projectRoot,
+        `workspace/repo`,
       )
 
       await lspServer.start()

@@ -286,6 +286,7 @@ export const storyRuns = pgTable(
     status: text('status').notNull().default('pending'),
     sessionId: text('session_id'),
     sessionRecordingUrl: text('session_recording_url'),
+    terminalRecording: text('terminal_recording'),
     observations: jsonb('observations'),
     error: text('error'),
     triggerRunId: text('trigger_run_id'),

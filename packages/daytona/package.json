@@ -16,8 +16,10 @@
   "dependencies": {
     "@app/config": "workspace:*",
     "@daytonaio/sdk": "catalog:",
+    "@opentelemetry/api": "catalog:",
     "@trigger.dev/sdk": "catalog:",
     "ai": "catalog:",
+    "ts-dedent": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@
     "@app/agents": "workspace:*",
     "@app/browserbase": "workspace:*",
     "@app/config": "workspace:*",
+    "@app/daytona": "workspace:*",
     "@app/db": "workspace:*",
     "@app/posthog": "workspace:^",
     "@app/schemas": "workspace:*",
@@ -18,7 +19,6 @@
     "@trigger.dev/sdk": "^4.3.0",
     "ai": "catalog:",
     "import-in-the-middle": "catalog:",
-    "ts-dedent": "catalog:",
     "zod": "catalog:"
   },
   "description": "Trigger.dev workflows for the application",
