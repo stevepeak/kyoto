@@ -90,7 +90,7 @@ export const vmAgentTask = task({
 
       logger.log('VM test agent completed', {
         success: result.success,
-        response: result.response,
+        observationsCount: result.observations.observations.length,
       })
 
       // Serialize and clean the terminal recording
@@ -102,8 +102,8 @@ export const vmAgentTask = task({
 
       void streams.append('progress', 'VM agent completed successfully!')
 
-      // TODO: Convert agent response to StoryTestOutput format
-      const observations: StoryTestOutput | null = null
+      // Use the structured observations from the agent
+      const observations: StoryTestOutput = result.observations
 
       // Update run with results and terminal recording
       await db

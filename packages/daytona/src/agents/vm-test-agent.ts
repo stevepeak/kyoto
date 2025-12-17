@@ -1,8 +1,10 @@
+import { type StoryTestOutput, storyTestOutputSchema } from '@app/schemas'
 import { type Sandbox } from '@daytonaio/sdk'
 import { type Tracer } from '@opentelemetry/api'
 import {
   Experimental_Agent as Agent,
   type LanguageModel,
+  Output,
   stepCountIs,
 } from 'ai'
 import { dedent } from 'ts-dedent'
@@ -62,8 +64,8 @@ export type VmTestAgentConfig = {
 }
 
 export type VmTestAgentResult = {
-  /** The agent's response/summary */
-  response: string
+  /** The agent's structured observations */
+  observations: StoryTestOutput
   /** The asciicast recording of the terminal session */
   recording: AsciicastRecording
   /** Whether the test was successful */
@@ -132,6 +134,9 @@ export async function runVmTestAgent(
           onProgress?.(step.reasoningText)
         }
       },
+      experimental_output: Output.object({
+        schema: storyTestOutputSchema,
+      }),
     })
 
     // Build the prompt
@@ -143,26 +148,26 @@ export async function runVmTestAgent(
       </TestInstructions>
 
       Execute each step carefully and report your findings.
+
+      After running the test, provide a structured response with:
+      - observations: A list of actions performed and their results (each with action, result, and timestamp)
+      - summary: A brief summary of what was accomplished
+      - success: Whether the overall task was successful
     `
 
     // Run the agent
     const result = await agent.generate({ prompt })
 
-    const response = result.text ?? ''
+    // Parse the structured output
+    const observations = storyTestOutputSchema.parse(result.experimental_output)
 
     // Get the recording
     const recording = ptySession.getRecording()
 
-    // Determine success based on response content
-    // This is a simple heuristic - the agent should indicate failure explicitly
-    const success =
-      !response.toLowerCase().includes('failed') &&
-      !response.toLowerCase().includes('error occurred')
-
     return {
-      response,
+      observations,
       recording,
-      success,
+      success: observations.success,
     }
   } finally {
     // Clean up the PTY session
