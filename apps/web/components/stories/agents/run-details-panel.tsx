@@ -4,12 +4,12 @@ import { type StoryRun } from '@app/schemas'
 import {
   ArrowLeft,
   CheckCircle,
-  Circle,
   Loader2,
   Terminal,
   Video,
   XCircle,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 
 import { TerminalPlayer } from '@/components/display/terminal-player'
 import { Button } from '@/components/ui/button'
@@ -71,9 +71,9 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {observations.summary}
-            </p>
+            <div className="prose prose-sm max-w-none dark:prose-invert [&_*]:text-muted-foreground">
+              <ReactMarkdown>{observations.summary}</ReactMarkdown>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -187,7 +187,7 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
 
       {!observations && !run.error && run.status === 'pending' && (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Circle className="size-8 mb-4" />
+          <Loader2 className="size-8 animate-spin mb-4" />
           <p>Waiting to start...</p>
         </div>
       )}

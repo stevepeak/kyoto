@@ -6,7 +6,7 @@ export function getDisplayStatus(run: StoryRun): RunDisplayStatus {
     return { status: 'running', label: 'Running' }
   }
   if (run.status === 'pending') {
-    return { status: 'pending', label: 'Pending' }
+    return { status: 'pending', label: 'Running' }
   }
   if (run.status === 'failed' || run.error) {
     return { status: 'failed', label: 'Failed' }
@@ -28,6 +28,8 @@ export function RunStatusIcon({ status }: { status: string }) {
     case 'failed':
       return <XCircle className="size-4 text-destructive" />
     case 'running':
+      return <Loader2 className="size-4 animate-spin text-blue-500" />
+    case 'pending':
       return <Loader2 className="size-4 animate-spin text-blue-500" />
     default:
       return <Circle className="size-4 text-muted-foreground" />

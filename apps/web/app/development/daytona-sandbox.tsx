@@ -2,10 +2,10 @@
 
 import { Copy, Loader2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { useTRPC } from '@/lib/trpc-client'
-import { toast } from 'sonner'
 
 export function DaytonaSandbox() {
   const trpc = useTRPC()
