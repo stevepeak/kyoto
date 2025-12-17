@@ -168,6 +168,7 @@
 .tiptap pre code {
   padding: 0 !important;
   background: transparent !important;
+  color: var(--color-foreground) !important;
 }
 
 /* Shiki code block styles */
