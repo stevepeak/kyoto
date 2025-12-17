@@ -35,8 +35,10 @@ export function useBrowserAgentsPage() {
   const [editedScheduleText, setEditedScheduleText] = useState<string>('')
   const [editedCronSchedule, setEditedCronSchedule] = useState<string>('')
 
-  // Run state
-  const [triggerHandle, setTriggerHandle] = useState<TriggerHandle | null>(null)
+  // Run state - includes storyId to track which story the run belongs to
+  const [triggerHandle, setTriggerHandle] = useState<
+    (TriggerHandle & { storyId: string }) | null
+  >(null)
 
   // Queries
   const storiesQuery = trpc.browserAgents.list.useQuery()
@@ -77,10 +79,13 @@ export function useBrowserAgentsPage() {
 
   const triggerMutation = trpc.browserAgents.trigger.useMutation({
     onSuccess: (data) => {
-      setTriggerHandle({
-        runId: data.triggerHandle.id,
-        publicAccessToken: data.triggerHandle.publicAccessToken,
-      })
+      if (selectedStoryId) {
+        setTriggerHandle({
+          runId: data.triggerHandle.id,
+          publicAccessToken: data.triggerHandle.publicAccessToken,
+          storyId: selectedStoryId,
+        })
+      }
       void storyQuery.refetch()
     },
   })
@@ -97,8 +102,8 @@ export function useBrowserAgentsPage() {
     publicAccessToken: triggerHandle?.publicAccessToken ?? null,
     toastMessages: {
       onProgress: (text) =>
-        text.split('\n').pop() || 'Browser agent running...',
-      onSuccess: 'Browser agent completed! 🎉',
+        text.split('\n').pop() || 'User story test running...',
+      onSuccess: 'User story test completed! 🎉',
       onError: (error) =>
         `Agent failed: ${error instanceof Error ? error.message : String(error)}`,
     },
@@ -125,13 +130,14 @@ export function useBrowserAgentsPage() {
   // Auto-reconnect to active run on page load/story change
   const activeRun = storyQuery.data?.activeRun as ActiveRun | null | undefined
   useEffect(() => {
-    if (activeRun && !triggerHandle) {
+    if (activeRun && selectedStoryId && !triggerHandle) {
       setTriggerHandle({
         runId: activeRun.triggerHandle.id,
         publicAccessToken: activeRun.triggerHandle.publicAccessToken,
+        storyId: selectedStoryId,
       })
     }
-  }, [activeRun, triggerHandle])
+  }, [activeRun, triggerHandle, selectedStoryId])
 
   // Handlers
   const handleCreateStory = useCallback(
@@ -221,8 +227,11 @@ export function useBrowserAgentsPage() {
   // Computed values
   const stories = storiesQuery.data ?? []
   const runs = (storyQuery.data?.runs ?? []) as BrowserAgentRun[]
+  // Only consider the current story as running if the triggerHandle belongs to it
   const isRunning =
-    triggerMutation.isPending || triggerHandle !== null || !!activeRun
+    triggerMutation.isPending ||
+    (triggerHandle !== null && triggerHandle.storyId === selectedStoryId) ||
+    !!activeRun
   const selectedRun = selectedRunId
     ? runs.find((r) => r.id === selectedRunId)
     : null

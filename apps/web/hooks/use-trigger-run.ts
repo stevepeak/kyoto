@@ -60,6 +60,20 @@ export function useTriggerRun<T = unknown>({
   const streamTextRef = useRef<string>('')
   const lastRunIdRef = useRef<string | null>(null)
 
+  // Store callbacks in refs to avoid infinite loops from dependency changes
+  const onCompleteRef = useRef(onComplete)
+  const onErrorRef = useRef(onError)
+  const onStreamTextRef = useRef(onStreamText)
+  const toastMessagesRef = useRef(toastMessages)
+
+  // Keep refs up to date
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+    onErrorRef.current = onError
+    onStreamTextRef.current = onStreamText
+    toastMessagesRef.current = toastMessages
+  })
+
   const { run, error: runError } = useRealtimeRun(runId ?? '', {
     accessToken: publicAccessToken ?? undefined,
     enabled: isEnabled,
@@ -95,10 +109,10 @@ export function useTriggerRun<T = unknown>({
     }
 
     if (!toastIdRef.current && runId) {
-      const message = toastMessages.onProgress?.('') ?? 'Loading...'
+      const message = toastMessagesRef.current.onProgress?.('') ?? 'Loading...'
       toastIdRef.current = toast.loading(message)
     }
-  }, [runId, isEnabled, showToast, toastMessages])
+  }, [runId, isEnabled, showToast])
 
   // Stream handling
   useEffect(() => {
@@ -113,7 +127,7 @@ export function useTriggerRun<T = unknown>({
     if (newParts.length > 0) {
       streamTextRef.current = fullText
       newParts.forEach((text: string) => {
-        onStreamText?.(text)
+        onStreamTextRef.current?.(text)
       })
 
       // KEEP THIS LOG
@@ -121,13 +135,13 @@ export function useTriggerRun<T = unknown>({
       console.log('[useTriggerRun 🌊] streaming...', streamParts)
 
       if (showToast && toastIdRef.current) {
-        const message = toastMessages.onProgress
-          ? toastMessages.onProgress(fullText)
+        const message = toastMessagesRef.current.onProgress
+          ? toastMessagesRef.current.onProgress(fullText)
           : (streamParts[streamParts.length - 1] ?? 'Loading...')
         toast.loading(message, { id: toastIdRef.current })
       }
     }
-  }, [streamParts, onStreamText, showToast, toastMessages])
+  }, [streamParts, showToast])
 
   // Completion/error handling
   useEffect(() => {
@@ -137,25 +151,26 @@ export function useTriggerRun<T = unknown>({
 
     if (run.isCompleted) {
       if (showToast && toastIdRef.current) {
-        const message = toastMessages.onSuccess ?? 'Sync completed successfully'
+        const message =
+          toastMessagesRef.current.onSuccess ?? 'Sync completed successfully'
         toast.success(message, { id: toastIdRef.current })
         toastIdRef.current = null
       }
-      onComplete?.(run.output as T)
+      onCompleteRef.current?.(run.output as T)
     }
 
     if (run.isFailed || run.isCancelled) {
       const error = new Error('Workflow failed')
       if (showToast && toastIdRef.current) {
-        const message = toastMessages.onError
-          ? toastMessages.onError(error)
+        const message = toastMessagesRef.current.onError
+          ? toastMessagesRef.current.onError(error)
           : error.message
         toast.error(message, { id: toastIdRef.current })
         toastIdRef.current = null
       }
-      onError?.(error)
+      onErrorRef.current?.(error)
     }
-  }, [run, runId, onComplete, onError, showToast, toastMessages])
+  }, [run, runId, showToast])
 
   // Handle runError
   useEffect(() => {
@@ -167,14 +182,14 @@ export function useTriggerRun<T = unknown>({
       runError instanceof Error ? runError : new Error(String(runError))
 
     if (showToast && toastIdRef.current) {
-      const message = toastMessages.onError
-        ? toastMessages.onError(error)
+      const message = toastMessagesRef.current.onError
+        ? toastMessagesRef.current.onError(error)
         : error.message
       toast.error(message, { id: toastIdRef.current })
       toastIdRef.current = null
     }
-    onError?.(error)
-  }, [runError, onError, showToast, toastMessages])
+    onErrorRef.current?.(error)
+  }, [runError, showToast])
 
   const isLoading =
     isEnabled &&

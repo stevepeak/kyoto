@@ -83,8 +83,10 @@ export function DashboardPage() {
                     User story testing
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Try our browser agents that run periodic user story tests on
-                    your website to ensure functionality is working as expected.
+                    Try our agents that run periodic user story tests in the{' '}
+                    <b>browser</b> or a <b>virtual machine</b> to test your
+                    website, cli, or api to ensuring functionality is working as
+                    expected.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-violet-600 transition-colors group-hover:text-violet-500">
