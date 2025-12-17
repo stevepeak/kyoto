@@ -62,7 +62,7 @@
     "knip:fix": "knip --fix",
     "ci": "bun run typecheck && bun run lint && bun run knip && bun run build",
     "fix": "turbo run fix",
-    "clean": "turbo run clean",
+    "clean": "turbo run clean | rm -rf .turbo",
     "kill": "&& lsof -i :3000 -t | xargs -r kill && lsof -i :3001 -t | xargs -r kill && lsof -i :6006 -t | xargs -r kill"
   },
   "devDependencies": {

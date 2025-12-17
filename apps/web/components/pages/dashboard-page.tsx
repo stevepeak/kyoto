@@ -1,6 +1,6 @@
 'use client'
 
-import { Bot, Terminal } from 'lucide-react'
+import { BookOpen, Bot, Code, FileText, Terminal } from 'lucide-react'
 import Link from 'next/link'
 
 import { Kanji } from '@/components/display/kanji'
@@ -97,6 +97,101 @@ export function DashboardPage() {
               </CardHeader>
             </Card>
           </Link>
+
+          {/* <Link href="/vibe-prompts">
+            <Card
+              className={cn(
+                'group relative h-full cursor-pointer overflow-hidden transition-all duration-300',
+                'hover:border-foreground/30 hover:shadow-lg',
+                'bg-gradient-to-br from-card via-card to-muted/30',
+              )}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <CardHeader className="relative space-y-4 p-8">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition-transform duration-300 group-hover:scale-110">
+                  <FileText className="size-7" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-semibold tracking-tight">
+                    Vibe prompts
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    Free prompts that improve your vibe coding experience.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-blue-600 transition-colors group-hover:text-blue-500">
+                  <span>Explore prompts</span>
+                  <span className="transition-transform duration-200 group-hover:translate-x-1">
+                    →
+                  </span>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link> */}
+
+          <Link
+            href="https://github.com/stevepeak/kyoto-template"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Card
+              className={cn(
+                'group relative h-full cursor-pointer overflow-hidden transition-all duration-300',
+                'hover:border-foreground/30 hover:shadow-lg',
+                'bg-gradient-to-br from-card via-card to-muted/30',
+              )}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <CardHeader className="relative space-y-4 p-8">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 transition-transform duration-300 group-hover:scale-110">
+                  <Code className="size-7" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-semibold tracking-tight">
+                    Vibe coding git template
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    A git repository template with all the build-in stuff for
+                    creating a Next.js web app, workflows, CLI, with sample
+                    packages for agents, and amazing tooling with Bun.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-indigo-600 transition-colors group-hover:text-indigo-500">
+                  <span>View template</span>
+                  <span className="transition-transform duration-200 group-hover:translate-x-1">
+                    →
+                  </span>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          {/* <Card
+            className={cn(
+              'group relative h-full overflow-hidden transition-all duration-300',
+              'bg-gradient-to-br from-card via-card to-muted/30',
+              'opacity-75',
+            )}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 opacity-0" />
+            <CardHeader className="relative space-y-4 p-8">
+              <div className="flex size-14 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                <BookOpen className="size-7" />
+              </div>
+              <div className="space-y-2">
+                <CardTitle className="text-2xl font-semibold tracking-tight">
+                  User behavior wiki
+                </CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  Generate a user behavior wiki by having an ai navigate around
+                  your product exploring tools and features.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2 pt-2 text-sm font-medium text-muted-foreground">
+                <span>Coming soon</span>
+              </div>
+            </CardHeader>
+          </Card> */}
         </div>
 
         <p className="text-center text-sm text-muted-foreground">
