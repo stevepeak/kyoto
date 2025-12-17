@@ -2,8 +2,8 @@ import { getConfig } from '@app/config'
 import { createDb, eq, schema } from '@app/db'
 import { logger, schedules, tasks } from '@trigger.dev/sdk'
 
-export const browserAgentScheduledTask = schedules.task({
-  id: 'browser-agent-scheduled',
+export const agentScheduledTask = schedules.task({
+  id: 'agent-scheduled',
   run: async (payload) => {
     const storyId = payload.externalId
 
@@ -50,6 +50,14 @@ export const browserAgentScheduledTask = schedules.task({
       storyId: story.id,
       instructions: story.instructions,
     })
+
+    await db
+      .update(schema.storyRuns)
+      .set({
+        triggerRunId: handle.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.storyRuns.id, run.id))
 
     logger.log('Triggered browser agent task', {
       runId: run.id,

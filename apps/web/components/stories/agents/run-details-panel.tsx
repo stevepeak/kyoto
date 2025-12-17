@@ -6,10 +6,12 @@ import {
   CheckCircle,
   Circle,
   Loader2,
+  Terminal,
   Video,
   XCircle,
 } from 'lucide-react'
 
+import { TerminalPlayer } from '@/components/display/terminal-player'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSessionRecordingPlayer } from '@/hooks/use-session-recording-player'
@@ -29,9 +31,10 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
     isLoading: isRecordingLoading,
     error: recordingError,
     hasRecording,
+    recordingType,
+    terminalRecording,
   } = useSessionRecordingPlayer({
     runId: run.id,
-    sessionId: run.sessionId,
   })
 
   const observations = run.observations
@@ -91,39 +94,57 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
       )}
 
       {/* Session Recording */}
-      {run.sessionId && (
+      {(isRecordingLoading || hasRecording || recordingError) && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Video className="size-5" />
-              Session Recording
+              {recordingType === 'terminal' ? (
+                <Terminal className="size-5" />
+              ) : (
+                <Video className="size-5" />
+              )}
+              {recordingType === 'terminal'
+                ? 'Terminal Recording'
+                : 'Session Recording'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-center rounded-lg bg-muted/50">
-              {isRecordingLoading ? (
-                <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
-                  <Loader2 className="size-8 animate-spin" />
-                  <span>Loading recording...</span>
-                </div>
-              ) : recordingError ? (
-                <div className="flex flex-col items-center gap-3 py-12 text-destructive">
-                  <span>Failed to load recording</span>
-                  <span className="text-sm text-muted-foreground">
-                    {recordingError.message}
-                  </span>
-                </div>
-              ) : !isPlayerReady && hasRecording ? (
-                <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
-                  <Loader2 className="size-8 animate-spin" />
-                  <span>Initializing player...</span>
-                </div>
-              ) : null}
-              <div
-                ref={containerRef}
-                className={cn(isPlayerReady ? 'block' : 'hidden')}
+            {recordingType === 'terminal' && terminalRecording ? (
+              <TerminalPlayer
+                recording={terminalRecording}
+                className="rounded-lg bg-muted/50 p-3"
+                autoPlay={false}
               />
-            </div>
+            ) : (
+              <div className="flex items-center justify-center rounded-lg bg-muted/50">
+                {isRecordingLoading ? (
+                  <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
+                    <Loader2 className="size-8 animate-spin" />
+                    <span>Loading recording...</span>
+                  </div>
+                ) : recordingError ? (
+                  <div className="flex flex-col items-center gap-3 py-12 text-destructive">
+                    <span>Failed to load recording</span>
+                    <span className="text-sm text-muted-foreground">
+                      {recordingError.message}
+                    </span>
+                  </div>
+                ) : recordingType === 'none' ? (
+                  <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
+                    <span>No recording available</span>
+                  </div>
+                ) : !isPlayerReady && hasRecording ? (
+                  <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
+                    <Loader2 className="size-8 animate-spin" />
+                    <span>Initializing player...</span>
+                  </div>
+                ) : null}
+                <div
+                  ref={containerRef}
+                  className={cn(isPlayerReady ? 'block' : 'hidden')}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

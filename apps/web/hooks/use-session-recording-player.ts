@@ -7,12 +7,10 @@ import { useTRPC } from '@/lib/trpc-client'
 
 type UseSessionRecordingPlayerArgs = {
   runId: string
-  sessionId: string | null
 }
 
 export function useSessionRecordingPlayer({
   runId,
-  sessionId,
 }: UseSessionRecordingPlayerArgs) {
   const trpc = useTRPC()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -21,13 +19,14 @@ export function useSessionRecordingPlayer({
 
   const recordingQuery = trpc.browserAgents.getRecording.useQuery(
     { runId },
-    { enabled: !!sessionId },
+    { enabled: !!runId },
   )
 
   const initPlayer = useCallback(async () => {
     if (
       !containerRef.current ||
-      !recordingQuery.data?.events ||
+      recordingQuery.data?.type !== 'browser' ||
+      !recordingQuery.data.events ||
       playerRef.current
     ) {
       return
@@ -52,7 +51,7 @@ export function useSessionRecordingPlayer({
     })
 
     setIsPlayerReady(true)
-  }, [recordingQuery.data?.events])
+  }, [recordingQuery.data])
 
   useEffect(() => {
     void initPlayer()
@@ -75,6 +74,13 @@ export function useSessionRecordingPlayer({
     isPlayerReady,
     isLoading: recordingQuery.isLoading,
     error: recordingQuery.error,
-    hasRecording: !!recordingQuery.data,
+    hasRecording:
+      recordingQuery.data?.type !== undefined &&
+      recordingQuery.data.type !== 'none',
+    recordingType: recordingQuery.data?.type ?? 'none',
+    terminalRecording:
+      recordingQuery.data?.type === 'terminal'
+        ? recordingQuery.data.recording
+        : null,
   }
 }

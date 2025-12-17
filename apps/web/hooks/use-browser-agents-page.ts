@@ -82,7 +82,6 @@ export function useBrowserAgentsPage() {
       if (selectedStoryId) {
         setTriggerHandle({
           runId: data.triggerHandle.id,
-          publicAccessToken: data.triggerHandle.publicAccessToken,
           storyId: selectedStoryId,
         })
       }
@@ -96,10 +95,16 @@ export function useBrowserAgentsPage() {
     },
   })
 
+  const publicAccessTokenQuery =
+    trpc.browserAgents.getRunPublicAccessToken.useQuery(
+      { runId: triggerHandle?.runId ?? '' },
+      { enabled: Boolean(triggerHandle?.runId) },
+    )
+
   // Run tracking
   useTriggerRun({
     runId: triggerHandle?.runId ?? null,
-    publicAccessToken: triggerHandle?.publicAccessToken ?? null,
+    publicAccessToken: publicAccessTokenQuery.data?.publicAccessToken ?? null,
     toastMessages: {
       onProgress: (text) =>
         text.split('\n').pop() || 'User story test running...',
@@ -133,7 +138,6 @@ export function useBrowserAgentsPage() {
     if (activeRun && selectedStoryId && !triggerHandle) {
       setTriggerHandle({
         runId: activeRun.triggerHandle.id,
-        publicAccessToken: activeRun.triggerHandle.publicAccessToken,
         storyId: selectedStoryId,
       })
     }

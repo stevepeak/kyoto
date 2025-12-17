@@ -3,7 +3,7 @@ import { getConfig } from '@app/config'
 import { desc, eq, schema } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
-import { configure, schedules, tasks } from '@trigger.dev/sdk'
+import { auth, configure, schedules, tasks } from '@trigger.dev/sdk'
 import { TRPCError } from '@trpc/server'
 import { generateText } from 'ai'
 import { dedent } from 'ts-dedent'
@@ -15,7 +15,7 @@ let isTriggerConfigured = false
 
 function ensureTriggerConfigured(secretKey: string) {
   if (!isTriggerConfigured) {
-    configure({ secretKey })
+    configure({ accessToken: secretKey })
     isTriggerConfigured = true
   }
 }
@@ -54,8 +54,7 @@ export const browserAgentsRouter = router({
       const activeRun = runs.find(
         (run) =>
           (run.status === 'pending' || run.status === 'running') &&
-          run.triggerRunId &&
-          run.triggerPublicAccessToken,
+          run.triggerRunId,
       )
 
       return {
@@ -66,7 +65,6 @@ export const browserAgentsRouter = router({
               id: activeRun.id,
               triggerHandle: {
                 id: activeRun.triggerRunId!,
-                publicAccessToken: activeRun.triggerPublicAccessToken!,
               },
             }
           : null,
@@ -140,7 +138,7 @@ export const browserAgentsRouter = router({
         if (input.cronSchedule) {
           // Create or update schedule
           const createdSchedule = await schedules.create({
-            task: 'browser-agent-scheduled',
+            task: 'agent-scheduled',
             cron: input.cronSchedule,
             timezone: ctx.user.timeZone ?? 'UTC',
             externalId: input.id,
@@ -306,7 +304,6 @@ export const browserAgentsRouter = router({
         .update(schema.storyRuns)
         .set({
           triggerRunId: handle.id,
-          triggerPublicAccessToken: handle.publicAccessToken,
           updatedAt: new Date(),
         })
         .where(eq(schema.storyRuns.id, run.id))
@@ -326,9 +323,34 @@ export const browserAgentsRouter = router({
         run: updatedRun,
         triggerHandle: {
           id: handle.id,
-          publicAccessToken: handle.publicAccessToken,
         },
       }
+    }),
+
+  getRunPublicAccessToken: protectedProcedure
+    .input(z.object({ runId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const run = await ctx.db.query.storyRuns.findFirst({
+        where: (runs, { and, eq }) =>
+          and(eq(runs.triggerRunId, input.runId), eq(runs.userId, ctx.user.id)),
+      })
+
+      if (!run) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Run not found' })
+      }
+
+      ensureTriggerConfigured(ctx.env.TRIGGER_SECRET_KEY)
+
+      const publicAccessToken = await auth.createPublicToken({
+        scopes: {
+          read: {
+            runs: input.runId,
+          },
+        },
+        expirationTime: '15m',
+      })
+
+      return { publicAccessToken }
     }),
 
   getRun: protectedProcedure
@@ -381,18 +403,19 @@ export const browserAgentsRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Run not found' })
       }
 
-      if (!run.sessionId) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No session recording available for this run',
-        })
+      if (run.terminalRecording) {
+        return { type: 'terminal' as const, recording: run.terminalRecording }
       }
 
-      const events = await getSessionRecording({
-        apiKey: ctx.env.BROWSERBASE_API_KEY,
-        sessionId: run.sessionId,
-      })
+      if (run.sessionId) {
+        const events = await getSessionRecording({
+          apiKey: ctx.env.BROWSERBASE_API_KEY,
+          sessionId: run.sessionId,
+        })
 
-      return { events }
+        return { type: 'browser' as const, events }
+      }
+
+      return { type: 'none' as const }
     }),
 })

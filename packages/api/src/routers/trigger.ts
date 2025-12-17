@@ -10,7 +10,7 @@ let isTriggerConfigured = false
 function ensureTriggerConfigured(secretKey: string) {
   if (!isTriggerConfigured) {
     configure({
-      secretKey,
+      accessToken: secretKey,
     })
     isTriggerConfigured = true
   }

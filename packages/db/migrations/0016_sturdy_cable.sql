@@ -1,0 +1,1 @@
+ALTER TABLE "story_runs" DROP COLUMN "trigger_public_access_token";

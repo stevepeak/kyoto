@@ -9,5 +9,5 @@ export {
 } from './tasks/github'
 export { helloWorldTask } from './tasks/hello-world'
 export { browserAgentTask } from './tasks/story-testing/browser'
-export { browserAgentScheduledTask } from './tasks/story-testing/cron'
+export { agentScheduledTask } from './tasks/story-testing/cron'
 export { vmAgentTask } from './tasks/story-testing/vm'

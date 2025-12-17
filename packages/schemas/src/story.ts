@@ -55,7 +55,6 @@ export const storyRunSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   triggerRunId: z.string().nullable(),
-  triggerPublicAccessToken: z.string().nullable(),
 })
 
 export type StoryRun = z.infer<typeof storyRunSchema>
@@ -66,7 +65,6 @@ export type StoryRun = z.infer<typeof storyRunSchema>
 
 export const triggerHandleSchema = z.object({
   runId: z.string(),
-  publicAccessToken: z.string(),
 })
 
 export type TriggerHandle = z.infer<typeof triggerHandleSchema>
@@ -75,7 +73,6 @@ export const activeRunSchema = z.object({
   id: z.string().uuid(),
   triggerHandle: z.object({
     id: z.string(),
-    publicAccessToken: z.string(),
   }),
 })
 

@@ -290,7 +290,6 @@ export const storyRuns = pgTable(
     observations: jsonb('observations'),
     error: text('error'),
     triggerRunId: text('trigger_run_id'),
-    triggerPublicAccessToken: text('trigger_public_access_token'),
   },
   (table) => ({
     storyIdIdx: index('story_runs_story_id_idx').on(table.storyId),
