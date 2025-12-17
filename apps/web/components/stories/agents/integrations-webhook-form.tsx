@@ -1,7 +1,7 @@
 'use client'
 
 import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -51,7 +51,7 @@ export function WebhookForm(props: WebhookFormProps) {
   const [formUrl, setFormUrl] = useState('')
   const [formErrors, setFormErrors] = useState<WebhookFormErrors>({})
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
     const errors = validateWebhookForm({ name: formName, url: formUrl })

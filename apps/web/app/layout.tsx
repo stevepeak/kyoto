@@ -1,5 +1,6 @@
 import { type Metadata } from 'next'
 import localFont from 'next/font/local'
+import { type ReactNode } from 'react'
 
 import { Navbar } from '@/components/layout/navbar'
 import { PostHogProvider } from '@/components/providers/posthog-provider'
@@ -36,11 +37,7 @@ export const metadata: Metadata = {
   description: 'Kyoto - Vibe coding tools for the developers of tomorrow.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={cormorantGaramond.variable}>

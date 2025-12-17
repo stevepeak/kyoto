@@ -1,11 +1,10 @@
 import { appRouter, type Context } from '@app/api'
 import { getConfig } from '@app/config'
-import { type NextRequest } from 'next/server'
 
 import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
 
-export async function createContext(req: NextRequest): Promise<Context> {
+export async function createContext(): Promise<Context> {
   const env = getConfig()
 
   const session = await getSession()

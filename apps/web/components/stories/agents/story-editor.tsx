@@ -1,6 +1,7 @@
 'use client'
 
 import { Clock, Loader2 } from 'lucide-react'
+import { type ChangeEvent } from 'react'
 
 import { Tiptap } from '@/components/editors/tiptap'
 
@@ -11,7 +12,7 @@ type StoryEditorProps = {
   isParsing: boolean
   parseError: string | null
   onInstructionsChange: (value: string) => void
-  onScheduleTextChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onScheduleTextChange: (e: ChangeEvent<HTMLInputElement>) => void
   onScheduleBlur: () => void
 }
 

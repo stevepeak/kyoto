@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import superjson from 'superjson'
 
 import { trpc } from '@/lib/trpc-client'
@@ -14,7 +14,7 @@ function getUrl() {
 }
 
 interface TRPCProviderProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function TRPCProvider(props: TRPCProviderProps) {

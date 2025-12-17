@@ -1,12 +1,12 @@
 import { type VariantProps } from 'class-variance-authority'
 import { type LucideIcon } from 'lucide-react'
-import { forwardRef, type ReactNode } from 'react'
+import { type ComponentProps, forwardRef, type ReactNode } from 'react'
 
 import { Button, type buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface ShimmerButtonProps
-  extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
+  extends ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
   icon?: LucideIcon
   isLoading?: boolean
   loadingText?: string

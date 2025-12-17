@@ -6,7 +6,7 @@ interface RepoPageProps {
 }
 
 export function RepoPage(props: RepoPageProps) {
-  const { owner, repo } = props
+  const { repo } = props
 
   return (
     <div className="container mx-auto min-h-screen py-12">

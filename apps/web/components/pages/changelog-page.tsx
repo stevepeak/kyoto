@@ -280,7 +280,7 @@ function ChangelogSummaryCard({
     try {
       await navigator.clipboard.writeText(changelogText)
       toast.success('Changelog copied to clipboard')
-    } catch (_error) {
+    } catch {
       toast.error('Failed to copy changelog')
     }
   }

@@ -8,7 +8,7 @@ function handler(req: NextRequest) {
     endpoint: '/api/trpc',
     req,
     router: appRouter,
-    createContext: () => createContext(req),
+    createContext,
     onError({ error, path }) {
       // eslint-disable-next-line no-console
       console.error(`tRPC Error on ${path}:`, error)
