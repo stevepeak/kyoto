@@ -27,6 +27,9 @@ const SYSTEM_PROMPT = dedent`
   - You can read files from the filesystem
   - All your terminal commands are being recorded for playback
 
+  # Notes
+  - If asked permission to run a command, try again with \'yes | <command>\'
+
   # Guidelines
   1. Follow the test instructions carefully and precisely
   2. Run commands one at a time and observe the output
