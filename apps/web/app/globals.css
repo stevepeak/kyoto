@@ -164,6 +164,12 @@
   font-family: var(--font-sans) !important;
 }
 
+/* Remove padding from code elements inside pre blocks */
+.tiptap pre code {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
 /* Shiki code block styles */
 .shiki-container {
   @apply rounded-md border border-border bg-muted/30 overflow-hidden;
