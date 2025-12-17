@@ -24,6 +24,7 @@ type VmAgentTaskOutput = {
 
 export const vmAgentTask = task({
   id: 'vm-agent',
+  maxDuration: 60, // 1 minute timeout
   run: async (input: VmAgentTaskInput): Promise<VmAgentTaskOutput> => {
     const { runId, storyId, instructions } = input
 
@@ -55,6 +56,8 @@ export const vmAgentTask = task({
 
       // Create ephemeral sandbox
       sandbox = await daytona.create({
+        // * gave up on this because i could not upload the image to daytona
+        // image: 'kyoto-cli-base',
         language: 'typescript',
         autoStopInterval: 30, // Auto-stop after 30 minutes of inactivity
       })

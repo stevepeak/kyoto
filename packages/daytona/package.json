@@ -10,6 +10,7 @@
   "scripts": {
     "clean": "rm -rf node_modules dist",
     "typecheck": "tsc --noEmit",
+    "deploy": "daytona snapshots create kyoto-cli-base:0.0.1 --dockerfile ./Dockerfile",
     "lint": "eslint . && prettier --ignore-path='../../.prettierignore' --check .",
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
