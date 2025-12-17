@@ -10,6 +10,14 @@ local_resource(
     serve_cmd="bun --cwd apps/web dev",
     links=[ link("http://localhost:3000/", "Web") ],
 )
+cmd_button(
+    name="btn-web-kill",
+    resource="Web",
+    icon_name="terminal",
+    text="Kill Port",
+    argv=["sh", "-c", "lsof -i :3000 -t | xargs kill"],
+)
+
 
 local_resource(
     name='Trigger',
@@ -26,13 +34,26 @@ local_resource(
     links=[ link("http://localhost:3001", "Docs") ],
 )
 
+cmd_button(
+    name="btn-docs-kill",
+    resource="Docs",
+    icon_name="terminal",
+    text="Kill Port",
+    argv=["sh", "-c", "lsof -i :3001 | awk 'NR>1 {print $2}' | xargs kill"],
+)
+
 # Development => MCP Builder
 local_resource(
     labels=["Development"],
     name='MCP Builder',
     serve_cmd="bunx @modelcontextprotocol/inspector ~/.bun/bin/kyoto mcp",
-    # ! cannot show link, must get from logs w/ token
-    # links=[ link("http://localhost:6274", "MCP Inspector") ],
+)
+cmd_button(
+    name="btn-mcp-kill",
+    resource="MCP Builder",
+    icon_name="terminal",
+    text="Kill Port",
+    argv=["sh", "-c", "lsof -i :6274 -t | xargs kill"],
 )
 
 local_resource(
@@ -47,4 +68,11 @@ local_resource(
     labels=["Development"],
     serve_cmd="bun run --cwd apps/web storybook",
     links=[ link("http://localhost:6006/", "Storybook") ],
+)
+cmd_button(
+    name="btn-storybook-kill",
+    resource="Storybook",
+    icon_name="terminal",
+    text="Kill Port",
+    argv=["sh", "-c", "lsof -i :6006 -t | xargs kill"],
 )
