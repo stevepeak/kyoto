@@ -17,6 +17,7 @@
   "dependencies": {
     "@app/config": "workspace:*",
     "@daytonaio/sdk": "catalog:",
+    "@app/schemas": "workspace:*",
     "@opentelemetry/api": "catalog:",
     "@trigger.dev/sdk": "catalog:",
     "ai": "catalog:",

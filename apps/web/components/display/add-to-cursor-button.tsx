@@ -1,9 +1,9 @@
+import { type VariantProps } from 'class-variance-authority'
 import { type ComponentProps, forwardRef } from 'react'
 
 import { CursorIcon } from '@/components/icons/cursor-icon'
 import { Button, type buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { type VariantProps } from 'class-variance-authority'
 
 type AddToCursorButtonProps = ComponentProps<'button'> &
   VariantProps<typeof buttonVariants>

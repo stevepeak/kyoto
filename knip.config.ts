@@ -26,6 +26,7 @@ const config: KnipConfig = {
         '**/*.d.ts',
         '**/.eslintrc.json',
       ],
+      ignoreDependencies: ['react-grab'],
     },
     'apps/cli': {
       entry: ['src/cli.tsx', 'src/commands/**/*.tsx'],
@@ -36,7 +37,7 @@ const config: KnipConfig = {
         '**/*.d.ts',
         'src/generated/**',
       ],
-      ignoreDependencies: ['playwright'],
+      ignoreDependencies: ['playwright', 'playwright-core'],
     },
     'apps/trigger': {
       entry: ['trigger.config.ts'],
@@ -71,6 +72,9 @@ const config: KnipConfig = {
         '**/*.d.ts',
         'src/helpers/env.ts',
       ],
+    },
+    'packages/daytona': {
+      ignoreBinaries: ['daytona'],
     },
   },
   ignore: [
