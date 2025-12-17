@@ -88,6 +88,7 @@
         "@app/db": "workspace:*",
         "@app/posthog": "workspace:^",
         "@app/schemas": "workspace:*",
+        "@app/utils": "workspace:*",
         "@browserbasehq/stagehand": "catalog:",
         "@daytonaio/sdk": "catalog:",
         "@octokit/auth-app": "catalog:",

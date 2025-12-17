@@ -40,7 +40,7 @@ export function TerminalPlayer({
     if (!containerRef.current || !recording) return
 
     // Dynamic import since asciinema-player is client-only
-    import('asciinema-player').then((AsciinemaPlayer) => {
+    void import('asciinema-player').then((asciinemaPlayerModule) => {
       // Clear previous player
       if (containerRef.current) {
         containerRef.current.innerHTML = ''
@@ -57,14 +57,18 @@ export function TerminalPlayer({
       urlRef.current = url
 
       // Create the player
-      playerRef.current = AsciinemaPlayer.create(url, containerRef.current, {
-        theme,
-        fit,
-        idleTimeLimit,
-        speed,
-        autoPlay,
-        loop,
-      })
+      playerRef.current = asciinemaPlayerModule.create(
+        url,
+        containerRef.current,
+        {
+          theme,
+          fit,
+          idleTimeLimit,
+          speed,
+          autoPlay,
+          loop,
+        },
+      )
     })
 
     // Cleanup on unmount
