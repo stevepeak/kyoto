@@ -9,7 +9,7 @@ import {
   WebhookActions,
   WebhookForm,
   WebhookList,
-} from '@/components/experiments/browser-agents'
+} from '@/components/stories/agents'
 import { useTRPC } from '@/lib/trpc-client'
 
 export function IntegrationsPanel() {

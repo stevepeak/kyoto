@@ -1,7 +1,7 @@
 import { type Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { BrowserAgentsPage } from '@/components/experiments/browser-agents-page'
+import { AgentsPage } from '@/components/stories/agents-page'
 import { getSession } from '@/lib/auth-server'
 
 export const dynamic = 'force-dynamic'
@@ -18,5 +18,5 @@ export default async function StoriesPage() {
     redirect('/login?redirect=/stories')
   }
 
-  return <BrowserAgentsPage />
+  return <AgentsPage />
 }

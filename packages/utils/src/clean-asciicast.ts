@@ -1,5 +1,60 @@
 type AsciicastEvent = [number, string, string]
 
+function hasVisibleOutput(text: string): boolean {
+  for (let index = 0; index < text.length; index++) {
+    const code = text.charCodeAt(index)
+
+    // Skip ANSI escape sequences.
+    if (code === 0x1b) {
+      const next = text.charCodeAt(index + 1)
+
+      // CSI: ESC [ ... <final>
+      if (next === 0x5b) {
+        index += 2
+        for (; index < text.length; index++) {
+          const c = text.charCodeAt(index)
+          if (
+            (c >= 0x30 && c <= 0x39) || // 0-9
+            c === 0x3b || // ;
+            c === 0x3f || // ?
+            (c >= 0x20 && c <= 0x2f) // intermediates
+          ) {
+            continue
+          }
+          if (c >= 0x40 && c <= 0x7e) {
+            break
+          }
+          break
+        }
+        continue
+      }
+
+      // OSC: ESC ] ... BEL or ST (ESC \)
+      if (next === 0x5d) {
+        index += 2
+        for (; index < text.length; index++) {
+          const c = text.charCodeAt(index)
+          if (c === 0x07) break
+          if (c === 0x1b && text.charCodeAt(index + 1) === 0x5c) {
+            index++
+            break
+          }
+        }
+        continue
+      }
+
+      continue
+    }
+
+    // Skip C0 controls + space + DEL.
+    if (code <= 0x20 || code === 0x7f) continue
+
+    return true
+  }
+
+  return false
+}
+
 /**
  * Cleans an asciicast recording by removing command markers.
  * Removes patterns like:
@@ -40,7 +95,7 @@ export function cleanAsciicast(args: { content: string }): string {
       )
 
     // Skip if output is now empty or just whitespace/control chars
-    if (cleaned.replace(/[\r\n\s\u001b[\]0-9;GKHJm]*/g, '') === '') {
+    if (!hasVisibleOutput(cleaned)) {
       continue
     }
 

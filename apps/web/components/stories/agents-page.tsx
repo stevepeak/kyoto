@@ -8,8 +8,8 @@ import {
   RunDetailsPanel,
   RunSidebar,
   StoryEditor,
-} from '@/components/experiments/browser-agents'
-import { IntegrationsPanel } from '@/components/experiments/integrations-panel'
+} from '@/components/stories/agents'
+import { IntegrationsPanel } from '@/components/stories/integrations-panel'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { useBrowserAgentsPage } from '@/hooks/use-browser-agents-page'
 import { cn } from '@/lib/utils'
 
-export function BrowserAgentsPage() {
+export function AgentsPage() {
   const {
     activeTab,
     setActiveTab,
