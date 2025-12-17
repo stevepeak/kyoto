@@ -1,4 +1,5 @@
 import { browserAgentsRouter } from './routers/experiments/browser-agents'
+import { developmentRouter } from './routers/development'
 import { feedbackRouter } from './routers/feedback'
 import { integrationsRouter } from './routers/integrations'
 import { orgRouter } from './routers/org'
@@ -26,6 +27,7 @@ export const appRouter = router({
   trigger: triggerRouter,
   integrations: integrationsRouter,
   browserAgents: browserAgentsRouter,
+  development: developmentRouter,
 })
 
 // Export type router type signature,
