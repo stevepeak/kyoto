@@ -1,5 +1,6 @@
 import { type Metadata } from 'next'
 import localFont from 'next/font/local'
+import Script from 'next/script'
 import { type ReactNode } from 'react'
 
 import { Navbar } from '@/components/layout/navbar'
@@ -40,6 +41,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* eslint-disable-next-line no-process-env */}
+        {process.env.NODE_ENV === 'development' && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+      </head>
       <body className={cormorantGaramond.variable}>
         <TRPCProvider>
           <PostHogProvider>

@@ -40,6 +40,7 @@
     "posthog-js": "catalog:",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-grab": "^0.0.89",
     "react-hotkeys-hook": "^5.2.1",
     "rrweb-player": "^2.0.0-alpha.18",
     "shiki": "^3.19.0",
