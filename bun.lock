@@ -88,6 +88,7 @@
         "@app/posthog": "workspace:^",
         "@app/schemas": "workspace:*",
         "@browserbasehq/stagehand": "catalog:",
+        "@daytonaio/sdk": "catalog:",
         "@octokit/auth-app": "catalog:",
         "@octokit/rest": "catalog:",
         "@openrouter/ai-sdk-provider": "catalog:",
@@ -98,6 +99,7 @@
         "@trigger.dev/sdk": "^4.3.0",
         "ai": "catalog:",
         "import-in-the-middle": "catalog:",
+        "ts-dedent": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -193,6 +195,7 @@
       "dependencies": {
         "@app/browserbase": "workspace:*",
         "@app/context7": "workspace:*",
+        "@app/schemas": "workspace:*",
         "@app/shell": "workspace:*",
         "@app/types": "workspace:*",
         "@opentelemetry/api": "catalog:",

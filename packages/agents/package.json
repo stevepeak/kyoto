@@ -18,6 +18,7 @@
     "@app/context7": "workspace:*",
     "@app/shell": "workspace:*",
     "@app/types": "workspace:*",
+    "@app/schemas": "workspace:*",
     "@opentelemetry/api": "catalog:",
     "ai": "catalog:",
     "ts-dedent": "catalog:",

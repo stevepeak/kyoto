@@ -1,6 +1,6 @@
 'use client'
 
-import { type BrowserAgentStory } from '@app/schemas'
+import { type Story } from '@app/schemas'
 import { Globe, Loader2, Play, Plus, Terminal, Trash2 } from 'lucide-react'
 
 import { Kanji } from '@/components/display/kanji'
@@ -146,7 +146,7 @@ export function BrowserAgentsPage() {
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    {stories.map((story: BrowserAgentStory) => (
+                    {stories.map((story: Story) => (
                       <button
                         key={story.id}
                         onClick={() => setSelectedStoryId(story.id)}

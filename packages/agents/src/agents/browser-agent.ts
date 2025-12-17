@@ -5,25 +5,14 @@ import {
   createGotoTool,
   createObserveTool,
 } from '@app/browserbase'
+import { type StoryTestOutput, storyTestOutputSchema } from '@app/schemas'
 import { Experimental_Agent as Agent, Output, stepCountIs } from 'ai'
 import { dedent } from 'ts-dedent'
-import { z } from 'zod'
 
 import { type AnalyzeBrowserAgentOptions } from './browser-agent.types'
 
-export const browserAgentOutputSchema = z.object({
-  observations: z.array(
-    z.object({
-      action: z.string().describe('The action that was performed'),
-      result: z.string().describe('The result of the action'),
-      timestamp: z.string().describe('When the action was performed'),
-    }),
-  ),
-  summary: z.string().describe('A summary of what was accomplished'),
-  success: z.boolean().describe('Whether the overall task was successful'),
-})
-
-export type BrowserAgentOutput = z.infer<typeof browserAgentOutputSchema>
+// Re-export for backwards compatibility
+export { storyTestOutputSchema as browserAgentOutputSchema }
 
 const SYSTEM_PROMPT = dedent`
   You are a quality assurance engineer that tests the product according to the user's instructions.
@@ -50,7 +39,7 @@ const SYSTEM_PROMPT = dedent`
  */
 export async function runBrowserAgent(
   options: AnalyzeBrowserAgentOptions,
-): Promise<BrowserAgentOutput> {
+): Promise<StoryTestOutput> {
   const {
     instructions,
     browserContext,
@@ -85,7 +74,7 @@ export async function runBrowserAgent(
       }
     },
     experimental_output: Output.object({
-      schema: browserAgentOutputSchema,
+      schema: storyTestOutputSchema,
     }),
   })
 
@@ -104,5 +93,5 @@ export async function runBrowserAgent(
 
   const result = await agent.generate({ prompt })
 
-  return result.experimental_output
+  return storyTestOutputSchema.parse(result.experimental_output)
 }

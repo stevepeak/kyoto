@@ -1,6 +1,6 @@
 'use client'
 
-import { type BrowserAgentRun } from '@app/schemas'
+import { type StoryRun } from '@app/schemas'
 import {
   ArrowLeft,
   CheckCircle,
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { getDisplayStatus, RunStatusIcon } from './run-status-utils'
 
 type RunDetailsPanelProps = {
-  run: BrowserAgentRun
+  run: StoryRun
   onBack: () => void
 }
 

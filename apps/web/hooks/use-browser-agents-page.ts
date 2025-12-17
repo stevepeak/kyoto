@@ -2,8 +2,8 @@
 
 import {
   type ActiveRun,
-  type BrowserAgentRun,
-  type BrowserAgentStory,
+  type Story,
+  type StoryRun,
   type StoryTestType,
   type TriggerHandle,
 } from '@app/schemas'
@@ -226,7 +226,7 @@ export function useBrowserAgentsPage() {
 
   // Computed values
   const stories = storiesQuery.data ?? []
-  const runs = (storyQuery.data?.runs ?? []) as BrowserAgentRun[]
+  const runs = (storyQuery.data?.runs ?? []) as StoryRun[]
   // Only consider the current story as running if the triggerHandle belongs to it
   const isRunning =
     triggerMutation.isPending ||
@@ -281,7 +281,7 @@ export function useBrowserAgentsPage() {
     hasUnsavedChanges,
 
     // Computed values
-    stories: stories as BrowserAgentStory[],
+    stories: stories as Story[],
     runs,
     isRunning,
     selectedRun,

@@ -1,6 +1,6 @@
 'use client'
 
-import { type BrowserAgentRun } from '@app/schemas'
+import { type StoryRun } from '@app/schemas'
 import { CalendarClock, Video } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { getDisplayStatus, RunStatusIcon } from './run-status-utils'
 
 type RunSidebarProps = {
-  runs: BrowserAgentRun[]
+  runs: StoryRun[]
   isLoading: boolean
   selectedRunId: string | null
   nextScheduledRun: Date | null

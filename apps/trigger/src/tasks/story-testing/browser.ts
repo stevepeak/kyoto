@@ -1,8 +1,8 @@
-import { type BrowserAgentOutput, runBrowserAgent } from '@app/agents'
+import { runBrowserAgent } from '@app/agents'
 import { type BrowserbaseToolsContext } from '@app/browserbase'
 import { getConfig } from '@app/config'
 import { createDb, eq, schema } from '@app/db'
-import { type WebhookPayload } from '@app/schemas'
+import { type StoryTestOutput, type WebhookPayload } from '@app/schemas'
 import { Stagehand } from '@browserbasehq/stagehand'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { logger, streams, task } from '@trigger.dev/sdk'
@@ -19,7 +19,7 @@ type BrowserAgentTaskOutput = {
   success: boolean
   sessionId: string | null
   sessionRecordingUrl: string | null
-  observations: BrowserAgentOutput | null
+  observations: StoryTestOutput | null
   error: string | null
 }
 

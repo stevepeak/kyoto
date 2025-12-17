@@ -1,13 +1,12 @@
-import { runVmAgent, type VmAgentOutput } from '@app/agents'
 import { getConfig } from '@app/config'
 import { createDb, eq, schema } from '@app/db'
-import { type WebhookPayload } from '@app/schemas'
+import { type StoryTestOutput, type WebhookPayload } from '@app/schemas'
 import { Daytona } from '@daytonaio/sdk'
-import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { logger, streams, task } from '@trigger.dev/sdk'
 import { writeFile } from 'fs/promises'
 import { homedir } from 'os'
 import { join } from 'path'
+import { dedent } from 'ts-dedent'
 
 import { sendWebhooks } from '../github/send-webhooks'
 
@@ -21,7 +20,7 @@ type VmAgentTaskOutput = {
   success: boolean
   sandboxId: string | null
   asciinemaPath: string | null
-  observations: VmAgentOutput | null
+  observations: StoryTestOutput | null
   error: string | null
 }
 
@@ -71,67 +70,50 @@ export const vmAgentTask = task({
         .set({ sessionId: sandboxId, updatedAt: new Date() })
         .where(eq(schema.storyRuns.id, runId))
 
-      void streams.append(
-        'progress',
-        'Installing asciinema for session recording...',
-      )
+      void streams.append('progress', 'Installing dependencies...')
 
-      // Install asciinema
+      // Install dependencies
       const installResult = await sandbox.process.executeCommand(
-        'apt-get update && apt-get install -y asciinema',
+        dedent`
+          sudo apt-get update && \
+          sudo apt-get install -y asciinema
+        `,
       )
 
       if (installResult.exitCode !== 0) {
-        throw new Error(`Failed to install asciinema: ${installResult.result}`)
+        throw new Error(
+          `Failed to install dependencies: ${installResult.result}`,
+        )
       }
-
-      logger.log('Asciinema installed successfully')
 
       // Create a recording file path in the sandbox
       const recordingPath = '/tmp/session-recording.cast'
 
-      void streams.append('progress', 'Starting asciinema recording...')
+      void streams.append('progress', 'Running tests...')
 
-      // Start asciinema recording in the background
-      // We use script to capture the session since asciinema rec needs a PTY
-      await sandbox.process.executeCommand(
-        `asciinema rec ${recordingPath} --stdin --command "bash" &`,
+      await sandbox.fs.uploadFile(Buffer.from(instructions), 'instructions.md')
+
+      const testResult = await sandbox.process.executeCommand(
+        dedent`
+          asciinema rec ${recordingPath} -c \
+            'echo "hello world" && sleep 5 && cat instructions.md'
+        `,
       )
+      // const testResult = await sandbox.process.executeCommand(
+      //   dedent`
+      //     npx @usekyoto/cli vibe test \
+      //       --vm \
+      //       --prompt instructions.md \
+      //       --record ${recordingPath}
+      //   `,
+      // )
 
-      // Give asciinema a moment to start
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      void streams.append(
-        'progress',
-        'VM sandbox ready. Executing instructions...',
-      )
-
-      // Create OpenRouter model for the agent
-      const openrouter = createOpenRouter({
-        apiKey: config.OPENROUTER_API_KEY,
+      // TODO: Parse observations from CLI output when format is defined
+      const observations: StoryTestOutput | null = null
+      logger.log('Test result', {
+        exitCode: testResult.exitCode,
+        output: testResult.result,
       })
-      const model = openrouter('openai/gpt-4o-mini')
-
-      // Run the VM agent
-      const observations = await runVmAgent({
-        instructions,
-        sandbox,
-        model,
-        maxSteps: 50,
-        onProgress: (message) => {
-          logger.log('Agent progress', { message })
-          void streams.append('progress', message)
-        },
-      })
-
-      logger.log('VM agent completed', { observations })
-      void streams.append('progress', 'VM agent completed. Saving recording...')
-
-      // Stop the asciinema recording by sending exit command
-      await sandbox.process.executeCommand('pkill -INT asciinema || true')
-
-      // Wait a moment for recording to finalize
-      await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Download the recording
       let asciinemaPath: string | null = null
