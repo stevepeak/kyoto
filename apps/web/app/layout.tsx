@@ -44,11 +44,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         {/* eslint-disable-next-line no-process-env */}
         {process.env.NODE_ENV === 'development' && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              crossOrigin="anonymous"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/cursor/dist/client.global.js"
+              crossOrigin="anonymous"
+              strategy="lazyOnload"
+            />
+          </>
         )}
       </head>
       <body className={cormorantGaramond.variable}>

@@ -10,6 +10,16 @@ import {
   StoryEditor,
 } from '@/components/stories/agents'
 import { IntegrationsPanel } from '@/components/stories/integrations-panel'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -52,7 +62,10 @@ export function AgentsPage() {
     parseError,
     handleCreateStory,
     handleSave,
-    handleDelete,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+    showDeleteDialog,
     handleScheduleTextChange,
     handleScheduleBlur,
     handleTrigger,
@@ -242,7 +255,7 @@ export function AgentsPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleDelete}
+                  onClick={handleDeleteClick}
                   disabled={isDeleting || isCreatingNewStory}
                   className="text-destructive hover:text-destructive"
                 >
@@ -250,6 +263,37 @@ export function AgentsPage() {
                 </Button>
               </div>
             </div>
+
+            <AlertDialog
+              open={showDeleteDialog}
+              onOpenChange={(open) => {
+                if (!open) {
+                  handleDeleteCancel()
+                }
+              }}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Story</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{editedName}"? This action
+                    cannot be undone and will permanently delete the story and
+                    all associated runs.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleDeleteCancel}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteConfirm}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Content area with editor/run details and runs sidebar */}
             <div className="flex flex-1 overflow-hidden">

@@ -31,6 +31,7 @@ export function useBrowserAgentsPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('stories')
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // New story state (tracks unsaved new story being created)
   const [newStoryTestType, setNewStoryTestType] =
@@ -205,10 +206,20 @@ export function useBrowserAgentsPage() {
     updateMutation,
   ])
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteClick = useCallback(() => {
     if (!selectedStoryId) return
+    setShowDeleteDialog(true)
+  }, [selectedStoryId])
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!selectedStoryId) return
+    setShowDeleteDialog(false)
     deleteMutation.mutate({ id: selectedStoryId })
   }, [selectedStoryId, deleteMutation])
+
+  const handleDeleteCancel = useCallback(() => {
+    setShowDeleteDialog(false)
+  }, [])
 
   const handleScheduleTextChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -257,10 +268,9 @@ export function useBrowserAgentsPage() {
   }, [handleSave])
 
   // Computed values
-  const storiesFromQuery = storiesQuery.data ?? []
-
   // Add temporary story if creating a new one
   const stories = useMemo(() => {
+    const storiesFromQuery = storiesQuery.data ?? []
     if (newStoryTestType && selectedStoryId === TEMP_STORY_ID) {
       const tempStory: Story = {
         id: TEMP_STORY_ID,
@@ -282,7 +292,7 @@ export function useBrowserAgentsPage() {
     editedInstructions,
     editedScheduleText,
     editedCronSchedule,
-    storiesFromQuery,
+    storiesQuery.data,
   ])
 
   const runs = (storyQuery.data?.runs ?? []) as StoryRun[]
@@ -364,7 +374,10 @@ export function useBrowserAgentsPage() {
     // Handlers
     handleCreateStory,
     handleSave,
-    handleDelete,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+    showDeleteDialog,
     handleScheduleTextChange,
     handleScheduleBlur,
     handleTrigger,

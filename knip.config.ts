@@ -37,7 +37,7 @@ const config: KnipConfig = {
         '**/*.d.ts',
         'src/generated/**',
       ],
-      ignoreDependencies: ['playwright', 'playwright-core'],
+      ignoreDependencies: ['playwright-core'],
     },
     'apps/trigger': {
       entry: ['trigger.config.ts'],
