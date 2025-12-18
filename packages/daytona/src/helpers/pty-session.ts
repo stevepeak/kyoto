@@ -1,7 +1,13 @@
 import { type PtyHandle, type Sandbox } from '@daytonaio/sdk'
 
-import { executeWithMarker } from '../utils/marker-utils'
 import { waitForStability } from '../utils/stability-utils'
+
+/**
+ * UUID prompt pattern: matches UUID followed by % (e.g., "79692d63-1269-4cd9-b7b7-4059230e06ee%")
+ * This pattern indicates the terminal is ready for the next command.
+ */
+const UUID_PROMPT_PATTERN =
+  /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}%/i
 
 /**
  * Asciicast v2 event format: [time, type, data]
@@ -55,14 +61,14 @@ export type RecordedPtySession = {
   ptyHandle: PtyHandle
   /**
    * Execute a command and wait for its completion.
-   * Uses a marker to detect when the command has finished.
+   * Waits for the UUID% prompt pattern to appear, indicating the terminal is ready.
    */
   executeCommand: (command: string) => Promise<string>
   /**
-   * Wait for output containing the specified marker.
-   * Returns all output captured before the marker.
+   * Wait for the UUID% prompt pattern to appear.
+   * Returns all output captured before the prompt.
    */
-  waitForOutput: (marker: string) => Promise<string>
+  waitForPrompt: () => Promise<string>
   /** Get the complete asciicast recording */
   getRecording: () => AsciicastRecording
   /** Close the PTY session and clean up */
@@ -251,40 +257,57 @@ export async function createRecordedPtySession(
   }
 
   /**
-   * Wait for output stability after a marker appears.
+   * Wait for the UUID% prompt pattern to appear, indicating terminal is ready.
    * This ensures commands have fully completed, including any buffered output
    * or background processes that might still be writing.
    *
-   * @param marker - The marker string to wait for
-   * @param stabilityMs - Milliseconds to wait with no new output after marker (default: 300ms)
-   * @returns The output captured before the marker
+   * @param stabilityMs - Milliseconds to wait with no new output after prompt (default: 300ms)
+   * @returns The output captured before the prompt
    */
-  async function waitForOutput(
-    marker: string,
-    stabilityMs = 300,
-  ): Promise<string> {
-    // Check if marker is already in buffer
-    let outputBeforeMarker = ''
+  async function waitForPrompt(stabilityMs = 300): Promise<string> {
+    let outputBeforePrompt = ''
     const buffer = state.getBuffer()
 
-    if (buffer.includes(marker)) {
-      const markerIndex = buffer.indexOf(marker)
-      outputBeforeMarker = buffer.substring(0, markerIndex)
+    // Check if prompt pattern is already in buffer
+    const promptMatch = buffer.match(UUID_PROMPT_PATTERN)
+    if (promptMatch && promptMatch.index !== undefined) {
+      outputBeforePrompt = buffer.substring(0, promptMatch.index)
     } else {
-      // Wait for the marker to appear
-      outputBeforeMarker = await new Promise<string>((resolve) => {
-        state.registerPendingResolver(marker, resolve)
+      // Wait for the prompt pattern to appear
+      outputBeforePrompt = await new Promise<string>((resolve) => {
+        const checkForPrompt = () => {
+          const currentBuffer = state.getBuffer()
+          const match = currentBuffer.match(UUID_PROMPT_PATTERN)
+
+          if (match && match.index !== undefined) {
+            resolve(currentBuffer.substring(0, match.index))
+          } else {
+            // Check again after a short delay
+            setTimeout(checkForPrompt, 50)
+          }
+        }
+
+        // Start checking
+        checkForPrompt()
       })
     }
 
-    // After marker is found, wait for output stability
+    // After prompt is found, wait for output stability
     // This ensures any buffered output or background processes have finished
     await waitForStability(() => state.getLastOutputTime(), stabilityMs)
 
-    // Clear the buffer up to and including the marker (and any trailing output)
-    state.clearBufferUpToMarker(marker)
+    // Clear the buffer up to and including the prompt
+    const finalBuffer = state.getBuffer()
+    const finalMatch = finalBuffer.match(UUID_PROMPT_PATTERN)
+    if (finalMatch && finalMatch.index !== undefined) {
+      const clearUpTo = finalMatch.index + finalMatch[0].length
+      state.clearBuffer()
+      state.appendToBuffer(finalBuffer.substring(clearUpTo))
+    } else {
+      state.clearBuffer()
+    }
 
-    return outputBeforeMarker.trim()
+    return outputBeforePrompt.trim()
   }
 
   async function executeCommand(command: string): Promise<string> {
@@ -295,13 +318,12 @@ export async function createRecordedPtySession(
     // Record the input event
     state.recordInput(command)
 
-    // Execute command with marker to detect completion
-    const marker = await executeWithMarker(ptyHandle, command)
+    // Send command directly (no marker needed - terminal shows UUID% when ready)
+    await ptyHandle.sendInput(`${command}\n`)
 
-    // Wait for the marker in output, then wait for stability
-    // Increased stability time for long-running commands like npm install
+    // Wait for the UUID% prompt to appear, then wait for stability
     const stabilityMs = 300
-    const output = await waitForOutput(marker, stabilityMs)
+    const output = await waitForPrompt(stabilityMs)
 
     return output
   }
@@ -330,7 +352,7 @@ export async function createRecordedPtySession(
   return {
     ptyHandle,
     executeCommand,
-    waitForOutput,
+    waitForPrompt,
     getRecording,
     close,
   }

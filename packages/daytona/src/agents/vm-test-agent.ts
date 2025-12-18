@@ -29,6 +29,7 @@ const SYSTEM_PROMPT = dedent`
 
   # Notes
   - If asked permission to run a command, try again with \'yes | <command>\'
+  - when running \`npm install\` add \`--no-audit --no-fund\` to the command
 
   # Guidelines
   1. Follow the test instructions carefully and precisely
