@@ -4,7 +4,7 @@ import { type StoryRun } from '@app/schemas'
 import { CalendarClock, Video } from 'lucide-react'
 
 import { RelativeTime } from '@/components/display/relative-time'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
