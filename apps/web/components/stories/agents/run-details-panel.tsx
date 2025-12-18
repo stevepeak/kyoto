@@ -13,6 +13,7 @@ import {
 import ReactMarkdown from 'react-markdown'
 
 import { TerminalPlayer } from '@/components/display/terminal-player'
+import { RelativeTime } from '@/components/display/relative-time'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSessionRecordingPlayer } from '@/hooks/use-session-recording-player'
@@ -79,13 +80,6 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
           <ArrowLeft className="size-4" />
           Back to Editor
         </Button>
-        <div className="flex items-center gap-2">
-          <RunStatusIcon status={displayStatus.status} />
-          <span className="font-medium">{displayStatus.label}</span>
-        </div>
-        <span className="text-sm text-muted-foreground">
-          {new Date(run.createdAt).toLocaleString()}
-        </span>
       </div>
 
       {/* Loading with streamed progress - shown first when running */}
@@ -124,7 +118,11 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
               ) : (
                 <XCircle className="size-5 text-destructive" />
               )}
-              Summary
+              {observations.success ? 'Passed' : 'Failed'}
+              <RelativeTime
+                date={run.createdAt}
+                className="text-sm text-muted-foreground font-normal"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -173,7 +171,7 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
                 autoPlay={false}
               />
             ) : (
-              <div className="flex items-center justify-center rounded-lg bg-muted/50">
+              <div className="w-full overflow-hidden rounded-lg bg-muted/50">
                 {isRecordingLoading ? (
                   <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
                     <Loader2 className="size-8 animate-spin" />
@@ -198,7 +196,10 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
                 ) : null}
                 <div
                   ref={containerRef}
-                  className={cn(isPlayerReady ? 'block' : 'hidden')}
+                  className={cn(
+                    'w-full max-w-full [&_*]:max-w-full [&_*]:box-border',
+                    isPlayerReady ? 'block' : 'hidden',
+                  )}
                 />
               </div>
             )}

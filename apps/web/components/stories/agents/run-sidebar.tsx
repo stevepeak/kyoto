@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 import { getDisplayStatus, RunStatusIcon } from './run-status-utils'
+import { RelativeTime } from '@/components/display/relative-time'
 
 type RunSidebarProps = {
   runs: StoryRun[]
@@ -40,13 +41,13 @@ export function RunSidebar({
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <CalendarClock className="size-4 text-primary" />
                   <span>Scheduled</span>
+                  <RelativeTime
+                    date={nextScheduledRun}
+                    shorthand={false}
+                    className="text-xs text-muted-foreground font-normal"
+                  />
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-3 py-0">
-                <div className="text-xs text-muted-foreground">
-                  {nextScheduledRun.toLocaleString()}
-                </div>
-              </CardContent>
             </Card>
           )}
 
@@ -77,9 +78,11 @@ export function RunSidebar({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-3 py-0">
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(run.createdAt).toLocaleString()}
-                    </div>
+                    <RelativeTime
+                      date={run.createdAt}
+                      shorthand={false}
+                      className="text-xs text-muted-foreground font-normal"
+                    />
                     {run.error && (
                       <div className="mt-2 truncate text-xs text-destructive">
                         {run.error}
