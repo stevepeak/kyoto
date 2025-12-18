@@ -49,13 +49,7 @@ export function useStoryRuns(args: {
   useTriggerRun({
     runId: triggerHandle?.runId ?? null,
     publicAccessToken: publicAccessTokenQuery.data?.publicAccessToken ?? null,
-    toastMessages: {
-      onProgress: (text) =>
-        text.split('\n').pop() || 'User story test running...',
-      onSuccess: 'User story test completed! 🎉',
-      onError: (error) =>
-        `Agent failed: ${error instanceof Error ? error.message : String(error)}`,
-    },
+    showToast: false,
     onComplete: () => {
       onStoryRefetch()
       setTriggerHandle(null)

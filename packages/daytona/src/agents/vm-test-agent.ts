@@ -113,8 +113,7 @@ export async function runVmTestAgent(
     const tools = {
       terminalCommand: createTerminalCommandTool({
         sandbox,
-        ptyHandle: ptySession.ptyHandle,
-        waitForPtyOutput: ptySession.waitForOutput,
+        session: ptySession,
       }),
       readFile: createReadFileTool({ sandbox }),
     }

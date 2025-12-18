@@ -1,7 +1,9 @@
-import { type PtyHandle, type Sandbox } from '@daytonaio/sdk'
+import { type Sandbox } from '@daytonaio/sdk'
 import { streams } from '@trigger.dev/sdk'
 import { tool } from 'ai'
 import { z } from 'zod'
+
+import { type RecordedPtySession } from '../helpers/pty-session'
 
 const terminalCommandInputSchema = z.object({
   command: z
@@ -15,10 +17,8 @@ const terminalCommandInputSchema = z.object({
 
 type TerminalCommandToolContext = {
   sandbox: Sandbox
-  /** Optional PTY handle for recording terminal sessions */
-  ptyHandle?: PtyHandle
-  /** Callback to wait for command output when using PTY */
-  waitForPtyOutput?: (marker: string) => Promise<string>
+  /** Optional recorded PTY session for recording terminal sessions */
+  session?: RecordedPtySession
 }
 
 export function createTerminalCommandTool(ctx: TerminalCommandToolContext) {
@@ -30,17 +30,9 @@ export function createTerminalCommandTool(ctx: TerminalCommandToolContext) {
     execute: async (input) => {
       void streams.append('progress', `Executing command ${input.command}`)
 
-      // Use PTY if available (for recording)
-      if (ctx.ptyHandle && ctx.waitForPtyOutput) {
-        const marker = `__CMD_END_${Date.now()}__`
-
-        // Send command with end marker to detect completion
-        await ctx.ptyHandle.sendInput(`${input.command}; echo "${marker}"\n`)
-
-        // Wait for output until we see the marker
-        const output = await ctx.waitForPtyOutput(marker)
-
-        return output
+      // Use recorded PTY session if available (for recording)
+      if (ctx.session) {
+        return await ctx.session.executeCommand(input.command)
       }
 
       // Fallback to executeCommand (no recording)

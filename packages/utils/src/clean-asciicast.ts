@@ -75,13 +75,13 @@ function isOnlyMarkerContent(text: string): boolean {
   if (/__CMD_END_\d+__/.test(trimmed)) return true
 
   // Check for marker fragments that appear alone
-  // Patterns like: "ech", "o \"", "_CMD_END_", long digit sequences, "__\""
+  // Patterns like: "ech", "o \"", "_CMD_END_", long digit sequences, "__\"", "|| echo"
   const markerFragmentPattern =
-    /^(ech|o\s*\\?["']|_CMD_END_|__\\?["']|;\s*echo|echo\s*\\?["']__CMD|CMD_END|__CM|D_END)/i
+    /^(ech|o\s*\\?["']|_CMD_END_|__\\?["']|;\s*echo|\|\|\s*echo|echo\s*\\?["']__CMD|CMD_END|__CM|D_END)/i
   if (markerFragmentPattern.test(trimmed)) {
     // If it's only the fragment with no other meaningful content, it's a marker
     const withoutFragment = trimmed.replace(markerFragmentPattern, '').trim()
-    return !withoutFragment || /^[\d\s"';_]*$/.test(withoutFragment)
+    return !withoutFragment || /^[\d\s"';_|]*$/.test(withoutFragment)
   }
 
   // Check for long digit sequences that are likely marker IDs (10+ digits)
@@ -115,6 +115,8 @@ function isOnlyMarkerContent(text: string): boolean {
  * Cleans an asciicast recording by removing command markers.
  * Removes patterns like:
  * - `; echo "__CMD_END_123__"` appended to commands
+ * - `; echo "__CMD_END_123__" || echo "__CMD_END_123__"` (with fallback)
+ * - `|| echo "__CMD_END_123__"` (fallback echo)
  * - `__CMD_END_123__` output lines
  * - Marker fragments split across multiple events
  */
@@ -165,7 +167,15 @@ export function cleanAsciicast(args: { content: string }): string {
       // Check if combined forms a complete marker pattern
       const combined = output + nextOutput
       if (
+        // Full pattern: "; echo \"__CMD_END_...__\" || echo \"__CMD_END_...__\""
+        /;\s*echo\s+\\?["']__CMD_END_\d+__\\?["']\s*\|\|\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/.test(
+          combined,
+        ) ||
+        // Pattern: "; echo \"__CMD_END_...__\""
         /;\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/.test(combined) ||
+        // Pattern: "|| echo \"__CMD_END_...__\""
+        /\|\|\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/.test(combined) ||
+        // Standalone marker
         /__CMD_END_\d+__/.test(combined)
       ) {
         skipToIndex = j
@@ -183,17 +193,26 @@ export function cleanAsciicast(args: { content: string }): string {
 
     // Remove marker patterns from output
     const cleaned = output
+      // Replace "; echo \"__CMD_END_...__\" || echo \"__CMD_END_...__\"" (full pattern with fallback)
+      .replace(
+        /;\s*echo\s+\\?["']__CMD_END_\d+__\\?["']\s*\|\|\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/g,
+        '\n',
+      )
       // Replace "; echo \"__CMD_END_...__\"" with newline (handles escaped quotes)
       .replace(/;\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/g, '\n')
-      // Replace "|| true; echo \"__CMD_END_...__\"" with newline
+      // Replace "|| echo \"__CMD_END_...__\"" with newline (fallback echo)
+      .replace(/\|\|\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/g, '\n')
+      // Replace "|| true; echo \"__CMD_END_...__\"" with newline (legacy pattern)
       .replace(/\|\|\s*true;\s*echo\s+\\?["']__CMD_END_\d+__\\?["']/g, '\n')
       // Remove standalone marker output lines
       .replace(/__CMD_END_\d+__\r?\n?/g, '')
       // Remove partial marker patterns (split across events)
       .replace(/;\s*echo\s*\\?["']?__?CMD/gi, '')
+      .replace(/\|\|\s*echo\s*\\?["']?__?CMD/gi, '')
       .replace(/echo\s*\\?["']?__?CMD/gi, '')
       .replace(/_CMD_END_\d*/g, '')
-      // Remove trailing marker fragments
+      // Remove trailing marker fragments (including || echo fragments)
+      .replace(/\|\|\s*echo\s*\\?["']?\s*$/g, '')
       .replace(/__\\?["']?\s*$/g, '')
       // Remove UUID% prompt markers
       .replace(

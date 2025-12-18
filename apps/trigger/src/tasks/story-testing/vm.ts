@@ -15,6 +15,81 @@ type VmAgentTaskInput = {
   instructions: string
 }
 
+/**
+ * Updates the run status in the database and sends webhook notifications.
+ * Consolidates the duplicated DB update and webhook logic.
+ */
+async function updateAndNotifyRun(args: {
+  db: ReturnType<typeof createDb>
+  runId: string
+  story: { id: string; name: string; userId: string }
+  status: 'completed' | 'failed'
+  observations?: StoryTestOutput
+  error?: string
+  terminalRecording?: string
+  databaseUrl: string
+}): Promise<void> {
+  const {
+    db,
+    runId,
+    story,
+    status,
+    observations,
+    error,
+    terminalRecording,
+    databaseUrl,
+  } = args
+
+  // Update run status in database
+  const updateData: {
+    status: 'completed' | 'failed'
+    updatedAt: Date
+    observations?: StoryTestOutput
+    error?: string
+    terminalRecording?: string
+  } = {
+    status,
+    updatedAt: new Date(),
+  }
+
+  if (observations !== undefined) {
+    updateData.observations = observations
+  }
+  if (error !== undefined) {
+    updateData.error = error
+  }
+  if (terminalRecording !== undefined) {
+    updateData.terminalRecording = terminalRecording
+  }
+
+  await db
+    .update(schema.storyRuns)
+    .set(updateData)
+    .where(eq(schema.storyRuns.id, runId))
+
+  // Send webhook notification
+  const webhookEvent = status === 'completed' ? 'run.completed' : 'run.failed'
+  const webhookPayload: WebhookPayload = {
+    event: webhookEvent,
+    timestamp: new Date().toISOString(),
+    story: { id: story.id, name: story.name },
+    run: {
+      id: runId,
+      status,
+      createdAt: new Date().toISOString(),
+      error: error ?? null,
+      sessionRecordingUrl: null,
+      observations: observations ?? null,
+    },
+  }
+
+  await sendWebhooks({
+    databaseUrl,
+    userId: story.userId,
+    payload: webhookPayload,
+  })
+}
+
 type VmAgentTaskOutput = {
   success: boolean
   sandboxId: string | null
@@ -106,36 +181,15 @@ export const vmAgentTask = task({
       // Use the structured observations from the agent
       const observations: StoryTestOutput = result.observations
 
-      // Update run with results and terminal recording
-      await db
-        .update(schema.storyRuns)
-        .set({
-          status: 'completed',
-          observations,
-          terminalRecording,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.storyRuns.id, runId))
-
-      // Send webhooks for completed run
-      const webhookPayload: WebhookPayload = {
-        event: 'run.completed',
-        timestamp: new Date().toISOString(),
-        story: { id: story.id, name: story.name },
-        run: {
-          id: runId,
-          status: 'completed',
-          createdAt: new Date().toISOString(),
-          error: null,
-          sessionRecordingUrl: null,
-          observations,
-        },
-      }
-
-      await sendWebhooks({
+      // Update run with results and terminal recording, then send webhooks
+      await updateAndNotifyRun({
+        db,
+        runId,
+        story,
+        status: 'completed',
+        observations,
+        terminalRecording,
         databaseUrl: config.DATABASE_URL,
-        userId: story.userId,
-        payload: webhookPayload,
       })
 
       return {
@@ -152,35 +206,14 @@ export const vmAgentTask = task({
 
       const sandboxId = sandbox?.id ?? null
 
-      // Update run with error
-      await db
-        .update(schema.storyRuns)
-        .set({
-          status: 'failed',
-          error: errorMessage,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.storyRuns.id, runId))
-
-      // Send webhooks for failed run
-      const webhookPayload: WebhookPayload = {
-        event: 'run.failed',
-        timestamp: new Date().toISOString(),
-        story: { id: story.id, name: story.name },
-        run: {
-          id: runId,
-          status: 'failed',
-          createdAt: new Date().toISOString(),
-          error: errorMessage,
-          sessionRecordingUrl: null,
-          observations: null,
-        },
-      }
-
-      await sendWebhooks({
+      // Update run with error, then send webhooks
+      await updateAndNotifyRun({
+        db,
+        runId,
+        story,
+        status: 'failed',
+        error: errorMessage,
         databaseUrl: config.DATABASE_URL,
-        userId: story.userId,
-        payload: webhookPayload,
       })
 
       return {

@@ -151,6 +151,11 @@ export function useTriggerRun<T = unknown>({
       return
     }
 
+    // Only handle completion/error states
+    if (!run.isCompleted && !run.isFailed && !run.isCancelled) {
+      return
+    }
+
     // Prevent handling the same completion/error multiple times
     const completionKey = `${runId}-${run.status}`
     if (handledCompletionRef.current === completionKey) {
@@ -161,6 +166,7 @@ export function useTriggerRun<T = unknown>({
     handledCompletionRef.current = completionKey
 
     if (run.isCompleted) {
+      // Only show toast if we have a toast ID (meaning we haven't shown it yet)
       if (showToast && toastIdRef.current) {
         const message =
           toastMessagesRef.current.onSuccess ?? 'Sync completed successfully'
@@ -170,6 +176,7 @@ export function useTriggerRun<T = unknown>({
       onCompleteRef.current?.(run.output as T)
     } else if (run.isFailed || run.isCancelled) {
       const error = new Error('Workflow failed')
+      // Only show toast if we have a toast ID (meaning we haven't shown it yet)
       if (showToast && toastIdRef.current) {
         const message = toastMessagesRef.current.onError
           ? toastMessagesRef.current.onError(error)

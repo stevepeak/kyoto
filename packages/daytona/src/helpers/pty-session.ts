@@ -1,5 +1,8 @@
 import { type PtyHandle, type Sandbox } from '@daytonaio/sdk'
 
+import { executeWithMarker } from '../utils/marker-utils'
+import { waitForStability } from '../utils/stability-utils'
+
 /**
  * Asciicast v2 event format: [time, type, data]
  * - time: seconds since recording start
@@ -67,6 +70,145 @@ export type RecordedPtySession = {
 }
 
 /**
+ * Manages the state and handlers for a recorded PTY session.
+ * Separates concerns: recording, buffering, and marker resolution.
+ */
+class PtySessionState {
+  private readonly startTime: number
+  private readonly events: AsciicastEvent[] = []
+  private outputBuffer = ''
+  private lastOutputTime: number
+  private readonly pendingResolvers: {
+    marker: string
+    resolve: (output: string) => void
+  }[] = []
+  private readonly onOutput?: (text: string) => void
+
+  constructor(startTime: number, onOutput?: (text: string) => void) {
+    this.startTime = startTime
+    this.lastOutputTime = startTime
+    this.onOutput = onOutput
+  }
+
+  /**
+   * Records an output event for asciicast playback.
+   */
+  recordOutput(text: string): void {
+    const elapsed = (Date.now() - this.startTime) / 1000
+    this.events.push([elapsed, 'o', text])
+  }
+
+  /**
+   * Records an input event for asciicast playback.
+   */
+  recordInput(command: string): void {
+    const elapsed = (Date.now() - this.startTime) / 1000
+    this.events.push([elapsed, 'i', command + '\n'])
+  }
+
+  /**
+   * Appends text to the output buffer and updates the last output time.
+   */
+  appendToBuffer(text: string): void {
+    this.outputBuffer += text
+    this.lastOutputTime = Date.now()
+  }
+
+  /**
+   * Gets the current output buffer.
+   */
+  getBuffer(): string {
+    return this.outputBuffer
+  }
+
+  /**
+   * Clears the output buffer.
+   */
+  clearBuffer(): void {
+    this.outputBuffer = ''
+  }
+
+  /**
+   * Clears the buffer up to and including the marker.
+   */
+  clearBufferUpToMarker(marker: string): void {
+    if (this.outputBuffer.includes(marker)) {
+      const markerIndex = this.outputBuffer.indexOf(marker)
+      // Clear everything up to and including the marker, plus a bit more to catch the echo output
+      const clearUpTo = markerIndex + marker.length + 10 // +10 for newline and echo output
+      this.outputBuffer = this.outputBuffer.substring(
+        Math.min(clearUpTo, this.outputBuffer.length),
+      )
+    }
+  }
+
+  /**
+   * Gets the last output time for stability checks.
+   */
+  getLastOutputTime(): number {
+    return this.lastOutputTime
+  }
+
+  /**
+   * Resets the last output time.
+   */
+  resetLastOutputTime(): void {
+    this.lastOutputTime = Date.now()
+  }
+
+  /**
+   * Notifies the output callback if provided.
+   */
+  notifyOutput(text: string): void {
+    this.onOutput?.(text)
+  }
+
+  /**
+   * Registers a pending resolver for a marker.
+   */
+  registerPendingResolver(
+    marker: string,
+    resolve: (output: string) => void,
+  ): void {
+    this.pendingResolvers.push({ marker, resolve })
+  }
+
+  /**
+   * Checks and resolves any pending resolvers that can be satisfied.
+   */
+  checkPendingResolvers(): void {
+    for (let i = this.pendingResolvers.length - 1; i >= 0; i--) {
+      const pending = this.pendingResolvers[i]
+      if (pending && this.outputBuffer.includes(pending.marker)) {
+        // Extract output before the marker
+        const markerIndex = this.outputBuffer.indexOf(pending.marker)
+        const output = this.outputBuffer.substring(0, markerIndex)
+
+        // Remove from pending
+        this.pendingResolvers.splice(i, 1)
+
+        // Resolve the promise
+        pending.resolve(output.trim())
+      }
+    }
+  }
+
+  /**
+   * Gets all recorded events.
+   */
+  getEvents(): AsciicastEvent[] {
+    return this.events
+  }
+
+  /**
+   * Gets the start time.
+   */
+  getStartTime(): number {
+    return this.startTime
+  }
+}
+
+/**
  * Creates a recorded PTY session in a Daytona sandbox.
  * All commands executed through this session will be captured
  * in asciicast v2 format for later playback.
@@ -77,14 +219,7 @@ export async function createRecordedPtySession(
   const { sandbox, sessionId, cols = 120, rows = 40, cwd, onOutput } = config
 
   const startTime = Date.now()
-  const events: AsciicastEvent[] = []
-  let outputBuffer = ''
-
-  // Pending promise resolvers for waitForOutput
-  const pendingResolvers: {
-    marker: string
-    resolve: (output: string) => void
-  }[] = []
+  const state = new PtySessionState(startTime, onOutput)
 
   // Create the PTY session
   const ptyHandle = await sandbox.process.createPty({
@@ -95,31 +230,11 @@ export async function createRecordedPtySession(
     onData: (data) => {
       const text = new TextDecoder().decode(data)
 
-      // Record the output event
-      const elapsed = (Date.now() - startTime) / 1000
-      events.push([elapsed, 'o', text])
-
-      // Accumulate to buffer
-      outputBuffer += text
-
-      // Notify callback
-      onOutput?.(text)
-
-      // Check if any pending resolvers can be satisfied
-      for (let i = pendingResolvers.length - 1; i >= 0; i--) {
-        const pending = pendingResolvers[i]
-        if (pending && outputBuffer.includes(pending.marker)) {
-          // Extract output before the marker
-          const markerIndex = outputBuffer.indexOf(pending.marker)
-          const output = outputBuffer.substring(0, markerIndex)
-
-          // Remove from pending
-          pendingResolvers.splice(i, 1)
-
-          // Resolve the promise
-          pending.resolve(output.trim())
-        }
-      }
+      // Handle output through focused handlers
+      state.recordOutput(text)
+      state.appendToBuffer(text)
+      state.notifyOutput(text)
+      state.checkPendingResolvers()
     },
   })
 
@@ -132,40 +247,61 @@ export async function createRecordedPtySession(
     // Wait a bit for the cd to complete
     await new Promise((resolve) => setTimeout(resolve, 100))
     // Clear the output buffer after initial setup
-    outputBuffer = ''
+    state.clearBuffer()
   }
 
-  async function waitForOutput(marker: string): Promise<string> {
+  /**
+   * Wait for output stability after a marker appears.
+   * This ensures commands have fully completed, including any buffered output
+   * or background processes that might still be writing.
+   *
+   * @param marker - The marker string to wait for
+   * @param stabilityMs - Milliseconds to wait with no new output after marker (default: 300ms)
+   * @returns The output captured before the marker
+   */
+  async function waitForOutput(
+    marker: string,
+    stabilityMs = 300,
+  ): Promise<string> {
     // Check if marker is already in buffer
-    if (outputBuffer.includes(marker)) {
-      const markerIndex = outputBuffer.indexOf(marker)
-      const output = outputBuffer.substring(0, markerIndex)
-      // Clear the buffer up to and including the marker
-      outputBuffer = outputBuffer.substring(markerIndex + marker.length)
-      return output.trim()
+    let outputBeforeMarker = ''
+    const buffer = state.getBuffer()
+
+    if (buffer.includes(marker)) {
+      const markerIndex = buffer.indexOf(marker)
+      outputBeforeMarker = buffer.substring(0, markerIndex)
+    } else {
+      // Wait for the marker to appear
+      outputBeforeMarker = await new Promise<string>((resolve) => {
+        state.registerPendingResolver(marker, resolve)
+      })
     }
 
-    // Wait for the marker to appear
-    return new Promise((resolve) => {
-      pendingResolvers.push({ marker, resolve })
-    })
+    // After marker is found, wait for output stability
+    // This ensures any buffered output or background processes have finished
+    await waitForStability(() => state.getLastOutputTime(), stabilityMs)
+
+    // Clear the buffer up to and including the marker (and any trailing output)
+    state.clearBufferUpToMarker(marker)
+
+    return outputBeforeMarker.trim()
   }
 
   async function executeCommand(command: string): Promise<string> {
-    const marker = `__CMD_END_${Date.now()}_${Math.random().toString(36).substring(7)}__`
-
     // Clear buffer before command
-    outputBuffer = ''
+    state.clearBuffer()
+    state.resetLastOutputTime()
 
     // Record the input event
-    const elapsed = (Date.now() - startTime) / 1000
-    events.push([elapsed, 'i', command + '\n'])
+    state.recordInput(command)
 
-    // Send the command with an echo marker to detect completion
-    await ptyHandle.sendInput(`${command}; echo "${marker}"\n`)
+    // Execute command with marker to detect completion
+    const marker = await executeWithMarker(ptyHandle, command)
 
-    // Wait for the marker in output
-    const output = await waitForOutput(marker)
+    // Wait for the marker in output, then wait for stability
+    // Increased stability time for long-running commands like npm install
+    const stabilityMs = 300
+    const output = await waitForOutput(marker, stabilityMs)
 
     return output
   }
@@ -176,14 +312,14 @@ export async function createRecordedPtySession(
         version: 2,
         width: cols,
         height: rows,
-        timestamp: Math.floor(startTime / 1000),
+        timestamp: Math.floor(state.getStartTime() / 1000),
         title: `Kyoto VM Session - ${sessionId}`,
         env: {
           TERM: 'xterm-256color',
           SHELL: '/bin/bash',
         },
       },
-      events,
+      events: state.getEvents(),
     }
   }
 
