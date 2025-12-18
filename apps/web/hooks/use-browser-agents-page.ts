@@ -21,6 +21,9 @@ import { useTRPC } from '@/lib/trpc-client'
 
 type ActiveTab = 'stories' | 'integrations'
 
+// UUID for temporary unsaved stories
+const TEMP_STORY_ID = '00000000-0000-0000-0000-000000000001'
+
 export function useBrowserAgentsPage() {
   const trpc = useTRPC()
 
@@ -28,6 +31,10 @@ export function useBrowserAgentsPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('stories')
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+
+  // New story state (tracks unsaved new story being created)
+  const [newStoryTestType, setNewStoryTestType] =
+    useState<StoryTestType | null>(null)
 
   // Editor state
   const [editedName, setEditedName] = useState<string>('')
@@ -44,7 +51,7 @@ export function useBrowserAgentsPage() {
   const storiesQuery = trpc.browserAgents.list.useQuery()
   const storyQuery = trpc.browserAgents.get.useQuery(
     { id: selectedStoryId ?? '' },
-    { enabled: !!selectedStoryId },
+    { enabled: !!selectedStoryId && selectedStoryId !== TEMP_STORY_ID },
   )
 
   // Mutations
@@ -52,10 +59,8 @@ export function useBrowserAgentsPage() {
     onSuccess: (newStory) => {
       void storiesQuery.refetch()
       setSelectedStoryId(newStory.id)
-      setEditedName(newStory.name)
-      setEditedInstructions(newStory.instructions)
-      setEditedScheduleText('')
-      setEditedCronSchedule('')
+      setNewStoryTestType(null)
+      // Editor state will be synced by useEffect when storyQuery loads
     },
   })
 
@@ -122,6 +127,17 @@ export function useBrowserAgentsPage() {
     },
   })
 
+  // Clear new story state when selecting an existing story (not the temp one)
+  useEffect(() => {
+    if (
+      selectedStoryId &&
+      selectedStoryId !== TEMP_STORY_ID &&
+      newStoryTestType
+    ) {
+      setNewStoryTestType(null)
+    }
+  }, [selectedStoryId, newStoryTestType])
+
   // Sync editor state when story selection changes
   useEffect(() => {
     if (storyQuery.data?.story) {
@@ -129,6 +145,7 @@ export function useBrowserAgentsPage() {
       setEditedInstructions(storyQuery.data.story.instructions)
       setEditedScheduleText(storyQuery.data.story.scheduleText ?? '')
       setEditedCronSchedule(storyQuery.data.story.cronSchedule ?? '')
+      setNewStoryTestType(null)
     }
   }, [storyQuery.data?.story])
 
@@ -144,36 +161,47 @@ export function useBrowserAgentsPage() {
   }, [activeRun, triggerHandle, selectedStoryId])
 
   // Handlers
-  const handleCreateStory = useCallback(
-    (testType: StoryTestType) => {
-      const defaultInstructions =
-        testType === 'browser'
-          ? '# Browser Agent Instructions\n\nDescribe what the agent should do...'
-          : '# VM Agent Instructions\n\nDescribe the CLI/API/SDK test...'
-      createMutation.mutate({
-        name: 'New Story',
-        instructions: defaultInstructions,
-        testType,
-      })
-    },
-    [createMutation],
-  )
+  const handleCreateStory = useCallback((testType: StoryTestType) => {
+    const defaultInstructions =
+      testType === 'browser'
+        ? '# Browser Agent Instructions\n\nDescribe what the agent should do...'
+        : '# VM Agent Instructions\n\nDescribe the CLI/API/SDK test...'
+    // Use a fixed UUID for temporary stories (all zeros with a specific pattern)
+    const tempId = '00000000-0000-0000-0000-000000000001'
+    setSelectedStoryId(tempId)
+    setNewStoryTestType(testType)
+    setEditedName('New Story')
+    setEditedInstructions(defaultInstructions)
+    setEditedScheduleText('')
+    setEditedCronSchedule('')
+  }, [])
 
   const handleSave = useCallback(() => {
-    if (!selectedStoryId) return
-    updateMutation.mutate({
-      id: selectedStoryId,
-      name: editedName,
-      instructions: editedInstructions,
-      scheduleText: editedScheduleText || null,
-      cronSchedule: editedCronSchedule || null,
-    })
+    if (newStoryTestType) {
+      // Creating a new story
+      createMutation.mutate({
+        name: editedName,
+        instructions: editedInstructions,
+        testType: newStoryTestType,
+      })
+    } else if (selectedStoryId) {
+      // Updating an existing story
+      updateMutation.mutate({
+        id: selectedStoryId,
+        name: editedName,
+        instructions: editedInstructions,
+        scheduleText: editedScheduleText || null,
+        cronSchedule: editedCronSchedule || null,
+      })
+    }
   }, [
+    newStoryTestType,
     selectedStoryId,
     editedName,
     editedInstructions,
     editedScheduleText,
     editedCronSchedule,
+    createMutation,
     updateMutation,
   ])
 
@@ -229,7 +257,34 @@ export function useBrowserAgentsPage() {
   }, [handleSave])
 
   // Computed values
-  const stories = storiesQuery.data ?? []
+  const storiesFromQuery = storiesQuery.data ?? []
+
+  // Add temporary story if creating a new one
+  const stories = useMemo(() => {
+    if (newStoryTestType && selectedStoryId === TEMP_STORY_ID) {
+      const tempStory: Story = {
+        id: TEMP_STORY_ID,
+        name: editedName,
+        instructions: editedInstructions,
+        testType: newStoryTestType,
+        scheduleText: editedScheduleText || null,
+        cronSchedule: editedCronSchedule || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+      return [tempStory, ...storiesFromQuery]
+    }
+    return storiesFromQuery
+  }, [
+    newStoryTestType,
+    selectedStoryId,
+    editedName,
+    editedInstructions,
+    editedScheduleText,
+    editedCronSchedule,
+    storiesFromQuery,
+  ])
+
   const runs = (storyQuery.data?.runs ?? []) as StoryRun[]
   // Only consider the current story as running if the triggerHandle belongs to it
   const isRunning =
@@ -241,8 +296,12 @@ export function useBrowserAgentsPage() {
     : null
 
   // Compute hasUnsavedChanges by comparing edited values against original values from the query
+  // Also true if we're creating a new story
   const originalStory = storyQuery.data?.story
   const hasUnsavedChanges = useMemo(() => {
+    // New story being created always has unsaved changes
+    if (newStoryTestType) return true
+
     if (!originalStory) return false
     return (
       editedName !== originalStory.name ||
@@ -251,6 +310,7 @@ export function useBrowserAgentsPage() {
       editedCronSchedule !== (originalStory.cronSchedule ?? '')
     )
   }, [
+    newStoryTestType,
     originalStory,
     editedName,
     editedInstructions,
@@ -283,9 +343,10 @@ export function useBrowserAgentsPage() {
     editedScheduleText,
     editedCronSchedule,
     hasUnsavedChanges,
+    isCreatingNewStory: newStoryTestType !== null,
 
     // Computed values
-    stories: stories as Story[],
+    stories,
     runs,
     isRunning,
     selectedRun,
@@ -295,7 +356,7 @@ export function useBrowserAgentsPage() {
     isStoriesLoading: storiesQuery.isLoading,
     isStoryLoading: storyQuery.isLoading,
     isCreating: createMutation.isPending,
-    isSaving: updateMutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isParsing: parseCronMutation.isPending,
     parseError: parseCronMutation.error?.message ?? null,

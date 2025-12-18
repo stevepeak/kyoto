@@ -21,6 +21,9 @@ import { Spinner } from '@/components/ui/spinner'
 import { useBrowserAgentsPage } from '@/hooks/use-browser-agents-page'
 import { cn } from '@/lib/utils'
 
+// UUID for temporary unsaved stories (must match the one in use-browser-agents-page.ts)
+const TEMP_STORY_ID = '00000000-0000-0000-0000-000000000001'
+
 export function AgentsPage() {
   const {
     activeTab,
@@ -34,6 +37,7 @@ export function AgentsPage() {
     editedScheduleText,
     editedCronSchedule,
     hasUnsavedChanges,
+    isCreatingNewStory,
     stories,
     runs,
     isRunning,
@@ -146,34 +150,42 @@ export function AgentsPage() {
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    {stories.map((story: Story) => (
-                      <button
-                        key={story.id}
-                        onClick={() => setSelectedStoryId(story.id)}
-                        className={cn(
-                          'w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
-                          'hover:bg-accent hover:text-accent-foreground',
-                          selectedStoryId === story.id &&
-                            'bg-accent text-accent-foreground',
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          {story.testType === 'browser' ? (
-                            <Globe className="size-3 shrink-0 text-violet-500" />
-                          ) : (
-                            <Terminal className="size-3 shrink-0 text-amber-500" />
+                    {stories.map((story: Story) => {
+                      const isTemp = story.id === TEMP_STORY_ID
+                      return (
+                        <button
+                          key={story.id}
+                          onClick={() => setSelectedStoryId(story.id)}
+                          className={cn(
+                            'w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
+                            'hover:bg-accent hover:text-accent-foreground',
+                            selectedStoryId === story.id &&
+                              'bg-accent text-accent-foreground',
                           )}
-                          <span className="truncate font-medium">
-                            {story.name}
-                          </span>
-                        </div>
-                        {story.scheduleText && (
-                          <div className="ml-5 truncate text-xs text-muted-foreground">
-                            {story.scheduleText}
+                        >
+                          <div className="flex items-center gap-2">
+                            {story.testType === 'browser' ? (
+                              <Globe className="size-3 shrink-0 text-violet-500" />
+                            ) : (
+                              <Terminal className="size-3 shrink-0 text-amber-500" />
+                            )}
+                            <span className="truncate font-medium">
+                              {story.name}
+                            </span>
+                            {isTemp && (
+                              <span className="text-xs text-muted-foreground">
+                                (unsaved)
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </button>
-                    ))}
+                          {story.scheduleText && (
+                            <div className="ml-5 truncate text-xs text-muted-foreground">
+                              {story.scheduleText}
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -231,7 +243,7 @@ export function AgentsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleDelete}
-                  disabled={isDeleting}
+                  disabled={isDeleting || isCreatingNewStory}
                   className="text-destructive hover:text-destructive"
                 >
                   {isDeleting ? <Spinner /> : <Trash2 className="size-4" />}
