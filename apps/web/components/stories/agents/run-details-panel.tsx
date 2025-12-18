@@ -27,6 +27,14 @@ type RunDetailsPanelProps = {
 }
 
 export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
+  const trpc = useTRPC()
+  const observations = run.observations
+  const displayStatus = getDisplayStatus(run)
+  const isRunning =
+    (run.status === 'running' || run.status === 'pending') &&
+    !observations &&
+    !run.error
+
   const {
     containerRef,
     isPlayerReady,
@@ -37,15 +45,8 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
     terminalRecording,
   } = useSessionRecordingPlayer({
     runId: run.id,
+    isRunning,
   })
-
-  const trpc = useTRPC()
-  const observations = run.observations
-  const displayStatus = getDisplayStatus(run)
-  const isRunning =
-    (run.status === 'running' || run.status === 'pending') &&
-    !observations &&
-    !run.error
 
   // Get public access token for streaming progress
   const publicAccessTokenQuery =

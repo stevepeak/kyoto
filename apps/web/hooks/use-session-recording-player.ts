@@ -7,20 +7,32 @@ import { useTRPC } from '@/lib/trpc-client'
 
 type UseSessionRecordingPlayerArgs = {
   runId: string
+  isRunning?: boolean
 }
 
 export function useSessionRecordingPlayer({
   runId,
+  isRunning = false,
 }: UseSessionRecordingPlayerArgs) {
   const trpc = useTRPC()
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<unknown>(null)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
+  const wasRunningRef = useRef(isRunning)
 
   const recordingQuery = trpc.browserAgents.getRecording.useQuery(
     { runId },
     { enabled: !!runId },
   )
+
+  // Refetch recording when run completes (transitions from running to not running)
+  useEffect(() => {
+    if (wasRunningRef.current && !isRunning) {
+      void recordingQuery.refetch()
+    }
+    wasRunningRef.current = isRunning
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRunning])
 
   const initPlayer = useCallback(async () => {
     if (

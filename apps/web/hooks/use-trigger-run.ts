@@ -157,8 +157,10 @@ export function useTriggerRun<T = unknown>({
       return
     }
 
+    // Mark as handled immediately to prevent race conditions
+    handledCompletionRef.current = completionKey
+
     if (run.isCompleted) {
-      handledCompletionRef.current = completionKey
       if (showToast && toastIdRef.current) {
         const message =
           toastMessagesRef.current.onSuccess ?? 'Sync completed successfully'
@@ -166,10 +168,7 @@ export function useTriggerRun<T = unknown>({
         toastIdRef.current = null
       }
       onCompleteRef.current?.(run.output as T)
-    }
-
-    if (run.isFailed || run.isCancelled) {
-      handledCompletionRef.current = completionKey
+    } else if (run.isFailed || run.isCancelled) {
       const error = new Error('Workflow failed')
       if (showToast && toastIdRef.current) {
         const message = toastMessagesRef.current.onError
