@@ -16,7 +16,7 @@ export function getDisplayStatus(run: StoryRun): RunDisplayStatus {
     if (run.observations?.success === false) {
       return { status: 'failed', label: 'Failed' }
     }
-    return { status: 'passed', label: 'Pass' }
+    return { status: 'passed', label: 'Passed' }
   }
   return { status: run.status, label: run.status }
 }

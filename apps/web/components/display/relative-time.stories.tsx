@@ -161,6 +161,9 @@ export const LongFormatWithoutAgo: Story = {
 }
 
 export const AllVariations: Story = {
+  args: {
+    date: new Date(),
+  },
   render: () => {
     const pastDates = {
       justNow: createDate(30 * 1000),

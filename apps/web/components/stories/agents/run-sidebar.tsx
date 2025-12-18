@@ -3,12 +3,12 @@
 import { type StoryRun } from '@app/schemas'
 import { CalendarClock, Video } from 'lucide-react'
 
+import { RelativeTime } from '@/components/display/relative-time'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 import { getDisplayStatus, RunStatusIcon } from './run-status-utils'
-import { RelativeTime } from '@/components/display/relative-time'
 
 type RunSidebarProps = {
   runs: StoryRun[]
@@ -72,23 +72,16 @@ export function RunSidebar({
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <RunStatusIcon status={displayStatus.status} />
                       <span>{displayStatus.label}</span>
+                      <RelativeTime
+                        date={run.createdAt}
+                        shorthand={false}
+                        className="text-xs text-muted-foreground font-normal"
+                      />
                       {run.sessionId && (
                         <Video className="ml-auto size-3 text-muted-foreground" />
                       )}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="px-3 py-0">
-                    <RelativeTime
-                      date={run.createdAt}
-                      shorthand={false}
-                      className="text-xs text-muted-foreground font-normal"
-                    />
-                    {run.error && (
-                      <div className="mt-2 truncate text-xs text-destructive">
-                        {run.error}
-                      </div>
-                    )}
-                  </CardContent>
                 </Card>
               )
             })

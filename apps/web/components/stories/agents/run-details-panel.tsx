@@ -12,8 +12,8 @@ import {
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 
-import { TerminalPlayer } from '@/components/display/terminal-player'
 import { RelativeTime } from '@/components/display/relative-time'
+import { TerminalPlayer } from '@/components/display/terminal-player'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSessionRecordingPlayer } from '@/hooks/use-session-recording-player'

@@ -113,7 +113,7 @@ export function useSessionRecordingPlayer({
 
     // Set up ResizeObserver to update player size when container resizes
     // Use a small debounce to avoid too many updates
-    let resizeTimeout: NodeJS.Timeout | null = null
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null
     const resizeObserver = new ResizeObserver(() => {
       if (resizeTimeout) {
         clearTimeout(resizeTimeout)
@@ -133,13 +133,13 @@ export function useSessionRecordingPlayer({
     ;(
       playerRef.current as {
         _resizeObserver?: ResizeObserver
-        _resizeTimeout?: NodeJS.Timeout | null
+        _resizeTimeout?: ReturnType<typeof setTimeout> | null
       }
     )._resizeObserver = resizeObserver
     ;(
       playerRef.current as {
         _resizeObserver?: ResizeObserver
-        _resizeTimeout?: NodeJS.Timeout | null
+        _resizeTimeout?: ReturnType<typeof setTimeout> | null
       }
     )._resizeTimeout = resizeTimeout
   }, [recordingQuery.data, updatePlayerSize])
@@ -152,7 +152,7 @@ export function useSessionRecordingPlayer({
         // Clean up ResizeObserver and timeout if they exist
         const player = playerRef.current as {
           _resizeObserver?: ResizeObserver
-          _resizeTimeout?: NodeJS.Timeout | null
+          _resizeTimeout?: ReturnType<typeof setTimeout> | null
         }
         if (player._resizeObserver) {
           player._resizeObserver.disconnect()
