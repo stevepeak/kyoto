@@ -21,6 +21,45 @@ function ensureTriggerConfigured(secretKey: string) {
   }
 }
 
+/**
+ * Generate a story title from instructions using AI
+ */
+async function generateStoryTitle(instructions: string): Promise<string> {
+  const config = getConfig()
+  const openrouter = createOpenRouter({
+    apiKey: config.OPENROUTER_API_KEY,
+  })
+
+  const result = await generateText({
+    model: openrouter('openai/gpt-5-mini'),
+    prompt: dedent`
+      Generate a concise title for this test story based on the instructions below.
+      
+      Instructions:
+      ${instructions}
+      
+      Rules:
+      - Output ONLY the title, nothing else
+      - Title must be less than 6 words
+      - Make it descriptive and clear about what the story tests
+      - Use title case
+      - No quotes or punctuation marks
+      
+      Title:
+    `,
+  })
+
+  const title = result.text.trim()
+
+  // Ensure title is less than 6 words (truncate if needed)
+  const words = title.split(/\s+/)
+  if (words.length > 5) {
+    return words.slice(0, 5).join(' ')
+  }
+
+  return title
+}
+
 export const browserAgentsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const stories = await ctx.db
@@ -81,11 +120,24 @@ export const browserAgentsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      let storyName = input.name
+
+      // Generate title if still "New Story"
+      if (input.name === 'New Story') {
+        try {
+          storyName = await generateStoryTitle(input.instructions)
+        } catch (error) {
+          // If title generation fails, keep "New Story" as fallback
+          // eslint-disable-next-line no-console
+          console.error('Failed to generate story title:', error)
+        }
+      }
+
       const [story] = await ctx.db
         .insert(schema.stories)
         .values({
           userId: ctx.user.id,
-          name: input.name,
+          name: storyName,
           instructions: input.instructions,
           testType: input.testType,
         })
@@ -164,10 +216,24 @@ export const browserAgentsRouter = router({
         }
       }
 
+      // Generate title if name is "New Story"
+      let storyName: string | undefined = input.name
+      if (input.name !== undefined && input.name === 'New Story') {
+        // Use new instructions if provided, otherwise use existing
+        const instructionsToUse = input.instructions ?? existing.instructions
+        try {
+          storyName = await generateStoryTitle(instructionsToUse)
+        } catch (error) {
+          // If title generation fails, keep "New Story" as fallback
+          // eslint-disable-next-line no-console
+          console.error('Failed to generate story title:', error)
+        }
+      }
+
       const [updated] = await ctx.db
         .update(schema.stories)
         .set({
-          ...(input.name !== undefined ? { name: input.name } : {}),
+          ...(input.name !== undefined ? { name: storyName } : {}),
           ...(input.instructions !== undefined
             ? { instructions: input.instructions }
             : {}),
