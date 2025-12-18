@@ -25,7 +25,7 @@ type BrowserAgentTaskOutput = {
 
 export const browserAgentTask = task({
   id: 'browser-agent',
-  maxDuration: 60, // 1 minute timeout
+  maxDuration: 60 * 10, // 10 minutes timeout
   run: async (
     input: BrowserAgentTaskInput,
   ): Promise<BrowserAgentTaskOutput> => {
