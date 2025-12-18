@@ -18,6 +18,7 @@
     "@app/api": "workspace:*",
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/utils": "workspace:*",
     "@app/schemas": "workspace:*",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

@@ -77,6 +77,7 @@ export function useBrowserAgentsPage() {
     storiesHook.selectedStoryId,
     tempHook.newStoryTestType,
     tempHook.setNewStoryTestType,
+    tempHook,
   ])
 
   // Handlers

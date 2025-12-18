@@ -91,15 +91,13 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
         (f) => f.severity === 'error',
       ).length
       const bugCount = allFindings.filter((f) => f.severity === 'bug').length
-      const impactfulCount = allFindings.filter(
-        (f) => f.severity === 'impactful',
-      ).length
+      const highCount = allFindings.filter((f) => f.severity === 'high').length
       const warnCount = allFindings.filter((f) => f.severity === 'warn').length
       const infoCount = allFindings.filter((f) => f.severity === 'info').length
 
       // Determine overall status
       let status: 'pass' | 'warn' | 'fail' = 'pass'
-      if (errorCount > 0 || bugCount > 0 || impactfulCount > 0) {
+      if (errorCount > 0 || bugCount > 0 || highCount > 0) {
         status = 'fail'
       } else if (warnCount > 0) {
         status = 'warn'

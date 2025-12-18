@@ -15,11 +15,15 @@
   },
   "dependencies": {
     "@app/browserbase": "workspace:*",
+    "@app/config": "workspace:*",
     "@app/context7": "workspace:*",
     "@app/shell": "workspace:*",
     "@app/types": "workspace:*",
     "@app/schemas": "workspace:*",
+    "@app/utils": "workspace:*",
+    "@openrouter/ai-sdk-provider": "catalog:",
     "@opentelemetry/api": "catalog:",
+    "@trpc/server": "catalog:",
     "ai": "catalog:",
     "ts-dedent": "catalog:",
     "zod": "catalog:"

@@ -48,7 +48,7 @@ export async function analyzePlanSummarization({
     message: string
     path?: string
     suggestion?: string
-    severity: 'info' | 'warn' | 'bug' | 'error'
+    severity: 'info' | 'warn' | 'bug' | 'error' | 'high'
   }[] = []
 
   for (const state of agentStates) {
@@ -79,7 +79,9 @@ export async function analyzePlanSummarization({
     })
     .join('\n\n')
 
-  const errorCount = allFindings.filter((f) => f.severity === 'error').length
+  const errorCount = allFindings.filter(
+    (f) => f.severity === 'error' || f.severity === 'high',
+  ).length
   const warnCount = allFindings.filter((f) => f.severity === 'warn').length
   const infoCount = allFindings.filter((f) => f.severity === 'info').length
 

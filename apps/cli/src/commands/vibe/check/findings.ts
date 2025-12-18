@@ -30,7 +30,7 @@ export function consolidateFindings(
 
 /**
  * Sorts findings by priority:
- * 1. Severity (error > bug > impactful > warn > info)
+ * 1. Severity (error > bug > high > warn > info)
  * 2. Path (group same files together)
  * 3. Message (alphabetically within same severity/path)
  */
@@ -40,7 +40,7 @@ export function sortFindingsByPriority(
   const severityOrder: Record<string, number> = {
     error: 0,
     bug: 1,
-    impactful: 2,
+    high: 2,
     warn: 3,
     info: 4,
   }

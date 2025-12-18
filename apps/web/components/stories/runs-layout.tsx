@@ -1,8 +1,7 @@
 'use client'
 
-import { type ChangeEvent } from 'react'
-
 import { type StoryRun } from '@app/schemas'
+import { type ChangeEvent } from 'react'
 
 import {
   RunDetailsPanel,

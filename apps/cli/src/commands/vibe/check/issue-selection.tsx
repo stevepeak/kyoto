@@ -35,7 +35,7 @@ function CustomItem({
   isStarted: boolean
 }): React.ReactElement {
   const severityColor =
-    finding.severity === 'error' || finding.severity === 'impactful'
+    finding.severity === 'error' || finding.severity === 'high'
       ? 'red'
       : finding.severity === 'bug'
         ? 'magenta'

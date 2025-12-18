@@ -1,6 +1,7 @@
 import {
   type VibeCheckAgent,
   type VibeCheckContext,
+  type VibeCheckFinding,
   type VibeCheckReporter,
   type VibeCheckResult,
 } from '@app/types'
@@ -10,12 +11,7 @@ type AnalyzerFn = (args: {
   context: VibeCheckContext
   options: { progress: (message: string) => void }
 }) => Promise<{
-  findings: {
-    message: string
-    path?: string
-    suggestion?: string
-    severity: 'info' | 'warn' | 'bug' | 'error' | 'impactful'
-  }[]
+  findings: VibeCheckFinding[]
 }>
 
 type SummaryConfig =
@@ -72,7 +68,7 @@ export function createVibeCheckAgent(
         if (id === 'code-organization') {
           if (
             finding.severity === 'error' ||
-            finding.severity === 'impactful' ||
+            finding.severity === 'high' ||
             finding.severity === 'bug'
           ) {
             return { ...finding, severity: 'warn' as const }
@@ -99,7 +95,7 @@ export function createVibeCheckAgent(
 
       // Both severity-based and severity-status need to compute status from severities
       const hasErrors = processedFindings.some(
-        (f) => f.severity === 'error' || f.severity === 'impactful',
+        (f) => f.severity === 'error' || f.severity === 'high',
       )
       const hasBugs = processedFindings.some((f) => f.severity === 'bug')
       const hasWarnings = processedFindings.some((f) => f.severity === 'warn')
@@ -121,8 +117,8 @@ export function createVibeCheckAgent(
       const bugCount = processedFindings.filter(
         (f) => f.severity === 'bug',
       ).length
-      const impactfulCount = processedFindings.filter(
-        (f) => f.severity === 'impactful',
+      const highCount = processedFindings.filter(
+        (f) => f.severity === 'high',
       ).length
       const warnCount = processedFindings.filter(
         (f) => f.severity === 'warn',
@@ -137,9 +133,9 @@ export function createVibeCheckAgent(
       if (bugCount > 0) {
         summaryParts.push(`${bugCount} ${pluralize(bugCount, 'bug')}`)
       }
-      if (impactfulCount > 0) {
+      if (highCount > 0) {
         summaryParts.push(
-          `${impactfulCount} impactful ${pluralize(impactfulCount, 'issue')}`,
+          `${highCount} high severity ${pluralize(highCount, 'issue')}`,
         )
       }
       if (warnCount > 0) {
@@ -149,13 +145,13 @@ export function createVibeCheckAgent(
       }
       if (
         processedFindings.length >
-        errorCount + bugCount + impactfulCount + warnCount
+        errorCount + bugCount + highCount + warnCount
       ) {
         const infoCount =
           processedFindings.length -
           errorCount -
           bugCount -
-          impactfulCount -
+          highCount -
           warnCount
         summaryParts.push(
           `${infoCount} code quality ${pluralize(infoCount, 'note')}`,
