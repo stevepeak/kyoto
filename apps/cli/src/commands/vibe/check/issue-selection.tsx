@@ -35,11 +35,13 @@ function CustomItem({
   isStarted: boolean
 }): React.ReactElement {
   const severityColor =
-    finding.severity === 'error'
+    finding.severity === 'error' || finding.severity === 'impactful'
       ? 'red'
-      : finding.severity === 'warn'
-        ? 'yellow'
-        : 'blue'
+      : finding.severity === 'bug'
+        ? 'magenta'
+        : finding.severity === 'warn'
+          ? 'yellow'
+          : 'blue'
 
   return (
     <Box flexDirection="row" gap={1}>

@@ -10,7 +10,7 @@ export type VibeCheckScope =
 
 export type VibeCheckTarget = 'staged' | 'unstaged'
 
-export type VibeCheckSeverity = 'info' | 'warn' | 'error'
+export type VibeCheckSeverity = 'info' | 'warn' | 'bug' | 'error' | 'high'
 
 export interface VibeCheckFinding {
   message: string

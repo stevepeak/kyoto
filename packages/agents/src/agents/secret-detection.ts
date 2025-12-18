@@ -13,7 +13,7 @@ export const secretDetectionOutputSchema = z.object({
       message: z.string(),
       path: z.string().optional(),
       suggestion: z.string().optional(),
-      severity: z.enum(['info', 'warn', 'error']),
+      severity: z.enum(['info', 'warn', 'high']),
     }),
   ),
 })
@@ -41,7 +41,7 @@ export const analyzeSecretDetection = createAnalyzeAgent({
     # What to Look For
     Look for these types of sensitive information in the code changes:
     
-    ## High Severity (error)
+    ## High Severity (high)
     - **API Keys**: API_KEY, apiKey, api_key, apikey (especially if followed by actual key values)
     - **Secrets**: SECRET, secret, secret_key, SECRET_KEY (especially if followed by actual secret values)
     - **Passwords**: password, pwd, passwd (especially if followed by actual password values)
@@ -69,7 +69,7 @@ export const analyzeSecretDetection = createAnalyzeAgent({
       - **message**: A concise description of what was found (e.g., "Hardcoded API key detected in config.ts")
       - **path**: The file path where the secret was found
       - **suggestion**: How to fix it (e.g., "Move to environment variable or secrets manager")
-      - **severity**: Use "error" for actual secrets, "warn" for suspicious patterns, "info" for false positives
+      - **severity**: Use "high" for actual secrets, "warn" for suspicious patterns, "info" for false positives
     ${githubChecksInstruction({ hasGitHub, checkName: 'Secret Detection' })}
     - Be precise: Don't flag variable names like "apiKey" if they're just being assigned from environment variables
     - Flag hardcoded values that look like actual secrets (long random strings, base64 encoded values, etc.)
@@ -88,7 +88,7 @@ export const analyzeSecretDetection = createAnalyzeAgent({
     - A message describing what was found and where
     - The file path where it was detected
     - A suggestion on how to fix it (e.g., use environment variables, secrets manager)
-    - Appropriate severity: "error" for actual secrets, "warn" for suspicious patterns, "info" for false positives
+    - Appropriate severity: "high" for actual secrets, "warn" for suspicious patterns, "info" for false positives
 
     Respond with JSON matching the schema.
   `,

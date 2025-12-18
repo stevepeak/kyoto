@@ -1,5 +1,6 @@
 export { assert, default as is } from '@sindresorhus/is'
 export { cleanAsciicast } from './clean-asciicast'
+export { TEMP_STORY_ID } from './constants'
 export { noop } from './noop'
 export { pluralize } from './pluralize'
 export { sleep } from './sleep'

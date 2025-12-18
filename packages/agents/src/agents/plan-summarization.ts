@@ -48,7 +48,7 @@ export async function analyzePlanSummarization({
     message: string
     path?: string
     suggestion?: string
-    severity: 'info' | 'warn' | 'error'
+    severity: 'info' | 'warn' | 'bug' | 'error'
   }[] = []
 
   for (const state of agentStates) {

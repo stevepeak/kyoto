@@ -4,10 +4,10 @@ import { type Story, type StoryTestType } from '@app/schemas'
 import { TEMP_STORY_ID } from '@app/utils'
 import { useCallback, useEffect, useState } from 'react'
 
-import { useNewStoryTemp } from '@/hooks/use-new-story-temp'
-import { useStories } from '@/hooks/use-stories'
-import { useStoryEditor } from '@/hooks/use-story-editor'
-import { useStoryRuns } from '@/hooks/use-story-runs'
+import { useNewStoryTemp } from '@/hooks/stories/use-new-story-temp'
+import { useStories } from '@/hooks/stories/use-stories'
+import { useStoryEditor } from '@/hooks/stories/use-story-editor'
+import { useStoryRuns } from '@/hooks/stories/use-story-runs'
 
 type ActiveTab = 'stories' | 'integrations'
 

@@ -22,7 +22,7 @@ export const libraryUsageOutputSchema = z.object({
       message: z.string(),
       path: z.string().optional(),
       suggestion: z.string().optional(),
-      severity: z.enum(['info', 'warn', 'error']),
+      severity: z.enum(['info', 'warn']),
     }),
   ),
 })

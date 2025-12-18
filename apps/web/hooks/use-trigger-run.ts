@@ -59,6 +59,7 @@ export function useTriggerRun<T = unknown>({
   const toastIdRef = useRef<string | number | null>(null)
   const streamTextRef = useRef<string>('')
   const lastRunIdRef = useRef<string | null>(null)
+  const handledCompletionRef = useRef<string | null>(null)
 
   // Store callbacks in refs to avoid infinite loops from dependency changes
   const onCompleteRef = useRef(onComplete)
@@ -94,6 +95,7 @@ export function useTriggerRun<T = unknown>({
     if (runId !== lastRunIdRef.current) {
       lastRunIdRef.current = runId
       streamTextRef.current = ''
+      handledCompletionRef.current = null
 
       if (toastIdRef.current) {
         toast.dismiss(toastIdRef.current)
@@ -149,7 +151,14 @@ export function useTriggerRun<T = unknown>({
       return
     }
 
+    // Prevent handling the same completion/error multiple times
+    const completionKey = `${runId}-${run.status}`
+    if (handledCompletionRef.current === completionKey) {
+      return
+    }
+
     if (run.isCompleted) {
+      handledCompletionRef.current = completionKey
       if (showToast && toastIdRef.current) {
         const message =
           toastMessagesRef.current.onSuccess ?? 'Sync completed successfully'
@@ -160,6 +169,7 @@ export function useTriggerRun<T = unknown>({
     }
 
     if (run.isFailed || run.isCancelled) {
+      handledCompletionRef.current = completionKey
       const error = new Error('Workflow failed')
       if (showToast && toastIdRef.current) {
         const message = toastMessagesRef.current.onError

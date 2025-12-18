@@ -14,7 +14,7 @@ type AnalyzerFn = (args: {
     message: string
     path?: string
     suggestion?: string
-    severity: 'info' | 'warn' | 'error'
+    severity: 'info' | 'warn' | 'bug' | 'error' | 'impactful'
   }[]
 }>
 
@@ -67,7 +67,21 @@ export function createVibeCheckAgent(
         options: { progress: reporter.progress },
       })
 
-      if (result.findings.length === 0) {
+      // Cap code-organization severity at WARN
+      const processedFindings = result.findings.map((finding) => {
+        if (id === 'code-organization') {
+          if (
+            finding.severity === 'error' ||
+            finding.severity === 'impactful' ||
+            finding.severity === 'bug'
+          ) {
+            return { ...finding, severity: 'warn' as const }
+          }
+        }
+        return finding
+      })
+
+      if (processedFindings.length === 0) {
         return {
           status: 'pass',
           summary: summary.passSummary,
@@ -78,40 +92,54 @@ export function createVibeCheckAgent(
       if (summary.type === 'simple') {
         return {
           status: 'warn',
-          summary: summary.findingSummary(result.findings.length),
-          findings: result.findings,
+          summary: summary.findingSummary(processedFindings.length),
+          findings: processedFindings,
         }
       }
 
       // Both severity-based and severity-status need to compute status from severities
-      const hasErrors = result.findings.some((f) => f.severity === 'error')
-      const hasWarnings = result.findings.some((f) => f.severity === 'warn')
-      const status: 'pass' | 'warn' | 'fail' = hasErrors
-        ? 'fail'
-        : hasWarnings
-          ? 'warn'
-          : 'pass'
+      const hasErrors = processedFindings.some(
+        (f) => f.severity === 'error' || f.severity === 'impactful',
+      )
+      const hasBugs = processedFindings.some((f) => f.severity === 'bug')
+      const hasWarnings = processedFindings.some((f) => f.severity === 'warn')
+      const status: 'pass' | 'warn' | 'fail' =
+        hasErrors || hasBugs ? 'fail' : hasWarnings ? 'warn' : 'pass'
 
       if (summary.type === 'severity-status') {
         return {
           status,
-          summary: summary.findingSummary(result.findings.length),
-          findings: result.findings,
+          summary: summary.findingSummary(processedFindings.length),
+          findings: processedFindings,
         }
       }
 
       // severity-based: detailed summary with counts per severity
-      const errorCount = result.findings.filter(
+      const errorCount = processedFindings.filter(
         (f) => f.severity === 'error',
       ).length
-      const warnCount = result.findings.filter(
+      const bugCount = processedFindings.filter(
+        (f) => f.severity === 'bug',
+      ).length
+      const impactfulCount = processedFindings.filter(
+        (f) => f.severity === 'impactful',
+      ).length
+      const warnCount = processedFindings.filter(
         (f) => f.severity === 'warn',
       ).length
 
       const summaryParts: string[] = []
       if (errorCount > 0) {
         summaryParts.push(
-          `${errorCount} critical ${pluralize(errorCount, 'bug')}`,
+          `${errorCount} logical ${pluralize(errorCount, 'error')}`,
+        )
+      }
+      if (bugCount > 0) {
+        summaryParts.push(`${bugCount} ${pluralize(bugCount, 'bug')}`)
+      }
+      if (impactfulCount > 0) {
+        summaryParts.push(
+          `${impactfulCount} impactful ${pluralize(impactfulCount, 'issue')}`,
         )
       }
       if (warnCount > 0) {
@@ -119,8 +147,16 @@ export function createVibeCheckAgent(
           `${warnCount} potential ${pluralize(warnCount, 'issue')}`,
         )
       }
-      if (result.findings.length > errorCount + warnCount) {
-        const infoCount = result.findings.length - errorCount - warnCount
+      if (
+        processedFindings.length >
+        errorCount + bugCount + impactfulCount + warnCount
+      ) {
+        const infoCount =
+          processedFindings.length -
+          errorCount -
+          bugCount -
+          impactfulCount -
+          warnCount
         summaryParts.push(
           `${infoCount} code quality ${pluralize(infoCount, 'note')}`,
         )
@@ -129,7 +165,7 @@ export function createVibeCheckAgent(
       return {
         status,
         summary: summaryParts.join(', '),
-        findings: result.findings,
+        findings: processedFindings,
       }
     },
   }

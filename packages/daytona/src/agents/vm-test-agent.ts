@@ -99,7 +99,7 @@ export async function runVmTestAgent(
   let ptySession: RecordedPtySession | null = null
 
   try {
-    onProgress?.('Creating recorded PTY session...')
+    onProgress?.('Creating recorded terminal session')
 
     ptySession = await createRecordedPtySession({
       sandbox,
@@ -108,8 +108,6 @@ export async function runVmTestAgent(
       rows: 40,
       onOutput: onTerminalOutput,
     })
-
-    onProgress?.('PTY session created, starting agent...')
 
     // Create tools that use the PTY session
     const tools = {

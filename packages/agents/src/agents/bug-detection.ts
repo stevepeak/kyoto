@@ -13,7 +13,7 @@ export const bugDetectionOutputSchema = z.object({
       message: z.string(),
       path: z.string().optional(),
       suggestion: z.string().optional(),
-      severity: z.enum(['info', 'warn', 'error']),
+      severity: z.enum(['info', 'bug', 'error']),
     }),
   ),
 })
@@ -42,10 +42,9 @@ export const analyzeBugDetection = createAnalyzeAgent({
 
     # What to Look For
 
-    ## High Severity (error) - Critical Bugs
+    ## High Severity (bug) - Actual Bugs
     - **Type errors**: Type mismatches, incorrect type usage, missing type guards
     - **Null/undefined access**: Accessing properties on potentially null/undefined values without checks
-    - **Logic errors**: Incorrect conditionals, wrong operators, off-by-one errors, incorrect comparisons
     - **Race conditions**: Async operations that could cause race conditions or data corruption
     - **Memory leaks**: Missing cleanup, event listeners not removed, subscriptions not unsubscribed
     - **Infinite loops**: Conditions that could cause infinite loops or stack overflows
@@ -53,6 +52,11 @@ export const analyzeBugDetection = createAnalyzeAgent({
     - **Incorrect API usage**: Wrong function signatures, incorrect parameter usage, missing required parameters
     - **State management bugs**: Incorrect state updates, stale closures, incorrect dependency arrays
     - **Side effects**: Unintended side effects, mutations of immutable data, incorrect state mutations
+
+    ## High Severity (error) - Logical Errors
+    - **Logic errors**: Incorrect conditionals, wrong operators, off-by-one errors, incorrect comparisons
+    - **Algorithmic errors**: Incorrect calculations, wrong formulas, flawed business logic
+    - **Control flow errors**: Incorrect branching, wrong loop conditions, missing break/continue statements
 
     ## Medium Severity (warn) - Potential Issues
     - **Edge cases**: Missing handling for edge cases (empty arrays, null values, boundary conditions)
@@ -87,7 +91,7 @@ export const analyzeBugDetection = createAnalyzeAgent({
       - **message**: A concise description of the bug (e.g., "Potential null pointer when accessing user.name")
       - **path**: The file path where the bug was found
       - **suggestion**: How to fix the bug or prevent it (e.g., "Add null check before accessing user.name")
-      - **severity**: Use "error" for critical bugs, "warn" for potential issues, "info" for code quality
+      - **severity**: Use "bug" for actual bugs, "error" for logical/algorithmic errors, "warn" for potential issues, "info" for code quality
     ${githubChecksInstruction({ hasGitHub, checkName: 'Bug Detection' })}
     - Be specific: Include line numbers or code snippets in suggestions when helpful
     - Consider TypeScript types: If types indicate a value could be null/undefined, flag missing checks
@@ -115,7 +119,7 @@ export const analyzeBugDetection = createAnalyzeAgent({
     - A message describing the bug clearly
     - The file path where it was detected
     - A suggestion on how to fix it
-    - Appropriate severity: "error" for critical bugs, "warn" for potential issues, "info" for code quality
+    - Appropriate severity: "bug" for actual bugs, "error" for logical/algorithmic errors, "warn" for potential issues, "info" for code quality
 
     Respond with JSON matching the schema.
   `,

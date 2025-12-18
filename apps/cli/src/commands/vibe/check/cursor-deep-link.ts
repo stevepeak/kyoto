@@ -27,11 +27,13 @@ export function generateCursorDeepLink(finding: ConsolidatedFinding): string {
 
   // Add severity context
   const severityContext =
-    finding.severity === 'error'
+    finding.severity === 'error' || finding.severity === 'bug'
       ? 'This is a critical issue that must be fixed.'
-      : finding.severity === 'warn'
-        ? 'This is an important issue that should be addressed.'
-        : 'This is a code improvement suggestion.'
+      : finding.severity === 'impactful'
+        ? 'This is an impactful issue that should be addressed.'
+        : finding.severity === 'warn'
+          ? 'This is an important issue that should be addressed.'
+          : 'This is a code improvement suggestion.'
 
   promptParts.push(severityContext)
 

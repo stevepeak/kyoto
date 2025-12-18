@@ -13,7 +13,7 @@ export const codeOrganizationOutputSchema = z.object({
       message: z.string(),
       path: z.string().optional(),
       suggestion: z.string().optional(),
-      severity: z.enum(['info', 'warn', 'error']),
+      severity: z.enum(['info', 'warn', 'high']),
     }),
   ),
 })
@@ -71,7 +71,7 @@ export const analyzeCodeOrganization = createAnalyzeAgent({
       - **message**: A concise description (e.g., "Large file (450 lines) - extract helpers", "Utility function should be in @app/utils", "Component should be split into smaller pieces")
       - **path**: The file path where the issue exists
       - **suggestion**: Detailed reasoning about what should be moved/extracted and where it should go
-      - **severity**: Use "warn" for organization issues, "error" for critical size/complexity issues
+      - **severity**: Use "warn" for organization issues, "high" for critical size/complexity issues
     ${githubChecksInstruction({ hasGitHub, checkName: 'Code Organization' })}
     - Keep findings concise and actionable
     - Focus on the most impactful refactoring opportunities
@@ -93,7 +93,7 @@ export const analyzeCodeOrganization = createAnalyzeAgent({
     - A message describing the issue (e.g., "Large file - extract helpers", "Utility should be in @app/utils")
     - The file path where the issue exists
     - A suggestion explaining what should be moved/extracted and where it should go
-    - Severity: "warn" for organization issues, "error" for critical size/complexity issues
+    - Severity: "warn" for organization issues, "high" for critical size/complexity issues
 
     Respond with JSON matching the schema.
   `,

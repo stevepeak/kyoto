@@ -24,7 +24,7 @@ type VmAgentTaskOutput = {
 
 export const vmAgentTask = task({
   id: 'vm-agent',
-  maxDuration: 60, // 1 minute timeout
+  maxDuration: 60 * 10, // 10 minutes timeout
   run: async (input: VmAgentTaskInput): Promise<VmAgentTaskOutput> => {
     const { runId, storyId, instructions } = input
 

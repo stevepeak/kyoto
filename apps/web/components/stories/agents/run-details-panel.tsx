@@ -1,6 +1,7 @@
 'use client'
 
 import { type StoryRun } from '@app/schemas'
+import { useRealtimeStream } from '@trigger.dev/react-hooks'
 import {
   ArrowLeft,
   CheckCircle,
@@ -15,6 +16,7 @@ import { TerminalPlayer } from '@/components/display/terminal-player'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSessionRecordingPlayer } from '@/hooks/use-session-recording-player'
+import { useTRPC } from '@/lib/trpc-client'
 import { cn } from '@/lib/utils'
 
 import { getDisplayStatus, RunStatusIcon } from './run-status-utils'
@@ -37,8 +39,36 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
     runId: run.id,
   })
 
+  const trpc = useTRPC()
   const observations = run.observations
   const displayStatus = getDisplayStatus(run)
+  const isRunning =
+    (run.status === 'running' || run.status === 'pending') &&
+    !observations &&
+    !run.error
+
+  // Get public access token for streaming progress
+  const publicAccessTokenQuery =
+    trpc.browserAgents.getRunPublicAccessToken.useQuery(
+      { runId: run.triggerRunId ?? '' },
+      { enabled: isRunning && Boolean(run.triggerRunId) },
+    )
+
+  // Stream progress when running
+  const { parts: streamParts } = useRealtimeStream<string>(
+    run.triggerRunId ?? '',
+    'progress',
+    {
+      accessToken: publicAccessTokenQuery.data?.publicAccessToken ?? undefined,
+      enabled:
+        isRunning &&
+        Boolean(
+          run.triggerRunId && publicAccessTokenQuery.data?.publicAccessToken,
+        ),
+    },
+  )
+
+  const streamText = streamParts?.join('\n') ?? ''
 
   return (
     <div className="space-y-6">
@@ -56,6 +86,32 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
           {new Date(run.createdAt).toLocaleString()}
         </span>
       </div>
+
+      {/* Loading with streamed progress - shown first when running */}
+      {isRunning && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Loader2 className="size-5 animate-spin text-blue-500" />
+              Streaming agent progress...
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {streamText ? (
+              <div className="space-y-2">
+                <div className="rounded-lg bg-muted/50 p-4 font-mono text-sm whitespace-pre-wrap break-words">
+                  {streamText}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="size-6 animate-spin mr-2" />
+                <span>Waiting to start...</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary */}
       {observations && (
@@ -175,21 +231,6 @@ export function RunDetailsPanel({ run, onBack }: RunDetailsPanelProps) {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* No observations yet */}
-      {!observations && !run.error && run.status === 'running' && (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Loader2 className="size-8 animate-spin mb-4" />
-          <p>Agent is running...</p>
-        </div>
-      )}
-
-      {!observations && !run.error && run.status === 'pending' && (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Loader2 className="size-8 animate-spin mb-4" />
-          <p>Waiting to start...</p>
-        </div>
       )}
     </div>
   )
