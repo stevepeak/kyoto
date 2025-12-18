@@ -52,7 +52,7 @@ export const vmAgentTask = task({
     let sandbox: Awaited<ReturnType<typeof daytona.create>> | null = null
 
     try {
-      void streams.append('progress', 'Creating VM sandbox...')
+      void streams.append('progress', 'Creating sandbox')
 
       // Create ephemeral sandbox
       sandbox = await daytona.create({
@@ -70,8 +70,6 @@ export const vmAgentTask = task({
         .update(schema.storyRuns)
         .set({ sessionId: sandboxId, updatedAt: new Date() })
         .where(eq(schema.storyRuns.id, runId))
-
-      void streams.append('progress', 'Running VM test agent...')
 
       // Create OpenRouter model for the agent
       const openrouter = createOpenRouter({
