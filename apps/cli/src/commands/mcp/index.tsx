@@ -73,7 +73,7 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
 
   // Register code_review tool (runs all review agents)
   server.registerTool(
-    'code_review',
+    'code-review',
     {
       description: 'Run all code review agents on unstaged changes',
     },

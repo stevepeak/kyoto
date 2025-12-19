@@ -60,3 +60,48 @@ Kyoto MCP empowers your AI agents to evaluate and improve their vibe coding; ena
 
   </Tab>
 </Tabs>
+
+## Tools
+
+Kyoto MCP provides the following tools for code review and quality checking:
+
+### `code-review`
+
+Run all code review agents on unstaged changes. This comprehensive tool executes all individual agents in parallel and returns a combined summary of findings.
+
+### Individual Agent Tools
+
+<CardGroup cols={2}>
+<Card title="bug-detection" icon="bug">
+  Detect bugs, logic errors, and potential runtime issues within the scope
+</Card>
+
+<Card title="code-organization" icon="folder">
+  Find functions and components that should be moved to other packages or
+  extracted into helper functions to reduce file sizes
+</Card>
+
+<Card title="function-consolidation" icon="merge">
+  Highlight opportunities to merge or extract shared helpers from similar
+  functions
+</Card>
+
+<Card title="library-usage" icon="book">
+  Check library usage against documentation to ensure best practices and avoid
+  reinventing the wheel
+</Card>
+
+<Card title="secret-detection" icon="key">
+  Scan code changes for leaked secrets, API keys, passwords, and other sensitive
+  information
+</Card>
+
+<Card title="stale-code-detection" icon="trash">
+  Detect unused code that was added in scope or became unreachable due to changes
+</Card>
+</CardGroup>
+
+<Tip>
+  Use the `code-review` tool to run all checks at once, or call individual agent
+  tools for specific analysis. All tools analyze unstaged changes by default.
+</Tip>
