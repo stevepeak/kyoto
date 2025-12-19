@@ -31,6 +31,7 @@ const SYSTEM_PROMPT = dedent`
   - If an action fails, do not try alternative approaches
   - Report all observations and results in the output
   - Be explicit about what succeeded and what failed
+  - Do not take screenshots
 `
 
 /**

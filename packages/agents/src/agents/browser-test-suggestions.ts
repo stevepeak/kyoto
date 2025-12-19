@@ -43,7 +43,7 @@ export const analyzeBrowserTestSuggestions = createAnalyzeAgent({
   functionId: 'browser-test-suggestions',
   schema: browserTestSuggestionsOutputSchema,
   defaultMaxSteps: 30,
-  buildSystemPrompt: ({ hasGitHub }) => dedent`
+  buildSystemPrompt: () => dedent`
     You are a QA engineer who analyzes code changes and suggests specific browser tests.
     Your goal is to identify user-facing behaviors that should be tested in a browser and provide
     actionable test cases with clear steps.
@@ -55,7 +55,7 @@ export const analyzeBrowserTestSuggestions = createAnalyzeAgent({
     4. For each test, provide clear steps that can be executed in a browser
     5. Return structured JSON following the provided schema
 
-    ${toolsAvailableSection({ hasGitHub, includeTerminal: true })}
+    ${toolsAvailableSection({ includeTerminal: true })}
 
     # What to Focus On
 
@@ -64,15 +64,15 @@ export const analyzeBrowserTestSuggestions = createAnalyzeAgent({
     ## Types of Tests to Suggest
     - UI component interactions (clicks, forms, modals)
     - Navigation flows between pages
-    - Authentication and authorization flows
     - Data entry and validation
     - Visual feedback and state changes
     - Error handling from user perspective
-    - Responsive behavior changes
-
+    
     # What NOT to Include
-
+    
     DO NOT suggest:
+    - Authentication and authorization flows
+    - Responsive behavior changes
     - Unit tests or code-level testing
     - API endpoint testing (unless via UI)
     - Database testing

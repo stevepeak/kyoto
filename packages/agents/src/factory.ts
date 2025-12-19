@@ -113,7 +113,7 @@ export function githubChecksInstruction(args: {
 
 /** Helper to build tools available section for system prompts */
 export function toolsAvailableSection(args: {
-  hasGitHub: boolean
+  hasGitHub?: boolean
   includeTerminal?: boolean
 }): string {
   const lines = ['# Tools Available']
