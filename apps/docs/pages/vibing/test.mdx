@@ -1,0 +1,48 @@
+---
+title: Vibe test
+description: Come up with a test plan for your vibe coding
+---
+
+> Automated browser testing after new vibe-coded changes/features.
+
+Kyoto explores the code changes to see what frontend features were added or changed
+then runs a series of tests to check if they work.
+
+```sh
+kyoto vibe test
+```
+
+This command will review all uncommited changes for tests to run.
+
+## Parameters
+
+#### Scope
+
+Change the scope that Kyoto will evaluate.
+
+```sh
+# Default
+kyoto vibe test                    # all uncommited changes
+
+kyoto vibe test --last             # since last vibe test
+kyoto vibe test -1                 # last commit
+kyoto vibe test -3                 # last 3 commits
+kyoto vibe test --since main       # branch changes
+kyoto vibe test --staged           # staged changes only
+kyoto vibe test --commit <sha>     # specific commit
+kyoto vibe test --changes "file.ts:1-10,other.ts:20-30"  # specific files and lines
+```
+
+#### Modes
+
+```sh
+kyoto vibe test --headless         # run browser in headless mode
+kyoto vibe test --interactive      # enable interactive mode
+```
+
+#### Instructions
+
+```sh
+kyoto vibe test --instructions "test login flow"  # custom testing instructions
+kyoto vibe test --timeout 5        # timeout in minutes (default: 1)
+```

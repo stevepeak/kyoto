@@ -15,14 +15,14 @@
       "pages/quickstart",
       "pages/roadmap",
       {
-        "group": "Vibing Tools",
+        "group": "Vibing",
         "icon": "wave",
-        "pages": [
-          "pages/features/vibe",
-          "pages/features/commit",
-          "pages/features/diff",
-          "pages/features/test"
-        ]
+        "pages": ["pages/vibing/check", "pages/vibing/test"]
+      },
+      {
+        "group": "Tools",
+        "icon": "wave",
+        "pages": ["pages/tooling/commit", "pages/tooling/diff"]
       },
       {
         "group": "Integrations",
