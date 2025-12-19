@@ -99,15 +99,16 @@ const commandGroups: CommandGroup[] = [
         description: 'Login via GitHub to get started',
         examples: [{ command: 'kyoto login' }],
       },
-      // TODO finish these later
-      // {
-      //   name: 'setup',
-      //   description: 'Configure your Kyoto experience',
-      //   examples: [
-      //     { command: 'kyoto setup github', description: 'Add a GitHub Action for Kyoto' },
-      //     { command: 'kyoto setup mcp', description: 'Add Kyoto to your MCP services' },
-      //   ],
-      // },
+      {
+        name: 'setup mcp',
+        description: 'Add Kyoto to your MCP services',
+        examples: [
+          {
+            command: 'kyoto setup mcp',
+            description: 'Configure Kyoto MCP integration in your IDE',
+          },
+        ],
+      },
       {
         name: 'docs',
         description: 'View the Kyoto documentation',
