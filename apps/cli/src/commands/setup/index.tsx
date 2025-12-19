@@ -1,18 +1,11 @@
-import { Box, Text, useApp } from 'ink'
-import { useEffect } from 'react'
+import { Box, Text } from 'ink'
 
+import { useExitAfterRender } from '../../helpers/ink/exit-wrap'
 import { Header } from '../../ui/header'
 import { Jumbo } from '../../ui/jumbo'
 
 export default function Setup(): React.ReactElement {
-  const { exit } = useApp()
-
-  useEffect(() => {
-    // Allow the render to flush before exiting
-    setTimeout(() => {
-      exit()
-    }, 0)
-  }, [exit])
+  useExitAfterRender()
 
   return (
     <Box flexDirection="column">

@@ -12,11 +12,10 @@ import Diff from './diff'
 import Docs from './docs'
 import Login from './login'
 import { runMcpCommand } from './mcp'
-import Plan from './plan'
 import Setup from './setup'
-import SetupAi from './setup/ai'
 import SetupGithub from './setup/github'
 import SetupMcp from './setup/mcp'
+import SetupAi from './setup/provider/ai'
 import VibeCheck from './vibe/check'
 import VibeTest from './vibe/test'
 
@@ -88,13 +87,6 @@ export function registerCommands(program: Command): void {
         commandName: 'commit',
         element: <Commit instructions={instructions} />,
       })
-    })
-
-  program
-    .command('plan')
-    .description('View the current plan')
-    .action(async () => {
-      await renderCommand({ commandName: 'plan', element: <Plan /> })
     })
 
   program

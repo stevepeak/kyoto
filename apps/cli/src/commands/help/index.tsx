@@ -1,6 +1,6 @@
-import { Box, Text, useApp, useStdout } from 'ink'
-import { useEffect } from 'react'
+import { Box, Text, useStdout } from 'ink'
 
+import { useExitAfterRender } from '../../helpers/ink/exit-wrap'
 import { Footer } from '../../ui/footer'
 import { Jumbo } from '../../ui/jumbo'
 
@@ -214,7 +214,6 @@ function CommandDisplay({
 }
 
 export default function Help(): React.ReactElement {
-  const { exit } = useApp()
   const { stdout } = useStdout()
   const terminalWidth = stdout.columns || 80
 
@@ -226,12 +225,7 @@ export default function Help(): React.ReactElement {
 
   const isVertical = terminalWidth < 80
 
-  useEffect(() => {
-    // Allow the render to flush before exiting
-    setTimeout(() => {
-      exit()
-    }, 250)
-  }, [exit])
+  useExitAfterRender()
 
   return (
     <Box flexDirection="column">

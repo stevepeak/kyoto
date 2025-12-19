@@ -104,7 +104,7 @@ export default function Login(): React.ReactElement {
 
         setLogin(resolvedLogin)
         setStatus('done')
-        setTimeout(() => exit(), 250)
+        exit()
       } catch (e) {
         if (cancelled) return
         setStatus('error')

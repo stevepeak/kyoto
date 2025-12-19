@@ -1,16 +1,14 @@
 import { Box, useApp } from 'ink'
 import React, { useCallback } from 'react'
 
-import { Header } from '../../ui/header'
-import { Jumbo } from '../../ui/jumbo'
-import { MCP } from '../init/mcp'
+import { Header } from '../../../ui/header'
+import { Jumbo } from '../../../ui/jumbo'
+import { MCP } from './mcp'
 
 export default function SetupMcp(): React.ReactElement {
   const { exit } = useApp()
 
-  const handleComplete = useCallback(() => {
-    setTimeout(() => exit(), 250)
-  }, [exit])
+  const handleComplete = useCallback(exit, [exit])
 
   return (
     <Box flexDirection="column">

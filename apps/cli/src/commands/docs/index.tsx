@@ -32,17 +32,13 @@ export default function Docs(): React.ReactElement {
         const command = getOpenCommand()
         await execa(command, [DOCS_URL])
         setStatus('opened')
-        setTimeout(() => {
-          exit()
-        }, 200)
       } catch (error) {
         setStatus('error')
         setErrorMessage(
           error instanceof Error ? error.message : 'Unknown error occurred',
         )
-        setTimeout(() => {
-          exit()
-        }, 200)
+      } finally {
+        exit()
       }
     }
 

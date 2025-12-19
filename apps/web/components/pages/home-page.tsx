@@ -24,7 +24,7 @@ export function HomePage() {
             入京行改善
           </Kanji>
           <h1 className="font-cormorant text-5xl font-semibold tracking-tight">
-            👋 Meet Kyoto,
+            👋 Hello Kyoto,
           </h1>
           <p className="mt-3 text-lg italic text-muted-foreground">
             Vibe coding tools for the developers of tomorrow.

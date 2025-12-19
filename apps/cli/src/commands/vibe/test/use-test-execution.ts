@@ -71,9 +71,7 @@ export function useTestExecution(options: UseTestExecutionOptions) {
         // If not watching, exit when no tests selected
         if (!watch) {
           log('No tests to run. Exiting...', { color: 'cyan' })
-          setTimeout(() => {
-            exit()
-          }, 1000)
+          exit()
         } else {
           setStage({ type: 'waiting' })
         }
@@ -148,9 +146,7 @@ export function useTestExecution(options: UseTestExecutionOptions) {
       // If not watching, exit after tests complete
       if (!watch) {
         log('Tests completed. Exiting...', { color: 'cyan' })
-        setTimeout(() => {
-          exit()
-        }, 1000)
+        exit()
       } else {
         setStage({ type: 'waiting' })
       }

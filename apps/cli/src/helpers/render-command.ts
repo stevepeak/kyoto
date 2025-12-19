@@ -42,6 +42,7 @@ export async function renderCommand(args: {
         },
       })
     }
+
     await app.waitUntilExit()
   } catch (error) {
     // Handle any unhandled errors at the top level
@@ -56,5 +57,11 @@ export async function renderCommand(args: {
     process.exit(1)
   } finally {
     await shutdownCliAnalytics()
+    // Ensure process exits after Ink app exits
+    process.exitCode = process.exitCode ?? 0
+    // give ink time to exit fully
+    setTimeout(() => {
+      process.exit(process.exitCode)
+    }, 100)
   }
 }

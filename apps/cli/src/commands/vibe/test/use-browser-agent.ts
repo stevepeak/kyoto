@@ -71,7 +71,7 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
           if (!cancelledRef.current) {
             cancelledRef.current = true
             log('Browser was closed', { color: 'yellow' })
-            setTimeout(() => exit(), 1500)
+            exit()
           }
         },
       })
