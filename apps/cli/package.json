@@ -71,6 +71,7 @@
     "@types/node": "catalog:",
     "@types/react": "^19.2.2",
     "tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod-to-json-schema": "^3.25.0"
   }
 }

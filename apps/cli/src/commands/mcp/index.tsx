@@ -10,6 +10,7 @@ import { pluralize } from '@app/utils'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { resolve } from 'node:path'
+import { z } from 'zod'
 
 import { defaultVibeCheckAgents } from '../../agents'
 import { CLI_VERSION } from '../../generated/version'
@@ -82,27 +83,28 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
     return await agent.run(context, reporter)
   }
 
+  // Shared Zod schema for tools that accept optional changes parameter
+  const changesInputSchema = z.object({
+    changes: z
+      .string()
+      .optional()
+      .describe(
+        'Optional. Check specific file and line ranges in format "file1.ts:1-10,file2.ts:20-30". If not provided, checks all unstaged changes.',
+      ),
+  })
+
   // Register code_review tool (runs all review agents)
   server.registerTool(
     'code-review',
     {
-      description:
-        'Run all code review agents on unstaged changes. Optionally specify specific file and line ranges using the changes parameter.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          changes: {
-            type: 'string',
-            description:
-              'Optional. Check specific file and line ranges in format "file1.ts:1-10,file2.ts:20-30". If not provided, checks all unstaged changes.',
-            examples: ['src/file.ts:1-10'],
-          },
-        },
-      } as any, // JSON Schema format - valid at runtime
+      description: 'Run all code review agents on unstaged changes.',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputSchema: changesInputSchema as any,
     },
-    async (args: { changes?: string } = {}) => {
-      const parsedChanges = args?.changes
-        ? parseChangesFlag(args.changes)
+    async (args: unknown) => {
+      const validatedArgs = changesInputSchema.parse(args)
+      const parsedChanges = validatedArgs.changes
+        ? parseChangesFlag(validatedArgs.changes)
         : undefined
       const context = await createContext(parsedChanges ?? undefined)
 
@@ -168,23 +170,15 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
     server.registerTool(
       agent.id,
       {
-        description: `${agent.description || agent.label}. Optionally specify specific file and line ranges using the changes parameter.`,
-        inputSchema: {
-          type: 'object',
-          properties: {
-            changes: {
-              type: 'string',
-              description:
-                'Optional. Check specific file and line ranges in format "file1.ts:1-10,file2.ts:20-30". If not provided, checks all unstaged changes.',
-              examples: ['src/file.ts:1-10'],
-            },
-          },
-        } as any, // JSON Schema format - valid at runtime
+        description: agent.description || agent.label,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        inputSchema: changesInputSchema as any,
       },
-      async (args: { changes?: string } = {}) => {
+      async (args: unknown) => {
         try {
-          const parsedChanges = args?.changes
-            ? parseChangesFlag(args.changes)
+          const validatedArgs = changesInputSchema.parse(args)
+          const parsedChanges = validatedArgs.changes
+            ? parseChangesFlag(validatedArgs.changes)
             : undefined
           const context = await createContext(parsedChanges ?? undefined)
           const result = await runAgent(agent, context)
@@ -224,53 +218,49 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
   }
 
   // Register browser-test tool
+  // Define Zod schema for input validation
+  const browserTestInputSchema = z.object({
+    changes: z
+      .string()
+      .optional()
+      .describe(
+        'File and line ranges to test in format "file1.ts:1-10,file2.ts:20-30". Defaults to changes in `git status`.',
+      ),
+    headless: z
+      .boolean()
+      .optional()
+      .default(true)
+      .describe('Run browser in headless mode. Default: true.'),
+    instructions: z
+      .string()
+      .optional()
+      .describe(
+        'Insructions on what to test otherwise it will be inferred by the "changed" argument.',
+      ),
+  })
+
   server.registerTool(
     'browser-test',
     {
       description:
         'Run browser tests on code changes using an AI agent. Analyzes changes, generates test suggestions, and executes them automatically.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          changes: {
-            type: 'string',
-            description:
-              'Required. File and line ranges to test in format "file1.ts:1-10,file2.ts:20-30".',
-            examples: ['src/file.ts:1-10'],
-          },
-          headless: {
-            type: 'boolean',
-            description:
-              'Run browser in headless mode (default: false). When false, browser window is visible.',
-            default: false,
-          },
-          instructions: {
-            type: 'string',
-            description:
-              'Optional. Custom instructions for the browser test agent. If not provided, uses .kyoto/instructions.md file.',
-          },
-        },
-        required: ['changes'],
-      } as any, // JSON Schema format - valid at runtime
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputSchema: browserTestInputSchema as any,
     },
-    async (args: {
-      changes: string
-      headless?: boolean
-      instructions?: string
-    }) => {
+    async (args: unknown) => {
       try {
+        // Validate and parse input using Zod schema
+        const validatedArgs = browserTestInputSchema.parse(args)
+
         // Parse changes
-        const parsedChanges = parseChangesFlag(args.changes)
-        if (!parsedChanges || parsedChanges.length === 0) {
-          throw new Error(
-            'Invalid changes format. Expected "file:lines" format.',
-          )
-        }
+        const parsedChanges = validatedArgs.changes
+          ? parseChangesFlag(validatedArgs.changes)
+          : undefined
 
         // Initialize browser agent
         const initResult = await initializeAgent({
-          headless: args.headless ?? false,
-          instructions: args.instructions,
+          headless: validatedArgs.headless ?? true,
+          instructions: validatedArgs.instructions,
           onProgress: () => {
             // Progress is logged internally, not needed for MCP
           },
@@ -287,10 +277,14 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
 
         try {
           // Get scope context
-          const scope: VibeCheckScope = {
-            type: 'file-lines',
-            changes: parsedChanges,
-          }
+          const scope: VibeCheckScope = parsedChanges
+            ? {
+                type: 'file-lines',
+                changes: parsedChanges,
+              }
+            : {
+                type: 'unstaged',
+              }
           const scopeContent = await getScopeContext(scope, agentGitRoot)
 
           // Perform browser tests
@@ -302,7 +296,7 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
               scopeContent,
               model: agentModel,
             },
-            parsedChanges,
+            parsedChanges: parsedChanges ?? [],
             progress: () => {
               // Progress is logged internally
             },
@@ -330,7 +324,8 @@ async function runMcpServer(args: { cwd?: string }): Promise<void> {
           const resultsText = testResult.results
             .map((result, i) => {
               const statusIcon = result.passed ? '✅' : '❌'
-              return `${statusIcon} Test ${i + 1}: ${result.description}\n${result.response}\n`
+              const test = testResult.tests[i]
+              return `${statusIcon} Test ${i + 1}: ${test.description}\n${result.response}\n`
             })
             .join('\n---\n\n')
 

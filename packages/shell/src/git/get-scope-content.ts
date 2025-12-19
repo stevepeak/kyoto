@@ -103,7 +103,7 @@ export async function getScopeFilePaths(
       return scope.paths.filter(
         (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
       )
-    case 'file-lines':
+    case 'file-lines': {
       // Extract unique file paths from changes
       const fileSet = new Set<string>()
       for (const change of scope.changes) {
@@ -113,6 +113,7 @@ export async function getScopeFilePaths(
       return Array.from(fileSet).filter(
         (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
       )
+    }
   }
 }
 

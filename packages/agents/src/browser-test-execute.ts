@@ -23,8 +23,6 @@ type PerformBrowserTestsOptions = {
 }
 
 export type BrowserTestResult = {
-  description: string
-  steps: string[]
   passed: boolean
   response: string
 }
@@ -94,15 +92,11 @@ export async function performBrowserTests(
       const passed = result.response.toLowerCase().includes('pass')
 
       testResults.push({
-        description: test.description,
-        steps: test.steps,
         passed,
         response: result.response,
       })
     } catch (err) {
       testResults.push({
-        description: test.description,
-        steps: test.steps,
         passed: false,
         response: `Error: ${err instanceof Error ? err.message : 'Unknown'}`,
       })

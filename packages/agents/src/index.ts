@@ -4,8 +4,8 @@ export {
   browserTestSuggestionsOutputSchema,
 } from './agents/browser-test-suggestions'
 export {
-  performBrowserTests,
   type BrowserTestResult,
+  performBrowserTests,
   type PerformBrowserTestsResult,
 } from './browser-test-execute'
 export {
