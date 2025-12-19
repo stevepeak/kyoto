@@ -3,18 +3,34 @@ title: Vibe check
 description: Kyoto will vibe check your code to keep development running smoothly.
 ---
 
-> _**Vibe coding comes with risks.**_ Entropy can quickly creep into your codebase bringing you
-> development flow to a grinding halt. _Sloppy_ AI code, security issues, bugs, dead code, and
-> duplicate functions are all avoidable. Kyoto will vibe check your code to ensure it remains
-> in good shape to promote your rapid development.
+<iframe
+  className="w-full rounded-xl"
+  src="https://platform.twitter.com/embed/Tweet.html?id=2002078803536065002"
+  title="Twitter Tweet"
+  frameBorder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowFullScreen
+  style={{ minHeight: '750px' }}
+></iframe>
 
-Kyoto vibe checks your AI code to reduce entropy and optimize your AI vibing experience.
+_**Vibe coding comes with risks.**_ Entropy can quickly creep into your codebase bringing you
+development flow to a grinding halt. Generated code can have security issues, bugs, dead code, and
+duplicate functions - not good vibes. Kyoto vibe checks your code to ensure it remains
+in good shape to promote your rapid development.
 
 ```sh
 kyoto vibe check
 ```
 
-or, choose what to vibe check with
+or, let coding agents vibe check themselves
+
+<Note>Set up the [Kyoto MCP](/pages/integrations/mcp)</Note>
+
+## Options
+
+#### Scope
+
+Change the scope that Kyoto will evaluate.
 
 ```sh
 kyoto vibe check               # all uncommited changes
@@ -24,29 +40,4 @@ kyoto vibe check -3            # last 3 commits
 kyoto vibe check --since main  # branch changes
 kyoto vibe check --staged      # staged changes only
 kyoto vibe check --unstaged    # unstaged changes only
-```
-
-or, let coding agents vibe check themselves
-
-<Note>Set up the [Kyoto MCP](/pages/integrations/mcp)</Note>
-
-# Example Vibe Check
-
-Which looks like this
-
-```sh
-入   |
-京   |
-行   |  Kyoto • May the vibe be with you.
-改   |
-善   |
-
-
-空気 Vibe checks
-──────────────────────────────────────────────────
-√ Bug detection
-√ Code organization
-√ Function consolidation
-√ Secret detection
-√ Stale code
 ```
