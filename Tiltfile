@@ -42,7 +42,6 @@ cmd_button(
     argv=["sh", "-c", "lsof -i :3001 | awk 'NR>1 {print $2}' | xargs kill"],
 )
 
-# Development => MCP Builder
 local_resource(
     labels=["Development"],
     name='MCP Builder',
@@ -61,6 +60,13 @@ local_resource(
     labels=["Development"],
     serve_cmd="bun run --cwd packages/db db:studio",
     links=[link("https://local.drizzle.studio", "Drizzle Studio") ],
+)
+cmd_button(
+    name="btn-drizzle-kill",
+    resource="Drizzle Studio",
+    icon_name="terminal",
+    text="Kill Port",
+    argv=["sh", "-c", "lsof -i :4983 -t | xargs kill"],
 )
 
 local_resource(
