@@ -4,6 +4,11 @@ export {
   browserTestSuggestionsOutputSchema,
 } from './agents/browser-test-suggestions'
 export {
+  performBrowserTests,
+  type BrowserTestResult,
+  type PerformBrowserTestsResult,
+} from './browser-test-execute'
+export {
   analyzeBugDetection,
   bugDetectionOutputSchema,
 } from './agents/bug-detection'

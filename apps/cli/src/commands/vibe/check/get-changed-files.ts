@@ -39,5 +39,15 @@ export async function getChangedFiles(args: {
       return scope.paths.filter(
         (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
       )
+    case 'file-lines':
+      // Extract unique file paths from changes
+      const fileSet = new Set<string>()
+      for (const change of scope.changes) {
+        fileSet.add(change.file)
+      }
+      // Filter to only TypeScript files
+      return Array.from(fileSet).filter(
+        (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
+      )
   }
 }

@@ -26,6 +26,7 @@ type UsePerformEvaluationOptions = {
   setTestStatuses: Dispatch<SetStateAction<Record<string, TestStatus>>>
   setHighlightedIndex: (index: number) => void
   setCustomInput: (input: string) => void
+  changes?: { file: string; lines: string }[]
 }
 
 /**
@@ -45,6 +46,7 @@ export function usePerformEvaluation(
     setTestStatuses,
     setHighlightedIndex,
     setCustomInput,
+    changes,
   } = options
 
   useEffect(() => {
@@ -67,7 +69,11 @@ export function usePerformEvaluation(
       }
 
       try {
-        const scope: VibeCheckScope = { type: 'changes' }
+        // Use file-lines scope if changes provided, otherwise use 'changes' type
+        const scope: VibeCheckScope =
+          changes && changes.length > 0
+            ? { type: 'file-lines', changes }
+            : { type: 'changes' }
         const scopeContent: ScopeContext = await getScopeContext(
           scope,
           gitRootRef.current,
@@ -139,5 +145,6 @@ export function usePerformEvaluation(
     setTestStatuses,
     setHighlightedIndex,
     setCustomInput,
+    changes,
   ])
 }

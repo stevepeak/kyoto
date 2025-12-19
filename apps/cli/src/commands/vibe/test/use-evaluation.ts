@@ -22,6 +22,7 @@ type UseEvaluationOptions = {
   setTestStatuses: Dispatch<SetStateAction<Record<string, TestStatus>>>
   setHighlightedIndex: (index: number) => void
   setCustomInput: (input: string) => void
+  changes?: { file: string; lines: string }[]
 }
 
 /**
@@ -42,6 +43,7 @@ export function useEvaluation(options: UseEvaluationOptions) {
     setTestStatuses,
     setHighlightedIndex,
     setCustomInput,
+    changes,
   } = options
 
   const evaluationAbortRef = useRef<AbortController | null>(null)
@@ -68,6 +70,7 @@ export function useEvaluation(options: UseEvaluationOptions) {
     setTestStatuses,
     setHighlightedIndex,
     setCustomInput,
+    changes,
   })
 
   // Re-trigger evaluation if files change during evaluation

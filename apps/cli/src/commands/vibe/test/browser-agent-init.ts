@@ -11,6 +11,7 @@ import { init } from '../../../helpers/init'
 
 type InitializeAgentOptions = {
   headless?: boolean
+  instructions?: string
   onProgress: (message: string) => void
   onBrowserClosed: () => void
 }
@@ -45,24 +46,36 @@ type InitializeAgentResult = InitializeAgentSuccess | InitializeAgentError
 export async function initializeAgent(
   options: InitializeAgentOptions,
 ): Promise<InitializeAgentResult> {
-  const { headless, onProgress, onBrowserClosed } = options
+  const {
+    headless,
+    instructions: customInstructions,
+    onProgress,
+    onBrowserClosed,
+  } = options
 
   // Initialize environment
   const { fs, model } = await init()
   const gitRoot = await findGitRoot()
 
-  // Validate instructions file exists
-  if (!existsSync(fs.instructions)) {
-    return {
-      success: false,
-      error: `No instructions file found at ${fs.instructions}`,
-      hint: 'Create a .kyoto/instructions.md file with testing instructions',
+  // Use custom instructions if provided, otherwise read from file
+  let instructions: string
+  if (customInstructions) {
+    instructions = customInstructions
+    onProgress('Applying custom instructions')
+  } else {
+    // Validate instructions file exists
+    if (!existsSync(fs.instructions)) {
+      return {
+        success: false,
+        error: `No instructions file found at ${fs.instructions}`,
+        hint: 'Create a .kyoto/instructions.md file with testing instructions or use --instructions flag',
+      }
     }
-  }
 
-  // Read instructions
-  const instructions = await readFile(fs.instructions, 'utf-8')
-  onProgress('Applying .kyoto/instructions.md')
+    // Read instructions
+    instructions = await readFile(fs.instructions, 'utf-8')
+    onProgress('Applying .kyoto/instructions.md')
+  }
 
   // Create agent
   const agent = await createBrowserTestAgent({

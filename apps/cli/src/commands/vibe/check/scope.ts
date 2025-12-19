@@ -21,6 +21,7 @@ interface GetVibeCheckScopeArgs {
   sinceBranch?: string
   last?: boolean
   staged: boolean
+  changes?: { file: string; lines: string }[]
   gitRoot: string
   hasStagedChanges: boolean
   hasChanges: boolean
@@ -35,7 +36,7 @@ interface GetVibeCheckScopeResult {
 /**
  * Determines the vibe check scope based on flags, GitHub Actions environment, or local changes.
  *
- * Priority: explicit commit flags > since branch > last vibe check > GitHub Actions auto-detection > staged/unstaged
+ * Priority: --changes > explicit commit flags > since branch > last vibe check > GitHub Actions auto-detection > staged/unstaged
  *
  * @returns Object with scope, warning message (if no scope), and whether unstaged changes exist
  */
@@ -48,12 +49,22 @@ export async function getVibeCheckScope(
     sinceBranch,
     last,
     staged,
+    changes,
     gitRoot,
     hasStagedChanges,
     hasChanges,
   } = args
 
-  // Priority: explicit commit flags > since branch > last vibe check > GitHub Actions auto-detection > staged/unstaged
+  // Priority: --changes > explicit commit flags > since branch > last vibe check > GitHub Actions auto-detection > staged/unstaged
+  if (changes && changes.length > 0) {
+    // Specific file:lines provided via --changes flag
+    return {
+      scope: { type: 'file-lines', changes },
+      warning: null,
+      hasUnstagedChanges: false,
+    }
+  }
+
   if (commitSha) {
     // Specific commit SHA provided
     return {

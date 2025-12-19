@@ -8,6 +8,10 @@ export const vibeCheckScopeSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('unstaged') }),
   z.object({ type: z.literal('changes') }),
   z.object({ type: z.literal('paths'), paths: z.array(z.string()) }),
+  z.object({
+    type: z.literal('file-lines'),
+    changes: z.array(z.object({ file: z.string(), lines: z.string() })),
+  }),
 ])
 
 // Individual finding within an agent's results

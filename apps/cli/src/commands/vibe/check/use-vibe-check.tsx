@@ -26,6 +26,7 @@ interface UseVibeCheckArgs {
   commitSha?: string
   sinceBranch?: string
   last?: boolean
+  changes?: { file: string; lines: string }[]
 }
 
 type VibeCheckStep = 'initializing' | 'agents' | 'issues'
@@ -49,7 +50,14 @@ interface UseVibeCheckResult {
  * 3. Issues - allows user to select and act on found issues
  */
 export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
-  const { staged = false, commitCount, commitSha, sinceBranch, last } = args
+  const {
+    staged = false,
+    commitCount,
+    commitSha,
+    sinceBranch,
+    last,
+    changes,
+  } = args
 
   const { exit } = useApp()
   const [step, setStep] = useState<VibeCheckStep>('initializing')
@@ -76,6 +84,7 @@ export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
           staged,
           sinceBranch,
           last,
+          changes,
           gitRoot: fs.gitRoot,
           hasStagedChanges: git.hasStagedChanges,
           hasChanges: git.hasChanges,
@@ -172,7 +181,7 @@ export function useVibeCheck(args: UseVibeCheckArgs): UseVibeCheckResult {
     return () => {
       cancelledRef.current = true
     }
-  }, [exit, staged, commitCount, commitSha, sinceBranch, last])
+  }, [exit, staged, commitCount, commitSha, sinceBranch, last, changes])
 
   // Update config and write check.json after successful vibe check
   useEffect(() => {

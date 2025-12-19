@@ -18,6 +18,7 @@ interface VibeCheckProps {
   commitSha?: string
   sinceBranch?: string
   last?: boolean
+  changes?: { file: string; lines: string }[]
 }
 
 function WarningsDisplay({
@@ -86,6 +87,7 @@ export default function VibeCheck({
   commitSha,
   sinceBranch,
   last,
+  changes,
 }: VibeCheckProps): React.ReactElement {
   const {
     step,
@@ -104,6 +106,7 @@ export default function VibeCheck({
     commitSha,
     sinceBranch,
     last,
+    changes,
   })
 
   const issuesExist = useMemo(

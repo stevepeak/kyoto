@@ -58,6 +58,10 @@ const commandGroups: CommandGroup[] = [
             command: 'kyoto vibe test --interactive',
             description: 'interactive with test results',
           },
+          {
+            command: 'kyoto vibe test --instructions "string"',
+            description: 'with custom instructions',
+          },
         ],
       },
     ],

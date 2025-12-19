@@ -8,6 +8,66 @@ import { getChangedTsFilesFromCommits } from './get-changed-ts-files-from-commit
 import { getStagedTsFiles } from './get-staged-ts-files'
 import { getUnstagedTsFiles } from './get-unstaged-ts-files'
 
+/**
+ * Parses a line range string (e.g., "1-10", "5", "20-30") and returns start and end line numbers.
+ * If only a single number is provided, returns that line only.
+ * If no range is provided (empty string), returns null (meaning all lines).
+ */
+function parseLineRange(lines: string): { start: number; end: number } | null {
+  if (!lines || lines.trim().length === 0) {
+    return null // No range specified, means all lines
+  }
+
+  const trimmed = lines.trim()
+  const dashIndex = trimmed.indexOf('-')
+
+  if (dashIndex === -1) {
+    // Single line number
+    const lineNum = Number.parseInt(trimmed, 10)
+    if (Number.isNaN(lineNum) || lineNum < 1) {
+      return null
+    }
+    return { start: lineNum, end: lineNum }
+  }
+
+  // Range format: start-end
+  const startStr = trimmed.slice(0, dashIndex).trim()
+  const endStr = trimmed.slice(dashIndex + 1).trim()
+
+  const start = Number.parseInt(startStr, 10)
+  const end = Number.parseInt(endStr, 10)
+
+  if (Number.isNaN(start) || Number.isNaN(end) || start < 1 || end < start) {
+    return null
+  }
+
+  return { start, end }
+}
+
+/**
+ * Extracts specific line ranges from file content.
+ * Line numbers are 1-indexed.
+ */
+function extractLineRanges(
+  content: string,
+  lineRanges: { start: number; end: number }[],
+): string {
+  const lines = content.split('\n')
+  const extractedLines: string[] = []
+
+  for (const range of lineRanges) {
+    // Extract lines (1-indexed, so subtract 1 for array index)
+    const startIdx = Math.max(0, range.start - 1)
+    const endIdx = Math.min(lines.length, range.end)
+
+    for (let i = startIdx; i < endIdx; i++) {
+      extractedLines.push(lines[i] ?? '')
+    }
+  }
+
+  return extractedLines.join('\n')
+}
+
 export interface ScopeContext {
   filePaths: string[]
   diffs: Record<string, string> // path -> diff content
@@ -41,6 +101,16 @@ export async function getScopeFilePaths(
     case 'paths':
       // Filter to only TypeScript files
       return scope.paths.filter(
+        (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
+      )
+    case 'file-lines':
+      // Extract unique file paths from changes
+      const fileSet = new Set<string>()
+      for (const change of scope.changes) {
+        fileSet.add(change.file)
+      }
+      // Filter to only TypeScript files
+      return Array.from(fileSet).filter(
         (path) => path.endsWith('.ts') || path.endsWith('.tsx'),
       )
   }
@@ -152,6 +222,64 @@ async function getFileDiff(
           // File is untracked, return empty (will use fileContents instead)
           return ''
         }
+      case 'file-lines': {
+        // For file-lines scope, get the full diff/content first, then extract specified lines
+        // Find the change entry for this file
+        const fileChange = scope.changes.find((c) => c.file === filePath)
+        if (!fileChange) {
+          return '' // File not in changes list
+        }
+
+        // Get full diff/content (try staged + unstaged like 'paths' scope)
+        let fullContent = ''
+        try {
+          await execa('git', ['ls-files', '--error-unmatch', '--', filePath], {
+            cwd: gitRoot,
+          })
+          // File is tracked, get staged + unstaged diff
+          const stagedResult = await execa(
+            'git',
+            ['diff', '--cached', '--', filePath],
+            { cwd: gitRoot },
+          ).catch(() => ({ stdout: '' }))
+          const unstagedResult = await execa('git', ['diff', '--', filePath], {
+            cwd: gitRoot,
+          }).catch(() => ({ stdout: '' }))
+          fullContent = [stagedResult.stdout, unstagedResult.stdout]
+            .filter((s) => s.trim().length > 0)
+            .join('\n')
+        } catch {
+          // File is untracked, get full file content
+          try {
+            fullContent = await getFileContent(filePath, gitRoot)
+          } catch {
+            return ''
+          }
+        }
+
+        // If no line range specified, return full content
+        if (!fileChange.lines || fileChange.lines.trim().length === 0) {
+          return fullContent
+        }
+
+        // Parse line ranges (can be comma-separated: "1-10,20-30")
+        const lineRangeStrs = fileChange.lines.split(',').map((s) => s.trim())
+        const lineRanges: { start: number; end: number }[] = []
+
+        for (const rangeStr of lineRangeStrs) {
+          const range = parseLineRange(rangeStr)
+          if (range) {
+            lineRanges.push(range)
+          }
+        }
+
+        if (lineRanges.length === 0) {
+          return fullContent // Invalid range, return full content
+        }
+
+        // Extract specified line ranges
+        return extractLineRanges(fullContent, lineRanges)
+      }
     }
   } catch {
     return ''
@@ -233,11 +361,45 @@ export async function getScopeFileContents(
 
   for (const filePath of filePaths) {
     const isTracked = await isFileTracked(filePath, gitRoot)
-    // For untracked files or paths scope, we need full content
-    if (!isTracked || scope.type === 'paths') {
-      const content = await getFileContent(filePath, gitRoot)
-      if (content.length > 0) {
-        contents[filePath] = content
+    // For untracked files or paths/file-lines scope, we need full content
+    if (!isTracked || scope.type === 'paths' || scope.type === 'file-lines') {
+      const fullContent = await getFileContent(filePath, gitRoot)
+      if (fullContent.length > 0) {
+        // For file-lines scope, extract specified line ranges if provided
+        if (scope.type === 'file-lines') {
+          const fileChange = scope.changes.find((c) => c.file === filePath)
+          if (
+            fileChange &&
+            fileChange.lines &&
+            fileChange.lines.trim().length > 0
+          ) {
+            // Parse line ranges (can be comma-separated: "1-10,20-30")
+            const lineRangeStrs = fileChange.lines
+              .split(',')
+              .map((s) => s.trim())
+            const lineRanges: { start: number; end: number }[] = []
+
+            for (const rangeStr of lineRangeStrs) {
+              const range = parseLineRange(rangeStr)
+              if (range) {
+                lineRanges.push(range)
+              }
+            }
+
+            if (lineRanges.length > 0) {
+              // Extract specified line ranges
+              contents[filePath] = extractLineRanges(fullContent, lineRanges)
+            } else {
+              // Invalid range, use full content
+              contents[filePath] = fullContent
+            }
+          } else {
+            // No line range specified, use full content
+            contents[filePath] = fullContent
+          }
+        } else {
+          contents[filePath] = fullContent
+        }
       }
     }
   }

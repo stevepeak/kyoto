@@ -40,5 +40,14 @@ export function formatScopeDescription({
       return 'all changes'
     case 'paths':
       return `specified paths: ${scope.paths.join(', ')}`
+    case 'file-lines': {
+      const descriptions = scope.changes.map((c) => {
+        if (c.lines && c.lines.trim().length > 0) {
+          return `${c.file}:${c.lines}`
+        }
+        return c.file
+      })
+      return `specified changes: ${descriptions.join(', ')}`
+    }
   }
 }

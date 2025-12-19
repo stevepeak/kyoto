@@ -7,6 +7,7 @@ export type VibeCheckScope =
   | { type: 'unstaged' }
   | { type: 'changes' }
   | { type: 'paths'; paths: string[] }
+  | { type: 'file-lines'; changes: { file: string; lines: string }[] }
 
 export type VibeCheckTarget = 'staged' | 'unstaged'
 

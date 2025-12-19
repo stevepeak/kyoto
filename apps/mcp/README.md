@@ -92,8 +92,13 @@ Scan code changes for leaked secrets, API keys, passwords, and other sensitive i
 
 Detect unused code that was added in scope or became unreachable due to changes.
 
+### `browser-test`
+
+Run browser tests on code changes using an AI agent. Analyzes changes, generates test suggestions, and executes them automatically in a browser.
+
 ## Usage Tips
 
 - Use the `code-review` tool to run all checks at once, or call individual agent tools for specific analysis
 - All tools analyze unstaged changes by default
 - Results include severity levels: `error`, `bug`, `high`, `warn`, and `info`
+- Use `browser-test` to automatically test UI changes with an AI agent that can interact with your browser

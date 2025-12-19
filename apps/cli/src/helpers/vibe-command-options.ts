@@ -1,6 +1,8 @@
 import { parseCommitSpec } from '@app/shell'
 import { type Command } from 'commander'
 
+import { parseChangesFlag } from './parse-changes-flag'
+
 /**
  * Raw options from commander for vibe-like commands (vibe check, test).
  */
@@ -11,6 +13,7 @@ export type VibeCommandRawOptions = {
   commit?: string
   since?: string
   last?: boolean
+  changes?: string
 }
 
 /**
@@ -23,6 +26,7 @@ type VibeCommandProps = {
   commitSha?: string
   sinceBranch?: string
   last?: boolean
+  changes?: { file: string; lines: string }[]
 }
 
 /**
@@ -51,6 +55,10 @@ export function addVibeCommandOptions(command: Command): Command {
       'Check commits since a branch (e.g., --since main)',
     )
     .option('--last', 'Check commits since last vibe check')
+    .option(
+      '--changes <file:lines>',
+      'Check specific file and line ranges (e.g., "file1.ts:1-10,file2.ts:20-30")',
+    )
 }
 
 /**
@@ -68,6 +76,10 @@ export function parseVibeCommandOptions(args: {
     commitOption: options.commit,
   })
 
+  const changes = options.changes
+    ? parseChangesFlag(options.changes)
+    : undefined
+
   return {
     staged: options.staged,
     timeoutMinutes,
@@ -75,5 +87,6 @@ export function parseVibeCommandOptions(args: {
     commitSha,
     sinceBranch: options.since,
     last: options.last,
+    changes: changes ?? undefined,
   }
 }

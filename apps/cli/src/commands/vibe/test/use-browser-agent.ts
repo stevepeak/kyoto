@@ -8,6 +8,7 @@ import { type Stage } from './types'
 
 type UseBrowserAgentOptions = {
   headless?: boolean
+  instructions?: string
   log: (text: string, opts?: { color?: string; dim?: boolean }) => void
   addAgentMessage: (text: string) => void
   addDivider: () => void
@@ -15,7 +16,8 @@ type UseBrowserAgentOptions = {
 }
 
 export function useBrowserAgent(options: UseBrowserAgentOptions) {
-  const { headless, log, addAgentMessage, addDivider, setStage } = options
+  const { headless, instructions, log, addAgentMessage, addDivider, setStage } =
+    options
   const { exit } = useApp()
 
   const agentRef = useRef<BrowserTestAgent | null>(null)
@@ -63,6 +65,7 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
 
       const result = await initializeAgent({
         headless,
+        instructions,
         onProgress: (msg) => log(msg, { dim: true }),
         onBrowserClosed: () => {
           if (!cancelledRef.current) {
@@ -119,7 +122,7 @@ export function useBrowserAgent(options: UseBrowserAgentOptions) {
     return () => {
       cancelledRef.current = true
     }
-  }, [log, addAgentMessage, addDivider, setStage, exit, headless])
+  }, [log, addAgentMessage, addDivider, setStage, exit, headless, instructions])
 
   return {
     agent: agentRef.current,

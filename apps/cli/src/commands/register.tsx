@@ -129,21 +129,36 @@ export function registerCommands(program: Command): void {
     },
   )
 
-  vibeCommand
-    .command('test')
-    .description('Interactive browser testing with AI agent')
-    .option('--headless', 'Run browser in headless mode')
-    .option('-i, --interactive', 'Enable interactive mode')
-    .action(async (options: { headless?: boolean; interactive?: boolean }) => {
+  addVibeCommandOptions(
+    vibeCommand
+      .command('test')
+      .description('Interactive browser testing with AI agent')
+      .option('--headless', 'Run browser in headless mode')
+      .option('-i, --interactive', 'Enable interactive mode')
+      .option('--instructions <string>', 'Custom instructions for testing'),
+  ).action(
+    async (
+      commitSpec: string | undefined,
+      options: VibeCommandRawOptions & {
+        headless?: boolean
+        interactive?: boolean
+        instructions?: string
+      },
+    ) => {
+      const props = parseVibeCommandOptions({ commitSpec, options })
+
       await renderCommand({
         commandName: 'vibe_test',
-        commandOptions: options,
+        commandOptions: { ...options, ...props },
         element: (
           <VibeTest
             headless={options.headless}
             interactive={options.interactive}
+            instructions={options.instructions}
+            changes={props.changes}
           />
         ),
       })
-    })
+    },
+  )
 }

@@ -16,6 +16,8 @@ import { useTestExecution } from './use-test-execution'
 type TestProps = {
   headless?: boolean
   interactive?: boolean
+  instructions?: string
+  changes?: { file: string; lines: string }[]
 }
 
 export default function Test(props: TestProps): React.ReactElement {
@@ -58,6 +60,7 @@ export default function Test(props: TestProps): React.ReactElement {
   const { agentRef, modelRef, gitRootRef, cancelledRef, isExiting, close } =
     useBrowserAgent({
       headless: props.headless,
+      instructions: props.instructions,
       log,
       addAgentMessage,
       addDivider,
@@ -76,6 +79,7 @@ export default function Test(props: TestProps): React.ReactElement {
     setTestStatuses,
     setHighlightedIndex,
     setCustomInput,
+    changes: props.changes,
   })
 
   // Test execution
