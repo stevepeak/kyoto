@@ -135,7 +135,8 @@ export function registerCommands(program: Command): void {
       .description('Interactive browser testing with AI agent')
       .option('--headless', 'Run browser in headless mode')
       .option('-i, --interactive', 'Enable interactive mode')
-      .option('--instructions <string>', 'Custom instructions for testing'),
+      .option('--instructions <string>', 'Custom instructions for testing')
+      .option('--watch', 'Watch for file changes and re-run tests'),
   ).action(
     async (
       commitSpec: string | undefined,
@@ -143,6 +144,7 @@ export function registerCommands(program: Command): void {
         headless?: boolean
         interactive?: boolean
         instructions?: string
+        watch?: boolean
       },
     ) => {
       const props = parseVibeCommandOptions({ commitSpec, options })
@@ -155,6 +157,7 @@ export function registerCommands(program: Command): void {
             headless={options.headless}
             interactive={options.interactive}
             instructions={options.instructions}
+            watch={options.watch}
             changes={props.changes}
           />
         ),

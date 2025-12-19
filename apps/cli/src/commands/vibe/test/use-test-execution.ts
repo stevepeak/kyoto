@@ -1,4 +1,5 @@
 import { type BrowserTestSuggestion } from '@app/agents'
+import { useApp } from 'ink'
 import {
   type Dispatch,
   type MutableRefObject,
@@ -30,6 +31,7 @@ type UseTestExecutionOptions = {
   setCustomInput: (input: string) => void
   resetFileWatcher: () => void
   lastEvaluatedFilesRef: MutableRefObject<string>
+  watch: boolean
 }
 
 export function useTestExecution(options: UseTestExecutionOptions) {
@@ -49,7 +51,9 @@ export function useTestExecution(options: UseTestExecutionOptions) {
     setCustomInput,
     resetFileWatcher,
     lastEvaluatedFilesRef,
+    watch,
   } = options
+  const { exit } = useApp()
 
   const runTests = useCallback(
     async (tests: BrowserTestSuggestion[]) => {
@@ -63,7 +67,16 @@ export function useTestExecution(options: UseTestExecutionOptions) {
         log('No tests selected', { dim: true })
         resetFileWatcher()
         lastEvaluatedFilesRef.current = ''
-        setStage({ type: 'waiting' })
+
+        // If not watching, exit when no tests selected
+        if (!watch) {
+          log('No tests to run. Exiting...', { color: 'cyan' })
+          setTimeout(() => {
+            exit()
+          }, 1000)
+        } else {
+          setStage({ type: 'waiting' })
+        }
         return
       }
 
@@ -131,7 +144,16 @@ export function useTestExecution(options: UseTestExecutionOptions) {
       addDivider()
       resetFileWatcher()
       lastEvaluatedFilesRef.current = ''
-      setStage({ type: 'waiting' })
+
+      // If not watching, exit after tests complete
+      if (!watch) {
+        log('Tests completed. Exiting...', { color: 'cyan' })
+        setTimeout(() => {
+          exit()
+        }, 1000)
+      } else {
+        setStage({ type: 'waiting' })
+      }
     },
     [
       agentRef,
@@ -149,6 +171,8 @@ export function useTestExecution(options: UseTestExecutionOptions) {
       setCustomInput,
       resetFileWatcher,
       lastEvaluatedFilesRef,
+      watch,
+      exit,
     ],
   )
 

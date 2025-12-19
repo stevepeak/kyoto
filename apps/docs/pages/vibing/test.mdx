@@ -39,9 +39,22 @@ kyoto vibe test --changes "file.ts:1-10,other.ts:20-30"  # specific files and li
 
 #### Modes
 
+Run browser in headless mode
+
 ```sh
-kyoto vibe test --headless         # run browser in headless mode
-kyoto vibe test --interactive      # enable interactive mode
+kyoto vibe test --headless
+```
+
+Enable interactive mode to choose which tests to run
+
+```sh
+kyoto vibe test --interactive
+```
+
+Watch for file changes and automatically run tests
+
+```sh
+kyoto vibe test --watch
 ```
 
 #### Instructions

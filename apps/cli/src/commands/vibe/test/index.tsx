@@ -17,6 +17,7 @@ type TestProps = {
   headless?: boolean
   interactive?: boolean
   instructions?: string
+  watch?: boolean
   changes?: { file: string; lines: string }[]
 }
 
@@ -45,16 +46,31 @@ export default function Test(props: TestProps): React.ReactElement {
   const [customInput, setCustomInput] = useState('')
 
   // File watcher - enabled in waiting, evaluating, and awaiting-input stages
+  // Only watch if --watch flag is provided, but always run once initially to get changed files
+  const watch = props.watch ?? false
+  const hasEvaluatedRef = useRef(false)
+
+  // Enable watcher if:
+  // - watch is true (always watch), OR
+  // - watch is false AND we haven't evaluated yet (to get initial files)
   const isWatchingEnabled =
-    stage.type === 'waiting' ||
-    stage.type === 'evaluating' ||
-    stage.type === 'awaiting-input'
+    (watch || !hasEvaluatedRef.current) &&
+    (stage.type === 'waiting' ||
+      stage.type === 'evaluating' ||
+      stage.type === 'awaiting-input')
 
   const { changedFiles, reset: resetFileWatcher } = useFileWatcher({
     enabled: isWatchingEnabled,
     debounceMs: 500,
     pollIntervalMs: 1000,
   })
+
+  // Track when we've evaluated (for non-watch mode)
+  useEffect(() => {
+    if (stage.type === 'evaluating') {
+      hasEvaluatedRef.current = true
+    }
+  }, [stage.type])
 
   // Browser agent lifecycle
   const { agentRef, modelRef, gitRootRef, cancelledRef, isExiting, close } =
@@ -99,6 +115,7 @@ export default function Test(props: TestProps): React.ReactElement {
     setCustomInput,
     resetFileWatcher,
     lastEvaluatedFilesRef,
+    watch,
   })
 
   // Auto-run tests when not in interactive mode
