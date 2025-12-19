@@ -1,6 +1,6 @@
 <div align="center">
 
-# ——— <span style="color: red; font-size: 1.5em;">入</span> <span style="font-size: 1.5em;">Kyoto</span> <span style="color: grey; font-size: 1.5em;">MCP</span> ———
+# <span style="color: red; font-size: 1.5em;">入</span> <span style="font-size: 1.5em;">Kyoto</span> <span style="color: grey; font-size: 1.5em;">MCP</span>
 
 </div>
 
@@ -11,13 +11,14 @@
 
 </div>
 
-Kyoto MCP empowers your AI agents to evaluate and improve their vibe coding; enabling faster, higher-quality iteration and more productive outcomes.
+Kyoto MCP gives your AI agents tools to vibe check and vibe test the code they generate; enabling higher-quality iteration and more productive outcomes.
 
 ## Quick Setup
 
 Run the command below to automatically setup the MCP integration in your IDE:
 
 ```sh
+npm install -g @usekyoto/cli
 kyoto setup mcp
 ```
 
@@ -95,10 +96,3 @@ Detect unused code that was added in scope or became unreachable due to changes.
 ### `browser-test`
 
 Run browser tests on code changes using an AI agent. Analyzes changes, generates test suggestions, and executes them automatically in a browser.
-
-## Usage Tips
-
-- Use the `code-review` tool to run all checks at once, or call individual agent tools for specific analysis
-- All tools analyze unstaged changes by default
-- Results include severity levels: `error`, `bug`, `high`, `warn`, and `info`
-- Use `browser-test` to automatically test UI changes with an AI agent that can interact with your browser

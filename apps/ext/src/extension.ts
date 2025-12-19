@@ -73,9 +73,9 @@ function generateCursorDeepLink(finding: FindingItem): string {
   )
 
   const severityContext =
-    finding.severity === 'error'
+    finding.severity === 'error' || finding.severity === 'bug'
       ? 'This is a critical issue that must be fixed.'
-      : finding.severity === 'warn'
+      : finding.severity === 'warn' || finding.severity === 'high'
         ? 'This is an important issue that should be addressed.'
         : 'This is a code improvement suggestion.'
 
@@ -234,7 +234,7 @@ class FindingItem extends vscode.TreeItem {
   public readonly message: string
   public readonly path?: string
   public readonly suggestion?: string
-  public readonly severity: 'info' | 'warn' | 'error'
+  public readonly severity: 'info' | 'warn' | 'bug' | 'error' | 'high'
   public readonly agentLabel: string
 
   constructor(finding: VibeCheckFileFinding, agentLabel: string) {
@@ -275,14 +275,18 @@ class FindingItem extends vscode.TreeItem {
     return md
   }
 
-  private getIcon(severity: 'info' | 'warn' | 'error'): vscode.ThemeIcon {
+  private getIcon(
+    severity: 'info' | 'warn' | 'bug' | 'error' | 'high',
+  ): vscode.ThemeIcon {
     switch (severity) {
       case 'error':
+      case 'bug':
         return new vscode.ThemeIcon(
           'error',
           new vscode.ThemeColor('errorForeground'),
         )
       case 'warn':
+      case 'high':
         return new vscode.ThemeIcon(
           'warning',
           new vscode.ThemeColor('editorWarning.foreground'),
