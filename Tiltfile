@@ -52,7 +52,7 @@ cmd_button(
     resource="MCP Builder",
     icon_name="terminal",
     text="Kill Port",
-    argv=["sh", "-c", "lsof -i :6274 -t | xargs kill"],
+    argv=["sh", "-c", "lsof -i :6277 -t | xargs kill"],
 )
 
 local_resource(
