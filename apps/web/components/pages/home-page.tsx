@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-export function DashboardPage() {
+export function HomePage() {
   return (
     <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
       <div className="w-full max-w-4xl space-y-8">

@@ -1,14 +1,14 @@
 import { type Metadata } from 'next'
 
-import { DashboardPage } from '@/components/pages/dashboard-page'
+import { HomePage } from '@/components/pages/home-page'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
-  description: 'Kyoto Dashboard',
+  title: 'Kyoto',
+  description: 'Kyoto',
 }
 
-export default async function HomePage() {
-  return <DashboardPage />
+export default async function Page() {
+  return <HomePage />
 }
