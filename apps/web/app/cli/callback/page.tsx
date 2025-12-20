@@ -1,4 +1,4 @@
-import { ensureOpenRouterApiKey } from '@app/api'
+import { ensureOpenRouterApiKey } from '@app/openrouter'
 import { redirect } from 'next/navigation'
 
 import { getSession } from '@/lib/auth-server'

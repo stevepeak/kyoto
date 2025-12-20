@@ -2,6 +2,7 @@
   "dependencies": {
     "@app/agents": "workspace:*",
     "@app/browserbase": "workspace:*",
+    "@app/openrouter": "workspace:*",
     "@app/config": "workspace:*",
     "@app/daytona": "workspace:*",
     "@app/db": "workspace:*",

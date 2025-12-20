@@ -1,9 +1,8 @@
 {
-  "name": "@app/api",
+  "name": "@app/openrouter",
   "type": "module",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Server-side tRPC API definitions",
+  "version": "0.0.1",
+  "description": "OpenRouter API key management",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts"
@@ -15,28 +14,14 @@
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@app/agents": "workspace:*",
-    "@app/browserbase": "workspace:*",
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
-    "@app/schemas": "workspace:*",
-    "@app/utils": "workspace:*",
-    "@app/linear": "workspace:*",
-    "@app/posthog": "workspace:*",
-    "@daytonaio/sdk": "catalog:",
-    "@sentry/nextjs": "catalog:",
-    "@trigger.dev/sdk": "catalog:",
-    "@trpc/server": "catalog:",
-    "ai": "catalog:",
-    "stripe": "catalog:",
-    "superjson": "catalog:",
-    "ts-dedent": "catalog:",
-    "zod": "catalog:"
+    "@openrouter/sdk": "catalog:",
+    "@trpc/server": "catalog:"
   },
   "devDependencies": {
     "@kyoto/eslint-config": "workspace:*",
     "@types/node": "catalog:",
-    "@types/pg": "^8.15.5",
     "tsconfig": "workspace:*",
     "typescript": "catalog:"
   }

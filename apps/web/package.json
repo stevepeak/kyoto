@@ -17,6 +17,7 @@
   "dependencies": {
     "@app/api": "workspace:*",
     "@app/config": "workspace:*",
+    "@app/openrouter": "workspace:*",
     "@app/db": "workspace:*",
     "@app/utils": "workspace:*",
     "@app/schemas": "workspace:*",
@@ -47,6 +48,7 @@
     "rrweb-player": "^2.0.0-alpha.18",
     "shiki": "^3.19.0",
     "sonner": "^2.0.7",
+    "stripe": "catalog:",
     "superjson": "catalog:",
     "tailwind-merge": "^3.4.0",
     "tiptap-markdown": "^0.9.0"

@@ -1,7 +1,7 @@
-import { ensureOpenRouterApiKey } from '@app/api'
 import { getConfig } from '@app/config'
 import { runVmTestAgent, serializeAsciicast } from '@app/daytona'
 import { createDb, eq, schema } from '@app/db'
+import { ensureOpenRouterApiKey } from '@app/openrouter'
 import { type StoryTestOutput, type WebhookPayload } from '@app/schemas'
 import { cleanAsciicast } from '@app/utils'
 import { Daytona } from '@daytonaio/sdk'

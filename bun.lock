@@ -25,12 +25,12 @@
       "dependencies": {
         "@ai-sdk/anthropic": "catalog:",
         "@ai-sdk/openai": "catalog:",
-        "@app/agents": "workspace:^",
-        "@app/playwright": "workspace:^",
-        "@app/schemas": "workspace:^",
-        "@app/shell": "workspace:^",
-        "@app/types": "workspace:^",
-        "@app/utils": "workspace:^",
+        "@app/agents": "workspace:*",
+        "@app/playwright": "workspace:*",
+        "@app/schemas": "workspace:*",
+        "@app/shell": "workspace:*",
+        "@app/types": "workspace:*",
+        "@app/utils": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.24.3",
         "@openrouter/ai-sdk-provider": "catalog:",
         "ai": "catalog:",
@@ -87,7 +87,8 @@
         "@app/config": "workspace:*",
         "@app/daytona": "workspace:*",
         "@app/db": "workspace:*",
-        "@app/posthog": "workspace:^",
+        "@app/openrouter": "workspace:*",
+        "@app/posthog": "workspace:*",
         "@app/schemas": "workspace:*",
         "@app/utils": "workspace:*",
         "@browserbasehq/stagehand": "catalog:",
@@ -121,6 +122,7 @@
         "@app/api": "workspace:*",
         "@app/config": "workspace:*",
         "@app/db": "workspace:*",
+        "@app/openrouter": "workspace:*",
         "@app/schemas": "workspace:*",
         "@app/utils": "workspace:*",
         "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -150,6 +152,7 @@
         "rrweb-player": "^2.0.0-alpha.18",
         "shiki": "^3.19.0",
         "sonner": "^2.0.7",
+        "stripe": "catalog:",
         "superjson": "catalog:",
         "tailwind-merge": "^3.4.0",
         "tiptap-markdown": "^0.9.0",
@@ -230,15 +233,15 @@
         "@app/config": "workspace:*",
         "@app/db": "workspace:*",
         "@app/linear": "workspace:*",
-        "@app/posthog": "workspace:^",
+        "@app/posthog": "workspace:*",
         "@app/schemas": "workspace:*",
         "@app/utils": "workspace:*",
         "@daytonaio/sdk": "catalog:",
-        "@openrouter/sdk": "catalog:",
         "@sentry/nextjs": "catalog:",
         "@trigger.dev/sdk": "catalog:",
         "@trpc/server": "catalog:",
         "ai": "catalog:",
+        "stripe": "catalog:",
         "superjson": "catalog:",
         "ts-dedent": "catalog:",
         "zod": "catalog:",
@@ -344,6 +347,22 @@
         "typescript": "catalog:",
       },
     },
+    "packages/openrouter": {
+      "name": "@app/openrouter",
+      "version": "0.0.1",
+      "dependencies": {
+        "@app/config": "workspace:*",
+        "@app/db": "workspace:*",
+        "@openrouter/sdk": "catalog:",
+        "@trpc/server": "catalog:",
+      },
+      "devDependencies": {
+        "@kyoto/eslint-config": "workspace:*",
+        "@types/node": "catalog:",
+        "tsconfig": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
     "packages/playwright": {
       "name": "@app/playwright",
       "version": "0.0.1",
@@ -363,7 +382,7 @@
       "name": "@app/posthog",
       "version": "0.0.1",
       "dependencies": {
-        "@app/config": "workspace:^",
+        "@app/config": "workspace:*",
         "posthog-node": "catalog:",
       },
       "devDependencies": {
@@ -473,6 +492,7 @@
     "import-in-the-middle": "^2.0.0",
     "posthog-js": "^1.208.3",
     "posthog-node": "^5.13.2",
+    "stripe": "^17.3.1",
     "superjson": "^2.2.2",
     "ts-dedent": "^2.2.0",
     "typescript": "^5.9.3",
@@ -541,6 +561,8 @@
     "@app/docs": ["@app/docs@workspace:apps/docs"],
 
     "@app/linear": ["@app/linear@workspace:packages/linear"],
+
+    "@app/openrouter": ["@app/openrouter@workspace:packages/openrouter"],
 
     "@app/playwright": ["@app/playwright@workspace:packages/playwright"],
 
@@ -4229,6 +4251,8 @@
     "strip-json-comments": ["strip-json-comments@5.0.3", "", {}, "sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw=="],
 
     "strip-literal": ["strip-literal@3.1.0", "", { "dependencies": { "js-tokens": "^9.0.1" } }, "sha512-8r3mkIM/2+PpjHoOtiAW8Rg3jJLHaV7xPwG+YRGrv6FP0wwk/toTpATxWYOW0BKdWwl82VT2tFYi5DlROa0Mxg=="],
+
+    "stripe": ["stripe@17.7.0", "", { "dependencies": { "@types/node": ">=8.1.0", "qs": "^6.11.0" } }, "sha512-aT2BU9KkizY9SATf14WhhYVv2uOapBWX0OFWF4xvcj1mPaNotlSc2CsxpS4DS46ZueSppmCF5BX1sNYBtwBvfw=="],
 
     "strnum": ["strnum@2.1.1", "", {}, "sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw=="],
 

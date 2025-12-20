@@ -39,6 +39,7 @@
       "import-in-the-middle": "^2.0.0",
       "posthog-js": "^1.208.3",
       "posthog-node": "^5.13.2",
+      "stripe": "^17.3.1",
       "superjson": "^2.2.2",
       "ts-dedent": "^2.2.0",
       "typescript": "^5.9.3",
