@@ -22,7 +22,7 @@
     "@app/schemas": "workspace:*",
     "@app/utils": "workspace:*",
     "@app/linear": "workspace:*",
-    "@app/posthog": "workspace:^",
+    "@app/posthog": "workspace:*",
     "@openrouter/sdk": "catalog:",
     "@daytonaio/sdk": "catalog:",
     "@sentry/nextjs": "catalog:",

@@ -5,7 +5,7 @@
     "@app/config": "workspace:*",
     "@app/daytona": "workspace:*",
     "@app/db": "workspace:*",
-    "@app/posthog": "workspace:^",
+    "@app/posthog": "workspace:*",
     "@app/schemas": "workspace:*",
     "@app/utils": "workspace:*",
     "@browserbasehq/stagehand": "catalog:",

@@ -14,7 +14,7 @@
     "fix": "eslint --fix --quiet . && prettier --ignore-path='../../.prettierignore' --log-level=silent --write ."
   },
   "dependencies": {
-    "@app/config": "workspace:^",
+    "@app/config": "workspace:*",
     "posthog-node": "catalog:"
   },
   "devDependencies": {
