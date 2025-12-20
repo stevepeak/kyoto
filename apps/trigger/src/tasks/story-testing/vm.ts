@@ -1,3 +1,4 @@
+import { ensureOpenRouterApiKey } from '@app/api'
 import { getConfig } from '@app/config'
 import { runVmTestAgent, serializeAsciicast } from '@app/daytona'
 import { createDb, eq, schema } from '@app/db'
@@ -146,9 +147,15 @@ export const vmAgentTask = task({
         .set({ sessionId: sandboxId, updatedAt: new Date() })
         .where(eq(schema.storyRuns.id, runId))
 
+      // Get user's OpenRouter API key
+      const userApiKey = await ensureOpenRouterApiKey({
+        db,
+        userId: story.userId,
+      })
+
       // Create OpenRouter model for the agent
       const openrouter = createOpenRouter({
-        apiKey: config.OPENROUTER_API_KEY,
+        apiKey: userApiKey,
       })
       const model = openrouter('openai/gpt-5-mini')
 

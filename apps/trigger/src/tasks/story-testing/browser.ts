@@ -1,4 +1,5 @@
 import { runBrowserAgent } from '@app/agents'
+import { ensureOpenRouterApiKey } from '@app/api'
 import { type BrowserbaseToolsContext } from '@app/browserbase'
 import { getConfig } from '@app/config'
 import { createDb, eq, schema } from '@app/db'
@@ -81,6 +82,12 @@ export const browserAgentTask = task({
         'Browser session ready. Executing instructions...',
       )
 
+      // Get user's OpenRouter API key
+      const userApiKey = await ensureOpenRouterApiKey({
+        db,
+        userId: story.userId,
+      })
+
       // Create browser context for the agent
       const browserContext: BrowserbaseToolsContext = {
         stagehand,
@@ -94,7 +101,7 @@ export const browserAgentTask = task({
 
       // Create OpenRouter model for the agent
       const openrouter = createOpenRouter({
-        apiKey: config.OPENROUTER_API_KEY,
+        apiKey: userApiKey,
       })
       const model = openrouter('openai/gpt-5-mini')
 
