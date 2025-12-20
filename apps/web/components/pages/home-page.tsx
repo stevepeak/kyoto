@@ -1,6 +1,13 @@
 'use client'
 
-import { BookOpen, Bot, Code, FileText, Terminal } from 'lucide-react'
+import {
+  BookOpen,
+  Bot,
+  Code,
+  FileText,
+  MessageCircle,
+  Terminal,
+} from 'lucide-react'
 import Link from 'next/link'
 
 import { Kanji } from '@/components/display/kanji'
@@ -141,9 +148,9 @@ export function HomePage() {
                 'bg-gradient-to-br from-card via-card to-muted/30',
               )}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-rose-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <CardHeader className="relative space-y-4 p-8">
-                <div className="flex size-14 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 transition-transform duration-300 group-hover:scale-110">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-red-500/10 text-red-600 transition-transform duration-300 group-hover:scale-110">
                   <Code className="size-7" />
                 </div>
                 <div className="space-y-2">
@@ -156,8 +163,50 @@ export function HomePage() {
                     packages for agents, and amazing tooling with Bun.
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-indigo-600 transition-colors group-hover:text-indigo-500">
+                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-red-600 transition-colors group-hover:text-red-500">
                   <span>View template</span>
+                  <span className="transition-transform duration-200 group-hover:translate-x-1">
+                    →
+                  </span>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link
+            href="https://timetuna.com/stevepeak"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Card
+              className={cn(
+                'group relative h-full cursor-pointer overflow-visible transition-all duration-300',
+                'hover:border-foreground/30 hover:shadow-lg',
+                'bg-gradient-to-br from-card via-card to-muted/30',
+              )}
+            >
+              <div className="absolute inset-0 overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute -top-3 right-4 z-10">
+                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600 dark:text-amber-500">
+                  Kyoto Pro or Max plan required
+                </span>
+              </div>
+              <CardHeader className="relative space-y-4 p-8">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 transition-transform duration-300 group-hover:scale-110">
+                  <MessageCircle className="size-7" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-semibold tracking-tight">
+                    Consult with Steve
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    Book a consultation with Steve on vibe coding and best
+                    development practices. Get personalized guidance on
+                    improving your development workflow.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-amber-600 transition-colors group-hover:text-amber-500">
+                  <span>Book consultation</span>
                   <span className="transition-transform duration-200 group-hover:translate-x-1">
                     →
                   </span>
