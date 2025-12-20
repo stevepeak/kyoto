@@ -18,6 +18,8 @@ export const userStatusEnum = pgEnum('user_status', [
   'invited',
 ])
 
+export const userPlanEnum = pgEnum('user_plan', ['free', 'pro', 'max'])
+
 // Better-Auth tables
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -36,6 +38,7 @@ export const user = pgTable('user', {
   lastInteractionAt: timestamp('last_interaction_at', { withTimezone: true }),
   timeZone: text('time_zone'),
   openrouterApiKey: text('openrouter_api_key'),
+  plan: userPlanEnum('plan').notNull().default('free'),
 })
 
 export const session = pgTable('session', {
@@ -319,5 +322,37 @@ export const integrations = pgTable(
   },
   (table) => ({
     userIdIdx: index('integrations_user_id_idx').on(table.userId),
+  }),
+)
+
+export const subscriptions = pgTable(
+  'subscriptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    stripeCustomerId: text('stripe_customer_id').unique(),
+    stripeSubscriptionId: text('stripe_subscription_id').unique(),
+    planId: text('plan_id').notNull(), // 'free' | 'pro' | 'max'
+    status: text('status').notNull(), // 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | etc.
+    billingPeriod: text('billing_period').notNull(), // 'monthly' | 'annual'
+    currentPeriodStart: timestamp('current_period_start', {
+      withTimezone: true,
+    }),
+    currentPeriodEnd: timestamp('current_period_end', {
+      withTimezone: true,
+    }),
+    cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
+  },
+  (table) => ({
+    userIdIdx: index('subscriptions_user_id_idx').on(table.userId),
+    userIdUnique: unique('subscriptions_user_id_unique').on(table.userId),
   }),
 )
