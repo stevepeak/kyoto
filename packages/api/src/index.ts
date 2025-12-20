@@ -1,3 +1,4 @@
+import { billingRouter } from './routers/billing'
 import { developmentRouter } from './routers/development'
 import { browserAgentsRouter } from './routers/experiments/browser-agents'
 import { feedbackRouter } from './routers/feedback'
@@ -12,7 +13,6 @@ export type { Context, Session, SessionUser } from './context'
 
 // TODO maybe move these into a @app/utils package?
 export { getUser, getUserGithubLogin } from './helpers/users'
-export { ensureOpenRouterApiKey } from './helpers/openrouter'
 export {
   findOwnerForUser,
   findRepoForUser,
@@ -28,6 +28,7 @@ export const appRouter = router({
   integrations: integrationsRouter,
   browserAgents: browserAgentsRouter,
   development: developmentRouter,
+  billing: billingRouter,
 })
 
 // Export type router type signature,

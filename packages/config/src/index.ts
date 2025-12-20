@@ -94,6 +94,15 @@ const envSchema = z.object({
   // Browserbase
   BROWSERBASE_API_KEY: z.string().min(1),
   BROWSERBASE_PROJECT_ID: z.string().min(1),
+
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
+  STRIPE_PRICE_ID_PRO_MONTHLY: z.string().startsWith('price_'),
+  STRIPE_PRICE_ID_PRO_ANNUAL: z.string().startsWith('price_'),
+  STRIPE_PRICE_ID_MAX_MONTHLY: z.string().startsWith('price_'),
+  STRIPE_PRICE_ID_MAX_ANNUAL: z.string().startsWith('price_'),
 })
 
 export type ParsedEnv = z.infer<typeof envSchema>
@@ -105,7 +114,7 @@ export function getConfig(
   const env = environmentVariables ?? process.env
 
   // Normalize public env vars to secret env vars
-  const normalizedEnv = {
+  const normalizedEnv: Record<string, string | undefined> = {
     ...env,
     POSTHOG_API_KEY: env.POSTHOG_API_KEY ?? env.NEXT_PUBLIC_POSTHOG_API_KEY,
     POSTHOG_HOST: env.POSTHOG_HOST ?? env.NEXT_PUBLIC_POSTHOG_HOST,
@@ -114,5 +123,16 @@ export function getConfig(
     APP_URL: env.APP_URL ?? env.NEXT_PUBLIC_APP_URL,
   }
 
-  return envSchema.parse(normalizedEnv)
+  try {
+    return envSchema.parse(normalizedEnv)
+  } catch (error) {
+    // Convert ZodError to a regular Error to prevent issues with read-only message property
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.errors
+        .map((err) => `${err.path.join('.')}: ${err.message}`)
+        .join('\n')
+      throw new Error(`Configuration validation failed:\n${errorMessage}`)
+    }
+    throw error
+  }
 }
