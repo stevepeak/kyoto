@@ -1,7 +1,10 @@
-import { getConfig } from '@app/config'
 import { type DB, eq, schema } from '@app/db'
-import { OpenRouter } from '@openrouter/sdk'
 import { TRPCError } from '@trpc/server'
+
+import {
+  getProvisioningOpenRouterClient,
+  getUserOpenrouterApiKey,
+} from './helpers'
 
 /**
  * Generates an OpenRouter API key for a user using the provisioning SDK.
@@ -16,12 +19,18 @@ export async function ensureOpenRouterApiKey({
   userId: string
 }): Promise<string> {
   // Check if user already has an API key
+  const existingKey = await getUserOpenrouterApiKey({ db, userId })
+
+  if (existingKey) {
+    return existingKey
+  }
+
+  // Get user for login field needed for key name
   const user = await db.query.user.findFirst({
     where: eq(schema.user.id, userId),
     columns: {
       id: true,
       login: true,
-      openrouterApiKey: true,
     },
   })
 
@@ -32,27 +41,9 @@ export async function ensureOpenRouterApiKey({
     })
   }
 
-  // Return existing key if present
-  if (user.openrouterApiKey) {
-    return user.openrouterApiKey
-  }
-
-  // Get provisioning key from config
-  const config = getConfig()
-  const provisioningKey = config.OPENROUTER_PROVISION_KEY
-
-  if (!provisioningKey) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'OpenRouter provisioning key not configured',
-    })
-  }
-
   try {
     // Initialize OpenRouter SDK with provisioning key
-    const openRouter = new OpenRouter({
-      apiKey: provisioningKey,
-    })
+    const openRouter = getProvisioningOpenRouterClient()
 
     // Create new API key
     const newKey = await openRouter.apiKeys.create({

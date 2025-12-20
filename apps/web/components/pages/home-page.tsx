@@ -57,8 +57,10 @@ export function HomePage() {
                     Kyoto CLI
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Vibe check your agent written code for bugs, security
-                    issues, library usage, and more.
+                    Vibe check and test your agent written code for bugs,
+                    security issues, library usage, and more. Normal usage of
+                    Kyoto CLI and MCP will keep your vibe coding sessions
+                    running smoothly.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-emerald-600 transition-colors group-hover:text-emerald-500">
@@ -89,14 +91,14 @@ export function HomePage() {
                     User story testing
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Try our agents that run periodic user story tests in the{' '}
+                    Launch agents that run periodic user story tests in the{' '}
                     <b>browser</b> or a <b>virtual machine</b> to test your
                     website, cli, or api to ensuring functionality is working as
                     expected.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-violet-600 transition-colors group-hover:text-violet-500">
-                  <span>Try user story testing</span>
+                  <span>User story testing</span>
                   <span className="transition-transform duration-200 group-hover:translate-x-1">
                     →
                   </span>
@@ -197,12 +199,13 @@ export function HomePage() {
                 </div>
                 <div className="space-y-2">
                   <CardTitle className="text-2xl font-semibold tracking-tight">
-                    Consult with Steve
+                    Consult with us
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
-                    Book a consultation with Steve on vibe coding and best
-                    development practices. Get personalized guidance on
-                    improving your development workflow.
+                    Book a consultation with Steve (founder of Kyoto and
+                    Codecov) on vibe coding and best development practices. Get
+                    personalized guidance on improving your development
+                    workflow.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-amber-600 transition-colors group-hover:text-amber-500">

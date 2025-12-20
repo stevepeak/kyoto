@@ -1,24 +1,13 @@
+import type Stripe from 'stripe'
+
 import { getConfig } from '@app/config'
 import { type DB, eq, schema } from '@app/db'
+import { cancelSubscription, getStripe } from '@app/stripe'
 import { TRPCError } from '@trpc/server'
-import Stripe from 'stripe'
 import { z } from 'zod'
 
 import { protectedProcedure, router } from '../../trpc'
-
-// Initialize Stripe client
-function getStripe() {
-  const config = getConfig()
-  if (!config.STRIPE_SECRET_KEY) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Stripe is not configured',
-    })
-  }
-  return new Stripe(config.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-02-24.acacia',
-  })
-}
+import { updateUserPlanAndSpendLimit } from './utils'
 
 // Map plan IDs and billing periods to Stripe price IDs
 // These should be set as environment variables or configured in Stripe Dashboard
@@ -136,13 +125,6 @@ export const billingRouter = router({
       const stripe = getStripe()
       const config = getConfig()
 
-      if (!config.STRIPE_SECRET_KEY) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Stripe is not configured',
-        })
-      }
-
       const { planId, billingPeriod } = input
       const userId = ctx.user.id
 
@@ -209,13 +191,10 @@ export const billingRouter = router({
 
     // If there's a Stripe subscription, cancel it
     if (subscription.stripeSubscriptionId) {
-      try {
-        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId)
-      } catch (error) {
-        // If subscription is already canceled or doesn't exist, continue
-        // eslint-disable-next-line no-console
-        console.error('Error canceling Stripe subscription:', error)
-      }
+      await cancelSubscription({
+        stripe,
+        subscriptionId: subscription.stripeSubscriptionId,
+      })
     }
 
     // Update database to set plan to free
@@ -227,6 +206,13 @@ export const billingRouter = router({
         updatedAt: new Date(),
       })
       .where(eq(schema.subscriptions.userId, userId))
+
+    // Update user plan and OpenRouter spend limit
+    await updateUserPlanAndSpendLimit({
+      db: ctx.db,
+      userId,
+      planId: 'free',
+    })
 
     return { success: true }
   }),

@@ -124,6 +124,7 @@
         "@app/db": "workspace:*",
         "@app/openrouter": "workspace:*",
         "@app/schemas": "workspace:*",
+        "@app/stripe": "workspace:*",
         "@app/utils": "workspace:*",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -233,8 +234,10 @@
         "@app/config": "workspace:*",
         "@app/db": "workspace:*",
         "@app/linear": "workspace:*",
+        "@app/openrouter": "workspace:*",
         "@app/posthog": "workspace:*",
         "@app/schemas": "workspace:*",
+        "@app/stripe": "workspace:*",
         "@app/utils": "workspace:*",
         "@daytonaio/sdk": "catalog:",
         "@sentry/nextjs": "catalog:",
@@ -425,6 +428,21 @@
         "ora": "^9.0.0",
       },
     },
+    "packages/stripe": {
+      "name": "@app/stripe",
+      "version": "0.0.1",
+      "dependencies": {
+        "@app/config": "workspace:*",
+        "@trpc/server": "catalog:",
+        "stripe": "catalog:",
+      },
+      "devDependencies": {
+        "@kyoto/eslint-config": "workspace:*",
+        "@types/node": "catalog:",
+        "tsconfig": "workspace:*",
+        "typescript": "catalog:",
+      },
+    },
     "packages/types": {
       "name": "@app/types",
       "version": "0.0.1",
@@ -571,6 +589,8 @@
     "@app/schemas": ["@app/schemas@workspace:packages/schemas"],
 
     "@app/shell": ["@app/shell@workspace:packages/shell"],
+
+    "@app/stripe": ["@app/stripe@workspace:packages/stripe"],
 
     "@app/trigger": ["@app/trigger@workspace:apps/trigger"],
 

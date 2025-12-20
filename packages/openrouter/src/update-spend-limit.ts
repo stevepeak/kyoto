@@ -1,6 +1,9 @@
-import { getConfig } from '@app/config'
-import { type DB, eq, schema } from '@app/db'
-import { OpenRouter } from '@openrouter/sdk'
+import { type DB } from '@app/db'
+
+import {
+  getProvisioningOpenRouterClient,
+  getUserOpenrouterApiKey,
+} from './helpers'
 
 /**
  * Spend limits per plan per month
@@ -24,25 +27,11 @@ export async function updateOpenRouterSpendLimit({
   userId: string
   planId: 'free' | 'pro' | 'max'
 }): Promise<void> {
-  const user = await db.query.user.findFirst({
-    where: eq(schema.user.id, userId),
-    columns: {
-      id: true,
-      openrouterApiKey: true,
-    },
-  })
-
-  if (!user) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `User ${userId} not found when updating OpenRouter spend limit`,
-    )
-    return
-  }
+  const apiKey = await getUserOpenrouterApiKey({ db, userId })
 
   // If user doesn't have an API key yet, they'll get one when they first use the service
   // We don't create it here to avoid unnecessary API key creation
-  if (!user.openrouterApiKey) {
+  if (!apiKey) {
     // eslint-disable-next-line no-console
     console.log(
       `User ${userId} doesn't have OpenRouter API key yet, skipping limit update`,
@@ -52,28 +41,14 @@ export async function updateOpenRouterSpendLimit({
 
   const limit = PLAN_SPEND_LIMITS[planId]
 
-  // Get provisioning key from config
-  const config = getConfig()
-  const provisioningKey = config.OPENROUTER_PROVISION_KEY
-
-  if (!provisioningKey) {
-    // eslint-disable-next-line no-console
-    console.error(
-      'OpenRouter provisioning key not configured, cannot update spend limit',
-    )
-    return
-  }
-
   try {
     // Initialize OpenRouter SDK with provisioning key
-    const openRouter = new OpenRouter({
-      apiKey: provisioningKey,
-    })
+    const openRouter = getProvisioningOpenRouterClient()
 
     // Update API key limit
     // The hash parameter is the API key itself
     await openRouter.apiKeys.update({
-      hash: user.openrouterApiKey,
+      hash: apiKey,
       requestBody: {
         limit,
         limitReset: 'monthly',

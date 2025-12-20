@@ -18,6 +18,7 @@
     "@app/api": "workspace:*",
     "@app/config": "workspace:*",
     "@app/openrouter": "workspace:*",
+    "@app/stripe": "workspace:*",
     "@app/db": "workspace:*",
     "@app/utils": "workspace:*",
     "@app/schemas": "workspace:*",

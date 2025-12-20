@@ -19,6 +19,16 @@ export {
   requireRepoForUser,
 } from './helpers/memberships'
 
+export {
+  normalizePlanId,
+  updateUserPlanAndSpendLimit,
+} from './routers/billing/utils'
+export {
+  handleSubscriptionCreated,
+  handleSubscriptionDeleted,
+  handleSubscriptionUpdated,
+} from './routers/billing/webhook-handlers'
+
 export const appRouter = router({
   user: userRouter,
   org: orgRouter,

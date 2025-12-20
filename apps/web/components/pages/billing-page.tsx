@@ -1,122 +1,25 @@
 'use client'
 
-import { Check, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
+import { BillingPeriodToggle } from '@/components/billing/billing-period-toggle'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+  type BillingPeriod,
+  defaultPlans,
+  getPlanPrice,
+  type Plan,
+  type PlanId,
+} from '@/components/billing/constants'
+import { DowngradeConfirmationDialog } from '@/components/billing/downgrade-confirmation-dialog'
+import { PlanCard } from '@/components/billing/plan-card'
 import { useTRPC } from '@/lib/trpc-client'
-import { cn } from '@/lib/utils'
-
-type PlanId = 'free' | 'pro' | 'max'
-type BillingPeriod = 'monthly' | 'annual'
-
-interface Plan {
-  id: PlanId
-  name: string
-  description: string
-  price: string
-  priceDescription?: string
-  features: string[]
-  cta: string
-  highlighted?: boolean
-  current?: boolean
-}
 
 interface BillingPageProps {
   currentPlanId?: PlanId
   onPlanSelect?: (planId: PlanId) => void
 }
-
-const getPlanPrice = (
-  planId: PlanId,
-  billingPeriod: BillingPeriod,
-): { price: string; priceDescription: string } => {
-  if (planId === 'free') {
-    return { price: '$0', priceDescription: 'forever' }
-  }
-
-  const monthlyPrices = {
-    pro: 15,
-    max: 50,
-  }
-
-  const monthlyPrice = monthlyPrices[planId]
-
-  if (billingPeriod === 'monthly') {
-    return { price: `$${monthlyPrice}`, priceDescription: 'per month' }
-  }
-
-  // Annual: 30% off
-  const annualPrice = Math.round(monthlyPrice * 12 * 0.7)
-  return { price: `$${annualPrice}`, priceDescription: 'per year' }
-}
-
-const defaultPlans: Omit<Plan, 'price' | 'priceDescription'>[] = [
-  {
-    id: 'free',
-    name: 'Free',
-    description: 'Perfect for getting started',
-    features: [
-      '30 Vibe check / month',
-      '30 Vibe tests / month',
-      '3 Kyoto Stories',
-      'Kyoto CLI & MCP',
-      'Community support',
-    ],
-    cta: 'Downgrade to Free',
-    current: false,
-  },
-  {
-    id: 'pro',
-    name: 'Kyoto Pro',
-    description: 'For professional developers',
-    features: [
-      'Everything in Free',
-      '$15 / month in token credits',
-      '∞ Unlimited Vibe checks',
-      '∞ Unlimited Vibe tests',
-      '∞ Unlimited Stories',
-      'Priority support',
-    ],
-    cta: 'Upgrade to Pro',
-    current: false,
-  },
-  {
-    id: 'max',
-    name: 'Kyoto Max',
-    description: 'For power users',
-    features: [
-      'Everything in Pro',
-      'Custom AI agents',
-      'Dedicated support',
-      'Early access to features',
-      'Custom integrations',
-    ],
-    cta: 'Upgrade to Max',
-    highlighted: true,
-    current: false,
-  },
-]
 
 export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
   const trpc = useTRPC()
@@ -220,123 +123,20 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
         </div>
 
         {/* Billing Period Toggle */}
-        <div className="flex items-center justify-center">
-          <div className="inline-flex items-center gap-2 rounded-lg border bg-muted p-1">
-            <button
-              type="button"
-              onClick={() => setBillingPeriod('monthly')}
-              className={cn(
-                'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                billingPeriod === 'monthly'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingPeriod('annual')}
-              className={cn(
-                'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                'relative',
-                billingPeriod === 'annual'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              Annual
-              <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
-                30% off
-              </span>
-            </button>
-          </div>
-        </div>
+        <BillingPeriodToggle
+          billingPeriod={billingPeriod}
+          onBillingPeriodChange={setBillingPeriod}
+        />
 
         {/* Pricing Cards */}
         <div className="grid gap-6 md:grid-cols-3">
           {plans.map((plan) => (
-            <Card
+            <PlanCard
               key={plan.id}
-              className={cn(
-                'relative flex flex-col',
-                plan.highlighted && 'border-2 border-primary shadow-lg',
-                plan.current && 'ring-2 ring-primary ring-offset-2',
-              )}
-            >
-              {plan.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                    <Sparkles className="size-3" />
-                    Popular
-                  </span>
-                </div>
-              )}
-
-              {plan.current && (
-                <div className="absolute -top-3 right-4">
-                  <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                    Current plan
-                  </span>
-                </div>
-              )}
-
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <CardDescription className="text-base">
-                  {plan.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="flex flex-1 flex-col space-y-6">
-                <div className="space-y-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    {plan.priceDescription && (
-                      <span className="text-muted-foreground">
-                        {plan.priceDescription}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <ul className="flex-1 space-y-3">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check
-                        className={cn(
-                          'mt-0.5 size-5 shrink-0',
-                          plan.highlighted
-                            ? 'text-primary'
-                            : 'text-muted-foreground',
-                        )}
-                      />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-
-              <CardFooter>
-                <Button
-                  className={cn(
-                    'w-full',
-                    plan.highlighted &&
-                      'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500',
-                    plan.current && 'opacity-50 cursor-not-allowed',
-                  )}
-                  variant={plan.highlighted ? 'default' : 'outline'}
-                  disabled={plan.current || checkoutMutation.isPending}
-                  onClick={() => handlePlanSelect(plan.id)}
-                >
-                  {checkoutMutation.isPending
-                    ? 'Loading...'
-                    : plan.current
-                      ? 'Current plan'
-                      : plan.cta}
-                </Button>
-              </CardFooter>
-            </Card>
+              plan={plan}
+              onSelect={() => handlePlanSelect(plan.id)}
+              isPending={checkoutMutation.isPending}
+            />
           ))}
         </div>
 
@@ -367,36 +167,12 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
       </div>
 
       {/* Downgrade Confirmation Dialog */}
-      <AlertDialog
+      <DowngradeConfirmationDialog
         open={showDowngradeDialog}
         onOpenChange={setShowDowngradeDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Downgrade to Free Plan?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to cancel your subscription and downgrade to
-              the Free plan? Your subscription will be canceled immediately, and
-              you'll lose access to premium features. You can upgrade again at
-              any time.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={cancelMutation.isPending}>
-              Keep My Plan
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDowngrade}
-              disabled={cancelMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {cancelMutation.isPending
-                ? 'Canceling...'
-                : 'Yes, Cancel Subscription'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleConfirmDowngrade}
+        isPending={cancelMutation.isPending}
+      />
     </div>
   )
 }
