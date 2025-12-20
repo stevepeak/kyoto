@@ -1,6 +1,12 @@
 'use client'
 
-import { FlaskConical, Github, LogOut, RefreshCw } from 'lucide-react'
+import {
+  CreditCard,
+  FlaskConical,
+  Github,
+  LogOut,
+  RefreshCw,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -174,6 +180,18 @@ export function LoginButton() {
             <span>Development</span>
           </DropdownMenuItem>
         )}
+
+        <DropdownMenuSeparator />
+
+        {/* Billing */}
+        <DropdownMenuItem
+          onClick={() => {
+            router.push('/billing')
+          }}
+        >
+          <CreditCard className="size-4" />
+          <span>Billing</span>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
