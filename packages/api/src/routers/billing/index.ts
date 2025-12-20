@@ -190,4 +190,44 @@ export const billingRouter = router({
         sessionId: session.id,
       }
     }),
+
+  cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
+    const stripe = getStripe()
+    const userId = ctx.user.id
+
+    // Find user's subscription
+    const subscription = await ctx.db.query.subscriptions.findFirst({
+      where: eq(schema.subscriptions.userId, userId),
+    })
+
+    if (!subscription) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No subscription found',
+      })
+    }
+
+    // If there's a Stripe subscription, cancel it
+    if (subscription.stripeSubscriptionId) {
+      try {
+        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId)
+      } catch (error) {
+        // If subscription is already canceled or doesn't exist, continue
+        // eslint-disable-next-line no-console
+        console.error('Error canceling Stripe subscription:', error)
+      }
+    }
+
+    // Update database to set plan to free
+    await ctx.db
+      .update(schema.subscriptions)
+      .set({
+        planId: 'free',
+        status: 'canceled',
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.subscriptions.userId, userId))
+
+    return { success: true }
+  }),
 })

@@ -5,6 +5,16 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -71,9 +81,9 @@ const defaultPlans: Omit<Plan, 'price' | 'priceDescription'>[] = [
       '30 Vibe tests / month',
       '3 Kyoto Stories',
       'Kyoto CLI & MCP',
-      'Community support via X',
+      'Community support',
     ],
-    cta: 'Current plan',
+    cta: 'Downgrade to Free',
     current: false,
   },
   {
@@ -112,6 +122,7 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
   const trpc = useTRPC()
   const searchParams = useSearchParams()
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
+  const [showDowngradeDialog, setShowDowngradeDialog] = useState(false)
 
   // Fetch subscription from tRPC
   const subscriptionQuery = trpc.billing.getSubscription.useQuery()
@@ -123,6 +134,16 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
     },
     onError: (error) => {
       toast.error(`Failed to create checkout session: ${error.message}`)
+    },
+  })
+  const cancelMutation = trpc.billing.cancelSubscription.useMutation({
+    onSuccess: () => {
+      toast.success('Subscription canceled successfully')
+      void subscriptionQuery.refetch()
+      setShowDowngradeDialog(false)
+    },
+    onError: (error) => {
+      toast.error(`Failed to cancel subscription: ${error.message}`)
     },
   })
 
@@ -149,7 +170,12 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
 
   const handlePlanSelect = (planId: PlanId) => {
     if (planId === 'free') {
-      // Free plan doesn't need checkout
+      // If user is on a paid plan, show confirmation dialog
+      if (effectivePlanId !== 'free') {
+        setShowDowngradeDialog(true)
+        return
+      }
+      // Already on free plan, no action needed
       return
     }
 
@@ -163,6 +189,10 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
       planId,
       billingPeriod,
     })
+  }
+
+  const handleConfirmDowngrade = () => {
+    cancelMutation.mutate()
   }
 
   const plans: Plan[] = defaultPlans.map((plan) => {
@@ -331,16 +361,42 @@ export function BillingPage({ currentPlanId, onPlanSelect }: BillingPageProps) {
         {/* Additional Info */}
         <div className="rounded-lg border bg-muted/50 p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            All plans include a 14-day free trial. Cancel anytime.{' '}
-            <a
-              href="#"
-              className="font-medium text-primary underline underline-offset-4 hover:no-underline"
-            >
-              Learn more
-            </a>
+            All plans include a 14-day free trial. Cancel anytime.
           </p>
         </div>
       </div>
+
+      {/* Downgrade Confirmation Dialog */}
+      <AlertDialog
+        open={showDowngradeDialog}
+        onOpenChange={setShowDowngradeDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Downgrade to Free Plan?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel your subscription and downgrade to
+              the Free plan? Your subscription will be canceled immediately, and
+              you'll lose access to premium features. You can upgrade again at
+              any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelMutation.isPending}>
+              Keep My Plan
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDowngrade}
+              disabled={cancelMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelMutation.isPending
+                ? 'Canceling...'
+                : 'Yes, Cancel Subscription'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

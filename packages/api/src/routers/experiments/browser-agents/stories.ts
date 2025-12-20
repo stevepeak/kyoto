@@ -1,5 +1,5 @@
 import { generateStoryTitle, parseCron } from '@app/agents'
-import { desc, eq, schema } from '@app/db'
+import { count, desc, eq, schema } from '@app/db'
 import { capturePostHogEvent, POSTHOG_EVENTS } from '@app/posthog'
 import { validateCronMinimumInterval } from '@app/utils'
 import { configure, schedules } from '@trigger.dev/sdk'
@@ -77,6 +77,24 @@ export const storiesRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Check story limit based on user plan
+      if (ctx.user.plan === 'free') {
+        const [storyCountResult] = await ctx.db
+          .select({ count: count() })
+          .from(schema.stories)
+          .where(eq(schema.stories.userId, ctx.user.id))
+
+        const storyCount = storyCountResult?.count ?? 0
+
+        if (storyCount >= 3) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message:
+              'Free plan is limited to 3 stories. Upgrade to create unlimited stories.',
+          })
+        }
+      }
+
       let storyName = input.name
 
       // Generate title if still "New Story"

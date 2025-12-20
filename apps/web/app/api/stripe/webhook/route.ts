@@ -1,5 +1,6 @@
 import { getConfig } from '@app/config'
 import { eq, schema } from '@app/db'
+import { updateOpenRouterSpendLimit } from '@app/openrouter'
 import { type NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
@@ -162,6 +163,12 @@ async function handleSubscriptionCreated({
     return
   }
 
+  // Normalize planId to match user plan enum
+  const normalizedPlanId =
+    planId === 'free' || planId === 'pro' || planId === 'max'
+      ? (planId as 'free' | 'pro' | 'max')
+      : ('pro' as const)
+
   if (existing) {
     // Update existing subscription
     await db
@@ -169,7 +176,7 @@ async function handleSubscriptionCreated({
       .set({
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
-        planId,
+        planId: normalizedPlanId,
         status: subscription.status,
         billingPeriod,
         currentPeriodStart: new Date(subscription.current_period_start * 1000),
@@ -184,7 +191,7 @@ async function handleSubscriptionCreated({
       userId,
       stripeCustomerId: customerId,
       stripeSubscriptionId: subscription.id,
-      planId,
+      planId: normalizedPlanId,
       status: subscription.status,
       billingPeriod,
       currentPeriodStart: new Date(subscription.current_period_start * 1000),
@@ -192,6 +199,21 @@ async function handleSubscriptionCreated({
       cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
     })
   }
+
+  // Update user plan and OpenRouter spend limit
+  await db
+    .update(schema.user)
+    .set({
+      plan: normalizedPlanId,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.user.id, userId))
+
+  await updateOpenRouterSpendLimit({
+    db,
+    userId,
+    planId: normalizedPlanId,
+  })
 }
 
 async function handleSubscriptionUpdated({
@@ -229,10 +251,16 @@ async function handleSubscriptionUpdated({
   const billingPeriod =
     subscription.metadata?.billingPeriod ?? existing.billingPeriod
 
+  // Normalize planId to match user plan enum
+  const normalizedPlanId =
+    planId === 'free' || planId === 'pro' || planId === 'max'
+      ? (planId as 'free' | 'pro' | 'max')
+      : ('pro' as const)
+
   await db
     .update(schema.subscriptions)
     .set({
-      planId,
+      planId: normalizedPlanId,
       status: subscription.status,
       billingPeriod,
       currentPeriodStart: new Date(subscription.current_period_start * 1000),
@@ -241,6 +269,21 @@ async function handleSubscriptionUpdated({
       updatedAt: new Date(),
     })
     .where(eq(schema.subscriptions.stripeSubscriptionId, subscription.id))
+
+  // Update user plan and OpenRouter spend limit
+  await db
+    .update(schema.user)
+    .set({
+      plan: normalizedPlanId,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.user.id, existing.userId))
+
+  await updateOpenRouterSpendLimit({
+    db,
+    userId: existing.userId,
+    planId: normalizedPlanId,
+  })
 }
 
 async function handleSubscriptionDeleted({
@@ -248,6 +291,16 @@ async function handleSubscriptionDeleted({
 }: {
   subscription: Stripe.Subscription
 }) {
+  const existing = await db.query.subscriptions.findFirst({
+    where: eq(schema.subscriptions.stripeSubscriptionId, subscription.id),
+  })
+
+  if (!existing) {
+    // eslint-disable-next-line no-console
+    console.warn(`Subscription ${subscription.id} not found when deleting`)
+    return
+  }
+
   await db
     .update(schema.subscriptions)
     .set({
@@ -255,4 +308,19 @@ async function handleSubscriptionDeleted({
       updatedAt: new Date(),
     })
     .where(eq(schema.subscriptions.stripeSubscriptionId, subscription.id))
+
+  // When subscription is deleted, user goes back to free plan
+  await db
+    .update(schema.user)
+    .set({
+      plan: 'free',
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.user.id, existing.userId))
+
+  await updateOpenRouterSpendLimit({
+    db,
+    userId: existing.userId,
+    planId: 'free',
+  })
 }

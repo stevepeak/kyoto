@@ -1,6 +1,9 @@
 'use client'
 
-import { Globe, Plus, Terminal } from 'lucide-react'
+import { type Story } from '@app/schemas'
+import { TEMP_STORY_ID } from '@app/utils'
+import { ArrowUpRight, Globe, Plus, Terminal } from 'lucide-react'
+import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -14,9 +17,36 @@ import { Spinner } from '@/components/ui/spinner'
 type NewStoryMenuProps = {
   isCreating: boolean
   onCreateStory: (testType: 'browser' | 'vm') => void
+  stories: Story[]
+  planId: 'free' | 'pro' | 'max'
 }
 
-export function NewStoryMenu({ isCreating, onCreateStory }: NewStoryMenuProps) {
+export function NewStoryMenu({
+  isCreating,
+  onCreateStory,
+  stories,
+  planId,
+}: NewStoryMenuProps) {
+  const isFreePlan = planId === 'free'
+  // Exclude temp stories from count since they're not persisted
+  const savedStoriesCount = stories.filter(
+    (story) => story.id !== TEMP_STORY_ID,
+  ).length
+  const hasReachedLimit = isFreePlan && savedStoriesCount >= 3
+
+  if (hasReachedLimit) {
+    return (
+      <div className="border-b p-4">
+        <Button asChild className="w-full" variant="outline">
+          <Link href="/billing">
+            Upgrade Plan
+            <ArrowUpRight className="ml-1 size-4" />
+          </Link>
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="border-b p-4">
       <DropdownMenu>
