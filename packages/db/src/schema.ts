@@ -300,6 +300,64 @@ export const storyRuns = pgTable(
   }),
 )
 
+// Security audit tables
+export const securityAudits = pgTable(
+  'security_audits',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    repoId: uuid('repo_id')
+      .notNull()
+      .references(() => repos.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    targetUrl: text('target_url'), // For browser-based audits
+    enabled: boolean('enabled').notNull().default(true),
+    scheduleText: text('schedule_text'), // Optional scheduling
+    cronSchedule: text('cron_schedule'),
+    triggerScheduleId: text('trigger_schedule_id'),
+  },
+  (table) => ({
+    userIdIdx: index('security_audits_user_id_idx').on(table.userId),
+    repoIdIdx: index('security_audits_repo_id_idx').on(table.repoId),
+  }),
+)
+
+export const securityAuditRuns = pgTable(
+  'security_audit_runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    auditId: uuid('audit_id')
+      .notNull()
+      .references(() => securityAudits.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('pending'), // 'pending' | 'running' | 'completed' | 'failed'
+    results: jsonb('results'), // Full audit results matching checklist structure
+    score: text('score'), // Overall security score (e.g., "85%")
+    criticalIssues: jsonb('critical_issues'),
+    recommendations: jsonb('recommendations'),
+    sessionId: text('session_id'), // Browserbase session ID if browser-based
+    sessionRecordingUrl: text('session_recording_url'), // Browserbase session recording URL
+    error: text('error'), // Error message if audit fails
+    triggerRunId: text('trigger_run_id'),
+  },
+  (table) => ({
+    auditIdIdx: index('security_audit_runs_audit_id_idx').on(table.auditId),
+  }),
+)
+
 export const integrationTypeEnum = pgEnum('integration_type', ['webhook'])
 
 export const integrations = pgTable(

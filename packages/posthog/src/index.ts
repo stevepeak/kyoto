@@ -42,6 +42,9 @@ export const POSTHOG_EVENTS = {
   STORY_CREATED: 'story_created',
   STORY_EDITED: 'story_edited',
   STORY_RUN_MANUAL: 'story_run_manual',
+  SECURITY_AUDIT_CREATED: 'security_audit_created',
+  SECURITY_AUDIT_EDITED: 'security_audit_edited',
+  SECURITY_AUDIT_DELETED: 'security_audit_deleted',
 } as const
 
 /**

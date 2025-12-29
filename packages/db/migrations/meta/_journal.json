@@ -127,6 +127,13 @@
       "when": 1766243770904,
       "tag": "0017_wandering_nicolaos",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1766258962154,
+      "tag": "0018_luxuriant_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

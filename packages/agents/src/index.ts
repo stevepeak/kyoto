@@ -55,3 +55,59 @@ export {
 } from './agents/browser-agent'
 export { type AnalyzeBrowserAgentOptions } from './agents/browser-agent.types'
 export { generateStoryTitle, parseCron } from './story-utils'
+export {
+  type BrowserTransportSecurityOutput,
+  browserTransportSecurityOutputSchema,
+  runBrowserTransportSecurityAudit,
+} from './agents/browser-transport-security'
+export {
+  type BrowserHeadersAuditOutput,
+  browserHeadersAuditOutputSchema,
+  runBrowserHeadersAudit,
+} from './agents/browser-headers-audit'
+export {
+  type BrowserCookieAuditOutput,
+  browserCookieAuditOutputSchema,
+  runBrowserCookieAudit,
+} from './agents/browser-cookie-audit'
+export {
+  type BrowserStorageAuditOutput,
+  browserStorageAuditOutputSchema,
+  runBrowserStorageAudit,
+} from './agents/browser-storage-audit'
+export {
+  type BrowserConsoleAuditOutput,
+  browserConsoleAuditOutputSchema,
+  runBrowserConsoleAudit,
+} from './agents/browser-console-audit'
+export {
+  analyzeFrontendSecurity,
+  frontendSecurityOutputSchema,
+} from './agents/frontend-security'
+export {
+  analyzeBackendSecurity,
+  backendSecurityOutputSchema,
+} from './agents/backend-security'
+export {
+  analyzeDatabaseSecurity,
+  databaseSecurityOutputSchema,
+} from './agents/database-security'
+export {
+  analyzeInfrastructureSecurity,
+  infrastructureSecurityOutputSchema,
+} from './agents/infrastructure-security'
+export {
+  analyzeDependencySecurity,
+  dependencySecurityOutputSchema,
+} from './agents/dependency-security'
+export {
+  type CliSecurityAuditOutput,
+  cliSecurityAuditOutputSchema,
+  runCliSecurityAudit,
+} from './agents/cli-security-audit'
+export {
+  runSecurityAudit,
+  securityAuditCheckItemSchema,
+  type SecurityAuditOutput,
+  securityAuditOutputSchema,
+} from './agents/security-audit'

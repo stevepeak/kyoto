@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  BookOpen,
-  Bot,
-  Code,
-  FileText,
-  MessageCircle,
-  Terminal,
-} from 'lucide-react'
+import { Bot, Code, MessageCircle, ShieldCheck, Terminal } from 'lucide-react'
 import Link from 'next/link'
 
 import { Kanji } from '@/components/display/kanji'
@@ -99,6 +92,39 @@ export function HomePage() {
                 </div>
                 <div className="flex items-center gap-2 pt-2 text-sm font-medium text-violet-600 transition-colors group-hover:text-violet-500">
                   <span>User story testing</span>
+                  <span className="transition-transform duration-200 group-hover:translate-x-1">
+                    →
+                  </span>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/security-audits">
+            <Card
+              className={cn(
+                'group relative h-full cursor-pointer overflow-hidden transition-all duration-300',
+                'hover:border-foreground/30 hover:shadow-lg',
+                'bg-gradient-to-br from-card via-card to-muted/30',
+              )}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-amber-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <CardHeader className="relative space-y-4 p-8">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-orange-500/10 text-orange-600 transition-transform duration-300 group-hover:scale-110">
+                  <ShieldCheck className="size-7" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-semibold tracking-tight">
+                    Regular Security Audits
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    Comprehensive automated security audits using AI agents.
+                    Verify HTTPS, headers, authentication, database security,
+                    dependencies, and more.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2 pt-2 text-sm font-medium text-orange-600 transition-colors group-hover:text-orange-500">
+                  <span>Security audits</span>
                   <span className="transition-transform duration-200 group-hover:translate-x-1">
                     →
                   </span>

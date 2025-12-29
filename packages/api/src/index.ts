@@ -5,6 +5,7 @@ import { feedbackRouter } from './routers/feedback'
 import { integrationsRouter } from './routers/integrations'
 import { orgRouter } from './routers/org'
 import { repoRouter } from './routers/repo'
+import { securityAuditRouter } from './routers/security-audit'
 import { triggerRouter } from './routers/trigger'
 import { userRouter } from './routers/user'
 import { router } from './trpc'
@@ -39,6 +40,7 @@ export const appRouter = router({
   browserAgents: browserAgentsRouter,
   development: developmentRouter,
   billing: billingRouter,
+  securityAudit: securityAuditRouter,
 })
 
 // Export type router type signature,
